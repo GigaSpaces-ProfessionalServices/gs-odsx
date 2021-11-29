@@ -1,0 +1,6 @@
+Usage: python3 odsx.py --servers --cdc [command] [optional argument]
+
+--restore 				 restore cdc
+--install 				 install cdc
+--stop 					 stop cdc
+--remove 				 remove cdc

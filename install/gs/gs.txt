@@ -1,0 +1,1 @@
+Keep gigaspace .zip file in gs folder

@@ -1,0 +1,15 @@
+[Unit]
+Description="GigaSpaces Health Check Service"
+After=network.target
+
+[Service]
+Type=simple
+User=gsods
+Group=gsods
+SuccessExitStatus=143
+ExecStart=/usr/bin/java -jar $healthCheckJar --app.services.filepath=$healthCheckServiceFile
+ExecStop=/bin/kill -15 $MAINPID
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

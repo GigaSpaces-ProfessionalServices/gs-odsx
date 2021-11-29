@@ -1,0 +1,4 @@
+Usage: python3 odsx.py --servers --manager --start [command] [optional argument]
+
+--host <value>           Host / IP of remote / local machine
+-u <value>               User of host / IP of remote / local machine

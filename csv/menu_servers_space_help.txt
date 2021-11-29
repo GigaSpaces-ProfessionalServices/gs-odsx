@@ -1,0 +1,7 @@
+Usage: python3 odsx.py --servers --manager [command] [optional argument]
+
+--install 				 install necessary tools to set up environment
+--start 				 restore space
+--stop 					 stop space
+--list 				     list of space host
+--remove 				 remove space

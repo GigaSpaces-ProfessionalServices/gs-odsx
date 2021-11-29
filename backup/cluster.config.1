@@ -1,0 +1,106 @@
+{
+  "cluster": {
+    "name": "cluster-1",
+    "configVersion": "0.95",
+    "timestamp": "2021-05-31 20:16:34",
+    "airGap": "false",
+    "resumeModeAll": "true",
+    "servers": {
+      "resumeMode": "true",
+      "managers": {
+        "node": [
+          {
+            "name": "jay-desktop-1",
+            "ip": "127.0.0.1",
+            "role": "admin",
+            "resumeMode": "true"
+          },
+          {
+            "name": "jay-desktop-2",
+            "ip": "127.0.0.1",
+            "role": "admin",
+            "resumeMode": "true"
+          }
+        ]
+      },
+      "cdc": {
+        "resumeMode": "true",
+        "node": [
+          {
+            "name": "jay-desktop-1",
+            "ip": "127.0.0.1",
+            "role": "admin",
+            "resumeMode": "true"
+          },
+          {
+            "name": "jay-desktop-2",
+            "ip": "127.0.0.1",
+            "role": "admin",
+            "resumeMode": "true"
+          }
+        ]
+      },
+      "nb": {
+        "resumeMode": "true",
+        "node": [
+          {
+            "name": "3.140.195.199",
+            "ip": "3.140.195.199",
+            "role": "admin",
+            "resumeMode": "false"
+          },
+          {
+            "name": "18.116.28.1",
+            "ip": "18.116.28.1",
+            "role": "admin",
+            "resumeMode": "false"
+          }
+        ]
+      },
+      "spaces": {
+        "partitions": {
+          "primary": "1",
+          "backup": "true"
+        },
+        "servers": {
+          "host": [
+            {
+              "name": "jay-desktop-1",
+              "ip": "127.0.0.1",
+              "resumeMode": "true",
+              "gsc": "2"
+            },
+            {
+              "name": "jay-desktop-2",
+              "ip": "127.0.0.1",
+              "resumeMode": "true",
+              "gsc": "2"
+            }
+          ]
+        }
+      }
+    },
+    "streams": [
+      {
+        "id": "CT-259883",
+        "name": "demo-stream-1",
+        "description": "demo stream",
+        "creationDate": "2021-06-11 20:16:34",
+        "serverName": "jay-desktop-1",
+        "serverip": "18.224.54.201",
+        "serverPathOfConfig": "/home/dbsh/cr8/latest_cr8/etc/CR8Config.json.template",
+        "status": "Stopped"
+      },
+      {
+        "id": "CT-631216",
+        "name": "demo-stream-2",
+        "description": "demo stream 2",
+        "creationDate": "2021-06-12 20:16:34",
+        "serverName": "jay-desktop-2",
+        "serverip": "18.116.28.1",
+        "serverPathOfConfig": "/home/dbsh/cr8/latest_cr8/etc/CR8Config.json",
+        "status": "Stopped"
+      }
+    ]
+  }
+}
