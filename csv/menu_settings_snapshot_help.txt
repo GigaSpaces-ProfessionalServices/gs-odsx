@@ -1,0 +1,6 @@
+Usage: python3 odsx.py --settings --snapshot [command] [optional argument]
+
+--list 				 list of snapshots
+--retention 		 Change snapshot retention settings
+--location 			 Change snapshot location settings
+--edit 				 edit snapshots settings

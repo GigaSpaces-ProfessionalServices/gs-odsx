@@ -1,0 +1,6 @@
+Usage: python3 odsx.py --servers --manager [command] [optional argument]
+
+--restore 				 restore manager
+--install 				 install manager
+--stop 					 stop manager
+--remove 				 remove manager

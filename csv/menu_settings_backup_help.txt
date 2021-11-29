@@ -1,0 +1,6 @@
+Usage: python3 odsx.py --settings --backup [command] [optional argument]
+
+--list 				 list of backups
+--retention 		 Change backup retention settings
+--destination 		 Change backup destination settings
+--restore 			 restore backup settings

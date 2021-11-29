@@ -1,0 +1,4 @@
+Usage: python3 odsx.py --settings --snapshot --list [command] [optional argument]
+
+--retentiontime=<value>                 retention time eg 10sec or 10min
+--maxretention=<value> 				 Max no of snapshot retention to keep

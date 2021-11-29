@@ -1,0 +1,5 @@
+Usage: python3 odsx.py --settings --script [command] [optional argument]
+
+--versions 				 Change versions script settings
+--upgrade 				 Change upgrade script settings
+--rollback 				 Change rollback script settings

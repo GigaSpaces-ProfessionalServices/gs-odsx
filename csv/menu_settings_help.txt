@@ -1,0 +1,6 @@
+Usage: python3 odsx.py --settings [command] [optional argument]
+
+--snapshot 				 list snapshot, modify retention, modify location or edit
+--backup 				 list backup, change destination, restore or change retention
+--config 				 Change config settings
+--script 				 Change script settings

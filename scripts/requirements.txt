@@ -1,0 +1,9 @@
+argparse
+colorama
+argcomplete
+pyfiglet
+schedule
+ConfigObj
+pandas
+tabulate
+requests

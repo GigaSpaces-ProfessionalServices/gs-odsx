@@ -1,0 +1,147 @@
+{
+    "Name":"SpaceServerRecoveryFlow",
+    "Scope": {
+        "Servers": [IP Address 1, IP Address 2]
+    },
+    "Setup":{
+        "Action": {
+            "ListenFor": [ "AdminEvent Machine Container"]
+        }
+    },
+    "States": [
+        {
+            "Id": "Initial",
+            "Triggers": [ 
+                {
+                    "Type": "OnContainerCreated",
+                    "Actions":[
+                        {
+                            "Id": "SaveContainerConfiguration",
+                            //Have to determine context read / write mechanism to be able to satisfy our use cases
+                            // Alternate sysntaxes are used in later occurrences.
+                            "UpdateContext": {
+                                "Name": "ContainerConfiguration",
+                                "Value":"$ContainerConfig",
+                                "Context": "$MachineIP" 
+                            }
+                        }
+                    ]
+                },
+                {
+                    "Type": "OnServerDown",
+                    "Actions": [ {
+                        "Id": "Transition",
+                        "WithValue": {
+                            "TargetState": "ServerDown"
+                        },
+                        "UpdateContext": {
+                            "RecoverIpAddress": "Machine.IPAddress"
+                        }
+                    }
+                    ]
+                }
+            ]
+        },
+        {
+            "Id": "ServerDown",
+            "Actions": [
+                //TODO: On machine down, should salvage the current container configuration, so it is ready for next
+                {
+                    //During delay period, if machine comes back, cancel the current course, move state back to wait.
+                    "Id": "Delay",
+                    "WithValue": {
+                        "Delay": 45, 
+                    }
+                },
+                //Check if server up action is there, if there, transit back to wait
+                {
+                    "Id": "FindServer",
+                    "WithValue": {
+                        "Criteria": "Max RAM", 
+                    },
+                    "UpdateContext": {
+                        "FoundIPServer": "Machine.IPAddress"
+                    }                    
+                },
+                {
+                    "Id": "CreateContainer",
+                    "UseContext": {
+                        "TargetMachine":"FoundIPServer",
+                    },
+                    "UpdateContext": {
+                        "ContainerId": "ContainerId"
+                    }                    
+
+                },
+                {
+                    "Id": "Transition",
+                    "WithValue": {
+                        "TargetState": "ContainerRelocated"
+                    }
+                }
+
+            ] 
+        },
+        {
+            "Id": "ContainerRelocated",
+            "Triggers": [ 
+                {
+                    "Type": "OnServerUp",
+                    "Actions":[
+                        {
+                            "Id": "Transition",
+                            "WithValue": {
+                                "TargetState": "ServerUp"
+                            }
+                        }
+                    ],
+                },
+            ]            
+        },
+        {
+            "Id": "ServerUp",
+            "Actions": [
+                {
+                    "Id": "Delay",
+                    "WithValue": {
+                        "Delay": 25, 
+                    }
+                },
+                {
+                    "Id": "DeleteContainer",
+                    "Condition": "ConteinerExists",
+                    "UseContext": [ "ContainerId", "ServerUpIpAddress" ]
+                },
+                {
+                    "Id": "CreateContainer",
+                    "UseContext": {
+                        "TargetMachine":"ServerUpIpAddress"
+                    }
+                },
+                {
+                    "Id": "DemoteContainer",
+                    "UseContext": [ "ContainerId", "FoundIPServer" ]
+                },
+                {
+                    "Id": "Delay",
+                    "WithValue": {
+                        "Delay": 15
+                    }
+                },
+                {
+                    "Id": "DeleteContainer",
+                    "UseContext": [ "ContainerId", "FoundIPServer" ]
+                },                
+                {
+                    "Id": "Transition",
+                    "WithValue": {
+                        "TargetState": "Initial"
+                    },
+                }
+
+            ] 
+         
+        }
+    ]
+}
+

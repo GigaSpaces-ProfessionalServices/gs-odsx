@@ -1,0 +1,4 @@
+serviceName:
+  - influxd
+  - kapacitor
+  - grafana

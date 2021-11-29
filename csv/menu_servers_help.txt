@@ -1,0 +1,6 @@
+Usage: python3 odsx.py --servers [command] [optional argument]
+
+--space 				 space related settings to restore, install, stop or remove
+--manager 				 manager related settings to restore, install, stop or remove
+--cdc 					 cdc related settings to restore, install, stop or remove
+--northbound 			 northbound related settings to restore, install, stop or remove

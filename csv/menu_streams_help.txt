@@ -1,0 +1,10 @@
+Usage: python3 odsx.py --streams [command] [optional argument]
+
+--list                  list Id, Name, Status, Description, Creation Date, ServerIp, Server Json Config path
+--show                  To Show stream details
+--config                Edit stream configurations
+--startfullsync         Start CR8 stream in full sync mode
+--startonline           Start CR8 application and add newly started stream to config streams
+--pauseonline           Stop CR8 application and update status of CR8 application to config streams
+--resumeonline          Start CR8 application and started stream added to config streams
+--remove                Remove streams from config file

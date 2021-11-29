@@ -1,0 +1,10 @@
+Usage: python3 odsx.py [command] [optional argument]
+
+--settings 				 Modify settings related to snapshot, backup, config or script
+--servers 				 Modify settings related to space, manager, cdc or Northbound
+--cdc 					 Modify settings related to cdc
+--northbound 			         Modify settings related to northbound
+--security 				 Modify settings related to security
+--logs 					 Modify settings related to logs
+--objects 				 Modify settings related to objects
+--validators 			         Modify settings related to validators
