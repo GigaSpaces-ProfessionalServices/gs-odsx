@@ -8,6 +8,7 @@ from utils.odsx_print_tabular_data import printTabular
 from colorama import Fore
 import socket, platform, requests
 from utils.ods_validation import getSpaceServerStatus
+from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -78,43 +79,44 @@ def getGSInfo(managerHost):
     print()
 
 def listFileFromDirectory():
-    logger.debug("servers - manager - list")
     logger.info("servers - manager - list")
-    managerNodes = config_get_manager_node()
-    managerHost = getManagerHost(managerNodes)
+    with Spinner():
+        managerNodes = config_get_manager_node()
+        managerHost = getManagerHost(managerNodes)
     logger.info("managerHost : "+str(managerHost))
     try:
-        inputDirectory='backup'
-        if(len(str(managerHost))>0):
-            getGSInfo(managerHost)
-        else:
-            logger.info("Unable to retrive GS Info no manager status ON.")
-            verboseHandle.printConsoleInfo("Unable to retrive GS Info no manager status ON.")
-        logger.debug('Settings - Manager - List -listFileFromDirectory()')
-        headers = [Fore.YELLOW+"Manager Name"+Fore.RESET,
-                   Fore.YELLOW+"IP"+Fore.RESET,
-                   Fore.YELLOW+"Role"+Fore.RESET,
-                   Fore.YELLOW+"Resume Mode"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET]
-        data=[]
-        managerNodes = config_get_manager_node()
-        for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
-            if(status=="ON"):
-                dataArray=[Fore.GREEN+node.name+Fore.RESET,
-                           Fore.GREEN+node.ip+Fore.RESET,
-                           Fore.GREEN+node.role+Fore.RESET,
-                           Fore.GREEN+node.resumeMode+Fore.RESET,
-                           Fore.GREEN+status+Fore.RESET]
+        with Spinner():
+            inputDirectory='backup'
+            if(len(str(managerHost))>0):
+                getGSInfo(managerHost)
             else:
-                dataArray=[Fore.GREEN+node.name+Fore.RESET,
-                           Fore.GREEN+node.ip+Fore.RESET,
-                           Fore.GREEN+node.role+Fore.RESET,
-                           Fore.GREEN+node.resumeMode+Fore.RESET,
-                           Fore.RED+status+Fore.RESET]
-            data.append(dataArray)
+                logger.info("Unable to retrive GS Info no manager status ON.")
+                verboseHandle.printConsoleInfo("Unable to retrive GS Info no manager status ON.")
+            logger.debug('Settings - Manager - List -listFileFromDirectory()')
+            headers = [Fore.YELLOW+"Manager Name"+Fore.RESET,
+                       Fore.YELLOW+"IP"+Fore.RESET,
+                       Fore.YELLOW+"Role"+Fore.RESET,
+                       Fore.YELLOW+"Resume Mode"+Fore.RESET,
+                       Fore.YELLOW+"Status"+Fore.RESET]
+            data=[]
+            managerNodes = config_get_manager_node()
+            for node in managerNodes:
+                status = getSpaceServerStatus(node.ip)
+                if(status=="ON"):
+                    dataArray=[Fore.GREEN+node.name+Fore.RESET,
+                               Fore.GREEN+node.ip+Fore.RESET,
+                               Fore.GREEN+node.role+Fore.RESET,
+                               Fore.GREEN+node.resumeMode+Fore.RESET,
+                               Fore.GREEN+status+Fore.RESET]
+                else:
+                    dataArray=[Fore.GREEN+node.name+Fore.RESET,
+                               Fore.GREEN+node.ip+Fore.RESET,
+                               Fore.GREEN+node.role+Fore.RESET,
+                               Fore.GREEN+node.resumeMode+Fore.RESET,
+                               Fore.RED+status+Fore.RESET]
+                data.append(dataArray)
 
-        printTabular(None,headers,data)
+            printTabular(None,headers,data)
     except Exception as e:
         logger.error("Exception while listing manager"+str(e))
 

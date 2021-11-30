@@ -37,7 +37,7 @@ def myCheckArg(args=None):
                         default='localhost')
     parser.add_argument('-u', '--user',
                         help='user name',
-                        default='root')
+                        default='ec2-user')
     parser.add_argument('-dryrun', '--dryrun',
                         help='Dry run flag',
                         default='false', action='store_true')
@@ -228,9 +228,9 @@ if __name__ == '__main__':
             #args.append('--host')
             #args.append(host)
             #user = readValuefromAppConfig("app.server.user")
-            user = str(input("Enter your user [root]: "))
+            user = str(input("Enter your user [ec2-user]: "))
             if(len(str(user))==0):
-                user="root"
+                user="ec2-user"
             args.append('-u')
             args.append(user)
         hostsConfig = readValuefromAppConfig("app.manager.hosts")

@@ -7,5 +7,5 @@ cd $GS_HOME
 #sudo -s
 #./bin/gs.sh host kill-agent --all
 #systemctl daemon-reload
-systemctl stop gs.service
+sudo systemctl stop gs.service
 

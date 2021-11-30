@@ -52,7 +52,7 @@ def getStatusOfHost(host_nic_dict_obj,server):
 def getStatusOfSpaceHost(serverHost):
     commandToExecute = "ps -ef | grep GSA"
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(serverHost, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(serverHost, 'ec2-user', commandToExecute)
     if(str(output).__contains__('services=GSA')):
         return "ON"
     else:
@@ -61,13 +61,13 @@ def getStatusOfSpaceHost(serverHost):
 
 def getStatusOfNBHost(server):
     if(str(server.role).__contains__('agent')):
-        cmd = "systemctl status consul.service"
+        cmd = "sudo systemctl status consul.service"
     if(str(server.role).__contains__('applicative')):
-        cmd = 'systemctl status northbound.target'
+        cmd = 'sudo systemctl status northbound.target'
     if(server.role =='management'):
-        cmd = 'systemctl status northbound.target'
+        cmd = 'sudo systemctl status northbound.target'
     logger.info("Getting status.. :"+str(cmd))
-    user = 'root'
+    user = 'ec2-user'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
     logger.info(cmd+" :"+str(output))
@@ -103,8 +103,8 @@ def listAllServers():
     spaceServers = config_get_space_hosts()
     host_dict_obj = host_dictionary()
     for server in spaceServers:
-        cmd = 'systemctl is-active gs.service'
-        user='root'
+        cmd = 'sudo systemctl is-active gs.service'
+        user='ec2-user'
         output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
         logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
         host_dict_obj.add(server.ip,str(output))

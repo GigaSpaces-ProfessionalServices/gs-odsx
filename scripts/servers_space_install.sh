@@ -132,13 +132,13 @@ function installAirGapJava {
     echo "Installation File :"$installation_file
     if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ]  || [[ "$osType" ==  *"Linux"*  ]]; then
       echo $installation_path"/"$installation_file
-	     rpm -ivh $installation_path"/"$installation_file
+	     sudo rpm -ivh $installation_path"/"$installation_file
 	     java_home_path="export JAVA_HOME='$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")'"
 	     echo "">>setenv.sh
 	     echo "$java_home_path">>setenv.sh
 	    echo "installAirGapJava -Done!"
 	  elif [ "$osType" == "ubuntu" ]; then
-       dpkg -i $installation_path"/"$installation_file
+       sudo dpkg -i $installation_path"/"$installation_file
       java_home_folder=$(ls /usr/lib/jvm/)
       java_home=$java_home_folder
       java_home_path="export JAVA_HOME=/usr/lib/jvm/$java_home"
@@ -158,9 +158,9 @@ function installAirGapUnzip {
    installation_path=$home_dir/install/unzip
    installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
    if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [[ "$osType" ==  *"Linux"*  ]]; then
-      rpm -ivh $installation_path"/"$installation_file
+      sudo rpm -ivh $installation_path"/"$installation_file
    elif [ "$osType" == "ubuntu"  ]; then
-      dpkg -i $installation_path"/"$installation_file
+      sudo dpkg -i $installation_path"/"$installation_file
    fi
    echo "Installation zip -Done!"
 }
@@ -168,19 +168,21 @@ function installAirGapGS {
    targetDir=$1
    #Creating target Directory to install Gigaspaces
    echo "TargetDir:"$targetDir
+   sudo -s
    cd
    cd /
    dir=$targetDir
    workDir="dbagigawork"
    logDir="dbagigalogs"
+   sudo -s
    cd
    #sudo -s
    targetConfigDir="$targetDir/gs_config/"
    if [ ! -d "$dir" ]; then
-     mkdir /$dir
-     chmod 777 /$dir
-     mkdir $targetConfigDir
-     chmod 777 $targetConfigDir
+     sudo -u 'root' -H sh -c "cd /;mkdir /$dir"
+     sudo chmod 777 /$dir
+     sudo -u 'root' -H sh -c "cd /;mkdir $targetConfigDir"
+     sudo chmod 777 $targetConfigDir
        : '
        sudo -u 'root' -H sh -c "mkdir /$dir"
        sudo chmod 777 $dir
@@ -190,14 +192,14 @@ function installAirGapGS {
        '
    fi
    if [ ! -d "$targetConfigDir" ]; then
-     chmod 777 /$dir
-     mkdir $targetConfigDir
+     sudo chmod 777 /$dir
+     sudo -u 'root' -H sh -c "cd /;mkdir $targetConfigDir"
      echo "Not Exit created"
-     chmod 777 $targetConfigDir
+     sudo chmod 777 $targetConfigDir
    fi
    if [ ! -d "/$logDir" ]; then
-     mkdir /$logDir
-     chmod 777 /$logDir
+     sudo -u 'root' -H sh -c "cd /;mkdir /$logDir"
+     sudo chmod 777 /$logDir
        : '
        sudo -u 'root' -H sh -c "mkdir /$logDir"
        sudo chmod 777 $logDir
@@ -205,8 +207,8 @@ function installAirGapGS {
        '
    fi
    if [ ! -d "/$workDir" ]; then
-     mkdir /$workDir
-     chmod 777 /$workDir
+     sudo -u 'root' -H sh -c "cd /;mkdir /$workDir"
+     sudo chmod 777 /$workDir
        : '
        sudo -u 'root' -H sh -c "mkdir /$workDir"
        sudo chmod 777 $workDir
@@ -239,19 +241,19 @@ function installAirGapGS {
    echo "extracted_folder: "$extracted_folder
 
    #sudo -u 'root' -H sh -c "sed -i '/export GS_LICENSE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
-   sed -i '/export GS_LICENSE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sudo -u 'root' -H sh -c "sed -i '/export GS_LICENSE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
    #sudo -u 'root' -H sh -c "sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
-   sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sudo -u 'root' -H sh -c "sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
    #sudo -u 'root' -H sh -c "sed -i '/export GS_LOGS_CONFIG_FILE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
-   sed -i '/export GS_LOGS_CONFIG_FILE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sudo -u 'root' -H sh -c "sed -i '/export GS_LOGS_CONFIG_FILE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
    #sudo -u 'root' -H sh -c "sed -i '/export GS_MANAGER_OPTIONS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
-   sed -i '/export GS_MANAGER_OPTIONS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sudo -u 'root' -H sh -c "sed -i '/export GS_MANAGER_OPTIONS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
    #sudo -u 'root' -H sh -c "sed -i '/export GS_OPTIONS_EXT/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
-   sed -i '/export GS_OPTIONS_EXT/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sudo -u 'root' -H sh -c "sed -i '/export GS_OPTIONS_EXT/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
    if [  "$gsNicAddress" != "" ]; then
       echo "PRESENT"
       #sudo -u 'root' -H sh -c "sed -i '/export GS_NIC_ADDRESS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
-      sed -i '/export GS_NIC_ADDRESS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+      sudo -u 'root' -H sh -c "sed -i '/export GS_NIC_ADDRESS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
    fi
 
    #echo "license"$license
@@ -302,24 +304,24 @@ function installAirGapGS {
    cd
    # Moving the required files to other folder
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir"
-   sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
+   sudo -u 'root' -H sh -c "sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties"
    cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir"
    if [ ! -f "$targetConfigDir/metrics.xml" ]; then                #Condition added on 20Oct21 if file exist dont override it
     echo "File $targetConfigDir/metrics.xml not exist so copying"
-    cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
+    sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir"
    fi
 
    limitContent="$applicativeUser hard nofile "$nofileLimitFile
    limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
 
-   sed -i '/hard nofile/d' /etc/security/limits.conf
-   sed -i '/soft nofile/d' /etc/security/limits.conf
+   sudo -u 'root' -H sh -c "sed -i '/hard nofile/d' /etc/security/limits.conf"
+   sudo -u 'root' -H sh -c "sed -i '/soft nofile/d' /etc/security/limits.conf"
 
-   echo "LimitContent : "$limitContent
-   echo "">>/etc/security/limits.conf
-   echo $limitContent>>/etc/security/limits.conf
-   echo $limitContentSoft>>/etc/security/limits.conf
+   sudo -u 'root' -H sh -c "echo 'LimitContent : '$limitContent"
+   sudo -u 'root' -H sh -c "echo ''>>/etc/security/limits.conf"
+   sudo -u 'root' -H sh -c "echo $limitContent>>/etc/security/limits.conf"
+   sudo -u 'root' -H sh -c "echo $limitContentSoft>>/etc/security/limits.conf"
 
    echo "Installation & configuration Gigaspace  -Done!"
 }
@@ -332,7 +334,7 @@ function loadEnv {
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*
+  sudo -u 'root' -H sh -c "chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*"
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
   start_gs_file="start_gs.sh"
@@ -351,23 +353,23 @@ function gsCreateGSServeice {
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
   echo "$cmd">>$stop_gs_file
 
-  mv $home_dir_sh/st*_gs.sh /tmp
-  mv $home_dir_sh/$gs_service_file /tmp
-  mv /tmp/st*_gs.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_gs.sh
-  mv /tmp/gs.service /etc/systemd/system/
+  sudo mv $home_dir_sh/st*_gs.sh /tmp
+  sudo mv $home_dir_sh/$gs_service_file /tmp
+  sudo mv /tmp/st*_gs.sh /usr/local/bin/
+  sudo chmod +x /usr/local/bin/st*_gs.sh
+  sudo mv /tmp/gs.service /etc/systemd/system/
 
   #======================================
   #mkdir $GS_HOME/tools/gs-webui/work
   #chmod 777 -R $GS_HOME/tools/gs-webui/work
-  chmod 777 -R $GS_HOME/logs/
-  chmod 777 -R $GS_HOME/deploy/
-  chmod 777 -R $GS_HOME/deploy/*
-  chmod 777 -R $GS_HOME/tools/gs-webui/*
-  chmod -R +x /dbagiga
+  sudo chmod 777 -R $GS_HOME/logs/
+  sudo chmod 777 -R $GS_HOME/deploy/
+  sudo chmod 777 -R $GS_HOME/deploy/*
+  sudo chmod 777 -R $GS_HOME/tools/gs-webui/*
+  sudo chmod -R +x /dbagiga
 
-  systemctl daemon-reload
-  systemctl enable gs.service
+  sudo systemctl daemon-reload
+  sudo systemctl enable gs.service
   : '
   sudo systemctl daemon-reload
   sudo systemctl start gs.service

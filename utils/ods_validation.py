@@ -53,6 +53,7 @@ def getSpaceServerStatus(host):
 
 def port_check_config(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+    s.settimeout(1)
     try:
         s.connect((host, int(port)))
         s.shutdown(1)

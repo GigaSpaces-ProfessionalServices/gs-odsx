@@ -6,5 +6,5 @@ installation_path=$home_dir/install/grafana
 echo "InstallationPath="$installation_path
 installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
 echo "InstallationFile:"$installation_file
-yum install -y $installation_path/$installation_file
+sudo yum install -y $installation_path/$installation_file
 sleep 5

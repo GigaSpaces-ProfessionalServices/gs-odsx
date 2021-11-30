@@ -9,7 +9,7 @@ from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_add_grafana_node
-from utils.ods_app_config import set_value_in_property_file
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -30,9 +30,11 @@ def installUserAndTargetDirectory():
         while(len(str(host))==0):
             host = str(input(Fore.YELLOW+"Enter host to install Grafana: "+Fore.RESET))
         logger.info("Enter host to install Grafana: "+str(host))
-        user = str(input(Fore.YELLOW+"Enter user to connect Grafana servers [root]:"+Fore.RESET))
-        if(len(str(user))==0):
-            user="root"
+        user = str(readValuefromAppConfig("app.server.user")).replace('"','')
+        userinput = str(input(Fore.YELLOW+"Enter user to connect Grafana servers ["+user+"]:"+Fore.RESET))
+        while(len(str(userinput))==0 and len(user)==0):
+            userinput = str(input(Fore.YELLOW+"Enter user to connect Grafana servers ["+user+"]:"+Fore.RESET))
+        user=userinput
         logger.info(" user: "+str(user))
 
     except Exception as e:

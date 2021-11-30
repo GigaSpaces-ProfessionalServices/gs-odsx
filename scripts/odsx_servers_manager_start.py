@@ -27,7 +27,7 @@ def myCheckArg(args=None):
                         default='localhost')
     parser.add_argument('-u', '--user',
                         help='user name',
-                        default='root')
+                        default='ec2-user')
     parser.add_argument('-dryrun', '--dryrun',
                         help='Dry run flag',
                         default='false', action='store_true')
@@ -124,7 +124,7 @@ if __name__ == '__main__':
                     #user = str(input("Enter your user ["+userConfig+"]: "))
                     #if(len(str(user))==0):
                     #    user=userConfig
-                    user='root'
+                    user='ec2-user'
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"
@@ -149,7 +149,7 @@ if __name__ == '__main__':
                     #user = str(input("Enter your user ["+userConfig+"]: "))
                     #if(len(str(user))==0):
                     #    user=userConfig
-                    user='root'
+                    user='ec2-user'
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"

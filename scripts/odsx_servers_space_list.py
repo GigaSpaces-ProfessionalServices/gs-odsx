@@ -94,7 +94,7 @@ def getStatusOfHost(host_nic_dict_obj,server):
 def getStatusOfSpaceHost(server):
     commandToExecute = "ps -ef | grep GSA"
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(server, 'ec2-user', commandToExecute)
     if(str(output).__contains__('services=GSA')):
         logger.info("services=GSA")
         return "ON"
@@ -106,7 +106,7 @@ def getVersion(ip):
     logger.info("getVersion() ip :"+str(ip))
     cmdToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh version"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
+    output = executeRemoteCommandAndGetOutput(ip,"ec2-user",cmdToExecute)
     output=str(output).replace('\n','')
     logger.info("output : "+str(output))
     return output

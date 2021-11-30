@@ -24,7 +24,7 @@ def myCheckArg(args=None):
                         default='localhost')
     parser.add_argument('-u', '--user',
                         help='user name',
-                        default='root')
+                        default='ec2-user')
     parser.add_argument('-dryrun', '--dryrun',
                         help='Dry run flag',
                         default='false', action='store_true')
@@ -59,7 +59,7 @@ if __name__ == '__main__':
         #if(len(str(user))==0):
         #    user="root"
         #logger.info("user :"+str(user))
-        user='root'
+        user='ec2-user'
         streamDict = config_get_space_list_with_status(user)
         serverStartType = str(input(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStartType:"+str(serverStartType))

@@ -18,4 +18,6 @@ echo "$path">>.bashrc
 setsebool -P httpd_read_user_content 1
 chcon -Rt httpd_sys_rw_content_t /dbagigalogs/nginx/
 
+chmod 755 /etc/ssl/*
+
 echo "Setting NB_HOME -Done!"

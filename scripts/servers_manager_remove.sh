@@ -1,21 +1,21 @@
 echo "Removing Server - Manager"
 homeDir=$(pwd)
 source setenv.sh
-#sudo su
-yum -y remove java*
-yum -y remove jdk*
+sudo su
+sudo yum -y remove java*
+sudo yum -y remove jdk*
 echo "Java Remove -Done!"
-yum -y remove unzip
+sudo yum -y remove unzip
 echo "unzip Remove -Done!"
-yum -y remove wget
+sudo yum -y remove wget
 echo "wget Remove -Done!"
 #rm -r install/*.zip
 source setenv.sh
-systemctl stop gs.service
+sudo systemctl stop gs.service
 sleep 5
-rm -rf $GS_HOME
-rm -rf setenv.sh gs install install.tar /dbagiga/giga*  /dbagigalogs/* /dbagigawork/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service
-sed -i '/hard nofile/d' /etc/security/limits.conf
-sed -i '/soft nofile/d' /etc/security/limits.conf
+sudo rm -rf $GS_HOME
+sudo rm -rf setenv.sh gs install install.tar /dbagiga/giga*  /dbagigalogs/* /dbagigawork/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service
+sudo -u 'root' -H sh -c "sed -i '/hard nofile/d' /etc/security/limits.conf"
+sudo -u 'root' -H sh -c "sed -i '/soft nofile/d' /etc/security/limits.conf"
 echo "GS Remove -Done!"
 
