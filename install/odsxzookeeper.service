@@ -1,0 +1,14 @@
+[Unit]
+Description="Zookeeper Service"
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/bin/bash /usr/local/bin/start_zookeeper.sh
+ExecStop=/bin/bash /usr/local/bin/stop_zookeeper.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -6,7 +6,7 @@ from utils.ods_cluster_config import config_get_manager_node
 from colorama import Fore
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_space_hosts,config_get_nb_list,config_get_grafana_list,config_get_influxdb_node
+from utils.ods_cluster_config import config_get_space_hosts,config_get_nb_list,config_get_grafana_list,config_get_influxdb_node, config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput
 from utils.ods_validation import getTelnetStatus
 from scripts.spinner import Spinner
@@ -76,7 +76,25 @@ def getStatusOfNBHost(server):
     else:
         return "OFF"
 
+def getConsolidatedStatus(node):
+    output=''
+    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status odsxcr8", "systemctl status telegraf"]
+    for cmd in cmdList:
+        logger.info("cmd :"+str(cmd))
+        logger.info("Getting status.. :"+str(cmd))
+        user = 'root'
+        with Spinner():
+            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            logger.info("output1 : "+str(output))
+            if(output!=0):
+                #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
+                logger.info(" Service :"+str(cmd)+" not started.")
+                return output
+    return output
+
 def listAllServers():
+    logger.info("Manager server list :")
     headers = [Fore.YELLOW+"Sr No"+Fore.RESET,
                Fore.YELLOW+"Type of host"+Fore.RESET,
                Fore.YELLOW+"IP"+Fore.RESET,
@@ -99,7 +117,7 @@ def listAllServers():
                        Fore.GREEN+node.ip+Fore.RESET,
                        Fore.RED+status+Fore.RESET]
         data.append(dataArray)
-
+    logger.info("Space server list.")
     spaceServers = config_get_space_hosts()
     host_dict_obj = host_dictionary()
     for server in spaceServers:
@@ -130,6 +148,7 @@ def listAllServers():
                        ]
         data.append(dataArray)
     #cdcServers = config_cdc_list()
+    logger.info("NB servers list")
     nbServers = config_get_nb_list()
     for server in nbServers:
         count = count+1
@@ -146,6 +165,7 @@ def listAllServers():
                        Fore.GREEN+"OFF"+Fore.RESET]
         data.append(dataArray)
 
+    logger.info("Grafana server list.")
     grafanaServers = config_get_grafana_list()
     for server in grafanaServers:
         count = count+1
@@ -162,6 +182,7 @@ def listAllServers():
                        Fore.RED+status+Fore.RESET]
         data.append(dataArray)
 
+    logger.info("Influxdb servers list")
     influxdbServers = config_get_influxdb_node()
     for server in influxdbServers:
         status = getTelnetStatus(server.ip,8086)
@@ -177,7 +198,38 @@ def listAllServers():
                        Fore.RED+status+Fore.RESET]
         data.append(dataArray)
 
-
+    logger.info("DI servers list")
+    dIServers = config_get_dataIntegration_nodes()
+    headers = [Fore.YELLOW+"Sr Num"+Fore.RESET,
+               Fore.YELLOW+"Name"+Fore.RESET,
+               Fore.YELLOW+"Type"+Fore.RESET,
+               Fore.YELLOW+"Resume Mode"+Fore.RESET,
+               Fore.YELLOW+"Role"+Fore.RESET,
+               Fore.YELLOW+"Status"+Fore.RESET,
+               Fore.YELLOW+"DIRole"+Fore.RESET]
+    data=[]
+    counter=1
+    for node in dIServers:
+        host_dict_obj.add(str(counter),str(node.ip))
+        output = getConsolidatedStatus(node)
+        if(output==0):
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       Fore.GREEN+node.resumeMode+Fore.RESET,
+                       Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.GREEN+""+Fore.RESET]
+        else:
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       Fore.GREEN+node.resumeMode+Fore.RESET,
+                       Fore.GREEN+node.role+Fore.RESET,
+                       Fore.RED+"OFF"+Fore.RESET,
+                       Fore.GREEN+""+Fore.RESET]
+        data.append(dataArray)
+        counter=counter+1
     printTabular(None,headers,data)
 
 if __name__ == '__main__':
