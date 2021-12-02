@@ -34,6 +34,14 @@ def handleException(e):
         'trace': trace
     })))
 
+class obj_type_dictionary(dict):
+    # __init__ function
+    def __init__(self):
+        self = dict()
+    # Function to add key:value
+    def add(self, key, value):
+        self[key] = value
+
 class bcolors:
     OK = '\033[92m'  # GREEN
     WARNING = '\033[93m'  # YELLOW
@@ -48,37 +56,61 @@ def myCheckArg(args=None):
                         default='false', action='store_true')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
-def listDIServers():
-    logger.info("listDIServers()")
-    dIServers = config_get_dataIntegration_nodes()
-    headers = [Fore.YELLOW+"Name"+Fore.RESET,
-               Fore.YELLOW+"Type"+Fore.RESET,
-               Fore.YELLOW+"Resume Mode"+Fore.RESET,
-               Fore.YELLOW+"Role"+Fore.RESET,
-               Fore.YELLOW+"Status"+Fore.RESET]
-    data=[]
-    for node in dIServers:
-        cmd = "systemctl status odsxkafka.service"
+
+def getConsolidatedStatus(node):
+    output=''
+    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status odsxcr8", "systemctl status telegraf"]
+    for cmd in cmdList:
+        logger.info("cmd :"+str(cmd))
         logger.info("Getting status.. :"+str(cmd))
         user = 'root'
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-            logger.info(str(output))
-        if(output==0):
-            dataArray=[Fore.GREEN+node.name+Fore.RESET,
-                       Fore.GREEN+node.type+Fore.RESET,
-                       Fore.GREEN+node.resumeMode+Fore.RESET,
-                       Fore.GREEN+node.role+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET]
-        else:
-            dataArray=[Fore.GREEN+node.name+Fore.RESET,
-                       Fore.GREEN+node.type+Fore.RESET,
-                       Fore.GREEN+node.resumeMode+Fore.RESET,
-                       Fore.GREEN+node.role+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET]
-        data.append(dataArray)
+            logger.info("output1 : "+str(output))
+            if(output!=0):
+                #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
+                logger.info(" Service :"+str(cmd)+" not started.")
+                return output
+    return output
 
+
+def listDIServers():
+    logger.info("listDIServers()")
+    host_dict_obj = obj_type_dictionary()
+    dIServers = config_get_dataIntegration_nodes()
+    headers = [Fore.YELLOW+"Sr Num"+Fore.RESET,
+               Fore.YELLOW+"Name"+Fore.RESET,
+               Fore.YELLOW+"Type"+Fore.RESET,
+               Fore.YELLOW+"Resume Mode"+Fore.RESET,
+               Fore.YELLOW+"Role"+Fore.RESET,
+               Fore.YELLOW+"Status"+Fore.RESET,
+               Fore.YELLOW+"DIRole"+Fore.RESET]
+    data=[]
+    counter=1
+    for node in dIServers:
+        host_dict_obj.add(str(counter),str(node.ip))
+        output = getConsolidatedStatus(node)
+        if(output==0):
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       Fore.GREEN+node.resumeMode+Fore.RESET,
+                       Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.GREEN+""+Fore.RESET]
+        else:
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       Fore.GREEN+node.resumeMode+Fore.RESET,
+                       Fore.GREEN+node.role+Fore.RESET,
+                       Fore.RED+"OFF"+Fore.RESET,
+                       Fore.GREEN+""+Fore.RESET]
+        data.append(dataArray)
+        counter=counter+1
     printTabular(None,headers,data)
+    return host_dict_obj
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> DI -> List')

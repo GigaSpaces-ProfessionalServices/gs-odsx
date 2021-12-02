@@ -8,6 +8,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from scripts.spinner import Spinner
 from colorama import Fore
+from scripts.odsx_servers_di_list import listDIServers
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -59,20 +60,51 @@ def getDIServerHostList():
 
 def startKafkaService(args):
     try:
+        listDIServers()
         nodes = getDIServerHostList()
         choice = str(input(Fore.YELLOW+"Are you sure, you want to stop kafka service for ["+str(nodes)+"]? (y/n)"+Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataIntegration_nodes():
-            cmd = "systemctl stop odsxkafka.service"
+            cmd = "systemctl stop odsxkafka.service; sleep 5;"
             logger.info("Getting status.. :"+str(cmd))
             user = 'root'
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                 if (output == 0):
-                    verboseHandle.printConsoleInfo("Service stopped successfully ib on node "+str(node.ip))
+                    verboseHandle.printConsoleInfo("Service kafka stopped successfully on node "+str(node.ip))
                 else:
-                    verboseHandle.printConsoleError("Service failed to stop.")
+                    verboseHandle.printConsoleError("Service kafka failed to stop.")
+        for node in config_get_dataIntegration_nodes():
+            cmd = "systemctl stop odsxzookeeper.service; sleep 5;"
+            logger.info("Getting status.. :"+str(cmd))
+            user = 'root'
+            with Spinner():
+                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                if (output == 0):
+                    verboseHandle.printConsoleInfo("Service zookeeper stopped successfully on node "+str(node.ip))
+                else:
+                    verboseHandle.printConsoleError("Service zookeeper failed to stop.")
+        for node in config_get_dataIntegration_nodes():
+            cmd = "systemctl stop odsxcr8.service; sleep 5;"
+            logger.info("Getting status odsxcr8.. :"+str(cmd))
+            user = 'root'
+            with Spinner():
+                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                if (output == 0):
+                    verboseHandle.printConsoleInfo("Service CR8 stopped successfully on node "+str(node.ip))
+                else:
+                    verboseHandle.printConsoleError("Service CR8 failed to stop.")
+        for node in config_get_dataIntegration_nodes():
+            cmd = "systemctl stop telegraf"
+            logger.info("Getting status.. telegraf :"+str(cmd))
+            user = 'root'
+            with Spinner():
+                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                if (output == 0):
+                    verboseHandle.printConsoleInfo("Service telegraf stopped successfully on "+str(node.ip))
+                else:
+                    verboseHandle.printConsoleError("Service telegraf failed to stop")
     except Exception as e:
         handleException(e)
 

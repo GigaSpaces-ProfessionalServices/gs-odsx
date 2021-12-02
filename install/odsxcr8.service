@@ -1,0 +1,14 @@
+[Unit]
+Description="CR8 Service"
+After=network.target
+
+[Service]
+Type=simple
+User=dbsh
+Group=dbsh
+ExecStart=/bin/bash /home/dbsh/cr8/latest_cr8/utils/CR8_ctl.sh start
+ExecStop=/bin/bash /home/dbsh/cr8/latest_cr8/utils/CR8_ctl.sh stop
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
