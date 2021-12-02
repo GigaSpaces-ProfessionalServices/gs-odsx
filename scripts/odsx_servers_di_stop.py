@@ -89,12 +89,13 @@ def startKafkaService(args):
             cmd = "systemctl stop odsxcr8.service; sleep 5;"
             logger.info("Getting status odsxcr8.. :"+str(cmd))
             user = 'root'
-            with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-                if (output == 0):
-                    verboseHandle.printConsoleInfo("Service CR8 stopped successfully on node "+str(node.ip))
-                else:
-                    verboseHandle.printConsoleError("Service CR8 failed to stop.")
+            if(str(node.type)!='Witness'):
+                with Spinner():
+                    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    if (output == 0):
+                        verboseHandle.printConsoleInfo("Service CR8 stopped successfully on node "+str(node.ip))
+                    else:
+                        verboseHandle.printConsoleError("Service CR8 failed to stop.")
         for node in config_get_dataIntegration_nodes():
             cmd = "systemctl stop telegraf"
             logger.info("Getting status.. telegraf :"+str(cmd))

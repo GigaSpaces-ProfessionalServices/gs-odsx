@@ -62,16 +62,19 @@ def getConsolidatedStatus(node):
     logger.info("getConsolidatedStatus() : "+str(node.ip))
     cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status odsxcr8", "systemctl status telegraf"]
     for cmd in cmdList:
-        logger.info("cmd :"+str(cmd))
-        logger.info("Getting status.. :"+str(cmd))
-        user = 'root'
-        with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-            logger.info("output1 : "+str(output))
-            if(output!=0):
-                #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :"+str(cmd)+" not started.")
-                return output
+        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
+        if(str(node.type)=='Witness' and cmd=='systemctl status odsxcr8'):
+            output=0
+        else:
+            logger.info("Getting status.. :"+str(cmd))
+            user = 'root'
+            with Spinner():
+                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                logger.info("output1 : "+str(output))
+                if(output!=0):
+                    #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
+                    logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+                    return output
     return output
 
 
