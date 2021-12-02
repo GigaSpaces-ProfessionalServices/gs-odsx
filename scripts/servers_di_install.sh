@@ -128,5 +128,5 @@ echo "InstallationPath :"$installation_path
 installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
 echo "Installation File :"$installation_file
 echo $installation_path"/"$installation_file
-rpm -ivh -y $installation_path"/"$installation_file
+yum install -y $installation_path"/"$installation_file
 
