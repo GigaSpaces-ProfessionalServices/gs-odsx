@@ -185,6 +185,7 @@ def listAllServers():
     logger.info("Influxdb servers list")
     influxdbServers = config_get_influxdb_node()
     for server in influxdbServers:
+        count=count+1
         status = getTelnetStatus(server.ip,8086)
         if(status=='ON'):
             dataArray=[Fore.GREEN+str(count)+Fore.RESET,
@@ -200,34 +201,21 @@ def listAllServers():
 
     logger.info("DI servers list")
     dIServers = config_get_dataIntegration_nodes()
-    headers = [Fore.YELLOW+"Sr Num"+Fore.RESET,
-               Fore.YELLOW+"Name"+Fore.RESET,
-               Fore.YELLOW+"Type"+Fore.RESET,
-               Fore.YELLOW+"Resume Mode"+Fore.RESET,
-               Fore.YELLOW+"Role"+Fore.RESET,
-               Fore.YELLOW+"Status"+Fore.RESET,
-               Fore.YELLOW+"DIRole"+Fore.RESET]
-    data=[]
     counter=1
     for node in dIServers:
+        count=count+1
         host_dict_obj.add(str(counter),str(node.ip))
         output = getConsolidatedStatus(node)
         if(output==0):
-            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                       Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
-                       Fore.GREEN+node.type+Fore.RESET,
-                       Fore.GREEN+node.resumeMode+Fore.RESET,
-                       Fore.GREEN+node.role+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET,
-                       Fore.GREEN+""+Fore.RESET]
+                       Fore.GREEN+"ON"+Fore.RESET]
         else:
-            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                       Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
-                       Fore.GREEN+node.type+Fore.RESET,
-                       Fore.GREEN+node.resumeMode+Fore.RESET,
-                       Fore.GREEN+node.role+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET,
-                       Fore.GREEN+""+Fore.RESET]
+                       Fore.RED+"OFF"+Fore.RESET]
         data.append(dataArray)
         counter=counter+1
     printTabular(None,headers,data)
