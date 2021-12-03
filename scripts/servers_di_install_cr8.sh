@@ -159,3 +159,5 @@ cr8_service_file="odsxcr8.service"
 
 mv $home_dir/install/$cr8_service_file /tmp
 sudo mv -f /tmp/$cr8_service_file /etc/systemd/system/
+
+sed -i '/java_env/d' ~/.bashrc

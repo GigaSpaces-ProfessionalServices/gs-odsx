@@ -80,9 +80,9 @@ def getConsolidatedStatus(node):
 def roleOfCurrentNode(ip):
     logger.info("isCurrentNodeLeaderNode(ip) "+str(ip))
     cmd = "echo srvr | nc "+ip+" 2181"
-    print(cmd)
+    #print(cmd)
     output = subprocess.getoutput(cmd)
-    print(output)
+    #print(output)
     logger.info("output "+str(output))
     if(str(output).__contains__('Mode: leader')):
         return "Primary"
