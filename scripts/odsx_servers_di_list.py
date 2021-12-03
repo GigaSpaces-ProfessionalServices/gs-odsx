@@ -1,5 +1,5 @@
 
-import argparse
+import argparse, subprocess
 import os
 import sys
 from utils.odsx_print_tabular_data import printTabular
@@ -77,6 +77,19 @@ def getConsolidatedStatus(node):
                     return output
     return output
 
+def roleOfCurrentNode(ip):
+    logger.info("isCurrentNodeLeaderNode(ip) "+str(ip))
+    cmd = "echo srvr | nc "+ip+" 2181"
+    print(cmd)
+    output = subprocess.getoutput(cmd)
+    print(output)
+    logger.info("output "+str(output))
+    if(str(output).__contains__('Mode: leader')):
+        return "Primary"
+    elif(str(output).__contains__('Mode: follower')):
+        return "Secondary"
+    else:
+        return "None"
 
 def listDIServers():
     logger.info("listDIServers()")
@@ -94,6 +107,7 @@ def listDIServers():
     for node in dIServers:
         host_dict_obj.add(str(counter),str(node.ip))
         output = getConsolidatedStatus(node)
+        role = roleOfCurrentNode(node.ip)
         if(output==0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
@@ -101,7 +115,7 @@ def listDIServers():
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
                        Fore.GREEN+"ON"+Fore.RESET,
-                       Fore.GREEN+""+Fore.RESET]
+                       Fore.GREEN+str(role)+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
@@ -109,7 +123,7 @@ def listDIServers():
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
                        Fore.RED+"OFF"+Fore.RESET,
-                       Fore.GREEN+""+Fore.RESET]
+                       Fore.GREEN+str(role)+Fore.RESET]
         data.append(dataArray)
         counter=counter+1
     printTabular(None,headers,data)
