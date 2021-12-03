@@ -86,7 +86,7 @@ def startKafkaService(args):
                     verboseHandle.printConsoleError("Service kafka failed to start")
         #odsxcr8.service
         for node in config_get_dataIntegration_nodes():
-            cmd = "rm -rf /tmp/kafka-logs/*;sleep 5; systemctl start odsxcr8.service"
+            cmd = "sleep 5; systemctl start odsxcr8.service"
             logger.info("Getting status.. odsxcr8 :"+str(cmd))
             user = 'root'
             if(str(node.type)!='Witness'):
