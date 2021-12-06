@@ -113,16 +113,16 @@ def getVersion(ip):
 
 def listSpaceServer():
     try:
-        logger.debug("listing space server")
+        logger.debug("listing space server with version")
         logger.info("listSpaceServer()")
         spaceServers = config_get_space_hosts()
-        verboseHandle.printConsoleWarning("Servers -> Space -> List\n")
+        verboseHandle.printConsoleWarning("Servers -> Space -> ListWithVersion\n")
         headers = [Fore.YELLOW+"IP"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
                    Fore.YELLOW+"Resume Mode"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
-                   #Fore.YELLOW+"Version"+Fore.RESET
+                   Fore.YELLOW+"Status"+Fore.RESET,
+                   Fore.YELLOW+"Version"+Fore.RESET
                    ]
         data=[]
         userConfig = readValuefromAppConfig("app.server.user")
@@ -152,22 +152,22 @@ def listSpaceServer():
             logger.info("Host:"+str(server.name))
             gsc = host_gsc_dict_obj.get(str(server.name))
             logger.info("GSC : "+str(gsc))
-            #version = getVersion(server.ip)
+            version = getVersion(server.ip)
             if(status=="ON"):
                 dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                            Fore.GREEN+server.name+Fore.RESET,
                            Fore.GREEN+str(gsc)+Fore.RESET,
                            Fore.GREEN+server.resumeMode+Fore.RESET,
-                           Fore.GREEN+str(status)+Fore.RESET
-                           #Fore.GREEN+str(version)+Fore.RESET
+                           Fore.GREEN+str(status)+Fore.RESET,
+                           Fore.GREEN+str(version)+Fore.RESET
                            ]
             else:
                 dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                            Fore.GREEN+server.name+Fore.RESET,
                            Fore.GREEN+str(gsc)+Fore.RESET,
                            Fore.GREEN+server.resumeMode+Fore.RESET,
-                           Fore.RED+str(status)+Fore.RESET
-                           #Fore.GREEN+str(version)+Fore.RESET
+                           Fore.RED+str(status)+Fore.RESET,
+                           Fore.GREEN+str(version)+Fore.RESET
                            ]
             data.append(dataArray)
 
