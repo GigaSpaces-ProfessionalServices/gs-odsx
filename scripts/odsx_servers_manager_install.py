@@ -45,258 +45,319 @@ def myCheckArg(args=None):
                         default='false', action='store_true')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def getHostConfiguration():
-    hostsConfig=""
-    hostConfigArray=[]
-    hostConfiguration=""
-    wantNicAddress=""
-    hostsConfig = readValuefromAppConfig("app.manager.hosts")
-    logger.info("hostsConfig : "+str(hostsConfig))
-    hostConfigArray=hostsConfig.replace('"','').split(",")
+    logger.info("getHostConfiguration()")
+    try:
+        hostsConfig=""
+        hostConfigArray=[]
+        hostConfiguration=""
+        wantNicAddress=""
+        hostsConfig = readValuefromAppConfig("app.manager.hosts")
+        logger.info("hostsConfig : "+str(hostsConfig))
+        hostConfigArray=hostsConfig.replace('"','').split(",")
 
-    applicativeUserFile = readValuefromAppConfig("app.server.user")
-    applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
-    if(len(str(applicativeUser))==0):
-        applicativeUser = str(applicativeUserFile)
-    logger.info("Applicative user : "+str(applicativeUser))
-    set_value_in_property_file_generic('User',applicativeUser,'install/gs.service','Service')
-    set_value_in_property_file_generic('Group',applicativeUser,'install/gs.service','Service')
+        applicativeUserFile = readValuefromAppConfig("app.server.user")
+        applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
+        if(len(str(applicativeUser))==0):
+            applicativeUser = str(applicativeUserFile)
+        logger.info("Applicative user : "+str(applicativeUser))
+        set_value_in_property_file_generic('User',applicativeUser,'install/gs.service','Service')
+        set_value_in_property_file_generic('Group',applicativeUser,'install/gs.service','Service')
 
-    if(len(hostsConfig)==2):
-        hostsConfig=hostsConfig.replace('"','')
-        logger.info("hostsConfig==2 : "+str(hostsConfig))
-    if(len(str(hostsConfig))>0):
-        logger.info("hostsConfig>0 : "+str(hostsConfig))
-        verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
-        hostConfiguration = str(input("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
-        logger.info("hostConfiguration : "+str(hostConfiguration))
-        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
-        while(len(str(wantNicAddress))==0):
+        if(len(hostsConfig)==2):
+            hostsConfig=hostsConfig.replace('"','')
+            logger.info("hostsConfig==2 : "+str(hostsConfig))
+        if(len(str(hostsConfig))>0):
+            logger.info("hostsConfig>0 : "+str(hostsConfig))
+            verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
+            hostConfiguration = str(input("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
+            logger.info("hostConfiguration : "+str(hostConfiguration))
             wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
-        logger.info("wantNicAddress  : "+str(wantNicAddress))
-        if(hostConfiguration != '1'):
-            logger.info("hostConfiguration !=1 : "+str(hostConfiguration))
-            for host in hostConfigArray:
-                logger.info("host  : "+str(host))
-                if(wantNicAddress=="yes" or wantNicAddress=="y"):
-                    logger.info("wantNicAddress  : "+str(wantNicAddress))
-                    gsNICAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
-                    while(len(str(gsNICAddress))==0):
-                        gsNICAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
-                    host_nic_dict_obj.add(host,gsNICAddress)
-                    logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
-                if(wantNicAddress=="no" or wantNicAddress=="n"):
-                    logger.info("wantNicAddress  : "+str(wantNicAddress))
-                    gsNICAddress="x"
-                    host_nic_dict_obj.add(host,gsNICAddress)
-                    logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
-    if(len(str(hostsConfig))==0) or (hostConfiguration=='1'):
-        gsNicAddress=""
-        gsNicAddress1=""
-        gsNicAddress2=""
-        gsNicAddress3 =""
-        managerType = int(input("Enter manager installation type: "+Fore.YELLOW+"\n[1] Single \n[2] Cluster : "+Fore.RESET))
-        logger.info("managerType  : "+str(managerType))
-        if(managerType==1):
-            logger.info("managerType  : "+str(managerType))
-            hostsConfig = str(input(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
-            while(len(str(hostsConfig))==0):
-                hostsConfig = str(input(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
-            logger.info("hostsConfig  : "+str(hostsConfig))
-            if(len(str(wantNicAddress))==0):
+            while(len(str(wantNicAddress))==0):
                 wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
             logger.info("wantNicAddress  : "+str(wantNicAddress))
-            if(wantNicAddress=="yes" or wantNicAddress=="y"):
-                logger.info("wantNicAddress  Y")
-                gsNicAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+hostsConfig+" :"+Fore.RESET))
-                logger.info("gsNicAddress  for host "+str(hostsConfig)+ ": "+str(gsNicAddress))
-            if(wantNicAddress=="no" or wantNicAddress=="n"):
-                logger.info("wantNicAddress  N")
-                gsNicAddress="x"
-            host_nic_dict_obj.add(hostsConfig,gsNicAddress)
-            logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
-            if(len(hostsConfig)<=0):
-                logger.info("Invalid host. Host configuration is required please specify valid host ip.:"+str(hostsConfig))
-                verboseHandle.printConsoleError("Invalid host. Host configuration is required please specify valid host ip.")
-                #break
-        elif(managerType==2):
-            logger.info("managerType==2  : "+str(managerType))
-            host1 = str(input(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
-            while(len(str(host1))==0):
-                host1 = str(input(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
-            host2 = str(input(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
-            while(len(str(host2))==0):
-                host2 = str(input(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
-            host3 = str(input(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
-            while(len(str(host3))==0):
-                host3 = str(input(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
-            #wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
-            logger.info("wantNicAddress  : "+str(wantNicAddress))
-            if(wantNicAddress=="yes" or wantNicAddress=="y"):
+            if(hostConfiguration != '1'):
+                logger.info("hostConfiguration !=1 : "+str(hostConfiguration))
+                for host in hostConfigArray:
+                    logger.info("host  : "+str(host))
+                    if(wantNicAddress=="yes" or wantNicAddress=="y"):
+                        logger.info("wantNicAddress  : "+str(wantNicAddress))
+                        gsNICAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
+                        while(len(str(gsNICAddress))==0):
+                            gsNICAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
+                        host_nic_dict_obj.add(host,gsNICAddress)
+                        logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
+                    if(wantNicAddress=="no" or wantNicAddress=="n"):
+                        logger.info("wantNicAddress  : "+str(wantNicAddress))
+                        gsNICAddress="x"
+                        host_nic_dict_obj.add(host,gsNICAddress)
+                        logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
+        if(len(str(hostsConfig))==0) or (hostConfiguration=='1'):
+            gsNicAddress=""
+            gsNicAddress1=""
+            gsNicAddress2=""
+            gsNicAddress3 =""
+            managerType = int(input("Enter manager installation type: "+Fore.YELLOW+"\n[1] Single \n[2] Cluster : "+Fore.RESET))
+            logger.info("managerType  : "+str(managerType))
+            if(managerType==1):
+                logger.info("managerType  : "+str(managerType))
+                hostsConfig = str(input(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
+                while(len(str(hostsConfig))==0):
+                    hostsConfig = str(input(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
+                logger.info("hostsConfig  : "+str(hostsConfig))
+                if(len(str(wantNicAddress))==0):
+                    wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
                 logger.info("wantNicAddress  : "+str(wantNicAddress))
-                gsNicAddress1 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
-                while(len(str(gsNicAddress1))==0):
+                if(wantNicAddress=="yes" or wantNicAddress=="y"):
+                    logger.info("wantNicAddress  Y")
+                    gsNicAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+hostsConfig+" :"+Fore.RESET))
+                    logger.info("gsNicAddress  for host "+str(hostsConfig)+ ": "+str(gsNicAddress))
+                if(wantNicAddress=="no" or wantNicAddress=="n"):
+                    logger.info("wantNicAddress  N")
+                    gsNicAddress="x"
+                host_nic_dict_obj.add(hostsConfig,gsNicAddress)
+                logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
+                if(len(hostsConfig)<=0):
+                    logger.info("Invalid host. Host configuration is required please specify valid host ip.:"+str(hostsConfig))
+                    verboseHandle.printConsoleError("Invalid host. Host configuration is required please specify valid host ip.")
+                    #break
+            elif(managerType==2):
+                logger.info("managerType==2  : "+str(managerType))
+                host1 = str(input(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
+                while(len(str(host1))==0):
+                    host1 = str(input(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
+                host2 = str(input(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
+                while(len(str(host2))==0):
+                    host2 = str(input(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
+                host3 = str(input(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
+                while(len(str(host3))==0):
+                    host3 = str(input(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
+                #wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
+                logger.info("wantNicAddress  : "+str(wantNicAddress))
+                if(wantNicAddress=="yes" or wantNicAddress=="y"):
+                    logger.info("wantNicAddress  : "+str(wantNicAddress))
                     gsNicAddress1 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
-                gsNicAddress2 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
-                while(len(str(gsNicAddress2))==0):
+                    while(len(str(gsNicAddress1))==0):
+                        gsNicAddress1 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
                     gsNicAddress2 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
-                gsNicAddress3 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
-                while(len(str(gsNicAddress3))==0):
+                    while(len(str(gsNicAddress2))==0):
+                        gsNicAddress2 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
                     gsNicAddress3 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
-            host_nic_dict_obj.add(host1,gsNicAddress1)
-            host_nic_dict_obj.add(host2,gsNicAddress2)
-            host_nic_dict_obj.add(host3,gsNicAddress3)
-            logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
-            if(len(host1)<=0 or len(host2)<=0 or len(host3)<=0):
-                logger.info("Invalid host. Host configuration is required please specify valid host ip.")
-                verboseHandle.printConsoleError("Invalid host. Host configuration is required please specify valid host ip.")
-                #break
-            hostsConfig=host1+','+host2+','+host3
-            logger.info("hostsConfig : "+str(hostsConfig))
-        else:
-            logger.info("Invalid input host option configuration is required please specify valid host ip.")
-            verboseHandle.printConsoleError("Invalid input host option configuration is required please specify valid host ip.")
-        if(len(hostsConfig)>0):
-            set_value_in_property_file('app.manager.hosts',hostsConfig)
-    return hostsConfig
+                    while(len(str(gsNicAddress3))==0):
+                        gsNicAddress3 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
+                host_nic_dict_obj.add(host1,gsNicAddress1)
+                host_nic_dict_obj.add(host2,gsNicAddress2)
+                host_nic_dict_obj.add(host3,gsNicAddress3)
+                logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
+                if(len(host1)<=0 or len(host2)<=0 or len(host3)<=0):
+                    logger.info("Invalid host. Host configuration is required please specify valid host ip.")
+                    verboseHandle.printConsoleError("Invalid host. Host configuration is required please specify valid host ip.")
+                    #break
+                hostsConfig=host1+','+host2+','+host3
+                logger.info("hostsConfig : "+str(hostsConfig))
+            else:
+                logger.info("Invalid input host option configuration is required please specify valid host ip.")
+                verboseHandle.printConsoleError("Invalid input host option configuration is required please specify valid host ip.")
+            if(len(hostsConfig)>0):
+                set_value_in_property_file('app.manager.hosts',hostsConfig)
+        return hostsConfig
+    except Exception as e:
+        handleException(e)
 
 def execute_ssh_server_manager_install(hostsConfig,user):
-    hostManager=[]
-    gsNicAddress=''
-    additionalParam=''
-    hostManager=hostsConfig.replace('"','').split(",")
-    #print("optionID:"+str(hostsConfig)+" : "+user)
-    logger.debug("optionID:"+str(hostsConfig))
+    logger.info("execute_ssh_server_manager_install()")
+    try:
+        hostManager=[]
+        gsNicAddress=''
+        additionalParam=''
+        targetDir=''
+        hostManager=hostsConfig.replace('"','').split(",")
+        #print("optionID:"+str(hostsConfig)+" : "+user)
+        logger.debug("optionID:"+str(hostsConfig))
 
-    gsOptionExtFromConfig = readValueByConfigObj("app.manager.gsOptionExt")
-    #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-    additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS [/dbagiga]: "+Fore.RESET))
-    gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+gsOptionExtFromConfig+']: '+Fore.RESET))
-    if(len(str(gsOptionExt))==0):
-        #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
-        gsOptionExt=gsOptionExtFromConfig
-    else:
-        set_value_in_property_file('app.manager.gsOptionExt',gsOptionExt)
-    gsOptionExt='"\\"{}\\""'.format(gsOptionExt)
-    #print("gsoptionext:"+gsOptionExt)
-
-    gsManagerOptionsFromConfig = readValueByConfigObj("app.manager.gsManagerOptions")
-    #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-    gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+gsManagerOptionsFromConfig+']: '+Fore.RESET))
-    if(len(str(gsManagerOptions))==0):
-        #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
-        gsManagerOptions=gsManagerOptionsFromConfig
-    else:
-        set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
-    gsManagerOptions='"{}"'.format(gsManagerOptions)
-
-    gsLogsConfigFileFromConfig = readValueByConfigObj("app.manager.gsLogsConfigFile")
-    #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-    gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+gsLogsConfigFileFromConfig+']: '+Fore.RESET))
-    if(len(str(gsLogsConfigFile))==0):
-        #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
-        gsLogsConfigFile=gsLogsConfigFileFromConfig
-    else:
-        set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
-    gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
-
-    licenseConfig = readValueByConfigObj("app.manager.license")
-    #licenseConfig='"{}"'.format(licenseConfig)
-    gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+licenseConfig+']: '+Fore.RESET))
-    if(len(str(gsLicenseFile))==0):
-        gsLicenseFile = licenseConfig
-    #else:
-        #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
-    gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
-
-    applicativeUser = read_value_in_property_file_generic_section('User','install/gs.service','Service')
-    #print("Applicative User: "+str(applicativeUser))
-
-    nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-    nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+nofileLimit+']: '+Fore.RESET))
-    logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
-    if(len(str(nofileLimitFile))==0):
-        nofileLimitFile = nofileLimit
-    #else:
-    #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
-    nofileLimitFile = '"{}"'.format(nofileLimitFile)
-
-    #To Display Summary ::
-    '''
-    1. Current cluster configuration
-    2. GS_NIC_Address configuration
-    3. Target Directory
-    4. GS_Op_Ext
-    5. GS_mgr_op
-    6. GS_Log_config
-    7. GS_Lic
-    8. User_openfile_limit
-    '''
-
-    if(len(additionalParam)==0):
-        additionalParam= 'true'+' '+'/dbagiga'+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
-    else:
-        additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
-    #print('additional param :'+additionalParam)
-    logger.debug('additional param :'+additionalParam)
-    output=""
-    for host in hostManager:
-        gsNicAddress = host_nic_dict_obj[host]
-        logger.info("NIC address:"+gsNicAddress+" for host "+host)
-        if(len(str(gsNicAddress))==0):
-            gsNicAddress='x'     # put dummy param to maintain position of arguments
-        additionalParam=additionalParam+' '+gsNicAddress
-        #print(additionalParam)
-        logger.info("Building .tar file : tar -cvf install/install.tar install")
-        cmd = 'tar -cvf install/install.tar install'
-        with Spinner():
-            status = os.system(cmd)
-            logger.info("Creating tar file status : "+str(status))
-        with Spinner():
-            scp_upload(host, user, 'install/install.tar', '')
-            scp_upload(host, user, 'install/gs.service', '')
-        verboseHandle.printConsoleInfo(output)
-        cmd = 'tar -xvf install.tar'
-        verboseHandle.printConsoleInfo("Extracting..")
-        with Spinner():
-            output = executeRemoteCommandAndGetOutput(host, user, cmd)
-        logger.info("Extracting .tar file :"+str(output))
-        verboseHandle.printConsoleInfo(str(output))
-
-        #Checking Applicative User exist or not
-        '''
-        cmd = 'id -u '+applicativeUser
-        logger.info("cmd : "+cmd)
-        verboseHandle.printConsoleInfo("Validating applicative user")
-        with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
-        #print(output)
-        
-        if(str(output) == '0'):
-            print("exist")
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
+        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS [/dbagiga]: "+Fore.RESET))
+        if(len(additionalParam)==0):
+            targetDir='/dbagiga'
         else:
-            print("Not exist")
-        logger.info("Validating applicative user :"+str(output))
-        verboseHandle.printConsoleInfo(str(output))
+            targetDir=additionalParam
+        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+str(gsOptionExtFromConfig)+']: '+Fore.RESET))
+        if(len(str(gsOptionExt))==0):
+            #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
+            gsOptionExt=gsOptionExtFromConfig
+        else:
+            set_value_in_property_file('app.manager.gsOptionExt',gsOptionExt)
+        gsOptionExt='"\\"{}\\""'.format(gsOptionExt)
+        #print("gsoptionext:"+gsOptionExt)
 
-        quit()
-        '''
+        gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
+        #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
+        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+gsManagerOptionsFromConfig+']: '+Fore.RESET))
+        if(len(str(gsManagerOptions))==0):
+            #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
+            gsManagerOptions=gsManagerOptionsFromConfig
+        else:
+            set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
+        #gsManagerOptions='"{}"'.format(gsManagerOptions)
+        gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
-        commandToExecute="scripts/servers_manager_install.sh"
-        #print(additionalParam)
-        logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-        with Spinner():
-            outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-            #print(outputShFile)
-            logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
-        serverHost=''
-        try:
-            serverHost = socket.gethostbyaddr(host).__getitem__(0)
-        except Exception as e:
-            serverHost=host
-        managerList = config_add_manager_node(host,host,"admin","true")
-        logger.info("Installation of manager server "+str(host)+" has been done!")
-        verboseHandle.printConsoleInfo("Installation of manager server "+host+" has been done!")
+        gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
+        #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
+        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+gsLogsConfigFileFromConfig+']: '+Fore.RESET))
+        if(len(str(gsLogsConfigFile))==0):
+            #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
+            gsLogsConfigFile=gsLogsConfigFileFromConfig
+        else:
+            set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
+        #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
+        gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
+
+        licenseConfig = readValueByConfigObj("app.manager.license")
+        #licenseConfig='"{}"'.format(licenseConfig)
+        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+licenseConfig+']: '+Fore.RESET))
+        if(len(str(gsLicenseFile))==0):
+            gsLicenseFile = licenseConfig
+        #else:
+            #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
+        gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
+
+        applicativeUser = read_value_in_property_file_generic_section('User','install/gs.service','Service')
+        #print("Applicative User: "+str(applicativeUser))
+
+        nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
+        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+nofileLimit+']: '+Fore.RESET))
+        logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
+        if(len(str(nofileLimitFile))==0):
+            nofileLimitFile = nofileLimit
+        #else:
+        #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
+        nofileLimitFile = '"{}"'.format(nofileLimitFile)
+
+        #To Display Summary ::
+        verboseHandle.printConsoleWarning("------------------------------------------------------------")
+        verboseHandle.printConsoleWarning("***Summary***")
+        print(Fore.GREEN+"1. "+
+              Fore.GREEN+"Current configuration = "+
+              Fore.GREEN+hostsConfig+Fore.RESET)
+        print(Fore.GREEN+"2. "+
+              Fore.GREEN+"Target Directory = "+
+              Fore.GREEN+targetDir.replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"3. "+
+              Fore.GREEN+"GS_OPTIONS_EXT = "+
+              Fore.GREEN+gsOptionExt.replace('"','').replace( "\\",'')+Fore.RESET)
+        print(Fore.GREEN+"4. "+
+              Fore.GREEN+"GS_MANAGER_OPTIONS = "+
+              Fore.GREEN+gsManagerOptions.replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"5. "+
+              Fore.GREEN+"GS_LOGS_CONFIG_FILE = "+
+              Fore.GREEN+gsLogsConfigFile.replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"6. "+
+              Fore.GREEN+"GS_LICENSE = "+
+              Fore.GREEN+gsLicenseFile.replace( "\\",'').replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"7. "+
+              Fore.GREEN+"User level open file limit = "+Fore.RESET,
+              Fore.GREEN+nofileLimitFile.replace('"','')+Fore.RESET)
+        verboseHandle.printConsoleWarning("------------------------------------------------------------")
+        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+        while(len(str(summaryConfirm))==0):
+            summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+
+        if(summaryConfirm == 'y' or summaryConfirm =='yes'):
+
+            if(len(additionalParam)==0):
+                additionalParam= 'true'+' '+'/dbagiga'+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+            else:
+                additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+            #print('additional param :'+additionalParam)
+            logger.info('additional param :'+additionalParam)
+            output=""
+            for host in hostManager:
+                gsNicAddress = host_nic_dict_obj[host]
+                logger.info("NIC address:"+gsNicAddress+" for host "+host)
+                if(len(str(gsNicAddress))==0):
+                    gsNicAddress='x'     # put dummy param to maintain position of arguments
+                additionalParam=additionalParam+' '+gsNicAddress
+                #print(additionalParam)
+                logger.info("Building .tar file : tar -cvf install/install.tar install")
+                cmd = 'tar -cvf install/install.tar install'
+                with Spinner():
+                    status = os.system(cmd)
+                    logger.info("Creating tar file status : "+str(status))
+                with Spinner():
+                    scp_upload(host, user, 'install/install.tar', '')
+                    scp_upload(host, user, 'install/gs.service', '')
+                verboseHandle.printConsoleInfo(output)
+                cmd = 'tar -xvf install.tar'
+                verboseHandle.printConsoleInfo("Extracting..")
+                with Spinner():
+                    output = executeRemoteCommandAndGetOutput(host, user, cmd)
+                logger.info("Extracting .tar file :"+str(output))
+                verboseHandle.printConsoleInfo(str(output))
+
+                #Checking Applicative User exist or not
+                '''
+                cmd = 'id -u '+applicativeUser
+                logger.info("cmd : "+cmd)
+                verboseHandle.printConsoleInfo("Validating applicative user")
+                with Spinner():
+                    output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+                #print(output)
+                
+                if(str(output) == '0'):
+                    print("exist")
+                else:
+                    print("Not exist")
+                logger.info("Validating applicative user :"+str(output))
+                verboseHandle.printConsoleInfo(str(output))
+        
+                quit()
+                '''
+
+                commandToExecute="scripts/servers_manager_install.sh"
+                #print(additionalParam)
+                logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+                logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+                with Spinner():
+                    outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+                    #print(outputShFile)
+                    logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
+                serverHost=''
+                try:
+                    serverHost = socket.gethostbyaddr(host).__getitem__(0)
+                except Exception as e:
+                    serverHost=host
+                managerList = config_add_manager_node(host,host,"admin","true")
+                logger.info("Installation of manager server "+str(host)+" has been done!")
+                verboseHandle.printConsoleInfo("Installation of manager server "+host+" has been done!")
+        elif(summaryConfirm == 'n' or summaryConfirm =='no'):
+            logger.info("menudriven")
+            return
+
+    except Exception as e:
+        handleException(e)
 
 if __name__ == '__main__':
     logger.info("odsx_servers_manager_install")
@@ -351,6 +412,7 @@ if __name__ == '__main__':
         ## Execution script flow diverted to this file hence major changes required and others scripts will going to distrub
 
     except Exception as e:
+        handleException(e)
         logger.error("Invalid argument. "+str(e))
-        verboseHandle.printConsoleError("Invalid argument.")
+        #verboseHandle.printConsoleError("Invalid argument.")
 
