@@ -173,6 +173,7 @@ function installAirGapGS {
    dir=$targetDir
    workDir="dbagigawork"
    logDir="dbagigalogs"
+   dataDir="dbagigadata"
    cd
    #sudo -s
    targetConfigDir="$targetDir/gs_config/"
@@ -207,6 +208,14 @@ function installAirGapGS {
    if [ ! -d "/$workDir" ]; then
      mkdir /$workDir
      chmod 777 /$workDir
+       : '
+       sudo -u 'root' -H sh -c "mkdir /$workDir"
+       sudo chmod 777 $workDir
+       '
+   fi
+   if [ ! -d "/$dataDir" ]; then
+     mkdir /$dataDir
+     chmod 777 /$dataDir
        : '
        sudo -u 'root' -H sh -c "mkdir /$workDir"
        sudo chmod 777 $workDir
@@ -332,7 +341,7 @@ function loadEnv {
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*
+  chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*  /dbagigadata
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
   start_gs_file="start_gs.sh"
