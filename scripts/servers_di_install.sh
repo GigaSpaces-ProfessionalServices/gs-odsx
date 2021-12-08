@@ -1,5 +1,6 @@
 echo "Starting DI Installation."
 #echo "Extracting install.tar to "$targetDir
+cd /home/dbsh
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
@@ -77,7 +78,8 @@ if [[ ${#masterHost} -ge 3 ]]; then
   echo "$id">>$KAFKAPATH/log/zookeeper/myid
 fi
 
-sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
+#sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
+sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs=/var/log/kafka|g' $KAFKAPATH/config/server.properties
 
 start_kafka_file="start_kafka.sh"
 start_zookeeper_file="start_zookeeper.sh"

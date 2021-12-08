@@ -150,7 +150,7 @@ def buildUploadInstallTarToServer(host):
     try:
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
-            scp_upload(host, user, 'install/install.tar', '')
+            scp_upload(host, user, 'install/install.tar', '/home/dbsh')
     except Exception as e:
         handleException(e)
 
@@ -172,7 +172,7 @@ def executeCommandForInstall(host,type,count):
             logger.info("outputShFile kafka : "+str(outputShFile))
             print("Checking for Type ::::"+str(type))
 
-            if type== 'Master' or type == 'Standby':
+            if type== 'Master' or type == 'Standby' or type == 'SingleNode':
                 verboseHandle.printConsoleInfo("Starting CR8 installation for "+str(type))
                 logger.info("Installing cr8 for "+str(type))
                 commandToExecute="scripts/servers_di_install_cr8.sh"
