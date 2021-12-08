@@ -7,7 +7,7 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_space_hosts
 from colorama import Fore
 import socket, platform
-from utils.ods_validation import getSpaceServerStatus
+from utils.ods_validation import getSpaceServerStatus,port_check_config
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from utils.ods_app_config import readValuefromAppConfig
@@ -137,21 +137,31 @@ def listSpaceServer():
         host_nic_dict_obj = host_nic_dictionary()
 
         for server in spaceServers:
-            cmd = 'systemctl is-active gs.service'
-            logger.info("server.ip : "+str(server.ip)+" cmd :"+str(cmd))
-            output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
-            logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
-            host_nic_dict_obj.add(server.ip,str(output))
+            if (port_check_config(server.ip,22)):
+                cmd = 'systemctl is-active gs.service'
+                logger.info("server.ip : "+str(server.ip)+" cmd :"+str(cmd))
+                output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
+                logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
+                host_nic_dict_obj.add(server.ip,str(output))
+            else:
+                logger.info(" Host :"+str(server.ip)+" is not reachable")
 
         logger.info("host_nic_dict_obj : "+str(host_nic_dict_obj))
         for server in spaceServers:
             logger.info("server.ip : "+str(server.ip))
             #status = getStatusOfHost(host_nic_dict_obj,server)
-            status = getStatusOfSpaceHost(str(server.ip))
-            logger.info("status : "+str(status))
-            logger.info("Host:"+str(server.name))
-            gsc = host_gsc_dict_obj.get(str(server.name))
-            logger.info("GSC : "+str(gsc))
+            status=''
+            gsc=''
+            if (port_check_config(server.ip,22)):
+                status = getStatusOfSpaceHost(str(server.ip))
+                logger.info("status : "+str(status))
+                logger.info("Host:"+str(server.name))
+                gsc = host_gsc_dict_obj.get(str(server.name))
+                logger.info("GSC : "+str(gsc))
+            else:
+                status="NOT REACHABLE"
+                gsc = host_gsc_dict_obj.get(str(server.name))
+                logger.info(" Host :"+str(server.ip)+" is not reachable")
             #version = getVersion(server.ip)
             if(status=="ON"):
                 dataArray=[Fore.GREEN+server.ip+Fore.RESET,

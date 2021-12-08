@@ -199,12 +199,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS [/dbagiga]: "+Fore.RESET))
+        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.BLUE+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
         if(len(additionalParam)==0):
             targetDir='/dbagiga'
         else:
             targetDir=additionalParam
-        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+str(gsOptionExtFromConfig)+']: '+Fore.RESET))
+        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.BLUE+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
             gsOptionExt=gsOptionExtFromConfig
@@ -215,7 +215,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+gsManagerOptionsFromConfig+']: '+Fore.RESET))
+        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.BLUE+''+gsManagerOptionsFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsManagerOptions))==0):
             #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
             gsManagerOptions=gsManagerOptionsFromConfig
@@ -226,7 +226,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+gsLogsConfigFileFromConfig+']: '+Fore.RESET))
+        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.BLUE+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLogsConfigFile))==0):
             #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
             gsLogsConfigFile=gsLogsConfigFileFromConfig
@@ -237,7 +237,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         licenseConfig = readValueByConfigObj("app.manager.license")
         #licenseConfig='"{}"'.format(licenseConfig)
-        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+licenseConfig+']: '+Fore.RESET))
+        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.BLUE+''+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLicenseFile))==0):
             gsLicenseFile = licenseConfig
         #else:
@@ -248,7 +248,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+nofileLimit+']: '+Fore.RESET))
+        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.BLUE+''+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
         if(len(str(nofileLimitFile))==0):
             nofileLimitFile = nofileLimit
