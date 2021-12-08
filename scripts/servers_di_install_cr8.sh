@@ -45,7 +45,7 @@ printNoColor() {
 
 SCRIPT_RUN="install"
 
-
+cd /home/dbsh
 home_dir=$(pwd)
 installation_path=$home_dir/install/cr8
 
