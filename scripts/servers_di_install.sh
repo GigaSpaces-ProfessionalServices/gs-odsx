@@ -25,14 +25,14 @@ installation_path=$home_dir/install/kafka
 echo "InstallationPath="$installation_path
 installation_file=$(find $installation_path -name "*.tgz" -printf "%f\n")
 echo "InstallationFile:"$installation_file
-tar -xvzf $installation_path"/"$installation_file -C  /root
+tar -xvzf $installation_path"/"$installation_file -C /opt/Kafka
 var=$installation_file
 echo "var"$var
 replace=""
 extracted_folder=${var//'.tgz'/$replace}
 sed -i '/export KAFKAPATH/d' setenv.sh
 echo "extracted_folder: "$extracted_folder
-kafka_home_path="export KAFKAPATH=/root/"$extracted_folder
+kafka_home_path="export KAFKAPATH=/opt/Kafka/"$extracted_folder
 echo "$kafka_home_path">>setenv.sh
 source setenv.sh
 
