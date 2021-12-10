@@ -1,4 +1,4 @@
-source setenv.sh
+source /home/dbsh/setenv.sh
 
 systemctl stop odsxkafka.service
 sleep 2
