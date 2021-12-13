@@ -25,6 +25,7 @@ installation_path=$home_dir/install/kafka
 echo "InstallationPath="$installation_path
 installation_file=$(find $installation_path -name "*.tgz" -printf "%f\n")
 echo "InstallationFile:"$installation_file
+mkdir -p /opt/Kafka
 tar -xvzf $installation_path"/"$installation_file -C /opt/Kafka
 var=$installation_file
 echo "var"$var
