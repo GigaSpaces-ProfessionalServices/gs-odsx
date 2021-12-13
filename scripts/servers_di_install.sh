@@ -1,5 +1,13 @@
 echo "Starting DI Installation."
 #echo "Extracting install.tar to "$targetDir
+echo " installtelegrafFlag "$1
+echo " param1 "$2" param2 "$3" param3 "$4" counter ID "$5" installtelegrafFlag "$1
+installtelegrafFlag=$1
+masterHost=$2
+standbyHost=$3
+witnessHost=$4
+id=$5
+
 cd /home/dbsh
 tar -xvf install.tar
 home_dir=$(pwd)
@@ -37,11 +45,7 @@ kafka_home_path="export KAFKAPATH=/opt/Kafka/"$extracted_folder
 echo "$kafka_home_path">>setenv.sh
 source setenv.sh
 
-echo " param1 "$1" param2 "$2" param3 "$3" counter ID "$4
-masterHost=$1
-standbyHost=$2
-witnessHost=$3
-id=$4
+
 
 # Configuration of log dir
 source setenv.sh
@@ -124,12 +128,13 @@ chmod +x /usr/local/bin/st*_zookeeper.sh
 mv /tmp/$kafka_service_file /etc/systemd/system/
 mv /tmp/$zookeeper_service_file /etc/systemd/system/
 
-# Install Telegraf
-echo "Installing Telegraf"
-installation_path=$home_dir/install/telegraf
-echo "InstallationPath :"$installation_path
-installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
-echo "Installation File :"$installation_file
-echo $installation_path"/"$installation_file
-yum install -y $installation_path"/"$installation_file
-
+if [[ $installtelegrafFlag == "y" ]]; then
+  # Install Telegraf
+  echo "Installing Telegraf"
+  installation_path=$home_dir/install/telegraf
+  echo "InstallationPath :"$installation_path
+  installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
+  echo "Installation File :"$installation_file
+  echo $installation_path"/"$installation_file
+  yum install -y $installation_path"/"$installation_file
+fi
