@@ -172,13 +172,13 @@ def executeCommandForInstall(host,type,count):
             logger.info("outputShFile kafka : "+str(outputShFile))
             print("Checking for Type ::::"+str(type))
 
-            if type== 'Master' or type == 'Standby' or type == 'SingleNode':
-                verboseHandle.printConsoleInfo("Starting CR8 installation for "+str(type))
-                logger.info("Installing cr8 for "+str(type))
-                commandToExecute="scripts/servers_di_install_cr8.sh"
-                outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
-                logger.info("outputShFile CR8 :"+str(outputShFile))
-                logger.info("Done installation of cr8 for "+str(type))
+            #if type== 'Master' or type == 'Standby' or type == 'SingleNode':
+            #    verboseHandle.printConsoleInfo("Starting CR8 installation for "+str(type))
+            #    logger.info("Installing cr8 for "+str(type))
+            #    commandToExecute="scripts/servers_di_install_cr8.sh"
+            #    outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
+            #    logger.info("outputShFile CR8 :"+str(outputShFile))
+            #    logger.info("Done installation of cr8 for "+str(type))
 
             config_add_dataIntegration_node(host, host, "dataIntegration", "true", type)
             set_value_in_property_file('app.di.hosts',host)
