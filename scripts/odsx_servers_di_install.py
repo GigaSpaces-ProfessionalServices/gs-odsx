@@ -214,8 +214,8 @@ def executeCommandForInstall(host, type, count):
         commandToExecute = "scripts/servers_di_install.sh"
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
-        if (len(clusterHosts) == 4):
-            additionalParam = masterHost + ' ' + standByHost + ' ' + witnessHost + ' ' + str(count)
+        if (len(clusterHosts) == 3):
+            additionalParam = additionalParam + masterHost + ' ' + standByHost + ' ' + witnessHost + ' ' + str(count)
 
         logger.info("Additinal Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))

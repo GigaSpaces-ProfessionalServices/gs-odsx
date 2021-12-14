@@ -50,13 +50,23 @@ source setenv.sh
 # Configuration of log dir
 source setenv.sh
 echo "kafkaPath :"$KAFKAPATH
-mkdir $KAFKAPATH/log
-mkdir $KAFKAPATH/log/kafka
-mkdir $KAFKAPATH/log/zookeeper
+mkdir -p $KAFKAPATH/log
+mkdir -p $KAFKAPATH/log/kafka
+mkdir -p $KAFKAPATH/log/zookeeper
 sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/zookeeper|g' $KAFKAPATH/config/zookeeper.properties
 sed -i -e 's|/tmp/zookeeper|'$KAFKAPATH'/log/zookeeper|g' $KAFKAPATH/config/zookeeper.properties
 
 if [[ ${#masterHost} -ge 3 ]]; then
+  # removing all existing properties
+  sed -i '/^server.1/d' $KAFKAPATH/config/zookeeper.properties
+  sed -i '/^server.2/d' $KAFKAPATH/config/zookeeper.properties
+  sed -i '/^server.3/d' $KAFKAPATH/config/zookeeper.properties
+  sed -i '/^initLimit=1000/d' $KAFKAPATH/config/zookeeper.properties
+  sed -i '/^syncLimit=1000/d' $KAFKAPATH/config/zookeeper.properties
+  sed -i '/^broker.id/d' $KAFKAPATH/config/server.properties
+  sed -i '/^zookeeper.connect/d' $KAFKAPATH/config/server.properties
+
+  # adding properties
   echo "server.1="$masterHost":2888:3888">>$KAFKAPATH/config/zookeeper.properties
   echo "server.2="$standbyHost":2888:3888">>$KAFKAPATH/config/zookeeper.properties
   echo "server.3="$witnessHost":2888:3888">>$KAFKAPATH/config/zookeeper.properties
@@ -80,7 +90,8 @@ if [[ ${#masterHost} -ge 3 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$witnessHost':9092|g' $KAFKAPATH/config/server.properties
     sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$witnessHost'' $KAFKAPATH/config/server.properties
   fi
-  echo "$id">>$KAFKAPATH/log/zookeeper/myid
+  echo "$id">$KAFKAPATH/log/zookeeper/myid
+  echo "added params"
 fi
 
 #sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
