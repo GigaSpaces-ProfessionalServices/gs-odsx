@@ -96,7 +96,7 @@ fi
 
 #sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
 sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs=/var/log/kafka|g' $KAFKAPATH/config/server.properties
-
+rm -f /var/log/kafka/*
 start_kafka_file="start_kafka.sh"
 start_zookeeper_file="start_zookeeper.sh"
 stop_kafka_file="stop_kafka.sh"
