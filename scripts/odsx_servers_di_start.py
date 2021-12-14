@@ -61,7 +61,7 @@ def startKafkaService(args):
     try:
         listDIServers()
         nodes = getDIServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to start kafka service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
+        choice = str(input(Fore.YELLOW+"Are you sure, you want to start kafka service for ["+str(nodes)+"] ? (y/n) [y]: "+Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataIntegration_nodes():
@@ -73,7 +73,7 @@ def startKafkaService(args):
                 if (output == 0):
                     verboseHandle.printConsoleInfo("Service zookeeper started successfully on "+str(node.ip))
                 else:
-                    verboseHandle.printConsoleError("Service zookeeper failed to start")
+                    verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(node.ip))
         for node in config_get_dataIntegration_nodes():
             cmd = "rm -rf /tmp/kafka-logs/*;sleep 5; systemctl start odsxkafka.service"
             logger.info("Getting status.. odsxkafka :"+str(cmd))
@@ -83,7 +83,7 @@ def startKafkaService(args):
                 if (output == 0):
                     verboseHandle.printConsoleInfo("Service kafka started successfully on "+str(node.ip))
                 else:
-                    verboseHandle.printConsoleError("Service kafka failed to start")
+                    verboseHandle.printConsoleError("Service kafka failed to start on "+str(node.ip))
         #odsxcr8.service
         for node in config_get_dataIntegration_nodes():
             cmd = "sleep 5; systemctl start odsxcr8.service"
@@ -95,7 +95,7 @@ def startKafkaService(args):
                     if (output == 0):
                         verboseHandle.printConsoleInfo("Service CR8 started successfully on "+str(node.ip))
                     else:
-                        verboseHandle.printConsoleError("Service CR8 failed to start")
+                        verboseHandle.printConsoleError("Service CR8 failed to start on "+str(node.ip))
 
         for node in config_get_dataIntegration_nodes():
             cmd = "systemctl start telegraf"
@@ -106,7 +106,7 @@ def startKafkaService(args):
                 if (output == 0):
                     verboseHandle.printConsoleInfo("Service telegraf started successfully on "+str(node.ip))
                 else:
-                    verboseHandle.printConsoleError("Service telegraf failed to start")
+                    verboseHandle.printConsoleError("Service telegraf failed to start on "+str(node.ip))
     except Exception as e:
         handleException(e)
 
