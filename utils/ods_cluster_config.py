@@ -9,7 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 
@@ -478,14 +478,20 @@ def config_get_space_hosts_list(filePath='config/cluster.config'):
     return  hosts
 
 def config_get_space_list_with_status(user,filePath='config/cluster.config'):
+    logger.info("config_get_space_list_with_status()")
     host_nic_dict_obj = host_nic_dictionary()
     spaceServers = config_get_space_hosts()
     for server in spaceServers:
-        cmd = 'systemctl is-active gs.service'
+        cmd = 'ps -ef | grep GSA'
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutput(server.ip, 'root', cmd)
             #output = executeRemoteShCommandAndGetOutput(server.ip,user,cmd)
-            host_nic_dict_obj.add(server.ip,str(output))
+            if(str(output).__contains__('services=GSA')):
+                logger.info("services=GSA")
+                host_nic_dict_obj.add(server.ip,"ON")
+            else:
+                logger.info("services!=GSA")
+                host_nic_dict_obj.add(server.ip,"OFF")
 
     spaceNodes = config_get_space_node()
     verboseHandle.printConsoleWarning("Please choose an option from below :")
@@ -503,13 +509,6 @@ def config_get_space_list_with_status(user,filePath='config/cluster.config'):
         spaceDict.update({counter: server})
         #verboseHandle.printConsoleInfo(str(counter) + ". "+spaceNode.name + " (" + spaceNode.ip + ")")
         status = host_nic_dict_obj.get(server.ip)
-        if(status=="3"):
-            status="OFF"
-        elif(status=="0"):
-            status="ON"
-        else:
-            logger.info("Host Not reachable..")
-            status="OFF"
         if(status=="ON"):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+server.ip+Fore.RESET,
