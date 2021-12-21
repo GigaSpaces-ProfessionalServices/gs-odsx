@@ -91,11 +91,11 @@ def cleanUpManagerServers():
     managerNodes = config_get_manager_node()
     if(len(str(managerNodes))>0):
         logger.info("managerNodes: main"+str(managerNodes))
-        verboseHandle.printConsoleInfo("Cleaning [/dbagigawork] and [/dbagigalogs]")
+        verboseHandle.printConsoleInfo("Cleaning [/dbagigawork] ,[/dbagigalogs] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates]")
         managerHosts = getManagerServerHostList()
         confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) : "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
-            cmd = "rm -rf /dbagigawork/*;rm -f /dbagigalogs/*"
+            cmd = "rm -rf /dbagigawork/*;rm -f /dbagigalogs/*;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
             for node in managerNodes:
                 with Spinner():
