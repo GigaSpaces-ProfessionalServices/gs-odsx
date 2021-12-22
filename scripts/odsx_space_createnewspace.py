@@ -8,7 +8,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
-
+from scripts.odsx_tieredstorage_undeploy import listDeployed
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 
@@ -29,6 +29,17 @@ class host_dictionary_obj(dict):
 
 managerHostConfig=''
 
+
+def getStatusAndTypeOfSpaceOrPU(managerHost,puName):
+    logger.info("getStatusOfSpaceOrPU()")
+    statusAndType=[]
+    logger.info("URL : http://"+str(managerHost)+":8090/v2/pus/"+str(puName))
+    response = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(puName))
+    jsonArray = json.loads(response.text)
+    statusAndType.append(jsonArray["status"])
+    statusAndType.append(jsonArray["processingUnitType"])
+    return statusAndType
+
 def listSpacesOnServer(managerNodes):
     managerHost=''
     for node in managerNodes:
@@ -42,7 +53,9 @@ def listSpacesOnServer(managerNodes):
                Fore.YELLOW+"Name"+Fore.RESET,
                Fore.YELLOW+"PU Name"+Fore.RESET,
                Fore.YELLOW+"Partition"+Fore.RESET,
-               Fore.YELLOW+"Backup Partition"+Fore.RESET
+               Fore.YELLOW+"Backup Partition"+Fore.RESET,
+               Fore.YELLOW+"Type"+Fore.RESET,
+               Fore.YELLOW+"Status"+Fore.RESET
                ]
     gs_space_host_dictionary_obj = host_dictionary_obj()
     counter=0
@@ -52,11 +65,14 @@ def listSpacesOnServer(managerNodes):
             isBackup="YES"
         if(str(data["topology"]["backupsPerPartition"])=="0"):
             isBackup="NO"
+        statusAndType = getStatusAndTypeOfSpaceOrPU(managerHost,str(data["processingUnitName"]))
         dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                      Fore.GREEN+data["name"]+Fore.RESET,
                      Fore.GREEN+data["processingUnitName"]+Fore.RESET,
                      Fore.GREEN+str(data["topology"]["partitions"])+Fore.RESET,
-                     Fore.GREEN+isBackup+Fore.RESET
+                     Fore.GREEN+isBackup+Fore.RESET,
+                     Fore.GREEN+statusAndType[1]+Fore.RESET,
+                     Fore.GREEN+statusAndType[0]+Fore.RESET
                      ]
         gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
         counter=counter+1

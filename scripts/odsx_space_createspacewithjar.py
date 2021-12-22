@@ -410,7 +410,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         set_value_in_property_file('app.tieredstorage.criteria.filepath.target',str(tieredCriteriaConfigFilePathTarget))
         '''
         global isSpacePropertyRequired
-        isSpacePropertyRequired = str(input(Fore.YELLOW+"Do you want to add space property ? (y/n) : "+Fore.RESET))
+        isSpacePropertyRequired = str(input(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
         if(len(isSpacePropertyRequired)==0):
             isSpacePropertyRequired='y'
         logger.info("isSpacePropertyRequired : "+str(isSpacePropertyRequired))
@@ -605,7 +605,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
 
             response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers)
             deployResponseCode = str(response.content.decode('utf-8'))
-            verboseHandle.printConsoleInfo("deployResponseCode : "+str(deployResponseCode))
+            print("deployResponseCode : "+str(deployResponseCode))
             logger.info("deployResponseCode :"+str(deployResponseCode))
             if(deployResponseCode.isdigit()):
                 status = validateResponseGetDescription(deployResponseCode)
@@ -614,13 +614,15 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
                 if(response.status_code==202):
                     logger.info("Response :"+str(status))
                     retryCount=5
-                    while(retryCount>0 or (not str(status).casefold().__contains__('successful'))):
+                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
                         status = validateResponseGetDescription(deployResponseCode)
                         verboseHandle.printConsoleInfo("Response :"+str(status))
                         retryCount = retryCount-1
                         time.sleep(2)
                         if(str(status).casefold().__contains__('successful')):
-                            retryCount=0
+                            return
+                        elif(str(status).casefold().__contains__('failed')):
+                            return
                 else:
                     logger.info("Unable to deploy :"+str(status))
                     verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
@@ -641,14 +643,17 @@ def validateResponseGetDescription(responseCode):
     response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode))
     jsonData = json.loads(response.text)
     logger.info("response : "+str(jsonData))
-    return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
+    if(str(jsonData["status"]).__contains__("failed")):
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["error"])
+    else:
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
 
 
 
 if __name__ == '__main__':
-    logger.info("Menu -> Space -> Create Space")
+    logger.info("Menu -> Space -> Create space with jar")
     #loggerTiered.info("Deploy")
-    verboseHandle.printConsoleWarning("Menu -> Space -> Create Space")
+    verboseHandle.printConsoleWarning("Menu -> Space -> Create space with jar")
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))

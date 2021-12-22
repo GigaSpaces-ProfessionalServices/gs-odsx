@@ -93,7 +93,7 @@ def cleanUpManagerServers():
         logger.info("managerNodes: main"+str(managerNodes))
         verboseHandle.printConsoleInfo("Cleaning [/dbagigawork] ,[/dbagigalogs] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates]")
         managerHosts = getManagerServerHostList()
-        confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) : "+Fore.RESET))
+        confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
             cmd = "rm -rf /dbagigawork/*;rm -f /dbagigalogs/*;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
@@ -115,7 +115,7 @@ def cleanUpSpaceServers():
         logger.info("spaceNodes: main"+str(spaceNodes))
         verboseHandle.printConsoleInfo("Cleaning [/dbagigadata] ,[/dbagigalogs] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates]")
         spaceHosts = getSpaceServerHostList()
-        confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(spaceHosts)+" ] ? (y/n) : "+Fore.RESET))
+        confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
             cmd = "rm -rf /dbagigadata/*;rm -f /dbagigalogs/*;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
