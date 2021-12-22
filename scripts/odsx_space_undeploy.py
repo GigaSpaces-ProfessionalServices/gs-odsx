@@ -163,8 +163,7 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"Name"+Fore.RESET,
                    Fore.YELLOW+"Resource"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
-                   Fore.YELLOW+"processingUnitType"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
+                   Fore.YELLOW+"processingUnitType"+Fore.RESET
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
@@ -175,9 +174,8 @@ def listDeployed(managerHost):
                          Fore.GREEN+data["name"]+Fore.RESET,
                          Fore.GREEN+data["resource"]+Fore.RESET,
                          Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                         Fore.GREEN+data["processingUnitType"]+Fore.RESET,
-                         Fore.GREEN+data["status"]+Fore.RESET
-                        ]
+                         Fore.GREEN+data["processingUnitType"]+Fore.RESET
+                         ]
             gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
             counter=counter+1
             dataTable.append(dataArray)
@@ -266,8 +264,8 @@ def proceedToUndeployPU(managerHost):
                         verboseHandle.printConsoleInfo("Undeploy  :"+str(spaceTobeUndeploy)+"   Status : "+str(undeployResponseCode))
 
             else:
-                    logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
-                    verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
+                logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
+                verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
         elif(typeOfRemove=='99'):
             logger.info("99")
             return
@@ -313,10 +311,9 @@ def removeGSC(managerHost):
         if(response.status_code==202):
             print("GSC ID "+str(data["id"])+" deleted")
 
-
 if __name__ == '__main__':
     logger.info("odsx_tieredstorage_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> TieredStorage -> Undeploy")
+    verboseHandle.printConsoleWarning("Menu -> Space -> Undeploy")
     try:
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):
@@ -341,13 +338,13 @@ if __name__ == '__main__':
                 else:
                     logger.info("No space/pu undeployed found.")
                     verboseHandle.printConsoleInfo("No space/pu undeployed found.")
+                #confirmParamAndRestartGSC()
                 gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
                 if(len(str(gscRemove))==0):
                     gscRemove='y'
                 if(gscRemove=='y'):
                     managerHost = getManagerHost(managerNodes)
                     removeGSC(managerHost)
-                #confirmParamAndRestartGSC()
             else:
                 logger.info("Please check manager server status.")
                 verboseHandle.printConsoleInfo("Please check manager server status.")

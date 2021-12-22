@@ -3,7 +3,7 @@ import os
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from scripts.odsx_space_createnewspace import listSpacesOnServer
+from scripts.odsx_tieredstorage_undeploy import listDeployed, getManagerHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -16,7 +16,8 @@ class bcolors:
 
 
 def listSpaceFromHosts(managerNodes):
-    listSpacesOnServer(managerNodes)
+    managerHost= getManagerHost(managerNodes)
+    listDeployed(managerHost)
 
 
 if __name__ == '__main__':

@@ -622,13 +622,15 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
                 if(response.status_code==202):
                     logger.info("Response :"+str(status))
                     retryCount=5
-                    while(retryCount>0 or (not str(status).casefold().__contains__('successful'))):
+                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
                         status = validateResponseGetDescription(deployResponseCode)
                         verboseHandle.printConsoleInfo("Response :"+str(status))
                         retryCount = retryCount-1
                         time.sleep(2)
                         if(str(status).casefold().__contains__('successful')):
-                            retryCount=0
+                            return
+                        elif(str(status).casefold().__contains__('failed')):
+                            return
                 else:
                     logger.info("Unable to deploy :"+str(status))
                     verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
@@ -649,7 +651,10 @@ def validateResponseGetDescription(responseCode):
     response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode))
     jsonData = json.loads(response.text)
     logger.info("response : "+str(jsonData))
-    return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
+    if(str(jsonData["status"]).__contains__("failed")):
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["error"])
+    else:
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
 
 
 
