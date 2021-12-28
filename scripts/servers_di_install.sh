@@ -43,8 +43,6 @@ sed -i '/export KAFKAPATH/d' setenv.sh
 echo "extracted_folder: "$extracted_folder
 kafka_home_path="export KAFKAPATH=/opt/Kafka/"$extracted_folder
 echo "$kafka_home_path">>setenv.sh
-source setenv.sh
-
 
 
 # Configuration of log dir
@@ -105,20 +103,16 @@ kafka_service_file="odsxkafka.service"
 zookeeper_service_file="odsxzookeeper.service"
 
 source setenv.sh
-cmd="nohup $KAFKAPATH/bin/zookeeper-server-start.sh $KAFKAPATH/config/zookeeper.properties &"
+cmd="$KAFKAPATH/bin/zookeeper-server-start.sh $KAFKAPATH/config/zookeeper.properties"
 echo "$cmd">>$start_zookeeper_file
-cmd="sleep 5"
-echo "$cmd">>$start_kafka_file
-cmd="nohup $KAFKAPATH/bin/kafka-server-start.sh $KAFKAPATH/config/server.properties  &"
+cmd="$KAFKAPATH/bin/kafka-server-start.sh $KAFKAPATH/config/server.properties"
 echo "$cmd">>$start_kafka_file
 source setenv.sh
 # stop KAFKA
-cmd="nohup $KAFKAPATH/bin/kafka-server-stop.sh $KAFKAPATH/config/server.properties  &"
-echo "$cmd">>$stop_kafka_file
-cmd="sleep 5"
+cmd="$KAFKAPATH/bin/kafka-server-stop.sh $KAFKAPATH/config/server.properties"
 echo "$cmd">>$stop_kafka_file
 # stop Zookeeper
-cmd="nohup $KAFKAPATH/bin/zookeeper-server-stop.sh $KAFKAPATH/config/zookeeper.properties &"
+cmd="$KAFKAPATH/bin/zookeeper-server-stop.sh $KAFKAPATH/config/zookeeper.properties"
 echo "$cmd">>$stop_zookeeper_file
 
 home_dir_sh=$(pwd)
@@ -149,3 +143,5 @@ if [[ $installtelegrafFlag == "y" ]]; then
   echo $installation_path"/"$installation_file
   yum install -y $installation_path"/"$installation_file
 fi
+chown gsods:gsods -R /opt/Kafka/*
+chown gsods:gsods -R /var/log/kafka/
