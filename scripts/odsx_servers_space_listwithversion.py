@@ -104,7 +104,7 @@ def getStatusOfSpaceHost(server):
 
 def getVersion(ip):
     logger.info("getVersion() ip :"+str(ip))
-    cmdToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh version"
+    cmdToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh version | grep -v JAVA_HOME"
     logger.info("cmdToExecute : "+str(cmdToExecute))
     output = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
     output=str(output).replace('\n','')
