@@ -401,7 +401,10 @@ gsLogsConfigFile=$6
 gsLicenseConfig=$7
 applicativeUser=$8
 nofileLimitFile=$9
-gsNicAddress=${10}
+wantInstallJava=${10}
+wantInstallUnzip=${11}
+gsNicAddress=${12}
+
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts
@@ -411,7 +414,9 @@ echo "param6"$gsLogsConfigFile
 echo "param7"$gsLicenseConfig
 echo "param8"$applicativeUser
 echo "param9"$nofileLimitFile
-echo "param10"$gsNicAddress
+echo "param10"$wantInstallJava
+echo "param11"$wantInstallUnzip
+echo "param12"$gsNicAddress
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else
@@ -419,10 +424,14 @@ else
 fi
 echo "TargetDir:"$targetDir
 if [ $1 == 'true' ]; then
-  echo "Setup AirGapJava"
-  installAirGapJava
-  echo "Setup AirGap unzip"
-  installAirGapUnzip
+  if [ "$wantInstallJava" == "y" ]; then
+    echo "Setup AirGapJava"
+    installAirGapJava
+  fi
+  if [ "$wantInstallUnzip" == "y" ]; then
+    echo "Setup AirGap unzip"
+    installAirGapUnzip
+  fi
   echo "Setup AirGap GS InsightEdge "
   installAirGapGS $targetDir
   echo "Load env"
