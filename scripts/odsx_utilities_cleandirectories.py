@@ -100,10 +100,12 @@ def cleanUpManagerServers():
             for node in managerNodes:
                 with Spinner():
                     output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-                    if (output == 0):
-                        verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(node.ip))
-                    else:
-                        verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
+                    #if(output>0):
+                    #    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    #if (output == 0):
+                    verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(node.ip))
+                    #else:
+                    #    verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
     else:
         logger.info("No Manager configuration found please check.")
         verboseHandle.printConsoleInfo("No Manager configuration found please check.")
@@ -122,6 +124,8 @@ def cleanUpSpaceServers():
             for node in spaceNodes:
                 with Spinner():
                     output = executeRemoteCommandAndGetOutputPython36(node.ip,user,cmd)
+                    #if(output>0):
+                    #    output = executeRemoteCommandAndGetOutputPython36(node.ip,user,cmd)
                     #if (output == 0):
                     verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(node.ip))
                     #else:

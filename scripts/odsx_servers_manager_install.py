@@ -6,7 +6,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
 from colorama import Fore
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,connectExecuteSSH
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap
 from scripts.spinner import Spinner
 
@@ -94,9 +94,9 @@ def getHostConfiguration():
             verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
             hostConfiguration = str(input("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
             logger.info("hostConfiguration : "+str(hostConfiguration))
-            wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
+            wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
             while(len(str(wantNicAddress))==0):
-                wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
+                wantNicAddress = 'n'
             logger.info("wantNicAddress  : "+str(wantNicAddress))
             if(hostConfiguration != '1'):
                 logger.info("hostConfiguration !=1 : "+str(hostConfiguration))
@@ -128,7 +128,9 @@ def getHostConfiguration():
                     hostsConfig = str(input(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
                 logger.info("hostsConfig  : "+str(hostsConfig))
                 if(len(str(wantNicAddress))==0):
-                    wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
+                    wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
+                if(len(str(wantNicAddress))==0):
+                    wantNicAddress='n'
                 logger.info("wantNicAddress  : "+str(wantNicAddress))
                 if(wantNicAddress=="yes" or wantNicAddress=="y"):
                     logger.info("wantNicAddress  Y")
@@ -256,6 +258,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
+        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "))
+        if(len(str(wantToInstallJava))==0):
+            wantToInstallJava='n'
+
+        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "))
+        if(len(str(wantToInstallUnzip))==0):
+            wantToInstallUnzip='n'
+
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -280,6 +290,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"7. "+
               Fore.GREEN+"User level open file limit = "+Fore.RESET,
               Fore.GREEN+nofileLimitFile.replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"8. "+
+              Fore.GREEN+"Do you want to install Java ? : "+Fore.RESET,
+              Fore.GREEN+wantToInstallJava+Fore.RESET)
+        print(Fore.GREEN+"9. "+
+              Fore.GREEN+"Do you want to install Unzip ? "+Fore.RESET,
+              Fore.GREEN+wantToInstallUnzip+Fore.RESET)
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -288,9 +304,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
             if(len(additionalParam)==0):
-                additionalParam= 'true'+' '+'/dbagiga'+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+                additionalParam= 'true'+' '+'/dbagiga'+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             else:
-                additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+                additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             #print('additional param :'+additionalParam)
             logger.info('additional param :'+additionalParam)
             output=""
@@ -342,6 +358,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
                 with Spinner():
                     outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                     #print(outputShFile)
                     logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
                 serverHost=''

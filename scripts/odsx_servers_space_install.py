@@ -6,7 +6,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
 from colorama import Fore
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
 from scripts.spinner import Spinner
 
@@ -159,12 +159,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
+        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "))
+        if(len(str(wantToInstallJava))==0):
+            wantToInstallJava='n'
 
+        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "))
+        if(len(str(wantToInstallUnzip))==0):
+            wantToInstallUnzip='n'
 
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
@@ -186,7 +192,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             host_nic_dict_obj.add(host,'')
         set_value_in_property_file('app.space.hosts',spaceHostConfig)
         #print("hostnic without"+str(host_nic_dict_obj))
-        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
+        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
+        if(len(str(wantNicAddress))==0):
+            wantNicAddress='n'
         if(wantNicAddress=="yes" or wantNicAddress=="y"):
             for host in host_nic_dict_obj:
                 nicAddr = str(input(Fore.YELLOW+"Enter GS_NIC_ADDRESS of space host"+str(host)+" :"+Fore.RESET))
@@ -221,6 +229,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"8. "+
               Fore.GREEN+"Space hosts = "+Fore.RESET,
               Fore.GREEN+spaceHostConfig.replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"9. "+
+              Fore.GREEN+"Do you want to install Java ? : "+Fore.RESET,
+              Fore.GREEN+wantToInstallJava+Fore.RESET)
+        print(Fore.GREEN+"10. "+
+              Fore.GREEN+"Do you want to install Unzip ? "+Fore.RESET,
+              Fore.GREEN+wantToInstallUnzip+Fore.RESET)
         #print(Fore.GREEN+"8. "+
         #      Fore.GREEN+"Space hosts NIC_ADDRESS= "+Fore.RESET,
         #      Fore.GREEN+str(host_nic_dict_obj).replace('"','')+Fore.RESET)
@@ -251,10 +265,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 verboseHandle.printConsoleInfo(output)
 
                 commandToExecute="scripts/servers_space_install.sh"
-                #print(additionalParam)
+                logger.info("additionalParam : "+str(additionalParam))
                 logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
                 with Spinner():
                     outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                     logger.debug("script output"+str(outputShFile))
                     #print(outputShFile)
                 serverHost=''
