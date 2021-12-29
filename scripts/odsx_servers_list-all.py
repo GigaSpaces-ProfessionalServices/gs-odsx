@@ -29,6 +29,27 @@ class host_dictionary(dict):
     def add(self, key, value):
         self[key] = value
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
 
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
@@ -58,8 +79,8 @@ def getStatusOfSpaceHost(serverHost):
     else:
         return "OFF"
 
-
 def getStatusOfNBHost(server):
+    cmd=''
     if(str(server.role).__contains__('agent')):
         cmd = "systemctl status consul.service"
     if(str(server.role).__contains__('applicative')):
@@ -227,3 +248,4 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error("Exception in Servers->List-all"+str(e))
         verboseHandle.printConsoleError("Exception in Servers->List-all"+str(e))
+        handleException(e)

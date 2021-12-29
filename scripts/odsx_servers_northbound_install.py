@@ -290,6 +290,14 @@ def setConfProperties():
         ssl_ca_certificate =ssl_ca_certificate_input
     logger.info("ssl_ca_certificate : "+str(ssl_ca_certificate))
 
+    max_upload_size = str(nbConfig.get("MAX_UPLOAD_SIZE")).replace('"','')
+    if(len(str(max_upload_size).replace('"',''))==0):
+        max_upload_size="20m"
+    maxUploadSize_input = str(input(Fore.YELLOW+"Enter MAX_UPLOAD_SIZE ["+max_upload_size+"]:"+Fore.RESET))
+    if(len(str(maxUploadSize_input))>0):
+        max_upload_size =maxUploadSize_input
+    logger.info("max_upload_size : "+str(max_upload_size))
+
     # Check if Application Service if yes then allow Agent else Ask for OPS Manager
     gridui_servers=""
     opsmanager_servers=""
@@ -363,6 +371,7 @@ def setConfProperties():
     lines = update_app_config_file("ssl_certificate=".upper(), ssl_certificate, lines)
     lines = update_app_config_file("ssl_private_key=".upper(), ssl_private_key, lines)
     lines = update_app_config_file("ssl_ca_certificate=".upper(), ssl_ca_certificate, lines)
+    lines = update_app_config_file("max_upload_size=".upper(),max_upload_size,lines)
     lines = update_app_config_file("gridui_servers=".upper(), gridui_servers, lines)
     lines = update_app_config_file("grafana_servers=".upper(), grafana_servers, lines)
     lines = update_app_config_file("influxdb_servers=".upper(), influxdb_servers, lines)
