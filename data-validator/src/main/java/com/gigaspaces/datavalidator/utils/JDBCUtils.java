@@ -1,12 +1,22 @@
 package com.gigaspaces.datavalidator.utils;
 
+import com.j_spaces.core.client.SQLQuery;
+import com.j_spaces.jdbc.SelectQuery;
+
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.util.ArrayList;
+import java.util.List;
 
 public class JDBCUtils {
-    static{
 
+    static List<String> aggregation_functions = new ArrayList<String>();
+    static{
+        aggregation_functions.add("avg");
+        aggregation_functions.add("count");
+        aggregation_functions.add("min");
+        aggregation_functions.add("max");
     }
     public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password) {
         Connection connection = null;
@@ -41,5 +51,35 @@ public class JDBCUtils {
             throwables.printStackTrace();
         }
         return connection;
+    }
+    public static String buildQuery(String dataSource, String fieldName
+            , String function, String tableName, long limitRecords, String whereCondition){
+        StringBuilder query = new StringBuilder();
+        query.append("SELECT ");
+        if(function != null && aggregation_functions.contains(function.toLowerCase())){
+            query.append(function).append("(A.").append(fieldName).append(") ");
+        }
+        query.append(" FROM ");
+
+        if(false && limitRecords != -1){
+            switch(dataSource) {
+                case "gigaspaces":
+                    query.append(" (SELECT ").append(fieldName).append(" FROM ").append(tableName).append(" WHERE ROWNUM <= ").append(limitRecords).append(" ) A");
+                    break;
+                case "mysql":
+                case "ms-sql":
+                    query.append(" (SELECT ").append(fieldName).append(" FROM ").append(tableName).append(" LIMIT ").append(limitRecords).append(" ) A");
+                    break;
+                case "db2":
+                    query.append(" (SELECT ").append(fieldName).append(" FROM ").append(tableName).append(" FETCH FIRST ").append(limitRecords).append(" ROWS ONLY").append(" ) A");
+                    break;
+            }
+        }else{
+            query.append(tableName).append(" A");
+            if(whereCondition != null && !whereCondition.trim().equals("")){
+                query.append(" WHERE ").append(whereCondition);
+            }
+        }
+        return query.toString();
     }
 }
