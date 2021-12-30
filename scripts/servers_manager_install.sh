@@ -223,7 +223,7 @@ function installAirGapGS {
    echo $installation_path"/"$installation_file
    pwd
    #sudo -u 'root' -H sh -c "unzip $installation_path"/"$installation_file -d  $targetDir"
-   unzip $installation_path"/"$installation_file -d  $targetDir
+   unzip -qq $installation_path"/"$installation_file -d  $targetDir
 
    # Configure license and additional params to setenv-override and set GS home
     if [ "$gsNicAddress" == "x" ] ; then   # Replaced dummy param with blank and no required to append GS_NIC_ADDR to setenv.over..
