@@ -1,6 +1,8 @@
 package com.gigaspaces.datavalidator.model;
 
 public class Measurement {
+    private long id;
+    private String type;
     private String dataSourceType;
     private String dataSourceHostIp;
     private String dataSourcePort;
@@ -9,9 +11,13 @@ public class Measurement {
     private String schemaName;
     private String tableName;
     private String fieldName;
+    private String limitRecords;
     private String whereCondition;
+    private static long maxId=0;
 
-    public Measurement(String dataSourceType, String dataSourceHostIp, String dataSourcePort, String username, String password, String schemaName, String tableName, String fieldName, String whereCondition) {
+    public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort, String username, String password, String schemaName, String tableName, String fieldName, String limitRecords, String whereCondition) {
+        this.id = id;
+        this.type = type;
         this.dataSourceType = dataSourceType;
         this.dataSourceHostIp = dataSourceHostIp;
         this.dataSourcePort = dataSourcePort;
@@ -21,6 +27,7 @@ public class Measurement {
         this.tableName = tableName;
         this.fieldName = fieldName;
         this.whereCondition = whereCondition;
+        this.limitRecords = limitRecords;
     }
 
     public String getDataSourceType() {
@@ -93,5 +100,33 @@ public class Measurement {
 
     public void setWhereCondition(String whereCondition) {
         this.whereCondition = whereCondition;
+    }
+
+    public long getId() {
+        return id;
+    }
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getLimitRecords() {
+        return limitRecords;
+    }
+
+    public void setLimitRecords(String limitRecords) {
+        this.limitRecords = limitRecords;
+    }
+
+    public static long getMaxId(){
+        return ++maxId;
     }
 }

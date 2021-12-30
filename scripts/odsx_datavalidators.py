@@ -259,23 +259,23 @@ def doValidate():
         if response:
             for task in response:
                 #print(task)
-                if task["dbProperties"]["testType"] == "Measure":
-                    testDetail = "Measurement:" + task["dbProperties"]["test"]+", Field:" + task["dbProperties"]["fieldName"]+", Table:" + task["dbProperties"]["tableName"]
-                    testDetail2= "'"+task["dbProperties"]["test"] +"' of '"+task["dbProperties"]["fieldName"] +"' FROM '"+ task["dbProperties"]["tableName"]+"'"
-                else:
-                    testDetail = "Measurement:" + task["dbProperties"]["test"]+", Field:" + task["dbProperties"]["fieldName1"]+", Table:" + task["dbProperties"]["tableName1"]
-                    testDetail2= "'"+task["dbProperties"]["test"] +"' of '"+task["dbProperties"]["fieldName1"] +"' FROM '"+ task["dbProperties"]["tableName1"] +"'"
+                #if task["type"] == "Measure":
+                #testDetail = "Measurement:" + task["measurementList"][0]["type"]+", Field:" + task["measurementList"][0]["fieldName"]+", Table:" + task["measurementList"][0]["tableName"]
+                testDetail= "'"+task["measurementList"][0]["type"] +"' of '"+task["measurementList"][0]["fieldName"] +"' FROM '"+ task["measurementList"][0]["tableName"]+"'"
+                #else:
+                #    testDetail = "Measurement:" + task["measurementList"][0]["type"]+", Field:" + task["measurementList"][0]["fieldName"]+", Table:" + task["measurementList"][0]["tableName"]
+                #    testDetail2= "'"+task["measurementList"][0]["type"] +"' of '"+task["measurementList"][0]["fieldName"] +"' FROM '"+ task["measurementList"][0]["tableName"] +"'"
 
-                if task["dbProperties"]["whereCondition"] != "":
-                    testDetail2 += " WHERE " + task["dbProperties"]["whereCondition"]
+                if task["measurementList"][0]["whereCondition"] != "":
+                    testDetail += " WHERE " + task["measurementList"][0]["whereCondition"]
 
                 status = Fore.GREEN + task["result"] + Fore.RESET
                 if task["result"].startswith('FAIL') :
                     status = Fore.RED + task["result"] + Fore.RESET
 
                 dataArray = [Fore.GREEN + str(task["id"]) + Fore.RESET,
-                             Fore.GREEN + task["dbProperties"]["testType"] + Fore.RESET,
-                             Fore.GREEN + testDetail2 + Fore.RESET,
+                             Fore.GREEN + task["type"] + Fore.RESET,
+                             Fore.GREEN + testDetail + Fore.RESET,
                              status
                              ]
                 data.append(dataArray)

@@ -1,14 +1,13 @@
 package com.gigaspaces.datavalidator.TaskProcessor;
 
+import com.gigaspaces.datavalidator.model.Measurement;
 import com.gigaspaces.datavalidator.utils.JDBCUtils;
 
-import java.beans.Transient;
 import java.io.Serializable;
 import java.sql.Connection;
 import java.sql.ResultSet;
 import java.sql.Statement;
-import java.util.Properties;
-import java.util.concurrent.Callable;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class TestTask implements Serializable {
@@ -16,15 +15,17 @@ public class TestTask implements Serializable {
     private static long maxId=0;
     private long id;
     private long time;
-    private Properties dbProperties;
+    private String type;
+    private List<Measurement> measurementList;
     private String result;
 
 
-    public TestTask(long id, long time, Properties dbProperties, String result){
+    public TestTask(long id, long time, String type, List<Measurement> measurementList){
         this.id = id;
         this.time = time;
-        this.result = result;
-        this.dbProperties = dbProperties;
+        this.type= type;
+        this.measurementList = measurementList;
+        this.result = "pending";
     }
 
     public long getId(){
@@ -37,25 +38,19 @@ public class TestTask implements Serializable {
 
     public String executeTask(){
         try {
-            String testType=dbProperties.getProperty("testType");
+            String testType=this.type;//dbProperties.getProperty("testType");
             if(testType != null && testType.equals("Measure")) {
+                Measurement measurement = measurementList.get(0);
                 logger.info("Executing task id: "+id);
-                String test = dbProperties.getProperty("test");
-                String dataSourceType = dbProperties.getProperty("dataSourceType");
-                String dataSourceHostIp = dbProperties.getProperty("dataSourceHostIp");
-                String dataSourcePort = dbProperties.getProperty("dataSourcePort");
-                String username = dbProperties.getProperty("username");
-                String password = dbProperties.getProperty("password");
-                String schemaName = dbProperties.getProperty("schemaName");
-                String tableName = dbProperties.getProperty("tableName");
-                String fieldName = dbProperties.getProperty("fieldName");
-                String limitRecords = dbProperties.getProperty("limitRecords", "-1");
-                String whereCondition = dbProperties.getProperty("whereCondition","");
+                String whereCondition = measurement.getWhereCondition()!=null?measurement.getWhereCondition():"";
 
-                Connection conn = JDBCUtils.getConnection(dataSourceType, dataSourceHostIp, dataSourcePort, schemaName, username, password);
+                Connection conn = JDBCUtils.getConnection(measurement.getDataSourceType()
+                        , measurement.getDataSourceHostIp(),measurement.getDataSourcePort()
+                        , measurement.getSchemaName(), measurement.getUsername(), measurement.getPassword());
                 Statement st = conn.createStatement();
-                String query = JDBCUtils.buildQuery(dataSourceType, fieldName, test, tableName
-                        , Long.parseLong(limitRecords), whereCondition);
+                String query = JDBCUtils.buildQuery(measurement.getDataSourceType(), measurement.getFieldName()
+                        , measurement.getType(), measurement.getTableName()
+                        , Long.parseLong(measurement.getLimitRecords()), whereCondition);
                 logger.info("query: " + query);
                 //st = conn.createStatement();
                 ResultSet rs = st.executeQuery(query);
@@ -69,24 +64,18 @@ public class TestTask implements Serializable {
 
             }else if(testType != null && testType.equals("Compare")){
 
-                String test = dbProperties.getProperty("test");
-                String limitRecords = dbProperties.getProperty("limitRecords", "-1");
-                String whereCondition = dbProperties.getProperty("whereCondition","");
+                Measurement measurement1 = measurementList.get(0);
+                String test = measurement1.getType();
+                String limitRecords=measurement1.getLimitRecords();
+                String whereCondition=measurement1.getWhereCondition();
 
-                String dataSource1Type = dbProperties.getProperty("dataSource1Type");
-                String dataSource1HostIp = dbProperties.getProperty("dataSource1HostIp");
-                String dataSource1Port = dbProperties.getProperty("dataSource1Port");
-                String username1 = dbProperties.getProperty("username1");
-                String password1 = dbProperties.getProperty("password1");
-                String schemaName1 = dbProperties.getProperty("schemaName1");
-                String tableName1 = dbProperties.getProperty("tableName1");
-                String fieldName1 = dbProperties.getProperty("fieldName1");
+               Connection conn1 = JDBCUtils.getConnection(measurement1.getDataSourceType()
+                        , measurement1.getDataSourceHostIp(),measurement1.getDataSourcePort()
+                        , measurement1.getSchemaName(), measurement1.getUsername(), measurement1.getPassword());
 
-
-                Connection conn1 = JDBCUtils.getConnection(dataSource1Type, dataSource1HostIp
-                        , dataSource1Port, schemaName1, username1, password1);
                 Statement statement1 = conn1.createStatement();
-                String query1 = JDBCUtils.buildQuery(dataSource1Type, fieldName1, test, tableName1
+                String query1 = JDBCUtils.buildQuery(measurement1.getDataSourceType()
+                        , measurement1.getFieldName(), test, measurement1.getTableName()
                         , Long.parseLong(limitRecords), whereCondition);
                 logger.info("query1: " + query1);
                 ResultSet resultSet1 = statement1.executeQuery(query1);
@@ -97,20 +86,14 @@ public class TestTask implements Serializable {
                     logger.info("val1:     " + val1);
                 }
 
-                String dataSource2Type = dbProperties.getProperty("dataSource2Type");
-                String dataSource2HostIp = dbProperties.getProperty("dataSource2HostIp");
-                String dataSource2Port = dbProperties.getProperty("dataSource2Port");
-                String username2 = dbProperties.getProperty("username2");
-                String password2 = dbProperties.getProperty("password2");
-                String schemaName2 = dbProperties.getProperty("schemaName2");
-                String tableName2 = dbProperties.getProperty("tableName2");
-                String fieldName2 = dbProperties.getProperty("fieldName2");
+                Connection conn2 = JDBCUtils.getConnection(measurement1.getDataSourceType()
+                        , measurement1.getDataSourceHostIp(),measurement1.getDataSourcePort()
+                        , measurement1.getSchemaName(), measurement1.getUsername(), measurement1.getPassword());
 
-                Connection conn2 = JDBCUtils.getConnection(dataSource2Type, dataSource2HostIp
-                        , dataSource2Port, schemaName2, username2, password2);
                 Statement statement2 = conn2.createStatement();
-                String query2 = JDBCUtils.buildQuery(dataSource2Type, fieldName2, test, tableName2
-                        , Long.parseLong(limitRecords),whereCondition);
+                String query2 = JDBCUtils.buildQuery(measurement1.getDataSourceType()
+                        , measurement1.getFieldName(), test, measurement1.getTableName()
+                        , Long.parseLong(limitRecords), whereCondition);
                 logger.info("query2: " + query2);
                 ResultSet resultSet2 = statement2.executeQuery(query2);
 

@@ -4,6 +4,7 @@ import com.fasterxml.jackson.databind.annotation.JsonAppend;
 import com.gigaspaces.datavalidator.TaskProcessor.CompleteTaskQueue;
 import com.gigaspaces.datavalidator.TaskProcessor.TaskQueue;
 import com.gigaspaces.datavalidator.TaskProcessor.TestTask;
+import com.gigaspaces.datavalidator.model.Measurement;
 import com.gigaspaces.datavalidator.utils.JDBCUtils;
 import com.google.gson.Gson;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -19,67 +20,7 @@ import java.util.logging.Logger;
 public class ValidateController {
 
     protected Logger logger = Logger.getLogger(this.getClass().getName());
-
-    @GetMapping("/avg/{schemaName}/{tableName}/{fieldName}")
-    public Double getAverageData(@PathVariable String schemaName,@PathVariable String tableName,@PathVariable String fieldName) {
-        Connection conn;
-        try {
-            conn = JDBCUtils.getConnection("gigaspaces","localhost","4174",schemaName,"","");
-            Statement st = conn.createStatement();
-            String query = "SELECT AVG("+fieldName+") " + "FROM "+tableName;
-            logger.info("query: "+query);
-            st = conn.createStatement();
-            ResultSet rs = st.executeQuery(query);
-            while (rs.next()) {
-                float avg = rs.getFloat(1);
-                logger.info("avg:     " + avg);
-                //logger.info("avg:     " + avg);
-            }
-        } catch (Exception exe) {
-            exe.printStackTrace();
-        }
-        return null;
-    }
-    @GetMapping("/count/{schemaName}/{tableName}/{fieldName}")
-    public Double getCountData(@PathVariable String schemaName,@PathVariable String tableName,@PathVariable String fieldName) {
-        Connection conn;
-        try {
-            conn = JDBCUtils.getConnection("gigaspaces","localhost","4174",schemaName,"","");
-            Statement st = conn.createStatement();
-            String query = "SELECT COUNT("+fieldName+") " + "FROM "+tableName;
-            logger.info("query: "+query);
-            st = conn.createStatement();
-            ResultSet rs = st.executeQuery(query);
-            while (rs.next()) {
-                float avg = rs.getFloat(1);
-                logger.info("avg:     " + avg);
-                //logger.info("avg:     " + avg);
-            }
-        } catch (Exception exe) {
-            exe.printStackTrace();
-        }
-        return null;
-    }
-    @GetMapping("/data/{schemaName}/{tableName}/{fieldName}")
-    public Double getData(@PathVariable String schemaName,@PathVariable String tableName,@PathVariable String fieldName) {
-        Connection conn;
-        try {
-            conn = JDBCUtils.getConnection("gigaspaces","localhost","4174",schemaName,"","");
-            Statement st = conn.createStatement();
-            String query = "SELECT COUNT("+fieldName+") " + "FROM "+tableName;
-            logger.info("query: "+query);
-            st = conn.createStatement();
-            ResultSet rs = st.executeQuery(query);
-            while (rs.next()) {
-                float avg = rs.getFloat(1);
-                logger.info("avg:     " + avg);
-                //logger.info("avg:     " + avg);
-            }
-        } catch (Exception exe) {
-            exe.printStackTrace();
-        }
-        return null;
-    }
+    
     @GetMapping("/compare/{test}")
     public Map<String,String> compareMeasurement(@PathVariable String test
             , @RequestParam String dataSource1Type
@@ -103,83 +44,34 @@ public class ValidateController {
         Connection conn;
         Map<String,String> response = new HashMap<>();
         try {
-            Properties dbProperties = new Properties();
-            dbProperties.setProperty("testType","Compare");
-            dbProperties.setProperty("test",test);
-            dbProperties.setProperty("whereCondition",whereCondition);
+            Measurement measurement1 = new Measurement(Measurement.getMaxId(), test, dataSource1Type
+                    , dataSource1HostIp, dataSource1Port
+                    , username1, password1, schemaName1
+                    , tableName1, fieldName1,"-1", whereCondition);
 
-            dbProperties.setProperty("dataSource1Type",dataSource1Type);
-            dbProperties.setProperty("dataSource1HostIp",dataSource1HostIp);
-            dbProperties.setProperty("dataSource1Port",dataSource1Port);
-            dbProperties.setProperty("username1",username1);
-            dbProperties.setProperty("password1",password1);
-            dbProperties.setProperty("schemaName1",schemaName1);
-            dbProperties.setProperty("tableName1",tableName1);
-            dbProperties.setProperty("fieldName1",fieldName1);
+            Measurement measurement2 = new Measurement(Measurement.getMaxId(), test
+                    , dataSource2Type, dataSource2HostIp, dataSource2Port
+                    , username2, password2, schemaName2
+                    , tableName2, fieldName2,"-1", whereCondition);
 
-            dbProperties.setProperty("dataSource2Type",dataSource2Type);
-            dbProperties.setProperty("dataSource2HostIp",dataSource2HostIp);
-            dbProperties.setProperty("dataSource2Port",dataSource2Port);
-            dbProperties.setProperty("username2",username2);
-            dbProperties.setProperty("password2",password2);
-            dbProperties.setProperty("schemaName2",schemaName2);
-            dbProperties.setProperty("tableName2",tableName2);
-            dbProperties.setProperty("fieldName2",fieldName2);
+            List<Measurement> measurementList = new LinkedList<>();
+            measurementList.add(measurement1);
+            measurementList.add(measurement2);
 
             if(executionTime == 0){
-                TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis(),dbProperties, "pending");
+                TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis()
+                        ,"Compare", measurementList);
                 String result = task.executeTask();
                 response.put("response", result);
             }else{
                 Calendar calScheduledTime = Calendar.getInstance();
                 calScheduledTime.add(Calendar.MINUTE, executionTime);
                 TaskQueue.setTask(new TestTask(TestTask.getMaxId(), calScheduledTime.getTimeInMillis()
-                        ,dbProperties, "pending"));
+                        ,"Compare", measurementList));
 
                 logger.info("Task scheduled and will be executed at "+calScheduledTime.getTime());
                 response.put("response", "scheduled");
-
             }
-
-
-
-
-
-            // Validation of type (table)
-            /*float val1=0,val2=0;
-            conn = JDBCUtils.getConnection(dataSource1Type,dataSource1HostIp,dataSource1Port,schemaName1,username1,password1);
-            Statement st = conn.createStatement();
-            String query = "SELECT "+test+"("+fieldName1+") " + "FROM "+tableName1;
-            logger.info("query1: "+query);
-            st = conn.createStatement();
-            ResultSet rs = st.executeQuery(query);
-            while (rs.next()) {
-                val1 = rs.getFloat(1);
-                logger.info("val1:     " + val1);
-                //logger.info("avg:     " + avg);
-            }
-
-            conn = JDBCUtils.getConnection(dataSource2Type,dataSource2HostIp,dataSource2Port,schemaName2,username2,password2);
-            st = conn.createStatement();
-            query = "SELECT "+test+"("+fieldName2+") " + "FROM "+tableName2;
-            logger.info("query2: "+query);
-            st = conn.createStatement();
-            rs = st.executeQuery(query);
-            while (rs.next()) {
-                val2 = rs.getFloat(1);
-                logger.info("val2:     " + val2);
-                //logger.info("avg:     " + avg);
-            }
-
-            if(val1 == val2){
-                System.out.printf("PASS");
-                response.put("response", "PASS");
-                return response;
-            }else{
-                logger.info("==> Test Result: FAIL, Test type: "+test+", DataSource1 Result: "+val1+", DataSource2 Result: "+val2);
-                response.put("response", "FAIL");
-                return response;
-            }*/
         } catch (Exception exe) {
             exe.printStackTrace();
             response.put("response", exe.getMessage());
@@ -204,30 +96,22 @@ public class ValidateController {
         Connection conn;
         Map<String,String> response = new HashMap<>();
         try {
+            Measurement measurement = new Measurement(Measurement.getMaxId(), test, dataSourceType, dataSourceHostIp, dataSourcePort
+                    , username, password, schemaName
+                    , tableName, fieldName, "-1",whereCondition);
 
-            Properties dbProperties = new Properties();
-            dbProperties.setProperty("testType","Measure");
-            dbProperties.setProperty("test",test);
-            dbProperties.setProperty("dataSourceType",dataSourceType);
-            dbProperties.setProperty("dataSourceHostIp",dataSourceHostIp);
-            dbProperties.setProperty("dataSourcePort",dataSourcePort);
-            dbProperties.setProperty("username",username);
-            dbProperties.setProperty("password",password);
-            dbProperties.setProperty("schemaName",schemaName);
-            dbProperties.setProperty("tableName",tableName);
-            dbProperties.setProperty("fieldName",fieldName);
-            dbProperties.setProperty("whereCondition",whereCondition);
-            //dbProperties.setProperty("limitRecords",limitRecords);
-
+            List<Measurement> measurementList = new LinkedList<>();
+            measurementList.add(measurement);
             if(executionTime == 0){
-                TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis(),dbProperties, "pending");
+                TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis()
+                        ,"Measure",measurementList);
                 String result = task.executeTask();
                 response.put("response", result);
             }else{
                 Calendar calScheduledTime = Calendar.getInstance();
                 calScheduledTime.add(Calendar.MINUTE, executionTime);
                 TaskQueue.setTask(new TestTask(TestTask.getMaxId(), calScheduledTime.getTimeInMillis()
-                        ,dbProperties, "pending"));
+                        ,"Measure", measurementList));
 
                 logger.info("Task scheduled and will be executed at "+calScheduledTime.getTime());
                 response.put("response", "scheduled");
@@ -239,7 +123,6 @@ public class ValidateController {
             response.put("response", exe.getMessage());
             return response;
         }
-        // return null;
     }
     @GetMapping("/scheduledtasks")
     public Map<String,String> getScheduledTasks(){
@@ -250,10 +133,8 @@ public class ValidateController {
         Collections.sort(allTasks, (left, right) -> Math.toIntExact(left.getId() - right.getId()));
 
         Gson gson = new Gson();
-        // convert your list to json
         String jsonTaskList = gson.toJson(allTasks);
-        // print your generated json
-        System.out.println("jsonTaskList: " + jsonTaskList);
+        logger.info("jsonTaskList: " + jsonTaskList);
         response.put("response", jsonTaskList);
         return response;
     }
@@ -267,30 +148,29 @@ public class ValidateController {
             , @RequestParam String schemaName
             , @RequestParam(defaultValue="0") int executionTime){
 
-        Properties dbProperties = new Properties();
-        dbProperties.setProperty("testType","Measure");
-        dbProperties.setProperty("test","max");
-        dbProperties.setProperty("dataSourceType","gigaspaces");
-        dbProperties.setProperty("dataSourceHostIp",dataSourceHostIp);
-        dbProperties.setProperty("dataSourcePort",dataSourcePort);
-        dbProperties.setProperty("username",username);
-        dbProperties.setProperty("password",password);
-        dbProperties.setProperty("schemaName",schemaName);
-        dbProperties.setProperty("tableName",tableName);
-        dbProperties.setProperty("fieldName",columnName);
-        dbProperties.setProperty("whereCondition","");
-        //dbProperties.setProperty("limitRecords",limitRecords);
+        String dataSourceType="gigaspaces";
+        String test="max";
+        String testType = "Measure";
+        Measurement measurement = new Measurement(Measurement.getMaxId(), test
+                , dataSourceType, dataSourceHostIp, dataSourcePort
+                , username, password, schemaName
+                , tableName, columnName,"-1", "");
+
+        List<Measurement> measurementList = new LinkedList<>();
+        measurementList.add(measurement);
+
 
         Map<String,String> response = new HashMap<>();
         if(executionTime == 0){
-            TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis(),dbProperties, "pending");
+            TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis()
+                    ,testType, measurementList);
             String result = task.executeTask();
             response.put("response", result);
         }else{
             Calendar calScheduledTime = Calendar.getInstance();
             calScheduledTime.add(Calendar.MINUTE, executionTime);
             TaskQueue.setTask(new TestTask(TestTask.getMaxId(), calScheduledTime.getTimeInMillis()
-                    ,dbProperties, "pending"));
+                    ,testType, measurementList));
 
             logger.info("Task scheduled and will be executed at "+calScheduledTime.getTime());
             response.put("response", "scheduled");
