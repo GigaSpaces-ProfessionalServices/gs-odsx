@@ -20,7 +20,7 @@ import java.util.logging.Logger;
 public class ValidateController {
 
     protected Logger logger = Logger.getLogger(this.getClass().getName());
-    
+
     @GetMapping("/compare/{test}")
     public Map<String,String> compareMeasurement(@PathVariable String test
             , @RequestParam String dataSource1Type
@@ -53,6 +53,41 @@ public class ValidateController {
                     , dataSource2Type, dataSource2HostIp, dataSource2Port
                     , username2, password2, schemaName2
                     , tableName2, fieldName2,"-1", whereCondition);
+
+            List<Measurement> measurementList = new LinkedList<>();
+            measurementList.add(measurement1);
+            measurementList.add(measurement2);
+
+            if(executionTime == 0){
+                TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis()
+                        ,"Compare", measurementList);
+                String result = task.executeTask();
+                response.put("response", result);
+            }else{
+                Calendar calScheduledTime = Calendar.getInstance();
+                calScheduledTime.add(Calendar.MINUTE, executionTime);
+                TaskQueue.setTask(new TestTask(TestTask.getMaxId(), calScheduledTime.getTimeInMillis()
+                        ,"Compare", measurementList));
+
+                logger.info("Task scheduled and will be executed at "+calScheduledTime.getTime());
+                response.put("response", "scheduled");
+            }
+        } catch (Exception exe) {
+            exe.printStackTrace();
+            response.put("response", exe.getMessage());
+            return response;
+        }
+        return response;
+    }
+    @GetMapping("/compare/{measurementId1}/{measurementId2}")
+    public Map<String,String> compareMeasurement(@PathVariable String measurementId1
+            ,@PathVariable String measurementId2
+            ,@RequestParam(defaultValue="0") int executionTime) {
+        Connection conn;
+        Map<String,String> response = new HashMap<>();
+        try {
+            Measurement measurement1 = Measurement.getMeasurementMap().get(Long.parseLong(measurementId1));
+            Measurement measurement2 = Measurement.getMeasurementMap().get(Long.parseLong(measurementId2));
 
             List<Measurement> measurementList = new LinkedList<>();
             measurementList.add(measurement1);
@@ -124,6 +159,66 @@ public class ValidateController {
             return response;
         }
     }
+    @GetMapping("/measurement/register")
+    public Map<String,String> registerMeasurement(@RequestParam String test
+            , @RequestParam String dataSourceType
+            , @RequestParam String dataSourceHostIp
+            , @RequestParam String dataSourcePort
+            , @RequestParam String username
+            , @RequestParam String password
+            , @RequestParam String schemaName
+            , @RequestParam String tableName
+            , @RequestParam String fieldName
+            , @RequestParam String whereCondition
+            //, @RequestParam String limitRecords
+    ) {
+        Connection conn;
+        Map<String,String> response = new HashMap<>();
+        try {
+            Measurement measurement = new Measurement(Measurement.getMaxId(), test, dataSourceType, dataSourceHostIp, dataSourcePort
+                    , username, password, schemaName
+                    , tableName, fieldName, "-1",whereCondition);
+            response.put("response", "Registered successfully");
+            return response;
+
+        } catch (Exception exe) {
+            exe.printStackTrace();
+            response.put("response", exe.getMessage());
+            return response;
+        }
+    }
+    @GetMapping("/measurement/run/{measurementId}")
+    public Map<String,String> runMeasurement(@PathVariable String measurementId
+            , @RequestParam(defaultValue="0") int executionTime
+    ) {
+        Connection conn;
+        Map<String,String> response = new HashMap<>();
+        try {
+            Measurement measurement = Measurement.getMeasurementMap().get(Long.parseLong(measurementId));
+            List<Measurement> measurementList = new LinkedList<>();
+            measurementList.add(measurement);
+            if(executionTime == 0){
+                TestTask task = new TestTask(TestTask.getMaxId(), System.currentTimeMillis()
+                        ,"Measure",measurementList);
+                String result = task.executeTask();
+                response.put("response", result);
+            }else{
+                Calendar calScheduledTime = Calendar.getInstance();
+                calScheduledTime.add(Calendar.MINUTE, executionTime);
+                TaskQueue.setTask(new TestTask(TestTask.getMaxId(), calScheduledTime.getTimeInMillis()
+                        ,"Measure", measurementList));
+
+                logger.info("Task scheduled and will be executed at "+calScheduledTime.getTime());
+                response.put("response", "scheduled");
+            }
+            return response;
+
+        } catch (Exception exe) {
+            exe.printStackTrace();
+            response.put("response", exe.getMessage());
+            return response;
+        }
+    }
     @GetMapping("/scheduledtasks")
     public Map<String,String> getScheduledTasks(){
         Map<String,String> response = new HashMap<>();
@@ -134,7 +229,20 @@ public class ValidateController {
 
         Gson gson = new Gson();
         String jsonTaskList = gson.toJson(allTasks);
-        logger.info("jsonTaskList: " + jsonTaskList);
+        //logger.info("jsonTaskList: " + jsonTaskList);
+        response.put("response", jsonTaskList);
+        return response;
+    }
+    @GetMapping("/measurement/list")
+    public Map<String,String> getMeasurementList(){
+        Map<String,String> response = new HashMap<>();
+        List<Measurement> measurementList = new ArrayList<>(Measurement.getMeasurementMap().values());
+        logger.info("measurementList size: "+measurementList.size());
+        Collections.sort(measurementList, (left, right) -> Math.toIntExact(left.getId() - right.getId()));
+
+        Gson gson = new Gson();
+        String jsonTaskList = gson.toJson(measurementList);
+        //logger.info("jsonMeasurementList: " + jsonTaskList);
         response.put("response", jsonTaskList);
         return response;
     }

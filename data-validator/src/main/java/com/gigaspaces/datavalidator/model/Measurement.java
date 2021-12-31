@@ -1,5 +1,8 @@
 package com.gigaspaces.datavalidator.model;
 
+import java.util.HashMap;
+import java.util.Map;
+
 public class Measurement {
     private long id;
     private String type;
@@ -15,6 +18,8 @@ public class Measurement {
     private String whereCondition;
     private static long maxId=0;
 
+    private static Map<Long,Measurement> measurementMap = new HashMap<>();
+
     public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort, String username, String password, String schemaName, String tableName, String fieldName, String limitRecords, String whereCondition) {
         this.id = id;
         this.type = type;
@@ -28,6 +33,8 @@ public class Measurement {
         this.fieldName = fieldName;
         this.whereCondition = whereCondition;
         this.limitRecords = limitRecords;
+
+        measurementMap.put(this.id, this);
     }
 
     public String getDataSourceType() {
@@ -124,6 +131,14 @@ public class Measurement {
 
     public void setLimitRecords(String limitRecords) {
         this.limitRecords = limitRecords;
+    }
+
+    public static Map<Long, Measurement> getMeasurementMap() {
+        return measurementMap;
+    }
+
+    public static void setMeasurementMap(Map<Long, Measurement> measurementMap) {
+        Measurement.measurementMap = measurementMap;
     }
 
     public static long getMaxId(){

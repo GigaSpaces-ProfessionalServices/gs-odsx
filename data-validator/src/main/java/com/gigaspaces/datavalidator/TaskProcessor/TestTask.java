@@ -86,13 +86,14 @@ public class TestTask implements Serializable {
                     logger.info("val1:     " + val1);
                 }
 
-                Connection conn2 = JDBCUtils.getConnection(measurement1.getDataSourceType()
-                        , measurement1.getDataSourceHostIp(),measurement1.getDataSourcePort()
-                        , measurement1.getSchemaName(), measurement1.getUsername(), measurement1.getPassword());
+                Measurement measurement2 = measurementList.get(1);
+                Connection conn2 = JDBCUtils.getConnection(measurement2.getDataSourceType()
+                        , measurement2.getDataSourceHostIp(),measurement2.getDataSourcePort()
+                        , measurement2.getSchemaName(), measurement2.getUsername(), measurement2.getPassword());
 
                 Statement statement2 = conn2.createStatement();
-                String query2 = JDBCUtils.buildQuery(measurement1.getDataSourceType()
-                        , measurement1.getFieldName(), test, measurement1.getTableName()
+                String query2 = JDBCUtils.buildQuery(measurement2.getDataSourceType()
+                        , measurement2.getFieldName(), test, measurement2.getTableName()
                         , Long.parseLong(limitRecords), whereCondition);
                 logger.info("query2: " + query2);
                 ResultSet resultSet2 = statement2.executeQuery(query2);
@@ -114,7 +115,7 @@ public class TestTask implements Serializable {
             return this.result;
         } catch (Exception e) {
             e.printStackTrace();
-            this.result = "FAIL: "+e.getMessage();
+            this.result = "FAIL: Error please refer log file";
         }
         return this.result;
     }
