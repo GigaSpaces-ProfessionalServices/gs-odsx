@@ -2,6 +2,12 @@
 The following was discovered as part of building this project:
 
 ### Build and Run Application
+* Install db2 jdbc dependency (This dependency is not available on maven repository)
+  > wget https://aa-nihar-test.s3.us-east-2.amazonaws.com/db2-driver/db2jcc.jar
+  
+  > mvn install:install-file -Dfile=db2jcc.jar -DgroupId=com.ibm.db2.jcc -DartifactId=db2jcc -Dversion=4.16.53 -Dpackaging=jar
+
+
 * Maven Build from data-validator directory 
   > mvn clean install -DskipTests
 * Run command 

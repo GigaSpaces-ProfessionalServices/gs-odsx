@@ -32,12 +32,13 @@ public class JDBCUtils {
                     connectionString  = "jdbc:mysql://"+dataSourceHostIp+":"+dataSourcePort+"/"+schemaName+"?characterEncoding=latin1";
                     break;
                 case "db2":
-                    // code block
                     Class.forName("com.ibm.db2.jcc.DB2Driver").newInstance();
+                    connectionString = "jdbc:db2://" + dataSourceHostIp + ":" + dataSourcePort + "/" + schemaName;
+                    //+ "?characterEncoding=latin1";
                     break;
                 case "ms-sql":
-                    // code block
                     Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+                    connectionString = "jdbc:sqlserver://" + dataSourceHostIp + ":" + dataSourcePort + ";DatabaseName=" + schemaName;
                     break;
             }
             connection = DriverManager.getConnection(connectionString,username, password);
