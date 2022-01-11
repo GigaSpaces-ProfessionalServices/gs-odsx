@@ -48,11 +48,22 @@ echo "$kafka_home_path">>setenv.sh
 # Configuration of log dir
 source setenv.sh
 echo "kafkaPath :"$KAFKAPATH
-mkdir -p $KAFKAPATH/log
-mkdir -p $KAFKAPATH/log/kafka
-mkdir -p $KAFKAPATH/log/zookeeper
-sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/zookeeper|g' $KAFKAPATH/config/zookeeper.properties
-sed -i -e 's|/tmp/zookeeper|'$KAFKAPATH'/log/zookeeper|g' $KAFKAPATH/config/zookeeper.properties
+#mkdir -p $KAFKAPATH/log
+#mkdir -p $KAFKAPATH/log/kafka
+#mkdir -p $KAFKAPATH/log/zookeeper
+
+rm -rf /data/zookeeper/
+rm -rf /data/kafka-logs/
+rm -rf /data/kafka-data/
+
+
+mkdir -p /data/zookeeper/
+mkdir -p /data/kafka-logs/
+mkdir -p /data/kafka-data/
+
+sed -i -e 's|$KAFKAPATH/log/kafka|/data/zookeeper/|g' $KAFKAPATH/config/zookeeper.properties
+sed -i -e 's|/tmp/zookeeper|/data/zookeeper/|g' $KAFKAPATH/config/zookeeper.properties
+sed -i -e 's|${kafka.logs.dir}|/data/kafka-logs|g' $KAFKAPATH/config/log4j.properties
 
 if [[ ${#masterHost} -ge 3 ]]; then
   # removing all existing properties
@@ -88,12 +99,12 @@ if [[ ${#masterHost} -ge 3 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$witnessHost':9092|g' $KAFKAPATH/config/server.properties
     sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$witnessHost'' $KAFKAPATH/config/server.properties
   fi
-  echo "$id">$KAFKAPATH/log/zookeeper/myid
+  echo "$id">/data/zookeeper/myid
   echo "added params"
 fi
 
 #sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
-sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs=/var/log/kafka|g' $KAFKAPATH/config/server.properties
+sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs=/data/kafka-data/|g' $KAFKAPATH/config/server.properties
 rm -f /var/log/kafka/*
 start_kafka_file="start_kafka.sh"
 start_zookeeper_file="start_zookeeper.sh"
@@ -143,5 +154,18 @@ if [[ $installtelegrafFlag == "y" ]]; then
   echo $installation_path"/"$installation_file
   yum install -y $installation_path"/"$installation_file
 fi
-chown gsods:gsods -R /opt/Kafka/*
-chown gsods:gsods -R /var/log/kafka/
+
+
+chown ec2-user:ec2-user -R /opt/Kafka/*
+chown ec2-user:ec2-user -R /data/kafka-logs
+chown ec2-user:ec2-user -R /data/kafka-data
+chown ec2-user:ec2-user -R /data/zookeeper
+
+#chmod 777 -R /opt/Kafka/
+#chmod 777 -R /data/kafka-logs
+#chmod 777 -R /data/kafka-data
+#chmod 777 -R /data/zookeeper
+
+systemctl daemon-reload
+
+
