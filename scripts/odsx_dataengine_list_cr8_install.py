@@ -8,9 +8,10 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file
-from utils.ods_cluster_config import config_add_dataIntegration_node, config_get_dataIntegration_nodes
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, \
+    config_get_dataEngine_nodes, config_add_dataEngine_node
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, executeRemoteShCommandAndGetOutput
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -57,8 +58,8 @@ class obj_type_dictionary(dict):
         self[key] = value
 
 
-def getDIServerHostList():
-    nodeList = config_get_dataIntegration_nodes()
+def getDEServerHostList():
+    nodeList = config_get_dataEngine_nodes()
     nodes = ""
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
@@ -69,8 +70,8 @@ def getDIServerHostList():
     return nodes
 
 
-def getDIServerTypeInstall():
-    logger.info("getDIServerTypeInstall()")
+def getDEServerTypeInstall():
+    logger.info("getDEServerTypeInstall()")
     serverType = str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
     while (len(serverType) == 0):
         serverType = str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
@@ -81,39 +82,22 @@ def installSingle():
     logger.info("installSingle():")
     try:
         global user
-#        global cr8InstallFlag
-        global telegrafInstallFlag
 
-        host = str(input(Fore.YELLOW + "Enter host to install DI: " + Fore.RESET))
+        host = str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
         while (len(str(host)) == 0):
-            host = str(input(Fore.YELLOW + "Enter host to install DI: " + Fore.RESET))
-        logger.info("Enter host to install Grafana: " + str(host))
-        user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
+            host = str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
+        logger.info("Enter host to install cr8: " + str(host))
+        user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
         if (len(str(user)) == 0):
             user = "root"
         logger.info(" user: " + str(user))
 
-        telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
-        logger.info("Selected answer telegraf:" + str(telegrafInstallFlag))
-        if (telegrafInstallFlag.lower() == "y"):
-            telegrafInstallFlag = "y"
-        else:
-            telegrafInstallFlag = "n"
-
-        print(telegrafInstallFlag)
-#        cr8InstallFlag = input("Do you want to install cr8? yes(y)/no(n) [n]: ")
-#        logger.info("Selected answer cr8:" + str(cr8InstallFlag))
-#        if (cr8InstallFlag.lower() == "y"):
-#            cr8InstallFlag = True
-#        else:
-#            cr8InstallFlag = False
-
-        confirmInstall = str(input(Fore.YELLOW + "Are you sure want to install DI servers (y/n) [y]: " + Fore.RESET))
+        confirmInstall = str(input(Fore.YELLOW + "Are you sure want to install DE servers (y/n) [y]: " + Fore.RESET))
         if (len(str(confirmInstall)) == 0):
             confirmInstall = 'y'
         if (confirmInstall == 'y'):
-            buildTarFileToLocalMachine(host)
-            buildUploadInstallTarToServer(host)
+            # buildTarFileToLocalMachine(host)
+            # buildUploadInstallTarToServer(host)
             executeCommandForInstall(host, 'SingleNode', 0)
 
     except Exception as e:
@@ -126,40 +110,23 @@ def installCluster():
     global masterHost
     global standByHost
     global witnessHost
-#    global cr8InstallFlag
-    global telegrafInstallFlag
 
-    masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
+    masterHost = str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
     while (len(masterHost) == 0):
-        masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
+        masterHost = str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
     logger.info("masterHost : " + str(masterHost))
-    standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
+    standByHost = str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
     while (len(standByHost) == 0):
-        standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
+        standByHost = str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
     logger.info("standByHost : " + str(standByHost))
-    witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
+    witnessHost = str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
     while (len(witnessHost) == 0):
-        witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
+        witnessHost = str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
     logger.info("witnessHost :" + str(witnessHost))
-    user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
+    user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
     if (len(str(user)) == 0):
         user = "root"
     logger.info(" user: " + str(user))
-
-    telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
-    logger.info("Selected answer telegraf:" + str(telegrafInstallFlag))
-    if (telegrafInstallFlag.lower() == "y"):
-        telegrafInstallFlag = "y"
-    else:
-        telegrafInstallFlag = "n"
-
-    print(telegrafInstallFlag)
-#    cr8InstallFlag = input("Do you want to install cr8? yes(y)/no(n) [n]: ")
-#    logger.info("Selected answer cr8:" + str(cr8InstallFlag))
-#    if (cr8InstallFlag.lower() == "y"):
-#        cr8InstallFlag = True
-#    else:
-#        cr8InstallFlag = False
 
     clusterHosts.append(masterHost)
     clusterHosts.append(standByHost)
@@ -172,7 +139,7 @@ def installCluster():
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
     confirmInstall = str(input(
-        Fore.YELLOW + "Are you sure want to install DI servers on " + str(clusterHosts) + " (y/n) [y]: " + Fore.RESET))
+        Fore.YELLOW + "Are you sure want to install DE servers on " + str(clusterHosts) + " (y/n) [y]: " + Fore.RESET))
     if (len(str(confirmInstall)) == 0):
         confirmInstall = 'y'
     if (confirmInstall == 'y'):
@@ -208,32 +175,44 @@ def executeCommandForInstall(host, type, count):
     logger.info("executeCommandForInstall(): start host : " + str(host) + " type : " + str(type))
 
     try:
-        # cmd = "java -version"
-        # outputVersion = executeRemoteCommandAndGetOutputPython36(host,user,cmd)
-        # print("output java version :"+str(outputVersion))
-        commandToExecute = "scripts/servers_di_install.sh"
-        additionalParam = ""
-        additionalParam = telegrafInstallFlag + ' '
-        if (len(clusterHosts) == 3):
-            additionalParam = additionalParam + masterHost + ' ' + standByHost + ' ' + witnessHost + ' ' + str(count)
-
-        logger.info("Additinal Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
-            host) + " User:" + str(user))
-        with Spinner():
+        commandToExecute = "scripts/dataengine_list_cr8_install_pre.sh"
+        additionalParam = str(type)
+        output = executeRemoteShCommandAndGetOutput(host, 'root', '', commandToExecute)
+        output = output.decode("utf-8").replace("IS_CR8_INSTALL= ", "").replace("\n", "")
+        print(output)
+        installCr8 = True
+        # IS_CR8_INSTALL= 1 -> install, 2-> installed version is lower, 3-> installed version is higher, 4-> installed version is same
+        if output == "2":
+            confirmInstall = str(input(
+                Fore.YELLOW + "Lower version of cr8 is installed. Do you want to continue installation (y/n) [y]: " + Fore.RESET))
+            if (len(str(confirmInstall)) == 0):
+                confirmInstall = 'y'
+            if (confirmInstall != 'y'):
+                installCr8 = False
+        if output == "3":
+            confirmInstall = str(input(
+                Fore.YELLOW + "Higher version of cr8 is installed. Do you want to continue installation (y/n) [y]: " + Fore.RESET))
+            if (len(str(confirmInstall)) == 0):
+                confirmInstall = 'y'
+            if (confirmInstall != 'y'):
+                installCr8 = False
+        if output == "4":
+            confirmInstall = str(input(
+                Fore.YELLOW + "Same version of cr8 is installed. Do you want to continue installation (y/n) [y]: " + Fore.RESET))
+            if (len(str(confirmInstall)) == 0):
+                confirmInstall = 'y'
+            if confirmInstall != 'y':
+                installCr8 = False
+        if installCr8 == True:
+            commandToExecute = "scripts/dataengine_list_cr8_install.sh"
+            logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
+                host) + " User:" + str(user))
             outputShFile = connectExecuteSSH(host, user, commandToExecute, additionalParam)
             logger.info("outputShFile kafka : " + str(outputShFile))
             print("Checking for Type ::::" + str(type))
 
-            #if (cr8InstallFlag == "y" and (type== 'Master' or type == 'Standby' or type == 'SingleNode')):
-            #   verboseHandle.printConsoleInfo("Starting CR8 installation for "+str(type))
-            #   logger.info("Installing cr8 for "+str(type))
-           #    commandToExecute="scripts/servers_di_install_cr8.sh"
-           #    outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
-           #    logger.info("outputShFile CR8 :"+str(outputShFile))
-           #    logger.info("Done installation of cr8 for "+str(type))
-
-            config_add_dataIntegration_node(host, host, "dataIntegration", "true", type)
-            set_value_in_property_file('app.di.hosts', host)
+            config_add_dataEngine_node(host, host, "cr8", "dataEngine", "true", type)
+            set_value_in_property_file('app.dataengine.hosts', host)
             verboseHandle.printConsoleInfo("Node has been added :" + str(host))
 
     except Exception as e:
@@ -252,32 +231,19 @@ def executeLocalCommandAndGetOutput(commandToExecute):
 
 def validateRPM():
     logger.info("validateRPM()")
-    installerArray = []
     cmd = "pwd"
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home dir : " + str(home))
-    cmd = 'find ' + str(home) + '/install/java/ -name *.rpm -printf "%f\n"'  # Creating .tar file on Pivot machine
-    javaRpm = executeLocalCommandAndGetOutput(cmd)
-    logger.info("javaRpm found :" + str(javaRpm))
-    cmd = 'find ' + str(home) + '/install/kafka/ -name *.tgz -printf "%f\n"'  # Creating .tar file on Pivot machine
-    kafkaZip = executeLocalCommandAndGetOutput(cmd)
-    logger.info("kafkaZip found :" + str(kafkaZip))
-    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.rpm -printf "%f\n"'  # Creating .tar file on Pivot machine
-    #cr8Rpm = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("cr8Rpm found :" + str(cr8Rpm))
-    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.gz -printf "%f\n"'  # Creating .tar file on Pivot machine
-    #localSetupZip = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("localSetupZip found :" + str(localSetupZip))
-    cmd = 'find ' + str(home) + '/install/telegraf/ -name *.rpm -printf "%f\n"'  # Creating .tar file on Pivot machine
-    telegrafRpm = executeLocalCommandAndGetOutput(cmd)
-    logger.info("telegrafRpm found :" + str(telegrafRpm))
+    cmd = 'find ' + str(home) + '/install/cr8/ -name *.rpm -printf "%f\n"'  # Creating .tar file on Pivot machine
+    cr8Rpm = executeLocalCommandAndGetOutput(cmd)
+    logger.info("cr8Rpm found :" + str(cr8Rpm))
+    cmd = 'find ' + str(home) + '/install/cr8/ -name *.gz -printf "%f\n"'  # Creating .tar file on Pivot machine
+    localSetupZip = executeLocalCommandAndGetOutput(cmd)
+    logger.info("localSetupZip found :" + str(localSetupZip))
 
     di_installer_dict = obj_type_dictionary()
-    di_installer_dict.add('Java', javaRpm)
-    di_installer_dict.add('KafkaZip', kafkaZip)
-    #di_installer_dict.add('CR8Rpm', cr8Rpm)
-    #di_installer_dict.add('CR8-LocalSetupZip', localSetupZip)
-    di_installer_dict.add('Telegraf', telegrafRpm)
+    di_installer_dict.add('CR8Rpm', cr8Rpm)
+    di_installer_dict.add('CR8-LocalSetupZip', localSetupZip)
 
     for name, installer in di_installer_dict.items():
         if (len(str(installer)) == 0):
@@ -316,26 +282,20 @@ def addNodeToCluster(nodes):
         while (len(witnessHost) == 0):
             witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
         logger.info("witnessHost :" + str(witnessHost))
-    user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
+    user = str(input(Fore.YELLOW + "Enter user to connect DE cr8 servers [root]:" + Fore.RESET))
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> DI -> Install')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 -> Install')
     try:
         if (validateRPM()):
-            diServerType = getDIServerTypeInstall()
-            logger.info("diServerInstallType : " + str(diServerType))
-            if (diServerType != '99'):
-                if (diServerType == '1'):
+            deServerType = getDEServerTypeInstall()
+            logger.info("deServerInstallType : " + str(deServerType))
+            if (deServerType != '99'):
+                if (deServerType == '1'):
                     installSingle()
-                if (diServerType == '2'):
-                    nodes = getDIServerHostList()
-                    # nodesCount = nodes.split(',')
-                    # logger.info("node Count :"+str(nodesCount))
-                    # if(len(nodesCount)<3):
-                    #    addNodeToCluster(nodes)
-                    # else:
-                    #    installCluster()
+                if (deServerType == '2'):
+                    nodes = getDEServerHostList()
                     installCluster()
         else:
             logger.info("No valid rpm found")
