@@ -89,7 +89,7 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, resumeMode, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration):
+    def __init__(self, resumeMode, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration, dataEngine):
         self.resumeMode = resumeMode
         self.managers = managers
         self.cdc = cdc
@@ -98,6 +98,7 @@ class AllServers:
         self.grafana = grafana
         self.influxdb = influxdb
         self.dataIntegration = dataIntegration
+        self.dataEngine = dataEngine
 
 class Managers:
     def __init__(self, node):
@@ -130,9 +131,23 @@ class DataIntegration:
         self.resumeMode = resumeMode
         self.nodes = nodes
 
+class DataEngine:
+    def __init__(self,resumeMode,nodes):
+        self.resumeMode = resumeMode
+        self.nodes = nodes
+
 class Nodes:
     def __init__(self, ip, name, role, resumeMode, type):
         self.name = name
+        self.type = type
+        self.ip = ip
+        self.role = role
+        self.resumeMode = resumeMode
+
+class Nodes1:
+    def __init__(self, ip, name, engine, role, resumeMode, type):
+        self.name = name
+        self.engine = engine
         self.type = type
         self.ip = ip
         self.role = role
@@ -258,6 +273,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     grafana = []
     influxdb = []
     dataIntegration = []
+    dataEngine = []
     if hasattr(config_data.cluster.servers, 'grafana'):
         for node1 in list(config_data.cluster.servers.grafana.node):
             nodes.append(Node(node1.ip, node1.name, node1.role, node1.resumeMode))
@@ -274,6 +290,12 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
             nodes.append(Nodes(node1.ip, node1.name, node1.role, node1.resumeMode, node1.type))
         dataIntegration = DataIntegration(config_data.cluster.servers.dataIntegration.resumeMode,nodes)
 
+    nodes = []
+    if hasattr(config_data.cluster.servers, 'dataEngine'):
+        for node1 in list(config_data.cluster.servers.dataEngine.nodes):
+            nodes.append(Nodes1(node1.ip, node1.name, node1.engine, node1.role, node1.resumeMode, node1.type))
+        dataEngine = DataEngine(config_data.cluster.servers.dataEngine.resumeMode,nodes)
+
     partition = Partitions(config_data.cluster.servers.spaces.partitions.primary,
                            config_data.cluster.servers.spaces.partitions.backup)
     hosts = []
@@ -282,7 +304,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
 
     spaces = Spaces(partition, Servers(hosts))
     allservers = AllServers(config_data.cluster.servers.resumeMode, managers, cdc,
-                            nb, spaces, grafana, influxdb, dataIntegration)
+                            nb, spaces, grafana, influxdb, dataIntegration,dataEngine)
 
     streams = []
     for stream in list(config_data.cluster.streams):
@@ -782,6 +804,10 @@ def config_get_influxdb_node(filePath='config/cluster.config'):
 def config_get_dataIntegration_nodes(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.dataIntegration.nodes
 
+def config_get_dataEngine_nodes(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.dataEngine.nodes
+
+
 def isInfluxdbNodeExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
@@ -789,6 +815,12 @@ def isInfluxdbNodeExist(existingNodes, hostIp):
     return "false"
 
 def isDataIntegrationNodeExist(existingNodes, hostIp):
+    for node in existingNodes:
+        if(str(node.ip)==str(hostIp)):
+            return 'true'
+    return "false"
+
+def isDataEngineNodeExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
             return 'true'
@@ -888,6 +920,52 @@ def config_remove_dataIntegration_byNameIP(dataIntegrationName,dataIntegrationIP
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
 
 
+def config_add_dataEngine_node(hostIp, hostName, engine, role, resumeMode, type, filePath='config/cluster.config'):
+    logger.info("config_add_dataEngine_node")
+    newNode = Nodes1(hostIp, hostName, engine, role, resumeMode,type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.dataEngine.nodes
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isdataEngineNodeExist(existingNodes,hostIp) "+isDataEngineNodeExist(existingNodes,hostIp))
+        if(isDataEngineNodeExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.dataEngine.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+
+def config_remove_dataEngine_byNameIP(dataEngineName,dataEngineIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_dataEngine_byNameIP () : dataEngineName :"+str(dataEngineName)+" nbIp:"+str(dataEngineIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    dataEngineNodes = config_data.cluster.servers.dataEngine.nodes
+    counter=0
+    for dataEngineNode in dataEngineNodes:
+        logger.info(dataEngineNode.name+" :: "+dataEngineName)
+        if(dataEngineNode.name==dataEngineName and dataEngineNode.role=='dataEngine'):
+            logger.info("dataEngine name : "+dataEngineName+" dataEngine IP:"+dataEngineIP+" has been removed.")
+            dataEngineNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.dataEngine.nodes = dataEngineNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
 
 def config_get_cdc_streams(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.streams
@@ -1098,3 +1176,7 @@ if __name__ == "__main__":
     #config_remove_dataIntegration_byNameIP("jay-desktop-2","127.0.0.11","../config/cluster.config")
     # config_add_nb_node("127.0.0.1", "jay-desktop-2", "admin", "true","../config/cluster.config")
     # config_add_space_node("127.0.0.1", "jay-desktop-3", "admin", "true", "../config/cluster.config")
+
+    #print(config_get_dataEngine_nodes("../config/cluster.config"))
+    #config_add_dataEngine_node("127.0.0.1", "jay-desktop-3","cr8", "dataEngine", "true", "Master","../config/cluster.config")
+    #config_remove_dataEngine_byNameIP("jay-desktop-3","127.0.0.1","../config/cluster.config")
