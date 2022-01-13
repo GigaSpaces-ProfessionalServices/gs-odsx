@@ -1,0 +1,35 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+"-//Hibernate/Hibernate Mapping DTD//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.gigaspaces.datavalidator.model.Measurement" table="MEASUREMENT">
+		<meta attribute="class-description">
+			This class contains the employee detail.
+		</meta>
+
+		<id name="id" type="long" column="MEASUREMENT_ID">
+			<!-- <generator class="native" /> -->
+		</id>
+
+
+		<property name="type" column="TYPE" type="string" />
+		<property name="dataSourceType" column="DATASOURCE_TYPE"
+			type="string" />
+		<property name="dataSourceHostIp" column="DATASOURCE_HOST_IP" 	type="string" />
+		<property name="dataSourcePort" column="DATASOURCE_PORT" type="string" />
+		<property name="username" column="USERNAME" type="string" />
+		<property name="password" column="PASSWORD" type="string" />
+		<property name="schemaName" column="SCHEAM" type="string" />
+		<property name="tableName" column="TABLE_NAME" type="string" />
+		<property name="fieldName" column="FIELD_NAME" type="string" />
+		<property name="limitRecords" column="LIMIT_RECORDS" 	type="string" />
+		<property name="whereCondition" column="WHERE_CONDITION" type="string" />
+
+
+
+
+
+	</class>
+</hibernate-mapping>

@@ -8,7 +8,10 @@ import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.PriorityBlockingQueue;
 import java.util.logging.Logger;
 
+import com.gigaspaces.datavalidator.model.TestTask;
+
 public class TaskQueue {
+	
     protected static Logger logger = Logger.getLogger(TaskQueue.class.getName());
     private static PriorityBlockingQueue<TestTask> taskQueue;
 
@@ -34,6 +37,7 @@ public class TaskQueue {
         public static TestTask getTask(){
             return taskQueue.poll();
         }
+        
     public static List<TestTask> getTasks(){
         return new ArrayList<TestTask>(taskQueue);
     }

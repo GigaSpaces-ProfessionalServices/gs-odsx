@@ -1,8 +1,4 @@
 package com.gigaspaces.datavalidator.utils;
-
-import com.j_spaces.core.client.SQLQuery;
-import com.j_spaces.jdbc.SelectQuery;
-
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
@@ -18,41 +14,38 @@ public class JDBCUtils {
         aggregation_functions.add("min");
         aggregation_functions.add("max");
     }
-    public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password) {
-        Connection connection = null;
-        String connectionString = "";
-        try {
-            switch(dataSource) {
-                case "gigaspaces":
-                    Class.forName("com.j_spaces.jdbc.driver.GDriver").newInstance();
-                    connectionString  = "jdbc:gigaspaces:url:jini://"+dataSourceHostIp+":"+dataSourcePort+"/*/"+schemaName;
-                    break;
-                case "mysql":
-                    Class.forName("com.mysql.jdbc.Driver").newInstance();
-                    connectionString  = "jdbc:mysql://"+dataSourceHostIp+":"+dataSourcePort+"/"+schemaName+"?characterEncoding=latin1";
-                    break;
-                case "db2":
-                    Class.forName("com.ibm.db2.jcc.DB2Driver").newInstance();
-                    connectionString = "jdbc:db2://" + dataSourceHostIp + ":" + dataSourcePort + "/" + schemaName;
-                    //+ "?characterEncoding=latin1";
-                    break;
-                case "ms-sql":
-                    Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-                    connectionString = "jdbc:sqlserver://" + dataSourceHostIp + ":" + dataSourcePort + ";DatabaseName=" + schemaName;
-                    break;
-            }
-            connection = DriverManager.getConnection(connectionString,username, password);
-        } catch (InstantiationException e) {
-            e.printStackTrace();
-        } catch (IllegalAccessException e) {
-            e.printStackTrace();
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        } catch (SQLException throwables) {
-            throwables.printStackTrace();
-        }
-        return connection;
-    }
+
+	public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password) throws ReflectiveOperationException, ReflectiveOperationException, ClassNotFoundException, SQLException {
+		Connection connection = null;
+		String connectionString = "";
+
+		switch (dataSource) {
+		
+		case "gigaspaces":
+			Class.forName("com.j_spaces.jdbc.driver.GDriver").newInstance();
+			connectionString = "jdbc:gigaspaces:url:jini://" + dataSourceHostIp + ":" + dataSourcePort + "/*/"+ schemaName;
+			break;
+		
+		case "mysql":
+			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+			connectionString = "jdbc:mysql://" + dataSourceHostIp + ":" + dataSourcePort + "/" + schemaName	+ "?zeroDateTimeBehavior=CONVERT_TO_NULL";
+			break;
+		
+		case "db2":
+			Class.forName("com.ibm.db2.jcc.DB2Driver").newInstance();
+			connectionString = "jdbc:db2://" + dataSourceHostIp + ":" + dataSourcePort + "/" + schemaName;
+			break;
+		
+		case "ms-sql":
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+			connectionString = "jdbc:sqlserver://" + dataSourceHostIp + ":" + dataSourcePort + ";DatabaseName="	+ schemaName;
+			break;
+		}
+		
+		connection = DriverManager.getConnection(connectionString, username, password);
+	
+		return connection;
+	}
     public static String buildQuery(String dataSource, String fieldName
             , String function, String tableName, long limitRecords, String whereCondition){
         StringBuilder query = new StringBuilder();
@@ -61,7 +54,7 @@ public class JDBCUtils {
             query.append(function).append("(A.").append(fieldName).append(") ");
         }
         query.append(" FROM ");
-
+        //use in future
         if(false && limitRecords != -1){
             switch(dataSource) {
                 case "gigaspaces":
