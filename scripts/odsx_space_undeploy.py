@@ -8,7 +8,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
 from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -303,14 +303,62 @@ def proceedForInputParams():
         drainTimeout = drainTimeoutConfirm
     logger.info("drainTimeout : "+str(drainTimeout))
 
+def printProgressBar(i,max,postText):
+    logger.info("printProgressBar()")
+    n_bar =10 #size of progress bar
+    j= i/max
+    print('\r')
+    print(f"[{'=' * int(n_bar * j):{n_bar}s}] {int(100 * j)}%  {postText}")
+
+def proceedForCount(zoneToDeleteGSC):
+    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container list --zones "+str(zoneToDeleteGSC)
+    logger.info("cmd : "+str(cmd))
+    print(str(cmd))
+    count=0
+    spaceNodes = config_get_space_hosts()
+    for node in spaceNodes:
+        with Spinner():
+            output = executeRemoteCommandAndGetOutput(node.ip, 'root', cmd)
+            print(output)
+            out = str(output).split("\n")
+            for var in out:
+                if(str(var).__contains__("Containers:")):
+                    var = str(var).replace("Containers:",'').replace(" ",'')
+                    return int(var)
+
+
 def removeGSC(managerHost):
+    logger.info("removeGSC()")
+    zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
+    while(len(str(zoneToDeleteGSC))==0):
+        zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
+    logger.info("zoneToDeleteGSC : "+str(zoneToDeleteGSC))
+    confirmRemoveGSC = str(input(Fore.YELLOW+"Are you sure want to remove GSCs under zone ["+str(zoneToDeleteGSC)+"] ? (y/n) [y] :"))
+    if(len(str(confirmRemoveGSC))==0):
+        confirmRemoveGSC='y'
+    if(confirmRemoveGSC=='y'):
+        #countGSC = proceedForCount(zoneToDeleteGSC)
+        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)
+        logger.info("cmd : "+str(cmd))
+        print(str(cmd))
+        with Spinner():
+            output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
+            print(output)
+
+    '''
     response = requests.get("http://"+managerHost+":8090/v2/containers")
     jsonArray = json.loads(response.text)
+    print("size : "+str(len(jsonArray)))
+    sizeJsonArray = (len(jsonArray))
+    i=1
+    percentage=0
     for data in jsonArray:
         response = requests.delete("http://"+managerHost+":8090/v2/containers/"+str(data["id"]))
         if(response.status_code==202):
             print("GSC ID "+str(data["id"])+" deleted")
-
+        printProgressBar(i,sizeJsonArray,"Completed.")
+        i=i+1
+    '''
 if __name__ == '__main__':
     logger.info("odsx_tieredstorage_undeploy")
     verboseHandle.printConsoleWarning("Menu -> Space -> Undeploy")
@@ -323,6 +371,9 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
+                managerHostConfig = str(input(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
+                if(len(str(managerHostConfig))>0):
+                    managerHost = managerHostConfig
                 logger.info("Manager Host :"+str(managerHost))
                 gs_space_dictionary_obj = listDeployed(managerHost)
                 if(len(gs_space_dictionary_obj)>0):
