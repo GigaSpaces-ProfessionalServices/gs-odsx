@@ -72,8 +72,8 @@
         </dependency> -->
         <dependency>
             <groupId>com.ibm.db2.jcc</groupId>
-                <artifactId>db2jcc</artifactId>
-                <version>4.16.53</version>
+                <artifactId>db2jcc4</artifactId>
+                <version>4.31.10 </version>
         </dependency>
         <!-- https://mvnrepository.com/artifact/com.microsoft.sqlserver/sqljdbc4 -->
         <!--<dependency>
@@ -87,6 +87,25 @@
             <artifactId>mssql-jdbc</artifactId>
             <version>6.1.0.jre8</version>
         </dependency>
+
+		<dependency>
+			<groupId>org.hibernate</groupId>
+			<artifactId>hibernate-core</artifactId>
+			<version>4.3.11.Final</version>
+		</dependency>
+
+		<!-- SQLite JDBC library -->
+		<dependency>
+			<groupId>org.xerial</groupId>
+			<artifactId>sqlite-jdbc</artifactId>
+			<version>3.25.2</version>
+		</dependency>
+		<!-- https://mvnrepository.com/artifact/org.hibernate.dialect/sqlite-dialect -->
+		<dependency>
+			<groupId>com.zsoltfabok</groupId>
+			<artifactId>sqlite-dialect</artifactId>
+			<version>1.0</version>
+		</dependency>
 
     </dependencies>
 

@@ -3,68 +3,85 @@ package com.gigaspaces.datavalidator.TaskProcessor;
 import java.util.concurrent.*;
 import java.util.logging.Logger;
 
-public class TaskWorker implements Runnable{
-    protected Logger logger = Logger.getLogger(this.getClass().getName());
-    private int numThreads;
-    private static ExecutorService executor;
-    private static CompletionService<TestTask> pool;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 
-    public TaskWorker(int numThreads){
-        this.numThreads = numThreads;
-        executor = Executors.newFixedThreadPool(numThreads);
-        pool = new ExecutorCompletionService<TestTask>(executor);
-    }
+import com.gigaspaces.datavalidator.db.service.TestTaskService;
+import com.gigaspaces.datavalidator.model.TestTask;
 
-    public void startworker(int numThreads){
+@Component
+public class TaskWorker implements Runnable {
 
-        TestTask st = null;
+	@Autowired
+	private TestTaskService odsxTaskDaoService;
+	
+	private Logger logger = Logger.getLogger(this.getClass().getName());
+	private int numThreads;
+	private static ExecutorService executor;
+	private static CompletionService<TestTask> pool;
 
-        for(;;){
-            st = TaskQueue.getTask();
-            //logger.info("TaskWorker:: getNewTask: "+st);
-            if(st != null) {
-                if (System.currentTimeMillis() >= st.getTime()) {
-                    String result = st.executeTask();
-                    logger.info("TaskWorker:: Result: " + result);
-                    CompleteTaskQueue.setTask(st);
-                } else {
-                    //logger.info("TaskWorker:: Adding task back to Queue");
-                    TaskQueue.setTask(st);
-                }
-            }
-            //if(st != null) pool.submit(st);
-            try {
-                Thread.sleep(5000);
-            } catch (InterruptedException e) {
-                e.printStackTrace();
-            }
-        }
-    }
+	
+	public void setNumThreads(int numThreads) {
+		this.numThreads = numThreads;
+		executor = Executors.newFixedThreadPool(numThreads);
+		pool = new ExecutorCompletionService<TestTask>(executor);
+	}
+	
+	public TaskWorker() {
+	}
 
-    public static void getTasksDone(){
-        try { Thread.sleep(1000); } catch (InterruptedException e) { }
-        for(;;){
-            try {
-                System.out.println("Looking for Complete Tasks");
-                Future<TestTask> result = pool.take();
-                System.out.println("Found. Trying to get the Task:"  );
+	public void startworker(int numThreads) {
 
-                TestTask st = result.get();
-                System.out.println("Task " + st.getId() + " Completed - " + st.getResult());
-                CompleteTaskQueue.setTask(st);
+		TestTask st = null;
 
-            } catch (InterruptedException e) {
-                //e.printStackTrace();
-                System.out.println("Task Interrupted!");
-            } catch (ExecutionException e) {
-                //e.printStackTrace();
-                System.out.println("Error getting the task!");
-            }
-        }
-    }
+		for (;;) {
+			st = TaskQueue.getTask();
+			if (st != null) {
+				if (System.currentTimeMillis() >= st.getTime()) {
+					String result = st.executeTask();
+					logger.info("TaskWorker::Id:Result: " + st.getId() + ":" + result);
+					odsxTaskDaoService.update(st);
+					CompleteTaskQueue.setTask(st);
+				} else {
+					logger.info("TaskWorker:: Adding task back to Queue :" + st.getId());
+					TaskQueue.setTask(st);
+				}
+			}
+			try {
+				Thread.sleep(5000);
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+		}
+	}
 
-    public void run() {
-        startworker(numThreads);
-    }
+	public static void getTasksDone() {
+		
+		try {
+			Thread.sleep(1000);
+		} catch (InterruptedException e) {
+		}
+		
+		for (;;) {
+			try {
+			
+				System.out.println("Looking for Complete Tasks");
+				Future<TestTask> result = pool.take();
+				System.out.println("Found. Trying to get the Task:");
+				TestTask st = result.get();
+				System.out.println("Task " + st.getId() + " Completed - " + st.getResult());
+				CompleteTaskQueue.setTask(st);
+
+			} catch (InterruptedException e) {
+				System.out.println("Task Interrupted!");
+			} catch (ExecutionException e) {
+				System.out.println("Error getting the task!");
+			}
+		}
+	}
+
+	public void run() {
+		startworker(numThreads);
+	}
 
 }
