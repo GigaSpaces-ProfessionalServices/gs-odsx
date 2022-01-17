@@ -26,17 +26,32 @@ public class TestTaskService {
 
 	@Autowired
 	private TestTaskDao testTaskDao;
+	@Autowired
+	private MeasurementDao measurementDao;
 	private static String TASKRESULT_PENDING = "pending";
 	
 	public void add(TestTask testTask) {
 		testTaskDao.add(testTask);
 	}
 
+	private void setMeasuremens(TestTask odsxTask) {
+		String measurementIds = odsxTask.getMeasurementIds();
+		if (measurementIds != null) {
+			List<Measurement> measurementList = new ArrayList<Measurement>();
+			String mIds[] = measurementIds.split(",");
+			for (int index = 0; index < mIds.length; index++) {
+				measurementList.add(measurementDao.getById(Long.parseLong(mIds[index])));
+			}
+			odsxTask.setMeasurementList(measurementList);
+		}
+	}
+	
 	public List<TestTask> getAllPendingTask() {
 		List<TestTask> odsxTasks = testTaskDao.getAll();
 		List<TestTask> odsxTaskList = new ArrayList<TestTask>();
 		for (TestTask odsxTask : odsxTasks) {
 			if (TASKRESULT_PENDING.equals(odsxTask.getResult())) {
+				setMeasuremens(odsxTask);
 				odsxTaskList.add(odsxTask);
 			}
 		}
@@ -48,6 +63,7 @@ public class TestTaskService {
 		List<TestTask> odsxTaskList = new ArrayList<TestTask>();
 		for (TestTask odsxTask : odsxTasks) {
 			if (!TASKRESULT_PENDING.equals(odsxTask.getResult())) {
+				setMeasuremens(odsxTask);
 				odsxTaskList.add(odsxTask);
 			}
 		}
