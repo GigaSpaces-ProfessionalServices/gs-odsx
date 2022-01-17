@@ -95,19 +95,19 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	}
 
 	@Override
-	public void deleteById(int id) {
+	public void deleteById(long id) {
 		String classname = getClass().getName();
 		deleteById(classname, id);
 	}
 
 	@Override
-	public void deleteById(String className, int id) {
+	public void deleteById(String className, long id) {
 
 		Transaction trns = null;
 		Session session = HibernateUtil.configureSessionFactory().openSession();
 		try {
 			trns = session.beginTransaction();
-			T contact = (T) session.load(this.genericType.getName(), new Integer(id));
+			T contact = (T) session.load(this.genericType.getName(), new Long(id));
 			session.delete(contact);
 			session.getTransaction().commit();
 		} catch (RuntimeException e) {

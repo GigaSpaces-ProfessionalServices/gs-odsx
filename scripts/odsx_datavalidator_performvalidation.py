@@ -3,9 +3,10 @@
 import os.path, argparse, sys
 from scripts.logManager import LogManager
 from colorama import Fore
+
+from scripts.odsx_datavalidator_list import getDataValidationHost
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts, config_get_nb_list, \
-    config_get_grafana_list, config_get_influxdb_node
+from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_validation import getSpaceServerStatus
 import requests, json, subprocess
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
@@ -71,13 +72,24 @@ def doValidate():
 
     printTabular(None, headers, data)
     verboseHandle.printConsoleWarning('');
-    testType = str(input("Select test name (1/2/3) [1]: "))
+    testType = str(input("Enter test sr number [1]: "))
     if (len(str(testType)) == 0):
         testType = '1'
 
-    dataValidatorServiceHost = str(input("Data validator service host [localhost]: "))
-    if (len(str(dataValidatorServiceHost)) == 0):
-        dataValidatorServiceHost = 'localhost'
+    dataValidationNodes = config_get_dataValidation_nodes()
+    dataValidationHost = getDataValidationHost(dataValidationNodes)
+    logger.info("dataValidationHost : "+str(dataValidationHost))
+
+    if str(dataValidationHost) == "":
+        verboseHandle.printConsoleError("")
+        verboseHandle.printConsoleError("Failed to connect to the Data validation server. Please check that it is running.")
+        return
+
+    #dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    #if (len(str(dataValidatorServiceHost)) == 0):
+    #    dataValidatorServiceHost = dataValidationHost
+
+    dataValidatorServiceHost = dataValidationHost
 
     verboseHandle.printConsoleWarning('');
     if testType == '1':
@@ -127,14 +139,22 @@ def doValidate():
                     whereCondition = ''
 
             verboseHandle.printConsoleWarning('');
-
-            response = requests.get(
-                    "http://" + dataValidatorServiceHost + ":7890/measurement/register?test=" + test + "&dataSourceType=" + dataSource1Type
-                    + "&dataSourceHostIp=" + dataSource1HostIp + "&dataSourcePort=" + dataSource1Port
-                    + "&username=" + username1 + "&password=" + password1
-                    + "&schemaName=" + schemaName1 + "&tableName=" + tableName1
-                    + "&fieldName=" + fieldName1
-                    + "&whereCondition=" + whereCondition)
+            data ={
+                "test": test,
+                "dataSourceType": dataSource1Type,
+                "dataSourceHostIp": dataSource1HostIp,
+                "dataSourcePort": dataSource1Port,
+                "username": username1,
+                "password": password1,
+                "schemaName": schemaName1,
+                "tableName": tableName1,
+                "fieldName": fieldName1,
+                "whereCondition": whereCondition
+            }
+            headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
+            response = requests.post("http://"+dataValidatorServiceHost+":7890/measurement/register"
+                                     ,data=json.dumps(data)
+                                     ,headers=headers)
 
             logger.info(str(response.status_code))
             jsonArray = json.loads(response.text)
@@ -383,7 +403,7 @@ def printmeasurementtable(dataValidatorServiceHost):
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN + measurement["dataSourceType"] +"(space="+measurement["schemaName"]+", host="+measurement["dataSourceHostIp"]+")" + Fore.RESET,
+                             Fore.GREEN + measurement["dataSourceType"] +"(schema="+measurement["schemaName"]+", host="+measurement["dataSourceHostIp"]+")" + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)

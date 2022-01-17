@@ -81,7 +81,7 @@ def stopDataValidationService(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> DataValidator -> Start")
+    verboseHandle.printConsoleWarning("Menu -> DataValidator -> Stop")
     args = []
     args = myCheckArg()
     stopDataValidationService(args)

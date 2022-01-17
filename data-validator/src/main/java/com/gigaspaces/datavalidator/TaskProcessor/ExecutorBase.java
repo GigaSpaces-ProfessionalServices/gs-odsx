@@ -2,10 +2,7 @@ package com.gigaspaces.datavalidator.TaskProcessor;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
-import com.gigaspaces.datavalidator.db.service.MeasurementService;
 import com.gigaspaces.datavalidator.db.service.TestTaskService;
-import com.gigaspaces.datavalidator.db.service.TestService;
-import com.gigaspaces.datavalidator.model.Measurement;
 import com.gigaspaces.datavalidator.model.TestTask;
 import javax.annotation.PostConstruct;
 import java.util.logging.Logger;
@@ -33,7 +30,7 @@ public class ExecutorBase {
 	}
 
 	public void initDb() {
-		logger.info("Initialisation of Mesurement and TestTask");
+		logger.info("Initialisation of Measurement and TestTask");
 		for (TestTask testTask : testTaskService.getAllPendingTask()) {
 			TaskQueue.setTask(testTask);
 		}

@@ -12,9 +12,9 @@ public interface DAO<T> {
 
 	void update(T t);
 
-	void deleteById(int id);
+	void deleteById(long id);
 
-	void deleteById(String className, int id);
+	void deleteById(String className, long id);
 
 	public long getAutoIncId(String dbTable, String tablePk);
 }
