@@ -74,6 +74,9 @@ public class JDBCUtils {
                 query.append(" WHERE ").append(whereCondition);
             }
         }
+        if(dataSource.equals("db2")){
+            query.append(" with ur");
+        }
         return query.toString();
     }
 }

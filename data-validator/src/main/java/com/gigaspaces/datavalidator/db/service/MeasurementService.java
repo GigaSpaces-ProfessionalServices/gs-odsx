@@ -25,6 +25,9 @@ public class MeasurementService {
 	public void add(Measurement measurement) {
 		measurementDao.add(measurement);
 	}
+	public void deleteById(long measurementId) {
+		measurementDao.deleteById(measurementId);
+	}
 
 
 	public long getAutoIncId() {
@@ -35,7 +38,7 @@ public class MeasurementService {
 		return measurementDao.getAll();
 	}
 
-	public Measurement getMeasurement(int parseLong) {
+	public Measurement getMeasurement(long parseLong) {
 		return measurementDao.getById(parseLong);
 
 	}
