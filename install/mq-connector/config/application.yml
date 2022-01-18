@@ -1,0 +1,53 @@
+config:
+  zookeeper:
+    address: 10.0.0.66,10.0.0.147,10.0.0.134
+    port: 3181
+    connectionStr: 10.0.0.66:2181,10.0.0.147:2181,10.0.0.134:2181
+    path: /publisher/adabase
+  kafka:
+    topic: $tableName$
+    schemaTopic: $tableName$_Schema
+    bootstrapAddress: 10.0.0.66:9092,10.0.0.147:9092,10.0.0.134:9092
+    numPartitions: 1
+    replicationFactor: 2
+  retryTimeOut: 10000
+  schemasPath: /data/adabas/schemas
+
+mq:
+  hostname: hostname 
+  channel: CLI.ODS_1
+  qManager: SBENAIM 
+  queueName: ACPT.YY.ODS.MATACH_TRANSACTIONS.R
+  sslChipherSuite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256
+  port: 1414
+  maxEvents: -1
+  testMode: False
+
+server:
+  port: 8071
+
+management:
+  server:
+    port: 8071
+  metrics:
+    export:
+      statsd:
+        enabled: false
+        flavor: telegraf
+        port: 8125
+  endpoints:
+    web:
+      port: 8071
+      expose: "*"
+
+logging:
+  level:
+    org.springframework: INFO
+    com.gs.leumi: DEBUG
+  pattern:
+    console: "%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"
+    file: "%d %p %c{1.} [%t] %m%n"
+  file:
+    name: /dbagigalogs/Adabas/adabasPublisher.log
+  
+
