@@ -958,7 +958,7 @@ def config_remove_dataEngine_byNameIP(dataEngineName,dataEngineIP,filePath='conf
     counter=0
     for dataEngineNode in dataEngineNodes:
         logger.info(dataEngineNode.name+" :: "+dataEngineName)
-        if(dataEngineNode.name==dataEngineName and dataEngineNode.role=='dataEngine'):
+        if(dataEngineNode.name==dataEngineName and (dataEngineNode.role=='dataEngine' or dataEngineNode.role=='mq-connector')):
             logger.info("dataEngine name : "+dataEngineName+" dataEngine IP:"+dataEngineIP+" has been removed.")
             dataEngineNodes.pop(counter)
         counter=counter+1
