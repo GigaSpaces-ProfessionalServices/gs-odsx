@@ -6,11 +6,12 @@ from os import path
 from colorama import Fore
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
     config_get_dataEngine_nodes, config_remove_dataEngine_byNameIP
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from scripts.odsx_servers_di_list import listDIServers
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -60,7 +61,7 @@ def removeInputUserAndHost():
     try:
         global user
         global host
-        user = str(input(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
+        user = str(input(Fore.YELLOW+"Enter user to connect to DE server [root]:"+Fore.RESET))
         if(len(str(user))==0):
             user="root"
         logger.info(" user: "+str(user))
@@ -88,6 +89,58 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
        # set_value_in_property_file('app.di.hosts',hostAppConfig)
         verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
 
+class obj_type_dictionary(dict):
+    # __init__ function
+    def __init__(self):
+        self = dict()
+
+    # Function to add key:value
+    def add(self, key, value):
+        self[key] = value
+
+def getAdabusServiceStatus(node):
+    logger.info("getConsolidatedStatus() : " + str(node.ip))
+    cmdList = ["systemctl status odsxadabas"]
+    for cmd in cmdList:
+        logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
+        logger.info("Getting status.. :" + str(cmd))
+        user = 'root'
+        with Spinner():
+            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            logger.info("output1 : " + str(output))
+            if (output != 0):
+                # verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
+                logger.info(" Service :" + str(cmd) + " not started." + str(node.ip))
+            return output
+
+def listDIServers():
+    logger.info("listDEServers()")
+    host_dict_obj = obj_type_dictionary()
+    dEServers = config_get_dataEngine_nodes("config/cluster.config")
+    headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
+               Fore.YELLOW + "Ip" + Fore.RESET,
+               Fore.YELLOW + "Host" + Fore.RESET,
+               Fore.YELLOW + "Status" + Fore.RESET]
+    data = []
+    counter = 1
+    for node in dEServers:
+        if node.role == "mq-connector":
+            host_dict_obj.add(str(counter), str(node.ip))
+            status = getAdabusServiceStatus(node)
+            if (status == 0):
+                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                             Fore.GREEN + node.ip + Fore.RESET,
+                             Fore.GREEN + node.name + Fore.RESET,
+                             Fore.GREEN + "ON" + Fore.RESET]
+            else:
+                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                             Fore.GREEN + node.ip + Fore.RESET,
+                             Fore.GREEN + node.name + Fore.RESET,
+                             Fore.RED + "OFF" + Fore.RESET]
+            data.append(dataArray)
+            counter = counter + 1
+    printTabular(None, headers, data)
+    return host_dict_obj
 
 def executeCommandForUnInstall():
     logger.info("executeCommandForUnInstall(): start")
@@ -102,12 +155,12 @@ def executeCommandForUnInstall():
             if(len(nodesCount)>1):
                 removeType = str(input(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
-                confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
+                confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove Adabus service ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
-                    commandToExecute="scripts/servers_di_remove.sh"
+                    commandToExecute="scripts/servers_dataengine_list_mq-connector_adabasservice_remove.sh"
                     additionalParam=""
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
@@ -115,8 +168,8 @@ def executeCommandForUnInstall():
                             print(host)
                             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                             print(outputShFile)
-                            config_remove_dataIntegration_byNameIP(host,host)
-                            set_value_in_property_file('app.di.hosts','')
+                            config_remove_dataEngine_byNameIP(host,host)
+                            #set_value_in_property_file('app.di.hosts','')
                             verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
             if(removeType=='1'):
                 proceedForIndividualRemove(host_dict_obj,nodes)
@@ -130,7 +183,7 @@ def executeCommandForUnInstall():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> DI -> Remove')
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> List -> MQ Connector -> Adabus Service -> Remove")
     try:
         removeInputUserAndHost()
         executeCommandForUnInstall()

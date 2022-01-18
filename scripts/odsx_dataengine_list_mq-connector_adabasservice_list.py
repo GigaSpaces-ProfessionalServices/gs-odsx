@@ -150,7 +150,7 @@ def listAdabusServiceServers():
     return host_dict_obj
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> DI -> List')
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> List -> MQ Connector -> Adabus Service -> List")
     try:
         args = []
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
