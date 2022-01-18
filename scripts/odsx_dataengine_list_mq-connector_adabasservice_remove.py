@@ -78,7 +78,7 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
     confirm = str(input(Fore.YELLOW+"Are you sure want to remove "+str(host)+" ? (y/n) [y]"+Fore.RESET))
     if(confirm=='y' or len(str(confirm))==0 ):
         logger.info("Individual host : "+str(host))
-        commandToExecute="scripts/servers_dataengine_list_mq-connector_adabasservice_remove.sh"
+        commandToExecute="scripts/dataengine_list_mq-connector_adabasservice_remove.sh"
         outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
         print(outputShFile)
         config_remove_dataEngine_byNameIP(host,host)
@@ -160,7 +160,7 @@ def executeCommandForUnInstall():
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
-                    commandToExecute="scripts/servers_dataengine_list_mq-connector_adabasservice_remove.sh"
+                    commandToExecute="scripts/dataengine_list_mq-connector_adabasservice_remove.sh"
                     additionalParam=""
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
