@@ -8,7 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.odsx_print_tabular_data import printTabular
 
@@ -52,15 +52,16 @@ def myCheckArg(args=None):
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
 
-def getDIServerHostList():
-    nodeList = config_get_dataIntegration_nodes()
+def getDEServerHostList():
+    nodeList = config_get_dataEngine_nodes()
     nodes = ""
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
-        if (len(nodes) == 0):
-            nodes = node.ip
-        else:
-            nodes = nodes + ',' + node.ip
+        if node.role == "MQ connector":
+            if (len(nodes) == 0):
+                nodes = node.ip
+            else:
+                nodes = nodes + ',' + node.ip
     return nodes
 
 
@@ -90,39 +91,40 @@ class obj_type_dictionary(dict):
         self[key] = value
 
 
-def listDIServers():
-    logger.info("listDIServers()")
+def listDEServers():
+    logger.info("listDEServers()")
     host_dict_obj = obj_type_dictionary()
-    dIServers = config_get_dataIntegration_nodes("config/cluster.config")
+    dEServers = config_get_dataEngine_nodes("config/cluster.config")
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
                Fore.YELLOW + "Ip" + Fore.RESET,
                Fore.YELLOW + "Host" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     counter = 1
-    for node in dIServers:
-        host_dict_obj.add(str(counter), str(node.ip))
-        status = getAdabusServiceStatus(node)
-        if (status == 0):
-            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.ip + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
-                         Fore.GREEN + "ON" + Fore.RESET]
-        else:
-            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.ip + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
-                         Fore.RED + "OFF" + Fore.RESET]
-        data.append(dataArray)
-        counter = counter + 1
+    for node in dEServers:
+        if node.role == "MQ connector":
+            host_dict_obj.add(str(counter), str(node.ip))
+            status = getAdabusServiceStatus(node)
+            if (status == 0):
+                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                             Fore.GREEN + node.ip + Fore.RESET,
+                             Fore.GREEN + node.name + Fore.RESET,
+                             Fore.GREEN + "ON" + Fore.RESET]
+            else:
+                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                             Fore.GREEN + node.ip + Fore.RESET,
+                             Fore.GREEN + node.name + Fore.RESET,
+                             Fore.RED + "OFF" + Fore.RESET]
+            data.append(dataArray)
+            counter = counter + 1
     printTabular(None, headers, data)
     return host_dict_obj
 
 
 def stopAdabusService(args):
     try:
-        listDIServers()
-        nodes = getDIServerHostList()
+        listDEServers()
+        nodes = getDEServerHostList()
         choice = str(input(Fore.YELLOW + "Are you sure, you want to stop adabus service for [" + str(
             nodes) + "] ? (y/n) [y]: " + Fore.RESET))
         if choice.casefold() == 'n':
