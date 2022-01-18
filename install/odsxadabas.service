@@ -1,0 +1,15 @@
+[Unit]
+Description="Adabas Service"
+After=network.target odsxkafka.service
+
+[Service]
+Type=simple
+User=gsods
+Group=gsods
+ExecStart=/bin/bash /usr/local/bin/start_adabaseFeeder.sh
+ExecStop=/bin/bash /usr/local/bin/stop_adabaseFeeder.sh
+RemainAfterExit=yes
+WorkingDirectory=/dbagigasoft/Adabas
+
+[Install]
+WantedBy=multi-user.target
