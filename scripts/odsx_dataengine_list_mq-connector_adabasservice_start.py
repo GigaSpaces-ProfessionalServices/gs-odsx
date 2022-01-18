@@ -57,7 +57,7 @@ def getDEServerHostList():
     nodes = ""
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
-        if node.role == "MQ connector":
+        if node.role == "mq-connector":
             if (len(nodes) == 0):
                 nodes = node.ip
             else:
@@ -102,7 +102,7 @@ def listDIServers():
     data = []
     counter = 1
     for node in dEServers:
-        if node.role == "MQ connector":
+        if node.role == "mq-connector":
             host_dict_obj.add(str(counter), str(node.ip))
             status = getAdabusServiceStatus(node)
             if (status == 0):

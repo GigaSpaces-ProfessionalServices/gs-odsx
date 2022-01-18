@@ -131,7 +131,7 @@ def listAdabusServiceServers():
     data = []
     counter = 1
     for node in dEServers:
-        if node.role == "MQ connector":
+        if node.role == "mq-connector":
             host_dict_obj.add(str(counter), str(node.ip))
             status = getAdabusServiceStatus(node)
             if (status == 0):
