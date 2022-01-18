@@ -169,7 +169,7 @@ public class ValidateController {
             measurement.setFieldName(measurementRequestModel.getFieldName());
             measurement.setWhereCondition(measurementRequestModel.getWhereCondition());
             measurement.setLimitRecords("-1");
-            measurementService.add(measurement);
+            measurementService.update(measurement);
             response.put("response", "Measurement with id '"+measurementRequestModel.getMeasurementId()+"' updated successfully");
             return response;
 

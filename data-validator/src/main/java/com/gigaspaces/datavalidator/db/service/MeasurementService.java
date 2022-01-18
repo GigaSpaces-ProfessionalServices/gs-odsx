@@ -22,6 +22,10 @@ public class MeasurementService {
 	@Autowired
 	private MeasurementDao measurementDao;
 
+	public void update(Measurement measurement) {
+		measurementDao.update(measurement);	
+	}
+	
 	public void add(Measurement measurement) {
 		measurementDao.add(measurement);
 	}
