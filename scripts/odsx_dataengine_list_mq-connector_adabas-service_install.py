@@ -78,7 +78,7 @@ def getInputParam(kafkaHosts):
     targetDirConfirm = str(input(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
     if(len(str(targetDirConfirm))==0):
         targetDirConfirm=targetDir
-    sourceConfig = str(readValueByConfigObj("app.dataendine.mq.adabas.jar")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    sourceConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.jar")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     sourceAdabasJarFile = str(input(Fore.YELLOW+"Enter source adabas .jar file path including file name ["+str(sourceConfig)+"] : "+Fore.RESET))
     if(len(str(sourceAdabasJarFile))==0):
         sourceAdabasJarFile=sourceConfig
