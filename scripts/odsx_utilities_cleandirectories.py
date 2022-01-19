@@ -153,13 +153,16 @@ def showAndSelectOption():
         cleanUpManagerServers()
     elif(optionSelected=="2"):
         cleanUpSpaceServers()
-
+    return optionSelected
 
 if __name__ == '__main__':
     logger.info("odsx_utilities_cleandirectories_manager")
     verboseHandle.printConsoleWarning("Menu -> Utilitites -> Clean Directories")
     try:
-        showAndSelectOption()
+
+        optionSelected = showAndSelectOption()
+        while(optionSelected!=99):
+            optionSelected = showAndSelectOption()
 
     except Exception as e:
         verboseHandle.printConsoleError("Eror in odsx_tieredstorage_undeployed : "+str(e))

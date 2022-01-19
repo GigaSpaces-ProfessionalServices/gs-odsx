@@ -7,7 +7,7 @@ from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_f
 from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,connectExecuteSSH
-from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap
+from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -66,6 +66,26 @@ def handleException(e):
         'message': str(e),
         'trace': trace
     })))
+
+def getDIServerHostList():
+    nodeList = config_get_dataIntegration_nodes()
+    nodes = ""
+    for node in nodeList:
+        # if(str(node.role).casefold() == 'server'):
+        if (len(nodes) == 0):
+            nodes = node.ip
+        else:
+            nodes = nodes + ',' + node.ip
+    return nodes
+
+def getBootstrapAddress(hostConfig):
+    logger.info("getBootstrapAddress()")
+    bootstrapAddress=''
+    for host in hostConfig.split(','):
+        bootstrapAddress=bootstrapAddress+host+':9092,'
+    bootstrapAddress=bootstrapAddress[:-1]
+    logger.info("getBootstrapAddress : "+str(bootstrapAddress))
+    return bootstrapAddress
 
 def getHostConfiguration():
     logger.info("getHostConfiguration()")
@@ -206,6 +226,22 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             targetDir='/dbagiga'
         else:
             targetDir=additionalParam
+        if(gsOptionExtFromConfig.__contains__('<DI servers>')):
+            kafkaConfirm = str(input(Fore.YELLOW+"Do you want to configure kafka servers? (y/n) [y] : "+Fore.RESET))
+            if(len(str(kafkaConfirm))==0):
+                kafkaConfirm='y'
+            if(kafkaConfirm=='y'):
+                dIHosts = getDIServerHostList()
+                kafkaHost=''
+                if(len(str(dIHosts))>0):
+                    kafkaHosts = getBootstrapAddress(dIHosts)
+                    print(kafkaHosts)
+                    verboseHandle.printConsoleWarning("DI servers will be confiured ["+str(kafkaHosts)+"] ")
+                else:
+                    verboseHandle.printConsoleInfo("No DI server configuration found.")
+                set_value_in_property_file("app.manager.kafka.host",kafkaHost)
+                gsOptionExtFromConfig = gsOptionExtFromConfig.replace('<DI servers>:9092',kafkaHosts)
+
         gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
@@ -360,7 +396,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
                     #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                     #print(outputShFile)
-                    logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
+                    #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
                 serverHost=''
                 try:
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)
