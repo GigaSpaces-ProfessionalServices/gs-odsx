@@ -4,16 +4,23 @@ import org.hibernate.Query;
 import org.hibernate.SQLQuery;
 import org.hibernate.Session;
 import org.hibernate.Transaction;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.GenericTypeResolver;
+import org.springframework.stereotype.Component;
+
 import com.gigaspaces.datavalidator.db.HibernateUtil;
 import com.gigaspaces.datavalidator.db.dao.DAO;
 import java.util.List;
 
+@Component
 public abstract class DAOImplAbstract<T> implements DAO<T> {
 
 	protected final Class<T> genericType;
 	private final String RECORD_COUNT_HQL;
 	private final String FIND_ALL_HQL;
+	
+	@Autowired
+	HibernateUtil hibernateUtil;
 
 	@SuppressWarnings("unchecked")
 	public DAOImplAbstract() {
@@ -25,7 +32,7 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	@Override
 	public void add(T t) {
 		Transaction trns = null;
-		Session session = HibernateUtil.configureSessionFactory().openSession();
+		Session session = hibernateUtil.configureSessionFactory().openSession();
 		try {
 			trns = session.beginTransaction();
 			session.save(t);
@@ -44,7 +51,7 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	@Override
 	public List<T> getAll() {
 		List<T> users = null;
-		Session session = HibernateUtil.configureSessionFactory().openSession();
+		Session session = hibernateUtil.configureSessionFactory().openSession();
 		try {
 			String query = "from " + this.genericType.getName();
 			users = session.createQuery(query).list();
@@ -60,7 +67,7 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	@Override
 	public T getById(long id) {
 		T contact = null;
-		Session session = HibernateUtil.configureSessionFactory().openSession();
+		Session session = hibernateUtil.configureSessionFactory().openSession();
 		try {
 			String queryString = " from " + this.genericType.getName() + " where id = :id";
 			Query query = session.createQuery(queryString);
@@ -78,7 +85,7 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	@Override
 	public void update(T t) {
 		Transaction trns = null;
-		Session session = HibernateUtil.configureSessionFactory().openSession();
+		Session session = hibernateUtil.configureSessionFactory().openSession();
 		try {
 			trns = session.beginTransaction();
 			session.update(t);
@@ -104,7 +111,7 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	public void deleteById(String className, long id) {
 
 		Transaction trns = null;
-		Session session = HibernateUtil.configureSessionFactory().openSession();
+		Session session = hibernateUtil.configureSessionFactory().openSession();
 		try {
 			trns = session.beginTransaction();
 			T contact = (T) session.load(this.genericType.getName(), new Long(id));
@@ -124,7 +131,7 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	@Override
 	public long getAutoIncId(String dbTable, String tablePk) {
 		long id = 0;
-		Session session = HibernateUtil.configureSessionFactory().openSession();
+		Session session = hibernateUtil.configureSessionFactory().openSession();
 		try {
 			String sql = "select max(tt." + tablePk + ") from " + dbTable + " tt";
 			SQLQuery query = session.createSQLQuery(sql);

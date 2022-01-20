@@ -6,19 +6,21 @@ import org.hibernate.cfg.Configuration;
 import org.hibernate.cfg.Environment;
 import org.hibernate.service.ServiceRegistry;
 import org.hibernate.service.ServiceRegistryBuilder;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.stereotype.Component;
 import java.util.Properties;
 
+@Component
 public class HibernateUtil {
 
-	private static SessionFactory sessionFactory = null;
-	private static ServiceRegistry serviceRegistry = null;
+	private SessionFactory sessionFactory = null;
+	private ServiceRegistry serviceRegistry = null;
 
-	public static SessionFactory configureSessionFactory() throws HibernateException {
-	
+	@Autowired
+	private DbProperties dbProperties;
+
+	public SessionFactory configureSessionFactory() throws HibernateException {
 		if (sessionFactory == null) {
-			
-			DbProperties dbProperties = new DbProperties();
-			
 			Properties properties = new Properties();
 			properties.put(Environment.SHOW_SQL, dbProperties.isShow_sql());
 			properties.put(Environment.FORMAT_SQL, dbProperties.isFormat_sql());
@@ -34,11 +36,10 @@ public class HibernateUtil {
 			configuration.setProperties(properties);
 			configuration.addResource("Measurement.hbm.xml");
 			configuration.addResource("TestTask.hbm.xml");
-			
 			serviceRegistry = new ServiceRegistryBuilder().applySettings(properties).buildServiceRegistry();
 			sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 		}
-		
+
 		return sessionFactory;
 	}
 
