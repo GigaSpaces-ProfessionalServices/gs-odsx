@@ -1,80 +1,29 @@
 package com.gigaspaces.datavalidator.db;
 
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
-import java.util.Properties;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.stereotype.Component;
 
+@Component
 public class DbProperties {
-	
-	private boolean show_sql = false;
-	private boolean format_sql = false;
+
+	@Value("${show_sql:false}")
+	private boolean show_sql;
+	@Value("${format_sql:false}")
+	private boolean format_sql;
+	@Value("${dialect:org.hibernate.dialect.SQLiteDialect}")
 	private String dialect;
+	@Value("${driver:org.sqlite.JDBC}")
 	private String driver;
+	@Value("${user:}")
 	private String user;
+	@Value("${pass:}")
 	private String pass;
+	@Value("${hbm2dll_auto:update}")
 	private String hbm2dll_auto;
+	@Value("${connection_url:jdbc:sqlite:}")
 	private String connection_url;
+	@Value("${pathToDataBase:datavalidator.db}")
 	private String pathToDataBase;
-
-	public DbProperties() {
-		
-		try {
-			
-			File file = new File(System.getProperty("user.dir"));
-			String filePath = new File(file.getCanonicalPath())
-					/* .getParent() */ + System.getProperty("file.separator")
-					+ "datavalidator.properties";
-			System.out.println("Db properties file Path" + filePath);
-			Properties properties = null;
-
-			if (new File(filePath).exists()) {
-				FileReader reader = new FileReader(filePath);
-				properties = new Properties();
-				properties.load(reader);
-			} else {
-				System.out.println("Db properties file not found " + filePath);
-			}
-			
-			if (properties != null) {
-				show_sql = Boolean.parseBoolean(properties.getProperty("show_sql"));
-				format_sql = Boolean.parseBoolean(properties.getProperty("format_sql"));
-				dialect = properties.getProperty("dialect");
-				driver = properties.getProperty("driver");
-				user = properties.getProperty("user");
-				pass = properties.getProperty("pass");
-				hbm2dll_auto = properties.getProperty("hbm2dll_auto");
-				connection_url = properties.getProperty("connection_url");
-				pathToDataBase = properties.getProperty("pathToDataBase");
-			}
-			
-			if (dialect == null) {
-				dialect = "org.hibernate.dialect.SQLiteDialect";
-			}
-			
-			if (driver == null) {
-				driver = "org.sqlite.JDBC";
-			}
-			
-			if (connection_url == null) {
-				connection_url = "jdbc:sqlite:";
-			}
-
-			if (pathToDataBase == null) {
-				pathToDataBase = "datavalidator.db";
-			}
-			if (hbm2dll_auto == null) {
-				hbm2dll_auto = "update";
-			}
-			connection_url = connection_url + pathToDataBase;
-
-		} catch (FileNotFoundException e) {
-			e.printStackTrace();
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-	}
 
 	public boolean isShow_sql() {
 		return show_sql;
@@ -135,6 +84,7 @@ public class DbProperties {
 	}
 
 	public String getConnection_url() {
+		connection_url = connection_url + pathToDataBase;
 		return connection_url;
 	}
 

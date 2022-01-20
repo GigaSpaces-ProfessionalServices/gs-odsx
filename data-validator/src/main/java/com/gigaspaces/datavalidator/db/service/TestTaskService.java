@@ -79,19 +79,7 @@ public class TestTaskService {
 	}
 	
 	public long getAutoIncId() {  
-
 		return testTaskDao.getAutoIncId("TESTTASK", "TESTTASK_ID");
 	}
-	
- //TODO: Remove Map ang get it from IDS
-//	public static Map<Long, OdsxTask> odsxTaskDaoMap = new HashMap<Long, OdsxTask>();
-//
-//	public static Map<Long, OdsxTask> getOdsxTaskDaoMapMap() {
-//		return odsxTaskDaoMap;
-//	}
-//
-//	public static void putOdsxTaskDao(OdsxTask odsxTask) {
-//		odsxTaskDaoMap.put(odsxTask.getId(), odsxTask);
-//	}
 
 }

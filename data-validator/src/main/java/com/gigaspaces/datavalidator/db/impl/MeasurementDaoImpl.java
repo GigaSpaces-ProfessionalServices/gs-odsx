@@ -1,7 +1,5 @@
 package com.gigaspaces.datavalidator.db.impl;
-import org.springframework.stereotype.Component;
 import org.springframework.stereotype.Repository;
-
 import com.gigaspaces.datavalidator.db.dao.MeasurementDao;
 import com.gigaspaces.datavalidator.model.Measurement;
 
