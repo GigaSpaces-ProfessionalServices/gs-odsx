@@ -156,10 +156,10 @@ if [[ $installtelegrafFlag == "y" ]]; then
 fi
 
 
-chown ec2-user:ec2-user -R /opt/Kafka/*
-chown ec2-user:ec2-user -R /data/kafka-logs
-chown ec2-user:ec2-user -R /data/kafka-data
-chown ec2-user:ec2-user -R /data/zookeeper
+chown gsods:gsods -R /opt/Kafka/*
+chown gsods:gsods -R /data/kafka-logs
+chown gsods:gsods -R /data/kafka-data
+chown gsods:gsods -R /data/zookeeper
 
 #chmod 777 -R /opt/Kafka/
 #chmod 777 -R /data/kafka-logs
