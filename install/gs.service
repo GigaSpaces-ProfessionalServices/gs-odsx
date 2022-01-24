@@ -8,7 +8,7 @@ User=gsods
 Group=gsods
 ExecStart=/bin/bash /usr/local/bin/start_gs.sh
 ExecStop=/bin/bash /usr/local/bin/stop_gs.sh
-RemainAfterExit=yes
+Restart=always
 
 [Install]
 WantedBy=multi-user.target
