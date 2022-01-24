@@ -167,8 +167,10 @@ def doValidate():
             verboseHandle.printConsoleWarning('');
             measurementId = str(input("Select measurement by id to run [1]: "))
             if (len(str(measurementId)) == 0):
-                measurementId = '1'
-
+                measurementId = '1')
+            while(measurementId not in measurementids):
+                print(Fore.YELLOW +"Please select  measurement from above list"+Fore.RESET) 
+                measurementId = str(input("Select measurement by id to run [1]:"))
             executionTime = str(input("Execution time delay (in minutes) [0]: "))
             if (len(str(executionTime)) == 0):
                 executionTime = '0'
@@ -195,9 +197,15 @@ def doValidate():
             measurementIdA = str(input("Select 1st measurement Id for comparison : "))
             if (len(str(measurementIdA)) == 0):
                 measurementIdA = '1'
+            while(measurementIdA not in measurementids):
+               print(Fore.YELLOW +"Please select  1st measurement Id  from above list"+Fore.RESET) 
+               measurementIdA = str(input("Select 1st measurement Id for comparison : "))
             measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
             if (len(str(measurementIdB)) == 0):
                 measurementIdB = '1'
+            while(measurementIdB not in measurementids):
+              print(Fore.YELLOW +"Please select  2nd measurement Id  from above list"+Fore.RESET) 
+              measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
 
             executionTime = str(input("Execution time delay (in minutes) [0]: "))
             if (len(str(executionTime)) == 0):
@@ -375,7 +383,7 @@ def doValidate():
     else:
         verboseHandle.printConsoleWarning("Invalid option")
 
-
+measurementids=[]
 def printmeasurementtable(dataValidatorServiceHost):
 
     try:
@@ -407,7 +415,7 @@ def printmeasurementtable(dataValidatorServiceHost):
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)
-
+                measurementids.append(str(measurement["id"]) )
         printTabular(None, headers, data)
         verboseHandle.printConsoleWarning('');
         return len(response)

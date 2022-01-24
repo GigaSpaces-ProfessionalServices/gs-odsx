@@ -63,11 +63,17 @@ def doValidate():
     resultCount = printmeasurementtable(dataValidatorServiceHost)
     if resultCount > 0:
         measurementIdA = str(input("Select 1st measurement Id for comparison : "))
+        while(measurementIdA not in measurementids):
+          print(Fore.YELLOW +"Please select 1st measurement Id from above list"+Fore.RESET) 
+          measurementIdA = str(input("Select 1st measurement Id for comparison :"))
         if (len(str(measurementIdA)) == 0):
-            measurementIdA = '1'
+          measurementIdA = '1'
         measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
+        while(measurementIdB not in measurementids):
+           print(Fore.YELLOW +"Please select 2nd measurement Id from above list"+Fore.RESET) 
+           measurementIdB = str(input("Select 2nd measurement Id for comparison :"))
         if (len(str(measurementIdB)) == 0):
-            measurementIdB = '1'
+          measurementIdB = '1'
 
         executionTime = str(input("Execution time delay (in minutes) [0]: "))
         if (len(str(executionTime)) == 0):
@@ -92,7 +98,7 @@ def doValidate():
     else:
         verboseHandle.printConsoleInfo("No measurement available.Please Register first.")
 
-
+measurementids=[]
 def printmeasurementtable(dataValidatorServiceHost):
     try:
         response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
@@ -125,7 +131,7 @@ def printmeasurementtable(dataValidatorServiceHost):
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)
-
+                measurementids.append(str(measurement["id"]) )
         printTabular(None, headers, data)
         verboseHandle.printConsoleWarning('');
         return len(response)

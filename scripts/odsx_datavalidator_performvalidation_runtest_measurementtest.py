@@ -72,7 +72,11 @@ def doValidate():
         return
 
     verboseHandle.printConsoleWarning('');
-    measurementId = str(input("Select measurement by id to run [1]: "))
+    measurementId = str(input("Select measurement by id to run [1] : "))
+    while(measurementId not in measurementids):
+      print(Fore.YELLOW +"Please select measurement Id from above list"+Fore.RESET) 
+      measurementId = str(input("Select measurement by id to run [1]:"))
+                
     if (len(str(measurementId)) == 0):
         measurementId = '1'
 
@@ -97,7 +101,7 @@ def doValidate():
         verboseHandle.printConsoleInfo("Test Result: " + jsonArray["response"])
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
-
+measurementids=[]
 def printmeasurementtable(dataValidatorServiceHost):
     try:
         response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
@@ -130,7 +134,7 @@ def printmeasurementtable(dataValidatorServiceHost):
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)
-
+                measurementids.append(str(measurement["id"]) )
         printTabular(None, headers, data)
         verboseHandle.printConsoleWarning('');
         return len(response)
