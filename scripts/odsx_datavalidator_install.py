@@ -62,7 +62,22 @@ def installSingle():
         if(len(str(user))==0):
             user="root"
         logger.info(" user: "+str(user))
-
+        #open and add properties as per user inputs
+        dbPath= str(input(Fore.YELLOW+"Enter db path[datavalidator.db]: "+Fore.RESET))
+        if(len(str(dbPath))==0):
+            dbPath='datavalidator.db'
+        logFilepath= str(input(Fore.YELLOW+"Enter  log file path[datavalidator.log] : "+Fore.RESET))
+        if(len(str(logFilepath))==0):
+            logFilepath='datavalidator.log'
+        
+        with open('install/data-validation/application.properties', 'w') as f:
+         f.write('server.port=7890')
+         f.write('\n')
+         f.write('logging.file.name='+logFilepath)
+         f.write('\n')
+         f.write('pathToDataBase='+dbPath)
+        
+    
         confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Data Validation Service server (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
             confirmInstall='y'
