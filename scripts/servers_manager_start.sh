@@ -12,7 +12,7 @@ cd $GS_HOME
 #sudo -s
 #nohup ./bin/gs.sh host run-agent --auto > /tmp/agent-console.log 2>&1 &
 systemctl daemon-reload
-systemctl start gs.service
+systemctl start gsa.service
 
 sleep 30
 echo "InsightEdge started."

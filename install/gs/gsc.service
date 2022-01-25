@@ -1,0 +1,15 @@
+[Unit]
+Description="GigaSpaces Service Grid"
+After=gsa.service
+Requires=gsa.service
+
+[Service]
+Type=simple
+User=gsods
+Group=gsods
+ExecStart=/bin/bash /usr/local/bin/start_gsc.sh
+ExecStop=/bin/bash /usr/local/bin/stop_gsc.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
