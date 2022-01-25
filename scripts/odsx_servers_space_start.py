@@ -150,9 +150,9 @@ if __name__ == '__main__':
             logger.info("99 - Exist start")
         else:
             confirm=''
-            confirm = str(input(Fore.YELLOW+"Are you sure want to start all server ? [yes (y)] / [no (n)]"+Fore.RESET))
+            confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()

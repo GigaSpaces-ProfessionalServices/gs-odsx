@@ -161,18 +161,32 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
-        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "))
+        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantToInstallJava))==0):
             wantToInstallJava='n'
 
-        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "))
+        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantToInstallUnzip))==0):
             wantToInstallUnzip='n'
+        global gscCount
+        global memoryGSC
+        global zoneGSC
+        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create [20]: "+Fore.RESET))
+        if(len(str(gscCount))==0):
+            gscCount = '20'
+
+        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC [15g]: "+Fore.RESET))
+        if(len(str(memoryGSC))==0):
+            memoryGSC = '15g'
+
+        zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
+        if(len(str(zoneGSC))==0):
+            zoneGSC = 'bll'
 
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
@@ -232,11 +246,20 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+"Space hosts = "+Fore.RESET,
               Fore.GREEN+spaceHostConfig.replace('"','')+Fore.RESET)
         print(Fore.GREEN+"9. "+
-              Fore.GREEN+"Do you want to install Java ? : "+Fore.RESET,
+              Fore.GREEN+"Do you want to install Java ? "+Fore.RESET,
               Fore.GREEN+wantToInstallJava+Fore.RESET)
         print(Fore.GREEN+"10. "+
               Fore.GREEN+"Do you want to install Unzip ? "+Fore.RESET,
               Fore.GREEN+wantToInstallUnzip+Fore.RESET)
+        print(Fore.GREEN+"11. "+
+              Fore.GREEN+"Enter number of GSC to create : "+Fore.RESET,
+              Fore.GREEN+gscCount+Fore.RESET)
+        print(Fore.GREEN+"12. "+
+              Fore.GREEN+"Enter memory required to create GSC : "+Fore.RESET,
+              Fore.GREEN+memoryGSC+Fore.RESET)
+        print(Fore.GREEN+"13. "+
+              Fore.GREEN+"Enter zone to create GSC : "+Fore.RESET,
+              Fore.GREEN+zoneGSC+Fore.RESET)
         #print(Fore.GREEN+"8. "+
         #      Fore.GREEN+"Space hosts NIC_ADDRESS= "+Fore.RESET,
         #      Fore.GREEN+str(host_nic_dict_obj).replace('"','')+Fore.RESET)
@@ -250,6 +273,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 gsNicAddress = host_nic_dict_obj[host]
                 #print(host+"  "+gsNicAddress)
                 additionalParam=additionalParam+' '+gsNicAddress
+                logger.info("additionalParam - Installation :")
                 logger.info("Building .tar file : tar -cvf install/install.tar install")
                 cmd = 'tar -cvf install/install.tar install'
                 with Spinner():

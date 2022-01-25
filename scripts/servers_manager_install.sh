@@ -335,7 +335,7 @@ function gsCreateGSServeice {
   chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
-    start_gsa_file="start_gsa.sh"
+  start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"
   stop_gsa_file="stop_gsa.sh"
   stop_gsc_file="stop_gsc.sh"
@@ -359,6 +359,9 @@ function gsCreateGSServeice {
   cmd="$GS_HOME/bin/gs.sh container kill --zones bll;sleep 20;"
   echo "$cmd">>$stop_gsc_file
 
+  #comment GSC requires param in Manager
+  sed -i -e 's|Requires = gsc.service|#Requires = gsc.service|g' $home_dir_sh/install/gs/$gsa_service_file
+
   mv $home_dir_sh/st*_gs*.sh /tmp
   mv $home_dir_sh/install/gs/$gsa_service_file /tmp
   mv $home_dir_sh/install/gs/$gsc_service_file /tmp
@@ -366,7 +369,7 @@ function gsCreateGSServeice {
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
 
-  rm -rf gs.service
+  #rm -rf gs.service
 
   #======================================
   #mkdir $GS_HOME/tools/gs-webui/work

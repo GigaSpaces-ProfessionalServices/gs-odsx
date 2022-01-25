@@ -237,7 +237,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 kafkaHost=''
                 if(len(str(dIHosts))>0):
                     kafkaHosts = getBootstrapAddress(dIHosts)
-                    print(kafkaHosts)
+                    logger.info("kafkaHosts :"+str(kafkaHost))
                     verboseHandle.printConsoleWarning("DI servers will be confiured ["+str(kafkaHosts)+"] ")
                 else:
                     verboseHandle.printConsoleInfo("No DI server configuration found.")
