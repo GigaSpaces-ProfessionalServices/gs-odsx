@@ -138,9 +138,9 @@ if __name__ == '__main__':
             elif(hostConfiguration=='99'):
                 logger.info("99 - Exist stop")
             else:
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(input(Fore.YELLOW+"Are you sure want to start all server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                    confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     logger.info("Starting Cluster")

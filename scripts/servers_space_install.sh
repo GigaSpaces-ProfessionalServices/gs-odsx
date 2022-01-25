@@ -359,7 +359,7 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=20 --zone=bll --memory=15g `hostname`"
+  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC `hostname`"
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
@@ -417,7 +417,10 @@ applicativeUser=$8
 nofileLimitFile=$9
 wantInstallJava=${10}
 wantInstallUnzip=${11}
-gsNicAddress=${12}
+gscCount=${12}
+memoryGSC=${13}
+zoneGSC=${14}
+gsNicAddress=${15}
 
 echo "param1"$1
 echo "param2"$targetDir
@@ -430,7 +433,10 @@ echo "param8"$applicativeUser
 echo "param9"$nofileLimitFile
 echo "param10"$wantInstallJava
 echo "param11"$wantInstallUnzip
-echo "param12"$gsNicAddress
+echo "param12"$gscCount
+echo "param13"$memoryGSC
+echo "param14"$zoneGSC
+echo "param15"$gsNicAddress
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else
