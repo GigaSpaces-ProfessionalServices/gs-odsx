@@ -103,8 +103,10 @@ def getHostConfiguration():
         if(len(str(applicativeUser))==0):
             applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
-        set_value_in_property_file_generic('User',applicativeUser,'install/gs.service','Service')
-        set_value_in_property_file_generic('Group',applicativeUser,'install/gs.service','Service')
+        set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
+        set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
+        set_value_in_property_file_generic('Group',applicativeUser,'install/gs/gsc.service','Service')
+        set_value_in_property_file_generic('Group',applicativeUser,'install/gs/gsc.service','Service')
 
         if(len(hostsConfig)==2):
             hostsConfig=hostsConfig.replace('"','')
@@ -282,7 +284,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
-        applicativeUser = read_value_in_property_file_generic_section('User','install/gs.service','Service')
+        applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
@@ -360,7 +362,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     logger.info("Creating tar file status : "+str(status))
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')
-                    scp_upload(host, user, 'install/gs.service', '')
+                    ##scp_upload(host, user, 'install/gs.service', '')
                 verboseHandle.printConsoleInfo(output)
                 cmd = 'tar -xvf install.tar'
                 verboseHandle.printConsoleInfo("Extracting..")

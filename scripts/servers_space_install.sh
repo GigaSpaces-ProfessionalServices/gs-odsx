@@ -344,9 +344,12 @@ function gsCreateGSServeice {
   chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*  /dbagigadata
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
-  start_gs_file="start_gs.sh"
-  stop_gs_file="stop_gs.sh"
-  gs_service_file="gs.service"
+  start_gsa_file="start_gsa.sh"
+  start_gsc_file="start_gsc.sh"
+  stop_gsa_file="stop_gsa.sh"
+  stop_gsc_file="stop_gsc.sh"
+  gsa_service_file="gsa.service"
+  gsc_service_file="gsc.service"
 
   home_dir_sh=$(pwd)
   echo "homedir: "$home_dir_sh
@@ -355,16 +358,24 @@ function gsCreateGSServeice {
 
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
-  echo "$cmd">>$start_gs_file
+  echo "$cmd">>$start_gsa_file
+  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m `hostname`"
+  echo "$cmd">>$start_gsc_file
+
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
-  echo "$cmd">>$stop_gs_file
+  echo "$cmd">>$stop_gsa_file
+  cmd="$GS_HOME/bin/gs.sh container kill --zones bll;sleep 20;"
+  echo "$cmd">>$stop_gsc_file
 
-  mv $home_dir_sh/st*_gs.sh /tmp
-  mv $home_dir_sh/$gs_service_file /tmp
-  mv /tmp/st*_gs.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_gs.sh
-  mv /tmp/gs.service /etc/systemd/system/
+  mv $home_dir_sh/st*_gs*.sh /tmp
+  mv $home_dir_sh/install/gs/$gsa_service_file /tmp
+  mv $home_dir_sh/install/gs/$gsc_service_file /tmp
+  mv /tmp/st*_gs*.sh /usr/local/bin/
+  chmod +x /usr/local/bin/st*_gs*.sh
+  mv /tmp/gs*.service /etc/systemd/system/
+
+  rm -rf gs.service
 
   #======================================
   #mkdir $GS_HOME/tools/gs-webui/work
@@ -376,7 +387,10 @@ function gsCreateGSServeice {
   chmod -R +x /dbagiga
 
   systemctl daemon-reload
-  systemctl enable gs.service
+  systemctl enable $gsa_service_file
+  systemctl enable $gsc_service_file
+
+
   : '
   sudo systemctl daemon-reload
   sudo systemctl start gs.service
