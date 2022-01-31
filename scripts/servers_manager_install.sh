@@ -359,7 +359,8 @@ function gsCreateGSServeice {
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
   echo "$cmd">>$stop_gsa_file
-  cmd="$GS_HOME/bin/gs.sh container kill --zones bll;sleep 20;"
+  #cmd="$GS_HOME/bin/gs.sh container kill --zones bll;sleep 20;"
+  cmd="ps -ef | grep GSC | grep java | awk '{print $2}' | xargs kill -9"
   echo "$cmd">>$stop_gsc_file
 
   #comment GSC requires param in Manager
