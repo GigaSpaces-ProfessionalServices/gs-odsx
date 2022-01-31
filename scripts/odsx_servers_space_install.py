@@ -9,6 +9,7 @@ from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
 from scripts.spinner import Spinner
+from utils.ods_scp import scp_upload
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -182,6 +183,25 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
         if(len(str(zoneGSC))==0):
             zoneGSC = 'bll'
+        confirmDb2FeederJar = str(input(Fore.YELLOW+"Do you want to upload DB2Feeder jar ? (y/n) [y] :"))
+        if(len(str(confirmDb2FeederJar))==0):
+            confirmDb2FeederJar='y'
+        if(confirmDb2FeederJar=='y'):
+            db2jccJarConfig = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc-4.26.14.jar")).replace('[','').replace(']','')
+            db2jccJarInput = str(input(Fore.YELLOW+"Enter source path of db2jcc-4.26.14.jar ["+db2jccJarConfig+"] : "+Fore.RESET))
+            if(len(str(db2jccJarInput))==0):
+                db2jccJarInput=db2jccJarConfig
+
+            db2jccJarLicenseConfig = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
+            db2jccJarLicenseInput = str(input(Fore.YELLOW+"Enter source path of db2jcc_license_cu-4.16.53.jar ["+db2jccJarLicenseConfig+"]"+Fore.RESET))
+            if(len(str(db2jccJarLicenseInput))==0):
+                db2jccJarLicenseInput=db2jccJarLicenseConfig
+
+            db2FeederJarTargetConfig = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
+            db2FeederJarTargetInput = str(input(Fore.YELLOW+"Enter target path of db2Feeder jar ["+db2FeederJarTargetConfig+"]"+Fore.RESET))
+            if(len(str(db2FeederJarTargetInput))==0):
+                db2FeederJarTargetInput=db2FeederJarTargetConfig
+
 
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
@@ -298,6 +318,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                     logger.debug("script output"+str(outputShFile))
                     #print(outputShFile)
+                    #UPLOAD DB2FEEDER JAR
+                    if(confirmDb2FeederJar=='y'):
+                        print("source :"+db2jccJarInput)
+                        scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                        print("source2 :"+db2jccJarLicenseInput)
+                        scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
                 serverHost=''
                 try:
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)

@@ -26,6 +26,9 @@ systemctl stop gsc.service
 sleep 5
 rm -rf $GS_HOME
 rm -rf setenv.sh gs install install.tar /dbagiga/giga*  /dbagigalogs/* /dbagigadata/* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+cd /dbagiga
+rm -f gigaspaces-smart-ods
+echo "Remove symlink done!"
 systemctl daemon-reload
 sed -i '/hard nofile/d' /etc/security/limits.conf
 sed -i '/soft nofile/d' /etc/security/limits.conf
