@@ -329,6 +329,8 @@ function installAirGapGS {
    echo "">>/etc/security/limits.conf
    echo $limitContent>>/etc/security/limits.conf
    echo $limitContentSoft>>/etc/security/limits.conf
+   cd $targetDir
+   ln -s $extracted_folder gigaspaces-smart-ods
 
    echo "Installation & configuration Gigaspace  -Done!"
 }
