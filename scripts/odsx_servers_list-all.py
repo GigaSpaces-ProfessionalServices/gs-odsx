@@ -85,7 +85,7 @@ def getStatusOfNBHost(server):
         cmd = "systemctl status consul.service"
     if(str(server.role).__contains__('applicative')):
         cmd = 'systemctl status northbound.target'
-    if(server.role =='management'):
+    if(str(server.role).__contains__('management')):
         cmd = 'systemctl status northbound.target'
     logger.info("Getting status.. :"+str(cmd))
     user = 'root'
@@ -183,7 +183,7 @@ def listAllServers():
             dataArray=[Fore.GREEN+str(count)+Fore.RESET,
                        Fore.GREEN+"Northbound "+server.role+Fore.RESET,
                        Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.GREEN+"OFF"+Fore.RESET]
+                       Fore.RED+"OFF"+Fore.RESET]
         data.append(dataArray)
 
     logger.info("Grafana server list.")
