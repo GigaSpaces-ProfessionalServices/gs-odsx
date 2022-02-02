@@ -302,8 +302,10 @@ function installAirGapGS {
    cd
    # Moving the required files to other folder
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir"
-   sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
-   cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+   if [ ! -f "$targetConfigDir/xap_logging.properties" ]; then                #Condition added on 02Feb22 if file exist dont override it
+     sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
+     cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+   fi
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir"
    if [ ! -f "$targetConfigDir/metrics.xml" ]; then                #Condition added on 20Oct21 if file exist dont override it
     echo "File $targetConfigDir/metrics.xml not exist so copying"

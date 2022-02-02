@@ -183,25 +183,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
         if(len(str(zoneGSC))==0):
             zoneGSC = 'bll'
-        confirmDb2FeederJar = str(input(Fore.YELLOW+"Do you want to upload DB2Feeder jar ? (y/n) [y] :"))
-        if(len(str(confirmDb2FeederJar))==0):
-            confirmDb2FeederJar='y'
-        if(confirmDb2FeederJar=='y'):
-            db2jccJarConfig = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc-4.26.14.jar")).replace('[','').replace(']','')
-            db2jccJarInput = str(input(Fore.YELLOW+"Enter source path of db2jcc-4.26.14.jar ["+db2jccJarConfig+"] : "+Fore.RESET))
-            if(len(str(db2jccJarInput))==0):
-                db2jccJarInput=db2jccJarConfig
 
-            db2jccJarLicenseConfig = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
-            db2jccJarLicenseInput = str(input(Fore.YELLOW+"Enter source path of db2jcc_license_cu-4.16.53.jar ["+db2jccJarLicenseConfig+"]"+Fore.RESET))
-            if(len(str(db2jccJarLicenseInput))==0):
-                db2jccJarLicenseInput=db2jccJarLicenseConfig
-
-            db2FeederJarTargetConfig = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
-            db2FeederJarTargetInput = str(input(Fore.YELLOW+"Enter target path of db2Feeder jar ["+db2FeederJarTargetConfig+"]"+Fore.RESET))
-            if(len(str(db2FeederJarTargetInput))==0):
-                db2FeederJarTargetInput=db2FeederJarTargetConfig
-
+        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
+        if(len(str(sourceDirectoryForJar))==0):
+            sourceDirectoryForJar='/dbagiga'
 
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
@@ -237,6 +222,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.debug("host enter:"+host+" nicAddr :"+nicAddr)
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
+
+        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
+        cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        db2jccJarInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc-4.26.14.jar")).replace('[','').replace(']','')
+        db2jccJarInput = sourceDirectoryForJar+'/'+db2jccJarInput
+        db2jccJarLicenseInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
+        db2jccJarLicenseInput=sourceDirectoryForJar+'/'+db2jccJarLicenseInput
+        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -280,9 +274,23 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"13. "+
               Fore.GREEN+"Enter zone to create GSC : "+Fore.RESET,
               Fore.GREEN+zoneGSC+Fore.RESET)
-        #print(Fore.GREEN+"8. "+
-        #      Fore.GREEN+"Space hosts NIC_ADDRESS= "+Fore.RESET,
-        #      Fore.GREEN+str(host_nic_dict_obj).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"14. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"15. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"16. "+
+              Fore.GREEN+"db2jcc-4.26.14.jar source : "+Fore.RESET,
+              Fore.GREEN+str(db2jccJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"17. "+
+              Fore.GREEN+"db2jcc_license_cu-4.16.53.jar source : "+Fore.RESET,
+              Fore.GREEN+str(db2jccJarLicenseInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"18. "+
+              Fore.GREEN+"DB2 Feeder jars target : "+Fore.RESET,
+              Fore.GREEN+str(db2FeederJarTargetInput).replace('"','')+Fore.RESET)
+
+
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -302,7 +310,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')
                     #scp_upload(host, user, 'install/gs.service', '')
-
                 cmd = 'tar -xvf install.tar'
                 verboseHandle.printConsoleInfo("Extracting..")
                 logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
@@ -318,12 +325,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                     logger.debug("script output"+str(outputShFile))
                     #print(outputShFile)
+                    #Upload CEF logging jar
+                    scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
                     #UPLOAD DB2FEEDER JAR
-                    if(confirmDb2FeederJar=='y'):
-                        print("source :"+db2jccJarInput)
-                        scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
-                        print("source2 :"+db2jccJarLicenseInput)
-                        scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+                    #if(confirmDb2FeederJar=='y'):
+                    #print("source :"+db2jccJarInput)
+                    scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                    #print("source2 :"+db2jccJarLicenseInput)
+                    scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
                 serverHost=''
                 try:
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)

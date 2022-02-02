@@ -304,6 +304,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(len(str(wantToInstallUnzip))==0):
             wantToInstallUnzip='n'
 
+        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy files [/dbagiga] : "+Fore.RESET))
+        if(len(str(sourceDirectoryForJar))==0):
+            sourceDirectoryForJar='/dbagiga'
+
+        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
+        cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -334,6 +342,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"9. "+
               Fore.GREEN+"Do you want to install Unzip ? "+Fore.RESET,
               Fore.GREEN+wantToInstallUnzip+Fore.RESET)
+        print(Fore.GREEN+"10. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"11. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -399,6 +413,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                     #print(outputShFile)
                     #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
+                    #Upload CEF logging jar
+                    scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
                 serverHost=''
                 try:
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)

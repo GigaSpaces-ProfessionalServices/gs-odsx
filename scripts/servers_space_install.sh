@@ -311,8 +311,10 @@ function installAirGapGS {
    cd
    # Moving the required files to other folder
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir"
-   sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
-   cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+   if [ ! -f "$targetConfigDir/xap_logging.properties" ]; then                #Condition added on 02Feb22 if file exist dont override it
+     sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
+     cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+   fi
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir"
    if [ ! -f "$targetConfigDir/metrics.xml" ]; then                #Condition added on 20Oct21 if file exist dont override it
     echo "File $targetConfigDir/metrics.xml not exist so copying"
@@ -361,14 +363,16 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC `hostname`"
+  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
   echo "$cmd">>$stop_gsa_file
   #cmd="$GS_HOME/bin/gs.sh container kill --zones bll;sleep 20;"
-  cmd="ps -ef | grep GSC | grep java | awk '{print $2}' | xargs kill -9"
+  prefix1='$'
+  prefix2="${prefix1}2"
+  cmd="ps -ef | grep GSC | grep java | awk '{print $prefix2}' | xargs kill -9"
   echo "$cmd">>$stop_gsc_file
 
   mv $home_dir_sh/st*_gs*.sh /tmp
