@@ -65,20 +65,25 @@ def proceedForNodeConfiguration(flag,nodes,targetDir):
             logger.info("outputShFile kafka : " + str(outputShFile))
 
 def proceedForInputParam(configXapLogLocation):
-    configXapLogLocation = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file"))
-    verboseHandle.printConsoleInfo("xap_logging.properties location ["+configXapLogLocation+"]")
-    confirmManagerInstall = str(input(Fore.YELLOW+"Are you sure want to disable CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
+    #configXapLogLocation = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file"))
+    #verboseHandle.printConsoleInfo("xap_logging.properties location ["+configXapLogLocation+"]")
+    configXapLogLocation = str(input(Fore.YELLOW+"Target directory of CEF logs [/dbagigalogs/CEF/] : "+Fore.RESET))
+    if(len(str(configXapLogLocation))==0):
+        configXapLogLocation='/dbagigalogs/CEF/'
+
+    confirmManagerInstall = str(input(Fore.YELLOW+"Are you sure want to clean CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):
         confirmManagerInstall='y'
     if(confirmManagerInstall=='y'):
         managerNodes = config_get_manager_node()
-        proceedForNodeConfiguration("disable",managerNodes,configXapLogLocation)
+        proceedForNodeConfiguration("clean",managerNodes,configXapLogLocation)
+
     confirmManagerInstall = str(input(Fore.YELLOW+"Are you sure want to disable CEF logs for space servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):
         confirmManagerInstall='y'
     if(confirmManagerInstall=='y'):
         spaceNodes = config_get_space_hosts()
-        proceedForNodeConfiguration("disable",spaceNodes,configXapLogLocation)
+        proceedForNodeConfiguration("clean",spaceNodes,configXapLogLocation)
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Logs -> Disable CEF')

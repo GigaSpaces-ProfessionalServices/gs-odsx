@@ -108,14 +108,9 @@ def copyFile(hostips, srcPath, destPath, dryrun=False):
     else:
         username = "gsods"
     for hostip in hostips:
-        if scp_upload(hostip, username, srcPath, destPath):
-            verboseHandle.printConsoleInfo(hostip)
-            logger.info(
-                "Done copying, hostip=" + hostip + ", username=" + username + ", srcPath=" + srcPath + ", destPath=" + destPath)
-        else:
-            return False
-    return True
-
+        scp_upload(hostip, username, srcPath, destPath)
+        verboseHandle.printConsoleInfo(hostip)
+        logger.info("Done copying, hostip=" + hostip + ", username=" + username + ", srcPath=" + srcPath + ", destPath=" + destPath)
 
 def showAndSelectOption():
     print("\n")
@@ -129,7 +124,7 @@ def showAndSelectOption():
     elif int(optionSelected) > len(getOptions().items()):
         verboseHandle.printConsoleError("Invalid option selected")
         exit(0)
-    print(optionSelected)
+    #print(optionSelected)
     srcPath = input("Enter source file absolute path: ")
     destPath = input("Enter destination file absolute path: ")
     if srcPath == "" or destPath == "":
@@ -139,9 +134,10 @@ def showAndSelectOption():
     if validation(srcPath, destPath) == False:
         exit(0)
     ips = getServerIps(int(optionSelected))
+    print(ips)
     logger.info("ips to copy file: "+str(ips))
     copyFile(ips, srcPath, destPath)
-
+    os.system('python3 scripts/odsx_utilities_copyfiles.py  m')
 
 if __name__ == '__main__':
     logger.info("Copy files Utilities")
