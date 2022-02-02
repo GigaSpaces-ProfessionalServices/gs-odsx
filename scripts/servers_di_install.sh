@@ -8,7 +8,7 @@ standbyHost=$3
 witnessHost=$4
 id=$5
 
-cd /home/dbsh
+cd /home/dbsh/
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
@@ -44,6 +44,19 @@ echo "extracted_folder: "$extracted_folder
 kafka_home_path="export KAFKAPATH=/opt/Kafka/"$extracted_folder
 echo "$kafka_home_path">>setenv.sh
 
+#zookeeper setup
+installation_path=$home_dir/install/zookeeper
+echo "InstallationPath="$installation_path
+installation_file=$(find $installation_path -name "*.gz" -printf "%f\n")
+echo "InstallationFile:"$installation_file
+tar -xvzf $installation_path"/"$installation_file -C /opt/Kafka
+var=$installation_file
+echo "var"$var
+replace=""
+extracted_folder=${var//'.tar.gz'/$replace}
+zk_home_path="export ZOOKEEPERPATH=/opt/Kafka/"$extracted_folder
+echo "$zk_home_path">>setenv.sh
+
 
 # Configuration of log dir
 source setenv.sh
@@ -61,26 +74,28 @@ mkdir -p /data/zookeeper/
 mkdir -p /data/kafka-logs/
 mkdir -p /data/kafka-data/
 
-sed -i -e 's|$KAFKAPATH/log/kafka|/data/zookeeper/|g' $KAFKAPATH/config/zookeeper.properties
-sed -i -e 's|/tmp/zookeeper|/data/zookeeper/|g' $KAFKAPATH/config/zookeeper.properties
+cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
+
+sed -i -e 's|$ZOOKEEPERPATH/log/kafka|/data/zookeeper/|g' $ZOOKEEPERPATH/conf/zoo.cfg
+sed -i -e 's|/tmp/zookeeper|/data/zookeeper/|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|${kafka.logs.dir}|/data/kafka-logs|g' $KAFKAPATH/config/log4j.properties
 
 if [[ ${#masterHost} -ge 3 ]]; then
   # removing all existing properties
-  sed -i '/^server.1/d' $KAFKAPATH/config/zookeeper.properties
-  sed -i '/^server.2/d' $KAFKAPATH/config/zookeeper.properties
-  sed -i '/^server.3/d' $KAFKAPATH/config/zookeeper.properties
-  sed -i '/^initLimit=1000/d' $KAFKAPATH/config/zookeeper.properties
-  sed -i '/^syncLimit=1000/d' $KAFKAPATH/config/zookeeper.properties
+  sed -i '/^server.1/d' $ZOOKEEPERPATH/conf/zoo.cfg
+  sed -i '/^server.2/d' $ZOOKEEPERPATH/conf/zoo.cfg
+  sed -i '/^server.3/d' $ZOOKEEPERPATH/conf/zoo.cfg
+  sed -i '/^initLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
+  sed -i '/^syncLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
   sed -i '/^broker.id/d' $KAFKAPATH/config/server.properties
   sed -i '/^zookeeper.connect/d' $KAFKAPATH/config/server.properties
 
   # adding properties
-  echo "server.1="$masterHost":2888:3888">>$KAFKAPATH/config/zookeeper.properties
-  echo "server.2="$standbyHost":2888:3888">>$KAFKAPATH/config/zookeeper.properties
-  echo "server.3="$witnessHost":2888:3888">>$KAFKAPATH/config/zookeeper.properties
-  echo "initLimit=1000">>$KAFKAPATH/config/zookeeper.properties
-  echo "syncLimit=1000">>$KAFKAPATH/config/zookeeper.properties
+  echo "server.1="$masterHost":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+  echo "server.2="$standbyHost":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+  echo "server.3="$witnessHost":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+  echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
+  echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
 
   echo "broker.id="$id"">>$KAFKAPATH/config/server.properties
   echo "zookeeper.connect="$masterHost":2181,"$standbyHost":2181,"$witnessHost":2181">>$KAFKAPATH/config/server.properties
@@ -114,7 +129,7 @@ kafka_service_file="odsxkafka.service"
 zookeeper_service_file="odsxzookeeper.service"
 
 source setenv.sh
-cmd="$KAFKAPATH/bin/zookeeper-server-start.sh $KAFKAPATH/config/zookeeper.properties"
+cmd="$ZOOKEEPERPATH/bin/zkServer.sh --config $ZOOKEEPERPATH/conf start"
 echo "$cmd">>$start_zookeeper_file
 cmd="$KAFKAPATH/bin/kafka-server-start.sh $KAFKAPATH/config/server.properties"
 echo "$cmd">>$start_kafka_file
@@ -123,7 +138,7 @@ source setenv.sh
 cmd="$KAFKAPATH/bin/kafka-server-stop.sh $KAFKAPATH/config/server.properties"
 echo "$cmd">>$stop_kafka_file
 # stop Zookeeper
-cmd="$KAFKAPATH/bin/zookeeper-server-stop.sh $KAFKAPATH/config/zookeeper.properties"
+cmd="$ZOOKEEPERPATH/bin/zookeeper-server-stop.sh --config $ZOOKEEPERPATH/conf stop"
 echo "$cmd">>$stop_zookeeper_file
 
 home_dir_sh=$(pwd)
@@ -161,10 +176,10 @@ chown gsods:gsods -R /data/kafka-logs
 chown gsods:gsods -R /data/kafka-data
 chown gsods:gsods -R /data/zookeeper
 
-#chmod 777 -R /opt/Kafka/
-#chmod 777 -R /data/kafka-logs
-#chmod 777 -R /data/kafka-data
-#chmod 777 -R /data/zookeeper
+chmod 777 -R /opt/Kafka/
+chmod 777 -R /data/kafka-logs
+chmod 777 -R /data/kafka-data
+chmod 777 -R /data/zookeeper
 
 systemctl daemon-reload
 
