@@ -95,7 +95,7 @@ def cleanUpManagerServers():
         managerHosts = getManagerServerHostList()
         confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
-            cmd = "rm -rf /dbagigawork/*;rm -f /dbagigalogs/*;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
+            cmd = "rm -rf /dbagigawork/*;find /dbagigalogs -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
             for node in managerNodes:
                 with Spinner():
@@ -119,7 +119,7 @@ def cleanUpSpaceServers():
         spaceHosts = getSpaceServerHostList()
         confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
-            cmd = "rm -rf /dbagigadata/*;rm -f /dbagigalogs/*;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
+            cmd = "rm -rf /dbagigadata/*;find /dbagigalogs -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
             for node in spaceNodes:
                 with Spinner():

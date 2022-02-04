@@ -25,7 +25,8 @@ source setenv.sh
 systemctl stop gsc.service
 sleep 5
 rm -rf $GS_HOME
-rm -rf setenv.sh gs install install.tar /dbagiga/giga*  /dbagigalogs/* /dbagigadata/* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+rm -rf setenv.sh gs install install.tar /dbagiga/giga* /dbagigadata/* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+find /dbagigalogs -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete
 cd /dbagiga
 rm -f gigaspaces-smart-ods
 echo "Remove symlink done!"
