@@ -75,6 +75,7 @@ def proceedForInputParam(configXapLogLocation):
     sourceCefLogInput = str(input(Fore.YELLOW+"Enter source CEF configured xap_logging.properties file ["+sourceCefLogConfig+"] :"))
     if(len(str(sourceCefLogInput))==0):
         sourceCefLogInput = sourceCefLogConfig
+    set_value_in_property_file("app.manager.cefXapLogging.source.file",sourceCefLogInput)
     #check source file exist
     global targetCefLogInput
     if(os.path.isfile(sourceCefLogInput)):
@@ -85,22 +86,7 @@ def proceedForInputParam(configXapLogLocation):
     else:
         verboseHandle.printConsoleInfo("Source file does not exist")
         logger.info("Source file does not exist")
-    '''
-    global cefLoggingJarInput
-    global cefLoggingJarInputTarget
-    cefLoggingJarConfig = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
-    cefLoggingJarInput = str(input(Fore.YELLOW+"Enter source path of CEFLogger-1.0-SNAPSHOT.jar ["+cefLoggingJarConfig+"] : "+Fore.RESET))
-    if(len(str(cefLoggingJarInput))==0):
-        cefLoggingJarInput=cefLoggingJarConfig
-    if(os.path.isfile(cefLoggingJarInput)):
-        cefLoggingJarConfigTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(input(Fore.YELLOW+"Enter target path of CEFLogger-1.0-SNAPSHOT.jar ["+cefLoggingJarConfigTarget+"] : "+Fore.RESET))
-        if(len(str(cefLoggingJarInputTarget))==0):
-            cefLoggingJarInputTarget=cefLoggingJarConfigTarget
-    else:
-        verboseHandle.printConsoleInfo("Source file does not exist"+str(os.path.isfile(cefLoggingJarInput)))
-        logger.info("Source file does not exist")
-    '''
+
     confirmManagerInstall = str(input(Fore.YELLOW+"Are you sure want to enable CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):
         confirmManagerInstall='y'
