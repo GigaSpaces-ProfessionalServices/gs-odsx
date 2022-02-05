@@ -12,7 +12,8 @@ public class MeasurementRequestModel {
     private String tableName;
     private String fieldName;
     private String whereCondition;
-
+    private String integratedSecurity;
+    
     public MeasurementRequestModel() {
     }
 
@@ -103,4 +104,15 @@ public class MeasurementRequestModel {
     public void setWhereCondition(String whereCondition) {
         this.whereCondition = whereCondition;
     }
+
+	public String getIntegratedSecurity() {
+		return integratedSecurity;
+	}
+
+	public void setIntegratedSecurity(String integratedSecurity) {
+		this.integratedSecurity = integratedSecurity;
+	}
+    
+    
+    
 }

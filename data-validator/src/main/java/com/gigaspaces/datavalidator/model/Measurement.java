@@ -22,10 +22,11 @@ public class Measurement implements Serializable{
     private String fieldName;
     private String limitRecords;
     private String whereCondition;
+    private String integratedSecurity;
     private static long maxId=0;
 
     
-    public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort, String username, String password, String schemaName, String tableName, String fieldName, String limitRecords, String whereCondition) {
+    public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort, String username, String password, String schemaName, String tableName, String fieldName, String limitRecords, String whereCondition ,String integratedSecurity) {
         this.id = id;
         this.type = type;
         this.dataSourceType = dataSourceType;
@@ -38,6 +39,7 @@ public class Measurement implements Serializable{
         this.fieldName = fieldName;
         this.whereCondition = whereCondition;
         this.limitRecords = limitRecords;
+		this.integratedSecurity = integratedSecurity;
     }
 
     public String getDataSourceType() {
@@ -136,8 +138,17 @@ public class Measurement implements Serializable{
         this.limitRecords = limitRecords;
     }
 
+    
 
-    public static long getMaxId(){
+    public String getIntegratedSecurity() {
+		return integratedSecurity;
+	}
+
+	public void setIntegratedSecurity(String integratedSecurity) {
+		this.integratedSecurity = integratedSecurity;
+	}
+
+	public static long getMaxId(){
         return ++maxId;
     }
 }

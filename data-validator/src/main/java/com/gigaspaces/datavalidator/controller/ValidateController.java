@@ -85,7 +85,7 @@ public class ValidateController {
                     , measurementRequestModel.getUsername(), measurementRequestModel.getPassword()
                     , measurementRequestModel.getSchemaName(), measurementRequestModel.getTableName()
                     , measurementRequestModel.getFieldName()
-                    , "-1",measurementRequestModel.getWhereCondition());
+                    , "-1",measurementRequestModel.getWhereCondition(),measurementRequestModel.getIntegratedSecurity());
             measurementService.add(measurement);
             response.put("response", "Registered successfully");
             return response;
@@ -169,10 +169,10 @@ public class ValidateController {
             measurement.setFieldName(measurementRequestModel.getFieldName());
             measurement.setWhereCondition(measurementRequestModel.getWhereCondition());
             measurement.setLimitRecords("-1");
+            measurement.setIntegratedSecurity(measurementRequestModel.getIntegratedSecurity());
             measurementService.update(measurement);
             response.put("response", "Measurement with id '"+measurementRequestModel.getMeasurementId()+"' updated successfully");
             return response;
-
         } catch (Exception exe) {
             exe.printStackTrace();
             response.put("response", exe.getMessage());
@@ -215,7 +215,8 @@ public class ValidateController {
             , @RequestParam String username
             , @RequestParam String password
             , @RequestParam String schemaName
-            , @RequestParam(defaultValue="0") int executionTime){
+            , @RequestParam(defaultValue="0") int executionTime
+            , @PathVariable String integratedSecurity){
 
         String dataSourceType="gigaspaces";
         String test="max";
@@ -223,7 +224,7 @@ public class ValidateController {
         Measurement measurement = new Measurement(Measurement.getMaxId(), test
                 , dataSourceType, dataSourceHostIp, dataSourcePort
                 , username, password, schemaName
-                , tableName, columnName,"-1", "");
+                , tableName, columnName,"-1", "",integratedSecurity);
 
         measurementService.add(measurement);
 
