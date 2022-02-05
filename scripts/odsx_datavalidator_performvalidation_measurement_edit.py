@@ -121,7 +121,14 @@ def doValidate():
                         input("Where Condition [Current value: '" + measurement["whereCondition"] + "'] New value: "))
                     if (len(str(whereCondition)) == 0):
                         whereCondition = measurement["whereCondition"]
-
+              
+                IsAD = 'N'
+                if (dataSource1Type == 'ms-sql'):
+                 IsAD = str(input("s Active Directory authentication [Current value: '" + measurement["integratedSecurity"] + "'] New value: "))
+                 if (len(str(IsAD)) == 0):
+                    IsAD = measurement["integratedSecurity"]
+                    verboseHandle.printConsoleWarning(IsAD) 
+                
                 verboseHandle.printConsoleWarning('');
                 data = {
                     "measurementId": measurementId,
@@ -134,7 +141,8 @@ def doValidate():
                     "schemaName": schemaName1,
                     "tableName": tableName1,
                     "fieldName": fieldName1,
-                    "whereCondition": whereCondition
+                    "whereCondition": whereCondition,
+                    "integratedSecurity":IsAD
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
                 response = requests.post("http://" + dataValidatorServiceHost + ":7890/measurement/update"

@@ -78,7 +78,7 @@ def doValidate():
         test = str(input("Test type (count/avg/min/max/sum) [count]: "))
         if (len(str(test)) == 0):
             test = 'count'
-        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql+ALP) [gigaspaces]: "))
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
         dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
@@ -103,6 +103,13 @@ def doValidate():
         fieldName1 = str(input("Field Name : "))
         if (len(str(fieldName1)) == 0):
             fieldName1 = 'demo'
+        IsAD = 'N'   
+        if (dataSource1Type == 'ms-sql'):
+           IsAD = str(input("Active Directory authentication (Y/N]) [N]:"))
+           if (IsAD!='Y'):
+            IsAD=' '
+           print("IS AD "+IsAD)
+           
         if test != 'lastvalue':
             whereCondition = str(input("Where Condition [''] : "))
             if (len(str(whereCondition)) == 0):
@@ -119,7 +126,8 @@ def doValidate():
             "schemaName": schemaName1,
             "tableName": tableName1,
             "fieldName": fieldName1,
-            "whereCondition": whereCondition
+            "whereCondition": whereCondition,
+            "integratedSecurity":IsAD
         }
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
         response = requests.post("http://" + dataValidatorServiceHost + ":7890/measurement/register"

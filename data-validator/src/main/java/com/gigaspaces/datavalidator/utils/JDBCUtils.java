@@ -15,7 +15,7 @@ public class JDBCUtils {
         aggregation_functions.add("max");
     }
 
-	public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password) throws ReflectiveOperationException, ReflectiveOperationException, ClassNotFoundException, SQLException {
+	public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password ,String integratedSecurity) throws ReflectiveOperationException, ReflectiveOperationException, ClassNotFoundException, SQLException {
 		Connection connection = null;
 		String connectionString = "";
 
@@ -38,7 +38,12 @@ public class JDBCUtils {
 		
 		case "ms-sql":
 			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
-			connectionString = "jdbc:sqlserver://" + dataSourceHostIp + ":" + dataSourcePort + ";DatabaseName="	+ schemaName;
+			connectionString = "jdbc:sqlserver://" + dataSourceHostIp + ":" + dataSourcePort + ";DatabaseName="	+ schemaName+";";
+
+			if ("Y".equalsIgnoreCase(integratedSecurity)) {
+				connectionString = connectionString + "integratedSecurity=true;";
+			}
+
 			break;
 		}
 		
