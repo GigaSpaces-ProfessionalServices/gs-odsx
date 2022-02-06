@@ -78,7 +78,7 @@ def doValidate():
         test = str(input("Test type (count/avg/min/max/sum) [count]: "))
         if (len(str(test)) == 0):
             test = 'count'
-        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql+ALP) [gigaspaces]: "))
+        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
         dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
