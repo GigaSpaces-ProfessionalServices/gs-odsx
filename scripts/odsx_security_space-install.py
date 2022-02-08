@@ -93,6 +93,29 @@ def getHostConfiguration():
         handleException(e)
 
 
+def getInputParamForSecurityCredantials():
+    logger.info("getInputParamForSecurityCredantials()")
+    global appId
+    global safeId
+    global objectId
+    appIdConfig = str(readValuefromAppConfig("app.space.security.appId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    appId = str(input(Fore.YELLOW+"Enter appId for credentials ["+appIdConfig+"] : "))
+    if(len(str(appId))==0):
+        appId = appIdConfig
+    set_value_in_property_file("app.space.security.appId",appId)
+
+    safeConfig = str(readValuefromAppConfig("app.space.security.safe")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    safeId = str(input(Fore.YELLOW+"Enter safe for credentials ["+safeConfig+"] : "))
+    if(len(str(safeId))==0):
+        safeId = safeConfig
+    set_value_in_property_file("app.space.security.safe",safeId)
+
+    objectConfig = str(readValuefromAppConfig("app.space.security.object")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    objectId = str(input(Fore.YELLOW+"Enter object for credentials ["+objectConfig+"] : "))
+    if(len(str(objectId))==0):
+        objectId = objectConfig
+    set_value_in_property_file("app.space.security.object",objectId)
+
 def execute_ssh_server_manager_install(hostsConfig,user):
     logger.info("execute_ssh_server_manager_install()")
     try:
@@ -188,10 +211,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(len(str(sourceDirectoryForJar))==0):
             sourceDirectoryForJar='/dbagiga'
 
+        getInputParamForSecurityCredantials()
+
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
@@ -248,6 +273,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         ldapSecurityConfigInput = str(readValuefromAppConfig("app.manager.security.config.ldap.source.file"))
         ldapSecurityConfigInput=sourceDirectoryForJar+'/'+ldapSecurityConfigInput
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
+
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -326,6 +352,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"25. "+
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
+
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
