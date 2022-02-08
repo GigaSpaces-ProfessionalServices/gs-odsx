@@ -363,7 +363,12 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
+  prefix1='$'
+  prefix2='(/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='$appId' -p Query="Safe='$safeId';Folder=;Object='$objectId';" -o PassProps.UserName)'
+  userNameParam=$prefix1$prefix2
+  prefix3='(/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='$appId' -p Query="Safe='$safeId';Folder=;Object='$objectId';" -o Password)'
+  passwordParam=$prefix1$prefix3
+  cmd="sleep 20;$GS_HOME/bin/gs.sh --username=$userNameParam --password=$passwordParam container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
@@ -427,7 +432,10 @@ wantInstallUnzip=${11}
 gscCount=${12}
 memoryGSC=${13}
 zoneGSC=${14}
-gsNicAddress=${15}
+appId=${15}
+safeId=${16}
+objectId=${17}
+gsNicAddress=${18}
 
 echo "param1"$1
 echo "param2"$targetDir
@@ -443,7 +451,10 @@ echo "param11"$wantInstallUnzip
 echo "param12"$gscCount
 echo "param13"$memoryGSC
 echo "param14"$zoneGSC
-echo "param15"$gsNicAddress
+echo "param15"$appId
+echo "param16"$safeId
+echo "param17"$objectId
+echo "param18"$gsNicAddress
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else
