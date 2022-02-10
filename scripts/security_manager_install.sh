@@ -115,7 +115,7 @@ function setGSHome {
     #home_dir=$(pwd)
     #path="export GS_HOME="$home_dir/gigaspaces-${gsType}-enterprise-${gsVersion}
     #rm setenv.sh
-    path="export GS_HOME="$targetDir/gigaspaces-${gsType}-enterprise-${gsVersion}
+    path="export GS_HOME="$targetDir/gigaspaces-smart-ods
     sed -i '/export GS_HOME/d' setenv.sh
     echo "">>setenv.sh
     echo "$path">>setenv.sh
@@ -293,7 +293,8 @@ function installAirGapGS {
    fi
    #set GS_HOME to start stop remove Gigaspaces
    cd
-   path="export GS_HOME="$targetDir/$extracted_folder
+   #path="export GS_HOME="$targetDir/$extracted_folder
+   path="export GS_HOME="$targetDir/gigaspaces-smart-ods
    #sed -i '/export GS_HOME/d' $home_dir/setenv.sh
    echo "">>setenv.sh
    echo "$path">>setenv.sh
