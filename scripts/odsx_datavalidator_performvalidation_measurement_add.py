@@ -103,17 +103,22 @@ def doValidate():
         fieldName1 = str(input("Field Name : "))
         if (len(str(fieldName1)) == 0):
             fieldName1 = 'demo'
-        IsAD = 'N'   
-        if (dataSource1Type == 'ms-sql'):
-           IsAD = str(input("Active Directory authentication (Y/N]) [N]:"))
-           if (IsAD!='Y'):
-            IsAD=' '
-           print("IS AD "+IsAD)
-           
+
         if test != 'lastvalue':
             whereCondition = str(input("Where Condition [''] : "))
             if (len(str(whereCondition)) == 0):
                 whereCondition = ''
+
+        IntegratedSecurity = ''
+        AuthenticationScheme=''
+        Properties=''
+        if (dataSource1Type == 'ms-sql'):
+           IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
+           AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
+           Properties = str(input("Connection properties( ex.Key=value;):"))
+
+
+
 
         verboseHandle.printConsoleWarning('');
         data = {
@@ -127,8 +132,10 @@ def doValidate():
             "tableName": tableName1,
             "fieldName": fieldName1,
             "whereCondition": whereCondition,
-            "integratedSecurity":IsAD
-        }
+            "integratedSecurity":IntegratedSecurity,
+            "authenticationScheme":AuthenticationScheme,
+            "properties":Properties
+       }
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
         response = requests.post("http://" + dataValidatorServiceHost + ":7890/measurement/register"
                                  , data=json.dumps(data)
