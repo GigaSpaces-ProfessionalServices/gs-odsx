@@ -121,14 +121,22 @@ def doValidate():
                         input("Where Condition [Current value: '" + measurement["whereCondition"] + "'] New value: "))
                     if (len(str(whereCondition)) == 0):
                         whereCondition = measurement["whereCondition"]
-              
-                IsAD = 'N'
+
+                IntegratedSecurity = ''
+                AuthenticationScheme=''
+                Properties=''
+                #print(measurement)
                 if (dataSource1Type == 'ms-sql'):
-                 IsAD = str(input("s Active Directory authentication [Current value: '" + measurement["integratedSecurity"] + "'] New value: "))
-                 if (len(str(IsAD)) == 0):
-                    IsAD = measurement["integratedSecurity"]
-                    verboseHandle.printConsoleWarning(IsAD) 
-                
+                 IntegratedSecurity = str(input("IntegratedSecurity [true/false] [Current value: '" + measurement["integratedSecurity"] + "'] New value:"))
+                 if (len(str(IntegratedSecurity)) == 0):
+                  IntegratedSecurity = measurement["integratedSecurity"]
+                 AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM] [Current value: '" + measurement["authenticationScheme"] + "'] New value:"))
+                 if (len(str(AuthenticationScheme)) == 0):
+                  AuthenticationScheme = measurement["authenticationScheme"]
+                 Properties = str(input("Connection properties( ex.Key=value;... ) [Current value: '" + measurement["properties"] + "'] New value:"))
+                 if (len(str(Properties)) == 0):
+                  Properties = measurement["properties"]
+
                 verboseHandle.printConsoleWarning('');
                 data = {
                     "measurementId": measurementId,
@@ -142,7 +150,9 @@ def doValidate():
                     "tableName": tableName1,
                     "fieldName": fieldName1,
                     "whereCondition": whereCondition,
-                    "integratedSecurity":IsAD
+                    "integratedSecurity":IntegratedSecurity,
+                    "authenticationScheme":AuthenticationScheme,
+                    "properties":Properties
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
                 response = requests.post("http://" + dataValidatorServiceHost + ":7890/measurement/update"

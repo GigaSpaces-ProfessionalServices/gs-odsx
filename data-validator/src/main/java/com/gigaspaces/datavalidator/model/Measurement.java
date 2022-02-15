@@ -23,36 +23,39 @@ public class Measurement implements Serializable{
     private String limitRecords;
     private String whereCondition;
     private String integratedSecurity;
-    private static long maxId=0;
+	private String properties;
+	private String authenticationScheme;
+	private static long maxId = 0;
 
-    
-    public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort, String username, String password, String schemaName, String tableName, String fieldName, String limitRecords, String whereCondition ,String integratedSecurity) {
-        this.id = id;
-        this.type = type;
-        this.dataSourceType = dataSourceType;
-        this.dataSourceHostIp = dataSourceHostIp;
-        this.dataSourcePort = dataSourcePort;
-        this.username = username;
-        this.password = password;
-        this.schemaName = schemaName;
-        this.tableName = tableName;
-        this.fieldName = fieldName;
-        this.whereCondition = whereCondition;
-        this.limitRecords = limitRecords;
+	public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort,
+			String username, String password, String schemaName, String tableName, String fieldName,
+			String limitRecords, String whereCondition, String integratedSecurity) {
+		this.id = id;
+		this.type = type;
+		this.dataSourceType = dataSourceType;
+		this.dataSourceHostIp = dataSourceHostIp;
+		this.dataSourcePort = dataSourcePort;
+		this.username = username;
+		this.password = password;
+		this.schemaName = schemaName;
+		this.tableName = tableName;
+		this.fieldName = fieldName;
+		this.whereCondition = whereCondition;
+		this.limitRecords = limitRecords;
 		this.integratedSecurity = integratedSecurity;
-    }
+	}
 
-    public String getDataSourceType() {
-        return dataSourceType;
-    }
+	public String getDataSourceType() {
+		return dataSourceType;
+	}
 
-    public void setDataSourceType(String dataSourceType) {
-        this.dataSourceType = dataSourceType;
-    }
+	public void setDataSourceType(String dataSourceType) {
+		this.dataSourceType = dataSourceType;
+	}
 
-    public String getDataSourceHostIp() {
-        return dataSourceHostIp;
-    }
+	public String getDataSourceHostIp() {
+		return dataSourceHostIp;
+	}
 
     public void setDataSourceHostIp(String dataSourceHostIp) {
         this.dataSourceHostIp = dataSourceHostIp;
@@ -148,7 +151,24 @@ public class Measurement implements Serializable{
 		this.integratedSecurity = integratedSecurity;
 	}
 
-	public static long getMaxId(){
-        return ++maxId;
-    }
+	public static long getMaxId() {
+		return ++maxId;
+	}
+
+	public String getProperties() {
+		return properties;
+	}
+
+	public void setProperties(String otherProperties) {
+		this.properties = otherProperties;
+	}
+
+	public String getAuthenticationScheme() {
+		return authenticationScheme;
+	}
+
+	public void setAuthenticationScheme(String isKerberoseInt) {
+		this.authenticationScheme = isKerberoseInt;
+	}
+
 }

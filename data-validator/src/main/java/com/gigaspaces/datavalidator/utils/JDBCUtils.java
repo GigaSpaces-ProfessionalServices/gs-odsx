@@ -4,6 +4,7 @@ import java.sql.DriverManager;
 import java.sql.SQLException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.logging.Logger;
 
 public class JDBCUtils {
 
@@ -14,8 +15,10 @@ public class JDBCUtils {
         aggregation_functions.add("min");
         aggregation_functions.add("max");
     }
-
-	public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password ,String integratedSecurity) throws ReflectiveOperationException, ReflectiveOperationException, ClassNotFoundException, SQLException {
+    private static Logger logger = Logger.getLogger(JDBCUtils.class.getName());
+	
+	public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password ,
+			String integratedSecurity,String isKerberoseInt,String otherProperties) throws ReflectiveOperationException, ReflectiveOperationException, ClassNotFoundException, SQLException {
 		Connection connection = null;
 		String connectionString = "";
 
@@ -40,13 +43,19 @@ public class JDBCUtils {
 			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
 			connectionString = "jdbc:sqlserver://" + dataSourceHostIp + ":" + dataSourcePort + ";DatabaseName="	+ schemaName+";";
 
-			if ("Y".equalsIgnoreCase(integratedSecurity)) {
-				connectionString = connectionString + "integratedSecurity=true;";
+			if (integratedSecurity != null && integratedSecurity.trim().length() > 0) {
+				connectionString = connectionString + "integratedSecurity="+integratedSecurity+";";
+			}
+			if (isKerberoseInt != null && isKerberoseInt.trim().length() > 0) {
+				connectionString = connectionString + "authenticationScheme="+isKerberoseInt+";";
+			}
+			if (otherProperties != null && otherProperties.trim().length() > 0) {
+				connectionString = connectionString + otherProperties;
 			}
 
 			break;
 		}
-		
+		logger.info("DataSource ConnectionString for " + dataSource + " :" + connectionString);
 		connection = DriverManager.getConnection(connectionString, username, password);
 	
 		return connection;

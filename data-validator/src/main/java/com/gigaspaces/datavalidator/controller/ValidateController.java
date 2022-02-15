@@ -86,6 +86,8 @@ public class ValidateController {
                     , measurementRequestModel.getSchemaName(), measurementRequestModel.getTableName()
                     , measurementRequestModel.getFieldName()
                     , "-1",measurementRequestModel.getWhereCondition(),measurementRequestModel.getIntegratedSecurity());
+            measurement.setAuthenticationScheme(measurementRequestModel.getIsKerberoseInt());
+            measurement.setProperties(measurementRequestModel.getProperties());
             measurementService.add(measurement);
             response.put("response", "Registered successfully");
             return response;
@@ -170,6 +172,8 @@ public class ValidateController {
             measurement.setWhereCondition(measurementRequestModel.getWhereCondition());
             measurement.setLimitRecords("-1");
             measurement.setIntegratedSecurity(measurementRequestModel.getIntegratedSecurity());
+            measurement.setAuthenticationScheme(measurementRequestModel.getIsKerberoseInt());
+            measurement.setProperties(measurementRequestModel.getProperties());
             measurementService.update(measurement);
             response.put("response", "Measurement with id '"+measurementRequestModel.getMeasurementId()+"' updated successfully");
             return response;

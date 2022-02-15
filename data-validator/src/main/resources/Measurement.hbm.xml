@@ -26,9 +26,9 @@
 		<property name="fieldName" column="FIELD_NAME" type="string" />
 		<property name="limitRecords" column="LIMIT_RECORDS" 	type="string" />
 		<property name="whereCondition" column="WHERE_CONDITION" type="string" />
-        <property name="integratedSecurity" column="IS_AD_AUTH" type="string" />
-
-
+        <property name="integratedSecurity" column="INTG_SECURITY" type="string" />
+        <property name="authenticationScheme" column="AUTH_SCHEME" type="string" />
+        <property name="properties" column="PROPERTIES" type="string" />
 
 
 	</class>

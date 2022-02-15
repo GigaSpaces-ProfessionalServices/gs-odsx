@@ -13,6 +13,18 @@ public class MeasurementRequestModel {
     private String fieldName;
     private String whereCondition;
     private String integratedSecurity;
+    private String authenticationScheme;
+    private String properties;
+    
+    
+   
+	public String getAuthenticationScheme() {
+		return authenticationScheme;
+	}
+
+	public void setAuthenticationScheme(String authenticationScheme) {
+		this.authenticationScheme = authenticationScheme;
+	}
     
     public MeasurementRequestModel() {
     }
@@ -112,7 +124,22 @@ public class MeasurementRequestModel {
 	public void setIntegratedSecurity(String integratedSecurity) {
 		this.integratedSecurity = integratedSecurity;
 	}
-    
+	
+	public String getProperties() {
+		return properties;
+	}
+
+	public void setProperties(String otherProperties) {
+		this.properties = otherProperties;
+	}
+
+	public String getIsKerberoseInt() {
+		return authenticationScheme;
+	}
+
+	public void setIsKerberoseInt(String isKerberoseInt) {
+		this.authenticationScheme = isKerberoseInt;
+	}
     
     
 }

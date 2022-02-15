@@ -76,7 +76,8 @@ public class TestTask  implements Serializable  {
 
 					Connection conn = JDBCUtils.getConnection(measurement.getDataSourceType(),
 							measurement.getDataSourceHostIp(), measurement.getDataSourcePort(),
-							measurement.getSchemaName(), measurement.getUsername(), measurement.getPassword(),measurement.getIntegratedSecurity());
+							measurement.getSchemaName(), measurement.getUsername(), measurement.getPassword()
+							,measurement.getIntegratedSecurity(),measurement.getAuthenticationScheme(),measurement.getProperties());
 					Statement st = conn.createStatement();
 					String query = JDBCUtils.buildQuery(measurement.getDataSourceType(), measurement.getFieldName(),
 							measurement.getType(), measurement.getTableName(),
@@ -107,7 +108,8 @@ public class TestTask  implements Serializable  {
 
 					Connection conn1 = JDBCUtils.getConnection(measurement1.getDataSourceType(),
 							measurement1.getDataSourceHostIp(), measurement1.getDataSourcePort(),
-							measurement1.getSchemaName(), measurement1.getUsername(), measurement1.getPassword(),measurement1.getIntegratedSecurity());
+							measurement1.getSchemaName(), measurement1.getUsername(), measurement1.getPassword(),
+							measurement1.getIntegratedSecurity(),measurement1.getAuthenticationScheme(),measurement1.getProperties());
 
 					Statement statement1 = conn1.createStatement();
 					String query1 = JDBCUtils.buildQuery(measurement1.getDataSourceType(), measurement1.getFieldName(),
@@ -123,7 +125,8 @@ public class TestTask  implements Serializable  {
 
 					Connection conn2 = JDBCUtils.getConnection(measurement2.getDataSourceType(),
 							measurement2.getDataSourceHostIp(), measurement2.getDataSourcePort(),
-							measurement2.getSchemaName(), measurement2.getUsername(), measurement2.getPassword(),measurement1.getIntegratedSecurity());
+							measurement2.getSchemaName(), measurement2.getUsername(), measurement2.getPassword()
+							,measurement1.getIntegratedSecurity(),measurement2.getAuthenticationScheme(),measurement2.getProperties());
 
 					Statement statement2 = conn2.createStatement();
 					String query2 = JDBCUtils.buildQuery(measurement2.getDataSourceType(), measurement2.getFieldName(),
@@ -152,6 +155,7 @@ public class TestTask  implements Serializable  {
 
 		} catch (Exception e) {
 			e.printStackTrace();
+			logger.info(e.getMessage());
 			this.errorSummary = e.getMessage();
 			this.result = "FAIL: Error please refer log file";
 		}
