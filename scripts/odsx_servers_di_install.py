@@ -87,7 +87,7 @@ def installSingle():
         host = str(input(Fore.YELLOW + "Enter host to install DI: " + Fore.RESET))
         while (len(str(host)) == 0):
             host = str(input(Fore.YELLOW + "Enter host to install DI: " + Fore.RESET))
-        logger.info("Enter host to install Grafana: " + str(host))
+        logger.info("Enter host to install di : " + str(host))
         user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
         if (len(str(user)) == 0):
             user = "root"
@@ -123,37 +123,43 @@ def installSingle():
 def installCluster():
     logger.info("installCluster()")
     global user
-    global masterHost
-    global standByHost
-    global witnessHost
+    global kafkaBrokerHost1
+    global kafkaBrokerHost2
+    global kafkaBrokerHost3
+    global zkWitnessHost
 #    global cr8InstallFlag
     global telegrafInstallFlag
+    telegrafInstallFlag="y"
 
-    masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
-    while (len(masterHost) == 0):
-        masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
-    logger.info("masterHost : " + str(masterHost))
-    standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
-    while (len(standByHost) == 0):
-        standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
-    logger.info("standByHost : " + str(standByHost))
-    witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
-    while (len(witnessHost) == 0):
-        witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
-    logger.info("witnessHost :" + str(witnessHost))
+    kafkaBrokerHost1 = str(input(Fore.YELLOW + "Enter kafka broker 1a host  :" + Fore.RESET))
+    while (len(kafkaBrokerHost1) == 0):
+        kafkaBrokerHost1 = str(input(Fore.YELLOW + "Enter kafka broker 1a host  :" + Fore.RESET))
+    logger.info("kafkaBrokerHost1 : " + str(kafkaBrokerHost1))
+    kafkaBrokerHost3 = str(input(Fore.YELLOW + "Enter kafka broker 2 host :" + Fore.RESET))
+    while (len(kafkaBrokerHost3) == 0):
+        kafkaBrokerHost3 = str(input(Fore.YELLOW + "Enter kafka broker 2 host :" + Fore.RESET))
+    logger.info("kafkaBrokerHost3 : " + str(kafkaBrokerHost3))
+    zkWitnessHost = str(input(Fore.YELLOW + "Enter Zookeeper WitnessHost :" + Fore.RESET))
+    while (len(zkWitnessHost) == 0):
+        zkWitnessHost = str(input(Fore.YELLOW + "Enter Zookeeper WitnessHost :" + Fore.RESET))
+    logger.info("zkWitnessHost :" + str(zkWitnessHost))
+    kafkaBrokerHost2 = str(input(Fore.YELLOW + "Enter kafka broker 1b host :" + Fore.RESET))
+    while (len(kafkaBrokerHost2) == 0):
+        kafkaBrokerHost2 = str(input(Fore.YELLOW + "Enter kafka broker 1b host :" + Fore.RESET))
+    logger.info("kafkaBrokerHost2 : " + str(kafkaBrokerHost2))
     user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
     if (len(str(user)) == 0):
         user = "root"
     logger.info(" user: " + str(user))
 
-    telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
-    logger.info("Selected answer telegraf:" + str(telegrafInstallFlag))
-    if (telegrafInstallFlag.lower() == "y"):
-        telegrafInstallFlag = "y"
-    else:
-        telegrafInstallFlag = "n"
+  #  telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
+  #  logger.info("Selected answer telegraf:" + str(telegrafInstallFlag))
+  #  if (telegrafInstallFlag.lower() == "y"):
+  #      telegrafInstallFlag = "y"
+  #  else:
+   #     telegrafInstallFlag = "n"
 
-    print(telegrafInstallFlag)
+  #  print(telegrafInstallFlag)
 #    cr8InstallFlag = input("Do you want to install cr8? yes(y)/no(n) [n]: ")
 #    logger.info("Selected answer cr8:" + str(cr8InstallFlag))
 #    if (cr8InstallFlag.lower() == "y"):
@@ -161,14 +167,16 @@ def installCluster():
 #    else:
 #        cr8InstallFlag = False
 
-    clusterHosts.append(masterHost)
-    clusterHosts.append(standByHost)
-    clusterHosts.append(witnessHost)
+    clusterHosts.append(kafkaBrokerHost1)
+    clusterHosts.append(kafkaBrokerHost2)
+    clusterHosts.append(kafkaBrokerHost3)
+    clusterHosts.append(zkWitnessHost)
 
     host_type_dictionary_obj = obj_type_dictionary()
-    host_type_dictionary_obj.add(masterHost, 'Master')
-    host_type_dictionary_obj.add(standByHost, 'Standby')
-    host_type_dictionary_obj.add(witnessHost, 'Witness')
+    host_type_dictionary_obj.add(kafkaBrokerHost1, 'kafka Broker 1a')
+    host_type_dictionary_obj.add(kafkaBrokerHost2, 'kafka Broker 1b')
+    host_type_dictionary_obj.add(kafkaBrokerHost3, 'kafka Broker 2')
+    host_type_dictionary_obj.add(zkWitnessHost, 'Zookeeper Witness')
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
     confirmInstall = str(input(
@@ -214,10 +222,10 @@ def executeCommandForInstall(host, type, count):
         commandToExecute = "scripts/servers_di_install.sh"
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
-        if (len(clusterHosts) == 3):
-            additionalParam = additionalParam + masterHost + ' ' + standByHost + ' ' + witnessHost + ' ' + str(count)
+        if (len(clusterHosts) == 4):
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count)
 
-        logger.info("Additinal Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
+        logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         with Spinner():
             outputShFile = connectExecuteSSH(host, user, commandToExecute, additionalParam)
@@ -256,25 +264,29 @@ def validateRPM():
     cmd = "pwd"
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home dir : " + str(home))
-    cmd = 'find ' + str(home) + '/install/java/ -name *.rpm -printf "%f\n"'  # Creating .tar file on Pivot machine
+    cmd = 'find ' + str(home) + '/install/java/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     javaRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("javaRpm found :" + str(javaRpm))
-    cmd = 'find ' + str(home) + '/install/kafka/ -name *.tgz -printf "%f\n"'  # Creating .tar file on Pivot machine
+    cmd = 'find ' + str(home) + '/install/kafka/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
     kafkaZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("kafkaZip found :" + str(kafkaZip))
-    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.rpm -printf "%f\n"'  # Creating .tar file on Pivot machine
+    cmd = 'find ' + str(home) + '/install/zookeeper/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    zkZip = executeLocalCommandAndGetOutput(cmd)
+    logger.info("ZookeeperZip found :" + str(zkZip))
+    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.rpm -printf "%f\n"'  # Checking .tar file on Pivot machine
     #cr8Rpm = executeLocalCommandAndGetOutput(cmd)
     #logger.info("cr8Rpm found :" + str(cr8Rpm))
-    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.gz -printf "%f\n"'  # Creating .tar file on Pivot machine
+    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.gz -printf "%f\n"'  # Checking .tar file on Pivot machine
     #localSetupZip = executeLocalCommandAndGetOutput(cmd)
     #logger.info("localSetupZip found :" + str(localSetupZip))
-    cmd = 'find ' + str(home) + '/install/telegraf/ -name *.rpm -printf "%f\n"'  # Creating .tar file on Pivot machine
+    cmd = 'find ' + str(home) + '/install/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     telegrafRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("telegrafRpm found :" + str(telegrafRpm))
 
     di_installer_dict = obj_type_dictionary()
     di_installer_dict.add('Java', javaRpm)
     di_installer_dict.add('KafkaZip', kafkaZip)
+    di_installer_dict.add('zkZip', zkZip)
     #di_installer_dict.add('CR8Rpm', cr8Rpm)
     #di_installer_dict.add('CR8-LocalSetupZip', localSetupZip)
     di_installer_dict.add('Telegraf', telegrafRpm)
@@ -302,20 +314,20 @@ def addNodeToCluster(nodes):
         if (str(node.type) == 'Witness'):
             witnessHost = str(node.ip)
     if (len(str(masterHost)) == 0):
-        masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
+        masterHost = str(input(Fore.YELLOW + "Enter Kafka broker 1a  :" + Fore.RESET))
         while (len(masterHost) == 0):
-            masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
-    logger.info("masterHost : " + str(masterHost))
+            masterHost = str(input(Fore.YELLOW + "Enter Kafka broker 1a  :" + Fore.RESET))
+    logger.info("Kafka broker 1a : " + str(masterHost))
     if (len(str(standByHost)) == 0):
-        standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
+        standByHost = str(input(Fore.YELLOW + "Enter Kafka broker 1b :" + Fore.RESET))
         while (len(standByHost) == 0):
-            standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
-    logger.info("standByHost : " + str(standByHost))
+            standByHost = str(input(Fore.YELLOW + "Enter Kafka broker 1b :" + Fore.RESET))
+    logger.info("Kafka broker 1b : " + str(standByHost))
     if (len(str(witnessHost)) == 0):
-        witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
+        witnessHost = str(input(Fore.YELLOW + "Enter Kafka broker 2 :" + Fore.RESET))
         while (len(witnessHost) == 0):
-            witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
-        logger.info("witnessHost :" + str(witnessHost))
+            witnessHost = str(input(Fore.YELLOW + "Enter Kafka broker 2 :" + Fore.RESET))
+        logger.info("Kafka broker 2 :" + str(witnessHost))
     user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
 
 
@@ -327,8 +339,10 @@ if __name__ == '__main__':
             logger.info("diServerInstallType : " + str(diServerType))
             if (diServerType != '99'):
                 if (diServerType == '1'):
+                    print("single Host")
                     installSingle()
                 if (diServerType == '2'):
+                    print("cluster Host")
                     nodes = getDIServerHostList()
                     # nodesCount = nodes.split(',')
                     # logger.info("node Count :"+str(nodesCount))

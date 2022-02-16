@@ -74,10 +74,12 @@ def getKafkaStatus(node):
 def getConsolidatedStatus(node):
     output=''
     logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status odsxcr8", "systemctl status telegraf"]
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
-        if(str(node.type)=='Witness' and cmd=='systemctl status odsxcr8'):
+        if(str(node.type)=='kafka Broker 1b' and cmd=='systemctl status odsxzookeeper'):
+            output=0
+        elif(str(node.type)=='Zookeeper Witness' and cmd=='systemctl status odsxkafka'):
             output=0
         else:
             logger.info("Getting status.. :"+str(cmd))
