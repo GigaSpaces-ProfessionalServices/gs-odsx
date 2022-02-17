@@ -8,6 +8,7 @@ public interface DAO<T> {
 
 	List<T> getAll();
 
+	List<T> getAll(String sql);
 	T getById(long id);
 
 	void update(T t);

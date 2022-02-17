@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 
-import json
 import os.path
-import requests
+from scripts.logManager import LogManager
 from colorama import Fore
 
-from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_list import getDataValidationHost
-from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_validation import getSpaceServerStatus
+import requests, json, subprocess
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -46,8 +46,6 @@ def getPort(dataSource):
 
 
 def doValidate():
-    verboseHandle.printConsoleWarning('');
-
     dataValidationNodes = config_get_dataValidation_nodes()
     dataValidationHost = getDataValidationHost(dataValidationNodes)
     logger.info("dataValidationHost : " + str(dataValidationHost))
@@ -65,46 +63,38 @@ def doValidate():
     dataValidatorServiceHost = dataValidationHost
 
     verboseHandle.printConsoleWarning('Measurements List:');
-    resultCount = printmeasurementtable(dataValidatorServiceHost)
+    resultCount = printDatasourcetable(dataValidatorServiceHost)
 
+    registernew = 'yes'
     if resultCount <= 0:
-        verboseHandle.printConsoleWarning("No measurement available. Please add one")
+        verboseHandle.printConsoleWarning("No Datasource available.")
         return
 
-    verboseHandle.printConsoleWarning('');
-    measurementId = str(input("Select measurement by id to run [1] : "))
-    while(measurementId not in measurementids):
-      print(Fore.YELLOW +"Please select measurement Id from above list"+Fore.RESET)
-      measurementId = str(input("Select measurement by id to run [1]:"))
+    datasourceId = str(input(Fore.YELLOW + "Enter Datasource id to remove: " + Fore.RESET))
+    while (len(str(datasourceId)) == 0 or datasourceId not in datasourceIds):
+        if(datasourceId not in datasourceIds):
+         print(Fore.YELLOW +"Please select DataSource Id from above list"+Fore.RESET)
+         datasourceId = str(input(Fore.YELLOW + "Enter Datasource id to remove: " + Fore.RESET))
+        else:
+         datasourceId = str(input(Fore.YELLOW + "Enter Datasource id to remove: " + Fore.RESET))
 
-    if (len(str(measurementId)) == 0):
-        measurementId = '1'
 
-    executionTime = str(input("Execution time delay (in minutes) [0]: "))
-    if (len(str(executionTime)) == 0):
-        executionTime = '0'
 
-    response = requests.get(
-            "http://" + dataValidatorServiceHost + ":7890/measurement/run/" + measurementId + "?executionTime=" + executionTime)
+    response = requests.delete(
+        "http://" + dataValidatorServiceHost + ":7890/datasource/remove/" + datasourceId)
 
     logger.info(str(response.status_code))
     jsonArray = json.loads(response.text)
 
     verboseHandle.printConsoleWarning("")
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
-    # verboseHandle.printConsoleInfo("Test Result:  "+jsonArray["response"])
-    if jsonArray["response"] == 'scheduled':
-        verboseHandle.printConsoleInfo("Test is " + jsonArray["response"])
-    elif jsonArray["response"].startswith('FAIL'):
-        verboseHandle.printConsoleError("Test Result: " + jsonArray["response"])
-    else:
-        verboseHandle.printConsoleInfo("Test Result: " + jsonArray["response"])
+    verboseHandle.printConsoleInfo(" " + jsonArray["response"])
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
-measurementids=[]
-def printmeasurementtable(dataValidatorServiceHost):
+datasourceIds=[]
+def printDatasourcetable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
     except:
         print("An exception occurred")
 
@@ -115,29 +105,24 @@ def printmeasurementtable(dataValidatorServiceHost):
         # print("response2 "+response[0])
         # print(isinstance(response, list))
 
-        headers = [Fore.YELLOW + "Id" + Fore.RESET,
+        headers = [Fore.YELLOW + "Datasource Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
-                   Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
-                   Fore.YELLOW + "Measurement Query" + Fore.RESET
+                   Fore.YELLOW + "Type" + Fore.RESET ,
+                   Fore.YELLOW + "Host Ip" + Fore.RESET
                    ]
         data = []
         if response:
-            for measurement in response:
-                #print(measurement)
+            for datasource in response:
+                #print(datasource)
+                datasourceIds.append(str(datasource["id"]) )
 
-                queryDetail = "'" + measurement["type"] + "' of '" + measurement["fieldName"] + "' FROM '" + \
-                              measurement["tableName"] + "'"
-                if measurement["whereCondition"] != "":
-                    queryDetail += " WHERE " + measurement["whereCondition"]
-
-                dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
-                             Fore.GREEN +"(Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
-                                 "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
-                             Fore.GREEN + queryDetail + Fore.RESET
+                dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET
                              ]
                 data.append(dataArray)
-                measurementids.append(str(measurement["id"]) )
+
         printTabular(None, headers, data)
         verboseHandle.printConsoleWarning('');
         return len(response)
@@ -145,8 +130,8 @@ def printmeasurementtable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Run Test -> Measurement Test")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Run Test -> Measurement Test')
+    logger.info("MENU -> Data Validator -> Perform Validation -> Datasource -> Remove")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Datasource -> Remove')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

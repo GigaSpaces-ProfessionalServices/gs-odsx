@@ -6,6 +6,9 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.logging.Logger;
 
+import com.gigaspaces.datavalidator.model.DataSource;
+import com.gigaspaces.datavalidator.model.Measurement;
+
 public class JDBCUtils {
 
     static List<String> aggregation_functions = new ArrayList<String>();
@@ -14,8 +17,72 @@ public class JDBCUtils {
         aggregation_functions.add("count");
         aggregation_functions.add("min");
         aggregation_functions.add("max");
+        aggregation_functions.add("sum");
     }
     private static Logger logger = Logger.getLogger(JDBCUtils.class.getName());
+    
+    public static Connection getConnection(Measurement measurement)
+			throws ReflectiveOperationException, ReflectiveOperationException, ClassNotFoundException, SQLException {
+
+		DataSource dataSource = measurement.getDataSource();
+		if (dataSource == null) {
+			return null;
+		}
+		
+		String dataSourceType = dataSource.getDataSourceType();
+		String dataSourceHostIp = dataSource.getDataSourceHostIp();
+		String dataSourcePort = dataSource.getDataSourcePort();
+		String username = dataSource.getUsername();
+		String password = dataSource.getPassword();
+		String integratedSecurity = dataSource.getIntegratedSecurity();
+		String authenticationScheme = dataSource.getAuthenticationScheme();
+		String properties = dataSource.getProperties();
+		String schemaName = measurement.getSchemaName();
+
+		Connection connection = null;
+		String connectionString = "";
+
+		switch (dataSourceType) {
+
+		case "gigaspaces":
+			Class.forName("com.j_spaces.jdbc.driver.GDriver").newInstance();
+			connectionString = "jdbc:gigaspaces:url:jini://" + dataSourceHostIp + ":" + dataSourcePort + "/*/"
+					+ schemaName;
+			break;
+
+		case "mysql":
+			Class.forName("com.mysql.cj.jdbc.Driver").newInstance();
+			connectionString = "jdbc:mysql://" + dataSourceHostIp + ":" + dataSourcePort + "/" + schemaName
+					+ "?zeroDateTimeBehavior=CONVERT_TO_NULL";
+			break;
+
+		case "db2":
+			Class.forName("com.ibm.db2.jcc.DB2Driver").newInstance();
+			connectionString = "jdbc:db2://" + dataSourceHostIp + ":" + dataSourcePort + "/" + schemaName;
+			break;
+
+		case "ms-sql":
+			Class.forName("com.microsoft.sqlserver.jdbc.SQLServerDriver").newInstance();
+			connectionString = "jdbc:sqlserver://" + dataSourceHostIp + ":" + dataSourcePort + ";DatabaseName="+ schemaName + ";";
+
+			if (integratedSecurity != null && integratedSecurity.trim().length() > 0) {
+				connectionString = connectionString + "integratedSecurity=" + integratedSecurity + ";";
+			}
+			if (authenticationScheme != null && authenticationScheme.trim().length() > 0) {
+				connectionString = connectionString + "authenticationScheme=" + authenticationScheme + ";";
+			}
+			if (properties != null && properties.trim().length() > 0) {
+				connectionString = connectionString + properties;
+			}
+
+			break;
+		}
+		logger.info("DataSource ConnectionString for " + dataSource + " :" + connectionString);
+		connection = DriverManager.getConnection(connectionString, username, password);
+
+		return connection;
+	}
+    
 	
 	public static Connection getConnection(String dataSource, String dataSourceHostIp, String dataSourcePort, String schemaName, String username, String password ,
 			String integratedSecurity,String isKerberoseInt,String otherProperties) throws ReflectiveOperationException, ReflectiveOperationException, ClassNotFoundException, SQLException {
@@ -75,6 +142,7 @@ public class JDBCUtils {
                     query.append(" (SELECT ").append(fieldName).append(" FROM ").append(tableName).append(" WHERE ROWNUM <= ").append(limitRecords).append(" ) A");
                     break;
                 case "mysql":
+                	 query.append(" (SELECT ").append(fieldName).append(" FROM ").append(tableName).append(" LIMIT ").append(limitRecords).append(" ) A");
                 case "ms-sql":
                     query.append(" (SELECT ").append(fieldName).append(" FROM ").append(tableName).append(" LIMIT ").append(limitRecords).append(" ) A");
                     break;

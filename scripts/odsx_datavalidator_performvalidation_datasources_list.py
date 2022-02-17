@@ -66,43 +66,37 @@ def doValidate():
 
     dataValidatorServiceHost = dataValidationHost
 
-    resultCount = printmeasurementtable(dataValidatorServiceHost)
+    resultCount = printDatasourcetable(dataValidatorServiceHost)
 
 
-def printmeasurementtable(dataValidatorServiceHost):
-
+def printDatasourcetable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
     except:
         print("An exception occurred")
 
     if response.status_code == 200:
-        #logger.info(str(response.status_code))
+        # logger.info(str(response.status_code))
         jsonArray = json.loads(response.text)
         response = json.loads(jsonArray["response"])
         # print("response2 "+response[0])
         # print(isinstance(response, list))
 
-        headers = [Fore.YELLOW + "Id" + Fore.RESET,
+        headers = [Fore.YELLOW + "Datasource Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
-                   Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
-                   Fore.YELLOW + "Measurement Query" + Fore.RESET
+                   Fore.YELLOW + "Type" + Fore.RESET , 
+                   Fore.YELLOW + "Host Ip" + Fore.RESET
                    ]
         data = []
         if response:
-            for measurement in response:
-                #print(measurement)
-                queryDetail= "'"+measurement["type"] +"' of '"+measurement["fieldName"] +"' FROM '"+ measurement["tableName"]+"'"
-                if measurement["whereCondition"] != "":
-                    queryDetail += " WHERE " + measurement["whereCondition"]
-
-                dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
-                             Fore.GREEN +"( Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
-                                 "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
-                             Fore.GREEN + queryDetail + Fore.RESET
+            for datasource in response:
+                #print(datasource)
+                              
+                dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET
                              ]
-
                 data.append(dataArray)
 
         printTabular(None, headers, data)
@@ -112,8 +106,8 @@ def printmeasurementtable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Measurement -> List")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Measurement -> List')
+    logger.info("MENU -> Data Validator -> Perform Validation -> Datasource -> List")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Datasource -> List')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

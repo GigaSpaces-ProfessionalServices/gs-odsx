@@ -65,7 +65,7 @@ def doValidate():
     dataValidatorServiceHost = dataValidationHost
 
     verboseHandle.printConsoleWarning('');
-    verboseHandle.printConsoleWarning('Existing Measurements:');
+    verboseHandle.printConsoleWarning('Existing Measurements :');
     resultCount = printmeasurementtable(dataValidatorServiceHost)
 
     registernew = 'yes'
@@ -76,66 +76,54 @@ def doValidate():
         verboseHandle.printConsoleWarning('');
         verboseHandle.printConsoleWarning('Add new Measurement:');
         test = str(input("Test type (count/avg/min/max/sum) [count]: "))
+        while(test not in testTypes):
+            print(Fore.YELLOW +"Please select Test type from given list"+Fore.RESET)
+            test = str(input("Test type (count/avg/min/max/sum) [count]: "))
+            
         if (len(str(test)) == 0):
             test = 'count'
-        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
-        if (len(str(dataSource1Type)) == 0):
-            dataSource1Type = 'gigaspaces'
-        dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
-        if (len(str(dataSource1HostIp)) == 0):
-            dataSource1HostIp = 'localhost'
-        dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
-        if (len(str(dataSource1Port)) == 0):
-            dataSource1Port = getPort(dataSource1Type)
-        username1 = str(input("User name []: "))
-        if (len(str(username1)) == 0):
-            username1 = ''
-        password1 = str(input("Password []: "))
-        if (len(str(password1)) == 0):
-            password1 = ''
+            
+        
+        datasourceRowCount = printDatasourcetable(dataValidatorServiceHost)
+        if datasourceRowCount <= 0:
+          verboseHandle.printConsoleWarning("No Datasource available. Please add atleast one datasources")
+          return
+        
+        DataSourceId = str(input("Select DataSource Id from above table: ")) 
+        while(DataSourceId not in dataSourceIds):
+            print(Fore.YELLOW +"Invalid DataSource Id "+Fore.RESET)
+            DataSourceId = str(input("DataSource Id from above table: ")) 
+        
+            
         schemaName1 = str(input("Schema Name [demo]: "))
         if (len(str(schemaName1)) == 0):
             schemaName1 = 'demo'
 
         tableName1 = str(input("Table Name : "))
-        if (len(str(tableName1)) == 0):
-            tableName1 = '0'
+        while (len(str(tableName1)) == 0):
+            print(Fore.YELLOW +"Table Name is invalid (Empty)"+Fore.RESET)
+            tableName1 = str(input("Table Name : "))
+        
         fieldName1 = str(input("Field Name : "))
-        if (len(str(fieldName1)) == 0):
-            fieldName1 = 'demo'
-
+        while (len(str(fieldName1)) == 0):
+            print(Fore.YELLOW +"Field Name is invalid (Empty)"+Fore.RESET)
+            fieldName1 = str(input("Field Name : "))
+         
         if test != 'lastvalue':
             whereCondition = str(input("Where Condition [''] : "))
             if (len(str(whereCondition)) == 0):
                 whereCondition = ''
 
-        IntegratedSecurity = ''
-        AuthenticationScheme=''
-        Properties=''
-        if (dataSource1Type == 'ms-sql'):
-           IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
-           AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
-           Properties = str(input("Connection properties( ex.Key=value;):"))
-
-
-
-
         verboseHandle.printConsoleWarning('');
         data = {
-            "test": test,
-            "dataSourceType": dataSource1Type,
-            "dataSourceHostIp": dataSource1HostIp,
-            "dataSourcePort": dataSource1Port,
-            "username": username1,
-            "password": password1,
+            "test":test,      
+            "dataSourceId": DataSourceId,
             "schemaName": schemaName1,
             "tableName": tableName1,
             "fieldName": fieldName1,
             "whereCondition": whereCondition,
-            "integratedSecurity":IntegratedSecurity,
-            "authenticationScheme":AuthenticationScheme,
-            "properties":Properties
-       }
+        }
+        
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
         response = requests.post("http://" + dataValidatorServiceHost + ":7890/measurement/register"
                                  , data=json.dumps(data)
@@ -146,7 +134,7 @@ def doValidate():
 
         verboseHandle.printConsoleWarning("")
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
-        verboseHandle.printConsoleInfo("Test Result:  " + jsonArray["response"])
+        verboseHandle.printConsoleInfo("  " + jsonArray["response"])
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
 
@@ -163,23 +151,62 @@ def printmeasurementtable(dataValidatorServiceHost):
         # print("response2 "+response[0])
         # print(isinstance(response, list))
 
-        headers = [Fore.YELLOW + "Measurement Id" + Fore.RESET,
+        headers = [Fore.YELLOW + "Id" + Fore.RESET,
+                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
                    Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
                    Fore.YELLOW + "Measurement Query" + Fore.RESET
                    ]
         data = []
         if response:
             for measurement in response:
-                # print(measurement)
+                #print(measurement)
                 queryDetail = "'" + measurement["type"] + "' of '" + measurement["fieldName"] + "' FROM '" + \
                               measurement["tableName"] + "'"
                 if measurement["whereCondition"] != "":
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN + measurement["dataSourceType"] + "(schema=" + measurement[
-                                 "schemaName"] + ", host=" + measurement["dataSourceHostIp"] + ")" + Fore.RESET,
+                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
+                             Fore.GREEN +"(Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
+                                 "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
+                             ]
+                data.append(dataArray)
+
+        printTabular(None, headers, data)
+        verboseHandle.printConsoleWarning('');
+        return len(response)
+    return 0
+
+dataSourceIds=[]
+testTypes =["count","avg","min","max","sum",""]
+def printDatasourcetable(dataValidatorServiceHost):
+    try:
+        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
+    except:
+        print("An exception occurred")
+
+    if response.status_code == 200:
+        # logger.info(str(response.status_code))
+        jsonArray = json.loads(response.text)
+        response = json.loads(jsonArray["response"])
+        # print("response2 "+response[0])
+        # print(isinstance(response, list))
+
+        headers = [Fore.YELLOW + " Id" + Fore.RESET,
+                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
+                   Fore.YELLOW + "Type" + Fore.RESET , 
+                   Fore.YELLOW + "Host Ip" + Fore.RESET
+                   ]
+        data = []
+        if response:
+            for datasource in response:
+                #print(datasource)
+                dataSourceIds.append(str(datasource["id"]))              
+                dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET
                              ]
                 data.append(dataArray)
 

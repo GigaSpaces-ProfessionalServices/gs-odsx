@@ -36,6 +36,7 @@ public class HibernateUtil {
 			configuration.setProperties(properties);
 			configuration.addResource("Measurement.hbm.xml");
 			configuration.addResource("TestTask.hbm.xml");
+			configuration.addResource("DataSource.hbm.xml");
 			serviceRegistry = new ServiceRegistryBuilder().applySettings(properties).buildServiceRegistry();
 			sessionFactory = configuration.buildSessionFactory(serviceRegistry);
 		}

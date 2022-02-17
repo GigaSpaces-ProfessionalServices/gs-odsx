@@ -43,7 +43,7 @@ public class TaskWorker implements Runnable {
 					odsxTaskDaoService.update(st);
 					CompleteTaskQueue.setTask(st);
 				} else {
-					logger.info("TaskWorker:: Adding task back to Queue :" + st.getId());
+					logger.info("TaskWorker:: Adding task back to Queue :" + st.getId()+" "+st.getType()+" ["+st.getMeasurementIds()+"] ");
 					TaskQueue.setTask(st);
 				}
 			}

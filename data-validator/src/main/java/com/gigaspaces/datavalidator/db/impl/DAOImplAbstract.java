@@ -20,7 +20,7 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 	private final String FIND_ALL_HQL;
 	
 	@Autowired
-	HibernateUtil hibernateUtil;
+	private HibernateUtil hibernateUtil;
 
 	@SuppressWarnings("unchecked")
 	public DAOImplAbstract() {
@@ -54,6 +54,21 @@ public abstract class DAOImplAbstract<T> implements DAO<T> {
 		Session session = hibernateUtil.configureSessionFactory().openSession();
 		try {
 			String query = "from " + this.genericType.getName();
+			users = session.createQuery(query).list();
+		} catch (RuntimeException e) {
+			e.printStackTrace();
+		} finally {
+			session.flush();
+			session.close();
+		}
+		return users;
+	}
+	
+	@Override
+	public List<T> getAll(String query) {
+		List<T> users = null;
+		Session session = hibernateUtil.configureSessionFactory().openSession();
+		try {
 			users = session.createQuery(query).list();
 		} catch (RuntimeException e) {
 			e.printStackTrace();

@@ -71,8 +71,10 @@ def doValidate():
         return
 
     measurementId = str(input(Fore.YELLOW + "Enter measurement id to remove: " + Fore.RESET))
-    while (len(str(measurementId)) == 0):
+    while (measurementId not in measurementIds):
+        print(Fore.YELLOW +"Enter measurement id from above list"+Fore.RESET)
         measurementId = str(input(Fore.YELLOW + "Enter measurement id to remove: " + Fore.RESET))
+
 
     response = requests.delete(
         "http://" + dataValidatorServiceHost + ":7890/measurement/remove/" + measurementId)
@@ -82,10 +84,10 @@ def doValidate():
 
     verboseHandle.printConsoleWarning("")
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
-    verboseHandle.printConsoleInfo("Response: " + jsonArray["response"])
+    verboseHandle.printConsoleInfo(" " + jsonArray["response"])
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
-
+measurementIds=[]
 def printmeasurementtable(dataValidatorServiceHost):
     try:
         response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
@@ -99,7 +101,8 @@ def printmeasurementtable(dataValidatorServiceHost):
         # print("response2 "+response[0])
         # print(isinstance(response, list))
 
-        headers = [Fore.YELLOW + "Measurement Id" + Fore.RESET,
+        headers = [Fore.YELLOW + "Id" + Fore.RESET,
+                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
                    Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
                    Fore.YELLOW + "Measurement Query" + Fore.RESET
                    ]
@@ -107,14 +110,17 @@ def printmeasurementtable(dataValidatorServiceHost):
         if response:
             for measurement in response:
                 # print(measurement)
+                measurementIds.append(str(measurement["id"]))
+
                 queryDetail = "'" + measurement["type"] + "' of '" + measurement["fieldName"] + "' FROM '" + \
                               measurement["tableName"] + "'"
                 if measurement["whereCondition"] != "":
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN + measurement["dataSourceType"] + "(schema=" + measurement[
-                                 "schemaName"] + ", host=" + measurement["dataSourceHostIp"] + ")" + Fore.RESET,
+                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
+                             Fore.GREEN +"( Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
+                                 "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)

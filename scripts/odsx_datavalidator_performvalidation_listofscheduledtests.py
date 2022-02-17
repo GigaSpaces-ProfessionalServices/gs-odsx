@@ -73,49 +73,56 @@ def doValidate():
     headers = [Fore.YELLOW + "Request Id" + Fore.RESET,
                Fore.YELLOW + "Test Name" + Fore.RESET,
                Fore.YELLOW + "Test Details" + Fore.RESET,
-               # Fore.YELLOW + "Datasource Details" + Fore.RESET,
+               Fore.YELLOW + "Datasource Details" + Fore.RESET,
                Fore.YELLOW + "Status/Result" + Fore.RESET
                ]
     data = []
     counter = 1
     if response:
         for task in response:
-            # print(task)
-            # if task["type"] == "Measure":
-            # testDetail = "Measurement:" + task["measurementList"][0]["type"]+", Field:" + task["measurementList"][0]["fieldName"]+", Table:" + task["measurementList"][0]["tableName"]
-            testDetail = "'" + task["measurementList"][0]["type"] + "' of '" + task["measurementList"][0][
-                "fieldName"] + "' FROM '" + task["measurementList"][0]["tableName"] + "'"
-            # else:
-            #    testDetail = "Measurement:" + task["measurementList"][0]["type"]+", Field:" + task["measurementList"][0]["fieldName"]+", Table:" + task["measurementList"][0]["tableName"]
-            #    testDetail2= "'"+task["measurementList"][0]["type"] +"' of '"+task["measurementList"][0]["fieldName"] +"' FROM '"+ task["measurementList"][0]["tableName"] +"'"
+            #print(task)
+            #print(task["measurementList"])
 
-            if task["measurementList"][0]["whereCondition"] != "":
-                testDetail += " WHERE " + task["measurementList"][0]["whereCondition"]
+#"'" + task["measurementList"][0]["type"] + "' of '" + task["measurementList"][0]["fieldName"] + "' FROM '" + task["measurementList"][0]["tableName"] + "'"
 
-            dataSouceDetail = ""
-            if task["type"] == "Measure":
-                dataSouceDetail += " | " + task["measurementList"][0]["dataSourceType"] \
-                                   + "(space=" + task["measurementList"][0]["schemaName"] \
-                                   + ", host=" + task["measurementList"][0]["dataSourceHostIp"] + ")"
-            else:
-                dataSouceDetail += " | " + task["measurementList"][0]["dataSourceType"] \
-                                   + "(space=" + task["measurementList"][0]["schemaName"] \
-                                   + ", host=" + task["measurementList"][0]["dataSourceHostIp"] + ")"
-                dataSouceDetail += " | " + task["measurementList"][1]["dataSourceType"] \
-                                   + "(space=" + task["measurementList"][1]["schemaName"] \
-                                   + ", host=" + task["measurementList"][1]["dataSourceHostIp"] + ")"
-
+            testDetail=""
             status = Fore.GREEN + task["result"] + Fore.RESET
+            dataSouceDetail="";
+            dataSouceDetai2="";
             if task["result"].startswith('FAIL'):
                 status = Fore.RED + task["result"] + Fore.RESET
 
-            dataArray = [Fore.GREEN + str(task["id"]) + Fore.RESET,
+            if(task["measurementList"]!=None):
+
+                if(task["measurementList"][0]!=None):
+                 testDetail = "'" + task["measurementList"][0]["type"] + "' of '" + task["measurementList"][0]["fieldName"] + "' FROM '" + task["measurementList"][0]["tableName"] + "'"
+
+                 if(task["measurementList"][0]["whereCondition"]!=""):
+                   testDetail += " WHERE " + task["measurementList"][0]["whereCondition"]
+
+            if (task["type"]!=None ):
+                if (task["type"] == "Measure" and task["measurementList"][0]!=None):
+                 #print( task["measurementList"][0]["dataSource"])
+                 dataSouceDetail +=  "   Ds1:|"+task["measurementList"][0]["type"]+"| Name:"+task["measurementList"][0]["dataSource"]["dataSourceName"]+",Ip:"+task["measurementList"][0]["dataSource"]["dataSourceHostIp"]+",User:"+task["measurementList"][0]["dataSource"]["username"]
+
+                if (task["type"] == "Compare" and task["measurementList"][0]!=None and task["measurementList"][1]!=None):
+                 dataSouceDetail +=  "   Ds1:|"+task["measurementList"][0]["type"]+"| Name:"+task["measurementList"][0]["dataSource"]["dataSourceName"]+",Ip:"+task["measurementList"][0]["dataSource"]["dataSourceHostIp"]+",User:"+task["measurementList"][0]["dataSource"]["username"]
+                 dataSouceDetai2 +=  "Vs Ds2:|"+task["measurementList"][1]["type"]+"| Name:"+task["measurementList"][1]["dataSource"]["dataSourceName"]+",Ip:"+task["measurementList"][1]["dataSource"]["dataSourceHostIp"]+",User:"+task["measurementList"][1]["dataSource"]["username"]
+                # if(task["measurementList"][0]["datasource"]!=None):
+                #   dataSouceDetail += task["measurementList"][0]["datasource"]["dataSourceName"]
+
+            dataArray = [Fore.GREEN + str(task["id"])  + Fore.RESET,
                          Fore.GREEN + task["type"] + Fore.RESET,
                          Fore.GREEN + testDetail + Fore.RESET,
-                         # Fore.GREEN + dataSouceDetail + Fore.RESET,
+                         Fore.GREEN + dataSouceDetail + Fore.RESET,
                          status
                          ]
             data.append(dataArray)
+            if(dataSouceDetai2!=""):
+             dataArray = ["","","",Fore.GREEN + dataSouceDetai2 + Fore.RESET,""]
+             data.append(dataArray)
+
+
             counter = counter + 1
 
     printTabular(None, headers, data)
@@ -141,15 +148,15 @@ def printmeasurementtable(dataValidatorServiceHost):
         data = []
         if response:
             for measurement in response:
-                # print(measurement)
+                print(measurement)
                 queryDetail = "'" + measurement["type"] + "' of '" + measurement["fieldName"] + "' FROM '" + \
                               measurement["tableName"] + "'"
                 if measurement["whereCondition"] != "":
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN + measurement["dataSourceType"] + "(schema=" + measurement[
-                                 "schemaName"] + ", host=" + measurement["dataSourceHostIp"] + ")" + Fore.RESET,
+                             Fore.GREEN +  measurement["dataSource"]["dataSourceType"] + "(schema=" + measurement[
+                                 "schemaName"] + ", host=" +  measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)

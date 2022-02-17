@@ -4,86 +4,72 @@ import java.io.Serializable;
 import java.util.HashMap;
 import java.util.Map;
 
-public class Measurement implements Serializable{
-	
+public class Measurement implements Serializable {
+
 	public Measurement() {
 
 	}
-	
-    private long id;
-    private String type;
-    private String dataSourceType;
-    private String dataSourceHostIp;
-    private String dataSourcePort;
-    private String username;
-    private String password;
-    private String schemaName;
-    private String tableName;
-    private String fieldName;
-    private String limitRecords;
-    private String whereCondition;
-    private String integratedSecurity;
-	private String properties;
-	private String authenticationScheme;
-	private static long maxId = 0;
 
-	public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort,
-			String username, String password, String schemaName, String tableName, String fieldName,
-			String limitRecords, String whereCondition, String integratedSecurity) {
+	private long id;
+	private long dataSourceId;
+	private String type;
+//	private String dataSourceType;
+//	private String dataSourceHostIp;
+//	private String dataSourcePort;
+//	private String username;
+//	private String password;
+	private String schemaName;
+	private String tableName;
+	private String fieldName;
+	private String limitRecords;
+	private String whereCondition;
+//	private String integratedSecurity;
+	private static long maxId = 0;
+	private DataSource dataSource ;
+	private String status;
+	
+	public DataSource getDataSource() {
+		return dataSource;
+	}
+
+	public void setDataSource(DataSource dataSource) {
+		this.dataSource = dataSource;
+	}
+
+	public long getDataSourceId() {
+		return dataSourceId;
+	}
+
+	public void setDataSourceId(long dataSourceId) {
+		this.dataSourceId = dataSourceId;
+	}
+
+	public Measurement(long id, long dataSourceId,
+			 String type,  String schemaName, String tableName, String fieldName, String limitRecords,
+			String whereCondition) {
 		this.id = id;
+		this.dataSourceId = dataSourceId;
 		this.type = type;
-		this.dataSourceType = dataSourceType;
-		this.dataSourceHostIp = dataSourceHostIp;
-		this.dataSourcePort = dataSourcePort;
-		this.username = username;
-		this.password = password;
 		this.schemaName = schemaName;
 		this.tableName = tableName;
 		this.fieldName = fieldName;
 		this.whereCondition = whereCondition;
 		this.limitRecords = limitRecords;
-		this.integratedSecurity = integratedSecurity;
+//		this.integratedSecurity = integratedSecurity;
 	}
 
-	public String getDataSourceType() {
-		return dataSourceType;
+	public Measurement(long id, String type, String dataSourceType, String dataSourceHostIp, String dataSourcePort,
+			String username, String password, String schemaName, String tableName, String fieldName,
+			String limitRecords, String whereCondition) {
+		this.id = id;
+		this.type = type;
+		this.schemaName = schemaName;
+		this.tableName = tableName;
+		this.fieldName = fieldName;
+		this.whereCondition = whereCondition;
+		this.limitRecords = limitRecords;
 	}
-
-	public void setDataSourceType(String dataSourceType) {
-		this.dataSourceType = dataSourceType;
-	}
-
-	public String getDataSourceHostIp() {
-		return dataSourceHostIp;
-	}
-
-    public void setDataSourceHostIp(String dataSourceHostIp) {
-        this.dataSourceHostIp = dataSourceHostIp;
-    }
-
-    public String getDataSourcePort() {
-        return dataSourcePort;
-    }
-
-    public void setDataSourcePort(String dataSourcePort) {
-        this.dataSourcePort = dataSourcePort;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+	
 
     public String getSchemaName() {
         return schemaName;
@@ -141,34 +127,24 @@ public class Measurement implements Serializable{
         this.limitRecords = limitRecords;
     }
 
-    
-
-    public String getIntegratedSecurity() {
-		return integratedSecurity;
-	}
-
-	public void setIntegratedSecurity(String integratedSecurity) {
-		this.integratedSecurity = integratedSecurity;
-	}
+//	public String getIntegratedSecurity() {
+//		return integratedSecurity;
+//	}
+//
+//	public void setIntegratedSecurity(String integratedSecurity) {
+//		this.integratedSecurity = integratedSecurity;
+//	}
 
 	public static long getMaxId() {
 		return ++maxId;
 	}
 
-	public String getProperties() {
-		return properties;
+	public String getStatus() {
+		return status;
 	}
 
-	public void setProperties(String otherProperties) {
-		this.properties = otherProperties;
+	public void setStatus(String status) {
+		this.status = status;
 	}
-
-	public String getAuthenticationScheme() {
-		return authenticationScheme;
-	}
-
-	public void setAuthenticationScheme(String isKerberoseInt) {
-		this.authenticationScheme = isKerberoseInt;
-	}
-
+	
 }
