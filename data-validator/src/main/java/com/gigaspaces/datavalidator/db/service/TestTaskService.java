@@ -10,6 +10,7 @@ import com.gigaspaces.datavalidator.db.dao.TestTaskDao;
 import com.gigaspaces.datavalidator.model.TestTask;
 
 import com.gigaspaces.datavalidator.db.impl.TestTaskDaoImpl;
+import com.gigaspaces.datavalidator.db.dao.DataSourceDao;
 import com.gigaspaces.datavalidator.db.dao.MeasurementDao;
 import com.gigaspaces.datavalidator.db.impl.MeasurementDaoImpl;
 import com.gigaspaces.datavalidator.model.Measurement;
@@ -28,6 +29,8 @@ public class TestTaskService {
 	private TestTaskDao testTaskDao;
 	@Autowired
 	private MeasurementDao measurementDao;
+	@Autowired
+	private DataSourceDao dataSourceDao;
 	private static String TASKRESULT_PENDING = "pending";
 	
 	public void add(TestTask testTask) {
@@ -39,15 +42,18 @@ public class TestTaskService {
 		if (measurementIds != null) {
 			List<Measurement> measurementList = new ArrayList<Measurement>();
 			String mIds[] = measurementIds.split(",");
+			Measurement measurement=null;
 			for (int index = 0; index < mIds.length; index++) {
-				measurementList.add(measurementDao.getById(Long.parseLong(mIds[index])));
+				measurement = measurementDao.getById(Long.parseLong(mIds[index]));
+				measurement.setDataSource(dataSourceDao.getById(measurement.getDataSourceId()));
+				measurementList.add(measurement);
 			}
 			odsxTask.setMeasurementList(measurementList);
 		}
 	}
 	
 	public List<TestTask> getAllPendingTask() {
-		List<TestTask> odsxTasks = testTaskDao.getAll();
+		List<TestTask> odsxTasks = getAll();
 		List<TestTask> odsxTaskList = new ArrayList<TestTask>();
 		for (TestTask odsxTask : odsxTasks) {
 			if (TASKRESULT_PENDING.equals(odsxTask.getResult())) {
@@ -59,7 +65,7 @@ public class TestTaskService {
 	}
 	
 	public List<TestTask> getAllCompletedTask() {
-		List<TestTask> odsxTasks = testTaskDao.getAll();
+		List<TestTask> odsxTasks = getAll();
 		List<TestTask> odsxTaskList = new ArrayList<TestTask>();
 		for (TestTask odsxTask : odsxTasks) {
 			if (!TASKRESULT_PENDING.equals(odsxTask.getResult())) {

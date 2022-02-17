@@ -9,6 +9,7 @@ import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import com.gigaspaces.datavalidator.db.dao.MeasurementDao;
+import com.gigaspaces.datavalidator.model.DataSource;
 import com.gigaspaces.datavalidator.model.Measurement;
 
 /**
@@ -21,6 +22,9 @@ public class MeasurementService {
 
 	@Autowired
 	private MeasurementDao measurementDao;
+	
+	@Autowired
+	private DataSourceService dataSourceService;
 
 	public void update(Measurement measurement) {
 		measurementDao.update(measurement);	
@@ -38,12 +42,45 @@ public class MeasurementService {
 		return measurementDao.getAutoIncId("MEASUREMENT", "MEASUREMENT_ID");
 	}
 
+	public List<Measurement> getActiveMeasurement() {
+		List<Measurement> measurementList = measurementDao.getActiveMeasurements();
+		Long dataSourceId = 0l;
+		for (Measurement measurement : measurementList) {
+			dataSourceId = measurement.getDataSourceId();
+			DataSource dataSource=dataSourceService.getDataSource(dataSourceId);
+			if(dataSource!=null) {
+				measurement.setDataSource(dataSource);	
+			}else {
+				measurement.setDataSource(new DataSource());	
+			}
+			
+		}
+		return measurementList;
+	}
+	
 	public List<Measurement> getAll() {
-		return measurementDao.getAll();
+		List<Measurement> measurementList = measurementDao.getAll();
+		Long dataSourceId = 0l;
+		for (Measurement measurement : measurementList) {
+			dataSourceId = measurement.getDataSourceId();
+			DataSource dataSource=dataSourceService.getDataSource(dataSourceId);
+			if(dataSource!=null) {
+				measurement.setDataSource(dataSource);	
+			}else {
+				measurement.setDataSource(new DataSource());	
+			}
+			
+		}
+		return measurementList;
 	}
 
 	public Measurement getMeasurement(long parseLong) {
-		return measurementDao.getById(parseLong);
+		
+		Long dataSourceId = 0l;
+		Measurement measurement=measurementDao.getById(parseLong);
+		dataSourceId = measurement.getDataSourceId();
+		measurement.setDataSource(dataSourceService.getDataSource(dataSourceId));
+		return measurement;
 
 	}
 

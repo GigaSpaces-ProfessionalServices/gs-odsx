@@ -2,34 +2,37 @@ package com.gigaspaces.datavalidator.model;
 
 public class MeasurementRequestModel {
     private String measurementId;
+    private String dataSourceId;
     private String test;
-    private String dataSourceType;
-    private String dataSourceHostIp;
-    private String dataSourcePort;
-    private String username;
-    private String password;
+//    private String dataSourceType;
+//    private String dataSourceHostIp;
+//    private String dataSourcePort;
+//    private String username;
+//    private String password;
     private String schemaName;
     private String tableName;
     private String fieldName;
     private String whereCondition;
-    private String integratedSecurity;
-    private String authenticationScheme;
-    private String properties;
-    
-    
-   
-	public String getAuthenticationScheme() {
-		return authenticationScheme;
-	}
-
-	public void setAuthenticationScheme(String authenticationScheme) {
-		this.authenticationScheme = authenticationScheme;
-	}
+//    private String integratedSecurity;
     
     public MeasurementRequestModel() {
     }
+    
+    
 
-    public String getMeasurementId() {
+    public String getDataSourceId() {
+		return dataSourceId;
+	}
+
+
+
+	public void setDataSourceId(String dataSourceId) {
+		this.dataSourceId = dataSourceId;
+	}
+
+
+
+	public String getMeasurementId() {
         return measurementId;
     }
 
@@ -45,45 +48,45 @@ public class MeasurementRequestModel {
         this.test = test;
     }
 
-    public String getDataSourceType() {
-        return dataSourceType;
-    }
-
-    public void setDataSourceType(String dataSourceType) {
-        this.dataSourceType = dataSourceType;
-    }
-
-    public String getDataSourceHostIp() {
-        return dataSourceHostIp;
-    }
-
-    public void setDataSourceHostIp(String dataSourceHostIp) {
-        this.dataSourceHostIp = dataSourceHostIp;
-    }
-
-    public String getDataSourcePort() {
-        return dataSourcePort;
-    }
-
-    public void setDataSourcePort(String dataSourcePort) {
-        this.dataSourcePort = dataSourcePort;
-    }
-
-    public String getUsername() {
-        return username;
-    }
-
-    public void setUsername(String username) {
-        this.username = username;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public void setPassword(String password) {
-        this.password = password;
-    }
+//    public String getDataSourceType() {
+//        return dataSourceType;
+//    }
+//
+//    public void setDataSourceType(String dataSourceType) {
+//        this.dataSourceType = dataSourceType;
+//    }
+//
+//    public String getDataSourceHostIp() {
+//        return dataSourceHostIp;
+//    }
+//
+//    public void setDataSourceHostIp(String dataSourceHostIp) {
+//        this.dataSourceHostIp = dataSourceHostIp;
+//    }
+//
+//    public String getDataSourcePort() {
+//        return dataSourcePort;
+//    }
+//
+//    public void setDataSourcePort(String dataSourcePort) {
+//        this.dataSourcePort = dataSourcePort;
+//    }
+//
+//    public String getUsername() {
+//        return username;
+//    }
+//
+//    public void setUsername(String username) {
+//        this.username = username;
+//    }
+//
+//    public String getPassword() {
+//        return password;
+//    }
+//
+//    public void setPassword(String password) {
+//        this.password = password;
+//    }
 
     public String getSchemaName() {
         return schemaName;
@@ -117,28 +120,21 @@ public class MeasurementRequestModel {
         this.whereCondition = whereCondition;
     }
 
-	public String getIntegratedSecurity() {
-		return integratedSecurity;
-	}
+//	public String getIntegratedSecurity() {
+//		return integratedSecurity;
+//	}
+//
+//	public void setIntegratedSecurity(String integratedSecurity) {
+//		this.integratedSecurity = integratedSecurity;
+//	}
 
-	public void setIntegratedSecurity(String integratedSecurity) {
-		this.integratedSecurity = integratedSecurity;
-	}
-	
-	public String getProperties() {
-		return properties;
-	}
 
-	public void setProperties(String otherProperties) {
-		this.properties = otherProperties;
-	}
 
-	public String getIsKerberoseInt() {
-		return authenticationScheme;
-	}
-
-	public void setIsKerberoseInt(String isKerberoseInt) {
-		this.authenticationScheme = isKerberoseInt;
+	@Override
+	public String toString() {
+		return "MeasurementRequestModel [measurementId=" + measurementId + ", dataSourceId=" + dataSourceId + ", test="
+				+ test + ", schemaName=" + schemaName + ", tableName=" + tableName + ", fieldName=" + fieldName
+				+ ", whereCondition=" + whereCondition +  "]";
 	}
     
     

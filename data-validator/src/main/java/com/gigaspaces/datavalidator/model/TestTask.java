@@ -69,17 +69,14 @@ public class TestTask  implements Serializable  {
 			
 				Measurement measurement = measurementList.get(0);
 				if (measurement != null) {
-
+					DataSource dataSource = measurement.getDataSource();
 					logger.info("Executing task id: " + id);
 					String whereCondition = measurement.getWhereCondition() != null ? measurement.getWhereCondition()
 							: "";
 
-					Connection conn = JDBCUtils.getConnection(measurement.getDataSourceType(),
-							measurement.getDataSourceHostIp(), measurement.getDataSourcePort(),
-							measurement.getSchemaName(), measurement.getUsername(), measurement.getPassword()
-							,measurement.getIntegratedSecurity(),measurement.getAuthenticationScheme(),measurement.getProperties());
+					Connection conn = JDBCUtils.getConnection(measurement);
 					Statement st = conn.createStatement();
-					String query = JDBCUtils.buildQuery(measurement.getDataSourceType(), measurement.getFieldName(),
+					String query = JDBCUtils.buildQuery(dataSource.getDataSourceType(), measurement.getFieldName(),
 							measurement.getType(), measurement.getTableName(),
 							Long.parseLong(measurement.getLimitRecords()), whereCondition);
 					logger.info("query: " + query);
@@ -101,19 +98,18 @@ public class TestTask  implements Serializable  {
 				measurement2 = measurementList.get(1);
 		
 				if (measurement1 != null && measurement2 != null) {
-
-					String test = measurement1.getType();
+					DataSource dataSource1 = measurement1.getDataSource();
+					DataSource dataSource2 = measurement2.getDataSource();
+					String test1 = measurement1.getType();
+					String test2 = measurement2.getType();
 					String limitRecords = measurement1.getLimitRecords();
 					String whereCondition = measurement1.getWhereCondition();
 
-					Connection conn1 = JDBCUtils.getConnection(measurement1.getDataSourceType(),
-							measurement1.getDataSourceHostIp(), measurement1.getDataSourcePort(),
-							measurement1.getSchemaName(), measurement1.getUsername(), measurement1.getPassword(),
-							measurement1.getIntegratedSecurity(),measurement1.getAuthenticationScheme(),measurement1.getProperties());
+					Connection conn1 = JDBCUtils.getConnection(measurement1);
 
 					Statement statement1 = conn1.createStatement();
-					String query1 = JDBCUtils.buildQuery(measurement1.getDataSourceType(), measurement1.getFieldName(),
-							test, measurement1.getTableName(), Long.parseLong(limitRecords), whereCondition);
+					String query1 = JDBCUtils.buildQuery(dataSource1.getDataSourceType(), measurement1.getFieldName(),
+							test1, measurement1.getTableName(), Long.parseLong(limitRecords), whereCondition);
 					logger.info("query1: " + query1);
 					ResultSet resultSet1 = statement1.executeQuery(query1);
 
@@ -123,14 +119,11 @@ public class TestTask  implements Serializable  {
 						logger.info("val1:     " + val1);
 					}
 
-					Connection conn2 = JDBCUtils.getConnection(measurement2.getDataSourceType(),
-							measurement2.getDataSourceHostIp(), measurement2.getDataSourcePort(),
-							measurement2.getSchemaName(), measurement2.getUsername(), measurement2.getPassword()
-							,measurement1.getIntegratedSecurity(),measurement2.getAuthenticationScheme(),measurement2.getProperties());
+					Connection conn2 = JDBCUtils.getConnection(measurement2);
 
 					Statement statement2 = conn2.createStatement();
-					String query2 = JDBCUtils.buildQuery(measurement2.getDataSourceType(), measurement2.getFieldName(),
-							test, measurement2.getTableName(), Long.parseLong(limitRecords), whereCondition);
+					String query2 = JDBCUtils.buildQuery(dataSource2.getDataSourceType(), measurement2.getFieldName(),
+							test2, measurement2.getTableName(), Long.parseLong(limitRecords), whereCondition);
 					logger.info("query2: " + query2);
 					ResultSet resultSet2 = statement2.executeQuery(query2);
 
@@ -142,7 +135,7 @@ public class TestTask  implements Serializable  {
 					if (val1 == val2) {
 						this.result = "PASS";
 					} else {
-						logger.info("==> Test Result: FAIL, Test type: " + test + ", DataSource1 Result: " + val1
+						logger.info("==> Test Result: FAIL, Test type: " + test1 + ", DataSource1 Result: " + val1
 								+ ", DataSource2 Result: " + val2);
 						this.result = "FAIL";
 					}
@@ -158,6 +151,7 @@ public class TestTask  implements Serializable  {
 			logger.info(e.getMessage());
 			this.errorSummary = e.getMessage();
 			this.result = "FAIL: Error please refer log file";
+			return this.result;
 		}
 		if (measurement1 == null || measurement2 == null) {
 			if ((testType != null && testType.equals("Compare"))) {

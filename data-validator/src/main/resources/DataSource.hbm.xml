@@ -1,0 +1,31 @@
+<?xml version = "1.0" encoding = "utf-8"?>
+<!DOCTYPE hibernate-mapping PUBLIC 
+"-//Hibernate/Hibernate Mapping DTD//EN"
+"http://www.hibernate.org/dtd/hibernate-mapping-3.0.dtd">
+
+<hibernate-mapping>
+	<class name="com.gigaspaces.datavalidator.model.DataSource" table="DATASOURCE">
+		<meta attribute="class-description">
+			This class contains the datasource detail.
+		</meta>
+		<id name="id" type="long" column="DATASOURCE_ID">
+			<!-- <generator class="native" /> -->
+		</id>
+		<property name="dataSourceName" column="DATASOURCE_NAME" type="string" />
+		<property name="dataSourceType" column="DATASOURCE_TYPE" type="string" />
+		<property name="dataSourceHostIp" column="DATASOURCE_HOST_IP" 	type="string" />
+		<property name="dataSourcePort" column="DATASOURCE_PORT" type="string" />
+		<property name="username" column="USERNAME" type="string" />
+		<property name="password" column="PASSWORD" type="string" />
+		<property name="status" column="STATUS" type="string" />
+		<property name="integratedSecurity" column="INTRIGRATEDSECURITY" type="string" />
+		<property name="properties" column="PROPERTIES" type="string" />
+		<property name="authenticationScheme" column="AUTHENTICATIONSCHEME" type="string" />
+	
+	
+	
+
+	
+	
+	</class>
+</hibernate-mapping>

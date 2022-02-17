@@ -64,13 +64,13 @@ def doValidate():
     if resultCount > 0:
         measurementIdA = str(input("Select 1st measurement Id for comparison : "))
         while(measurementIdA not in measurementids):
-          print(Fore.YELLOW +"Please select 1st measurement Id from above list"+Fore.RESET) 
+          print(Fore.YELLOW +"Please select 1st measurement Id from above list"+Fore.RESET)
           measurementIdA = str(input("Select 1st measurement Id for comparison :"))
         if (len(str(measurementIdA)) == 0):
           measurementIdA = '1'
         measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
         while(measurementIdB not in measurementids):
-           print(Fore.YELLOW +"Please select 2nd measurement Id from above list"+Fore.RESET) 
+           print(Fore.YELLOW +"Please select 2nd measurement Id from above list"+Fore.RESET)
            measurementIdB = str(input("Select 2nd measurement Id for comparison :"))
         if (len(str(measurementIdB)) == 0):
           measurementIdB = '1'
@@ -112,7 +112,8 @@ def printmeasurementtable(dataValidatorServiceHost):
         # print("response2 "+response[0])
         # print(isinstance(response, list))
 
-        headers = [Fore.YELLOW + "Measurement Id" + Fore.RESET,
+        headers = [Fore.YELLOW + "Id" + Fore.RESET,
+                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
                    Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
                    Fore.YELLOW + "Measurement Query" + Fore.RESET
                    ]
@@ -126,8 +127,9 @@ def printmeasurementtable(dataValidatorServiceHost):
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN + measurement["dataSourceType"] + "(schema=" + measurement[
-                                 "schemaName"] + ", host=" + measurement["dataSourceHostIp"] + ")" + Fore.RESET,
+                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
+                             Fore.GREEN +"(Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
+                                 "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)

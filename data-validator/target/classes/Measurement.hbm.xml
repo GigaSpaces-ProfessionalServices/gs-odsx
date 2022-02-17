@@ -12,24 +12,18 @@
 		<id name="id" type="long" column="MEASUREMENT_ID">
 			<!-- <generator class="native" /> -->
 		</id>
-
-
+		<property name="dataSourceId" column="DATASOURCE_ID"  type="long" />
 		<property name="type" column="TYPE" type="string" />
-		<property name="dataSourceType" column="DATASOURCE_TYPE"
-			type="string" />
-		<property name="dataSourceHostIp" column="DATASOURCE_HOST_IP" 	type="string" />
-		<property name="dataSourcePort" column="DATASOURCE_PORT" type="string" />
-		<property name="username" column="USERNAME" type="string" />
-		<property name="password" column="PASSWORD" type="string" />
 		<property name="schemaName" column="SCHEAM" type="string" />
 		<property name="tableName" column="TABLE_NAME" type="string" />
 		<property name="fieldName" column="FIELD_NAME" type="string" />
 		<property name="limitRecords" column="LIMIT_RECORDS" 	type="string" />
 		<property name="whereCondition" column="WHERE_CONDITION" type="string" />
-
-
-
-
-
+        <!-- <property name="integratedSecurity" column="IS_AD_AUTH" type="string" /> -->
+        <property name="status" column="STATUS" type="string" />
+        
+        <one-to-one name="dataSource" class="com.gigaspaces.datavalidator.model.DataSource"
+			cascade="save-update"></one-to-one>
+        
 	</class>
 </hibernate-mapping>
