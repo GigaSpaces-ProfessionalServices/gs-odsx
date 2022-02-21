@@ -5,10 +5,17 @@ hostConfig=$2 #10.0.0.66,10.0.0.147,10.0.0.134
 connectionStr=$3 #10.0.0.66:2181,10.0.0.147:2181,10.0.0.134:2181
 bootstrapAddress=$4 #10.0.0.66:9092,10.0.0.147:9092,10.0.0.134:9092
 sourceAdabasJarFile=$5
+mqHostname=$6
+mqChannel=$7
+mqManager=$8
+queueName=$9
+sslChipherSuite=${10}
+mqPort=${11}
+
 rootDir='/dbagigasoft'
 #targetDir='/dbagigasoft/Adabas'
 echo "targetDir:"$targetDir
-logDir='/dbagigalogs'
+logDir='/dbagigalogs/Adabas'
 start_publisher_file='run-publisher.sh'
 stop_publisher_file='stop-publisher.sh'
 service_file='odsxadabas.service'
@@ -18,11 +25,11 @@ applicationYml=$targetDir'/config/application.yml'
 #if [ ! -d "$rootDir" ]; then
 #     mkdir $rootDir
 #fi
-if [ ! -d "$targetDir" ]; then
+if [ ! -d "$targetDir/config" ]; then
      mkdir -p $targetDir/config
 fi
 if [ ! -d "$logDir" ]; then
-     mkdir $logDir
+     mkdir -p $logDir
 fi
 chmod 777 $rootDir
 chmod 777 $targetDir
@@ -45,9 +52,24 @@ chown gsods:gsods $targetDir/config/*.*
 chmod +x $targetDir/*.sh
 chmod 777 $targetDir/config/*.*
 
+mqHostname=$6
+mqChannel=$7
+mqManager=$8
+queueName=$9
+sslChipherSuite=${10}
+mqPort=${11}
+#echo "hostname"$hostname
+#echo "mqChannel"$mqChannel
+#echo "mqManager"$mqManager
 sed -i -e 's|    address: BAM,BAN,BAK|    address: '$hostConfig'|g' $applicationYml
 sed -i -e 's|    connectionStr: BAM:2181,BAN:2181,BAK:2181|    connectionStr: '$connectionStr'|g' $applicationYml
 sed -i -e 's|    bootstrapAddress: BAM:9092,BAN:9092,BAK:9092|    bootstrapAddress: '$bootstrapAddress'|g' $applicationYml
+sed -i -e 's|  hostname: mqhostname|  hostname: '$mqHostname'|g' $applicationYml
+sed -i -e 's|  channel: CLI.ODS_1|  channel: '$mqChannel'|g' $applicationYml
+sed -i -e 's|  qManager: SBENAIM|  qManager: '$mqManager'|g' $applicationYml
+sed -i -e 's|  queueName: ACPT.YY.ODS.MATACH_TRANSACTIONS.R|  queueName: '$queueName'|g' $applicationYml
+sed -i -e 's|  sslChipherSuite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256|  sslChipherSuite: '$sslChipherSuite'|g' $applicationYml
+sed -i -e 's|  port: 1414|  port: '$mqPort'|g' $applicationYml
 
 mv $home_dir_sh/$start_adabas_feeder_file /tmp
 mv $home_dir_sh/$stop_adabas_feeder_file /tmp

@@ -61,7 +61,7 @@ def removeInputUserAndHost():
     try:
         global user
         global host
-        user = str(input(Fore.YELLOW+"Enter user to connect to DE server [root]:"+Fore.RESET))
+        user = str(input(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
         if(len(str(user))==0):
             user="root"
         logger.info(" user: "+str(user))
