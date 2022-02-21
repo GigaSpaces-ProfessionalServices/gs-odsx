@@ -101,6 +101,8 @@ def listDEServers():
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     counter = 1
+    global adbas_host_dict
+    adbas_host_dict = obj_type_dictionary()
     for node in dEServers:
         if node.role == "mq-connector":
             host_dict_obj.add(str(counter), str(node.ip))
@@ -116,30 +118,42 @@ def listDEServers():
                              Fore.GREEN + node.name + Fore.RESET,
                              Fore.RED + "OFF" + Fore.RESET]
             data.append(dataArray)
+            adbas_host_dict.add(str(counter),str(node.ip))
             counter = counter + 1
     printTabular(None, headers, data)
     return host_dict_obj
 
+def executeService(host):
+    cmd = "systemctl stop odsxadabas.service"
+    logger.info("Getting status.. odsxadabas:" + str(cmd))
+    user = 'root'
+    with Spinner():
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        if (output == 0):
+            verboseHandle.printConsoleInfo("Service odsxadabas stopped successfully on " + str(host))
+        else:
+            verboseHandle.printConsoleError("Service odsxadabas failed to stop on " + str(host))
 
 def stopAdabusService(args):
     try:
         listDEServers()
-        nodes = getDEServerHostList()
-        choice = str(input(Fore.YELLOW + "Are you sure, you want to stop adabus service for [" + str(
-            nodes) + "] ? (y/n) [y]: " + Fore.RESET))
-        if choice.casefold() == 'n':
-            exit(0)
-        for node in config_get_dataIntegration_nodes():
-            cmd = "systemctl stop odsxadabas.service"
-            logger.info("Getting status.. odsxadabas:" + str(cmd))
-            user = 'root'
-            with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-                if (output == 0):
-                    verboseHandle.printConsoleInfo("Service odsxadabas stopped successfully on " + str(node.ip))
-                else:
-                    verboseHandle.printConsoleError("Service odsxadabas failed to stop on " + str(node.ip))
-
+        inputChoice = str(input(Fore.YELLOW+"[1] For individual stop \n[Enter] For stop all servers \n[99] For exit \nEnter your choice : "+Fore.RESET))
+        if(inputChoice=='1'):
+            hostNumber = str(input(Fore.YELLOW+"Enter host number to stop : "+Fore.RESET))
+            while(len(str(hostNumber))==0):
+                hostNumber = str(input(Fore.YELLOW+"Enter host number to stop : "+Fore.RESET))
+            host = adbas_host_dict.get(hostNumber)
+            executeService(host)
+        elif(len(str(inputChoice))==0):
+            nodes = getDEServerHostList()
+            choice = str(input(Fore.YELLOW + "Are you sure, you want to stop adabus service for [" + str(
+                nodes) + "] ? (y/n) [y]: " + Fore.RESET))
+            if choice.casefold() == 'n':
+                exit(0)
+            for node in config_get_dataIntegration_nodes():
+                executeService(str(node.ip))
+        elif(inputChoice=='99'):
+            return
     except Exception as e:
         handleException(e)
 

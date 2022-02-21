@@ -262,7 +262,7 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         global pathOfSourcePU
-        pathOfSourcePU = str(readValuefromAppConfig("app.tieredstorage.pu.filepath")).replace('"','')
+        pathOfSourcePU = str(readValuefromAppConfig("app.dataengine.mq.kafkaconnector.jar")).replace('"','')
         pathOfSourcePUInput = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
         if(len(str(pathOfSourcePUInput))>0):
             pathOfSourcePU = pathOfSourcePUInput
@@ -392,9 +392,9 @@ def proceedToDeployPUInputParam(managerHost):
     verboseHandle.printConsoleWarning("spring.kafka.bootstrap-servers : ["+str(kafkaBootStrapServers)+"]")
 
     global spaceName
-    spaceName = str(input(Fore.YELLOW+"Enter space.name [adbsSpace] : "+Fore.RESET))
+    spaceName = str(input(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
     if(len(str(spaceName))==0):
-        spaceName='adbsSpace'
+        spaceName='bllspace'
 
     global consumerGroup
     consumerGroup = str(input(Fore.YELLOW+"Enter spring.kafka.consumer-group [DIH] :"+Fore.RESET))

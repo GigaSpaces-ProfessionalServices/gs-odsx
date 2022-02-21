@@ -63,6 +63,21 @@ def getDIServerHostList():
             nodes = nodes + ',' + node.ip
     return nodes
 
+
+def displaySummary():
+    logger.info("displaySummary()")
+    verboseHandle.printConsoleInfo("----------------------------------------------------------------")
+    verboseHandle.printConsoleWarning("-----------------------*****Summary****-------------------------")
+    verboseHandle.printConsoleInfo("Enter target directory to install mq-connector         : "+str(targetDir))
+    verboseHandle.printConsoleInfo("Enter source adabas .jar file path including file name : "+str(sourceAdabasJarFile))
+    verboseHandle.printConsoleInfo("Enter mq hostname        :"+str(mqHostname))
+    verboseHandle.printConsoleInfo("Enter mq channel         : "+str(mqChannel))
+    verboseHandle.printConsoleInfo("Enter mq qmanager        : "+str(mqManager))
+    verboseHandle.printConsoleInfo("Enter mq queueName       : "+str(queueName))
+    verboseHandle.printConsoleInfo("Enter mq sslChipherSuite : "+str(sslChipherSuite))
+    verboseHandle.printConsoleInfo("Enter mq port            : "+str(mqPort))
+    verboseHandle.printConsoleInfo("----------------------------------------------------------------")
+
 def getInputParam(kafkaHosts):
     logger.info("getInputParam()")
     numMQhostToInstall=''
@@ -71,6 +86,12 @@ def getInputParam(kafkaHosts):
     global targetDir
     global sourceAdabasJarFile
     global targetAdabasJarFile
+    global mqHostname
+    global mqChannel
+    global mqManager
+    global queueName
+    global sslChipherSuite
+    global mqPort
     sourceAdabasJarFile=''
     targetAdabasJarFile=''
     targetDir = '/dbagigasoft/Adabas'
@@ -78,6 +99,7 @@ def getInputParam(kafkaHosts):
     targetDirConfirm = str(input(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
     if(len(str(targetDirConfirm))==0):
         targetDirConfirm=targetDir
+
     sourceConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.jar")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     sourceAdabasJarFile = str(input(Fore.YELLOW+"Enter source adabas .jar file path including file name ["+str(sourceConfig)+"] : "+Fore.RESET))
     if(len(str(sourceAdabasJarFile))==0):
@@ -85,29 +107,38 @@ def getInputParam(kafkaHosts):
     verboseHandle.printConsoleWarning("Target path will be "+targetDir+"/"+(os.path.basename(sourceAdabasJarFile)))
     targetAdabasJarFile = targetDirConfirm+"/"+(os.path.basename(sourceAdabasJarFile))
 
+    mqHostnameConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.mqHostname")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    mqHostname = str(input(Fore.YELLOW+"Enter mq hostname ["+mqHostnameConfig+"] : "+Fore.RESET))
+    if(len(str(mqHostname))==0):
+        mqHostname=mqHostnameConfig
+
+    mqChannelConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.channel")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    mqChannel = str(input(Fore.YELLOW+"Enter mq channel ["+mqChannelConfig+"] : "+Fore.RESET))
+    if(len(str(mqChannel))==0):
+        mqChannel = mqChannelConfig
+
+    mqManagerConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.manager")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    mqManager = str(input(Fore.YELLOW+"Enter mq qmanager ["+mqManagerConfig+"] : "+Fore.RESET))
+    if(len(str(mqHostname))==0):
+        mqManager = mqManagerConfig
+
+    queueNameConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.queuename")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    queueName = str(input(Fore.YELLOW+"Enter mq queueName ["+queueNameConfig+"] : "+Fore.RESET))
+    if(len(str(queueName))==0):
+        queueName = queueNameConfig
+
+    sslChipherSuiteConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.sslChipherSuite")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    sslChipherSuite = str(input(Fore.YELLOW+"Enter mq sslChipherSuite ["+sslChipherSuiteConfig+"] : "+Fore.RESET))
+    if(len(str(sslChipherSuite))==0):
+        sslChipherSuite = sslChipherSuiteConfig
+
+    mqPortConfig =  str(readValueByConfigObj("app.dataengine.mq.adabas.port")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    mqPort = str(input(Fore.YELLOW+"Enter mq port ["+mqPortConfig+"] : "+Fore.RESET))
+    if(len(str(mqPort))==0):
+        mqPort = mqPortConfig
+
+    displaySummary()
     return kafkaHosts
-    '''
-    configMQhosts = str(readValueByConfigObj("app.dataengine.mq.host")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    if(len(str(configMQhosts))>0):
-        confirmMQHosts = str(input(Fore.YELLOW+"Enter to install MQ-Connector on host ["+configMQhosts+"] \n[1] To modify host configuration. \n[99]Exit : "+Fore.RESET))
-    if(str(confirmMQHosts)=='1'):
-        numMQhostToInstall = str(input(Fore.YELLOW+"Enter number of MQ-Connector to install : "+Fore.RESET))
-        while(len(numMQhostToInstall)==0):
-            numMQhostToInstall = str(input(Fore.YELLOW+"Enter number of MQ-Connector to install : "+Fore.RESET))
-        hostMQConnectorDict = obj_type_dictionary()
-        for num in range(1,int(numMQhostToInstall)+1):
-            host = str(input(Fore.YELLOW+"Enter host ["+str(num)+"] to install MQ-Connectors : "+Fore.RESET))
-            hostConfig = hostConfig+','+host
-            hostMQConnectorDict.add(str(num),str(host))
-        hostConfig=hostConfig[1:]
-        set_value_in_property_file("app.dataengine.mq.host",hostConfig)
-        print(hostConfig)
-    if(len(str(confirmMQHosts))==0):
-        hostConfig=configMQhosts
-    if(confirmMQHosts=='99'):
-        return "99"
-    return hostConfig
-    '''
 
 def buildTarFileToLocalMachine():
     logger.info("buildTarFileToLocalMachine :")
@@ -153,6 +184,8 @@ def proceedForInstallation(hostConfig):
         connectionStr = getConnectionStr(hostConfig)
         bootstrapAddress = getBootstrapAddress(hostConfig)
         additionalParam = ""+targetDir+' '+hostConfig+' '+connectionStr+' '+bootstrapAddress+' '+os.path.basename(sourceAdabasJarFile)
+        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort
+        print(additionalParam)
         logger.info("additionalParam : "+str(additionalParam))
         user='root'
         for host in hostList:
