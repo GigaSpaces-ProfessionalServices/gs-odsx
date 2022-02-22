@@ -22,6 +22,7 @@ service_file='odsxadabas.service'
 start_adabas_feeder_file='start_adabasFeeder.sh'
 stop_adabas_feeder_file='stop_adabasFeeder.sh'
 applicationYml=$targetDir'/config/application.yml'
+keystoreFile='keystore.jks'
 #if [ ! -d "$rootDir" ]; then
 #     mkdir $rootDir
 #fi
@@ -47,6 +48,8 @@ home_dir_sh=$(pwd)
 mv $home_dir_sh/install/mq-connector/*publisher.sh $targetDir
 mv $home_dir_sh/install/mq-connector/config/*.yml $targetDir/config
 mv $home_dir_sh/$sourceAdabasJarFile $targetDir
+mv $home_dir_sh/$keystoreFile $targetDir/$keystoreFile
+
 chown gsods:gsods $targetDir/*.sh
 chown gsods:gsods $targetDir/config/*.*
 chmod +x $targetDir/*.sh
@@ -61,6 +64,9 @@ mqPort=${11}
 #echo "hostname"$hostname
 #echo "mqChannel"$mqChannel
 #echo "mqManager"$mqManager
+sed -i -e 's|adabas-0.0.1-SNAPSHOT.jar|'$targetDir'/adabas-0.0.1-SNAPSHOT.jar|g' $targetDir/$start_publisher_file
+sed -i -e 's|=keystore.jks|='$targetDir'/keystore.jks|g' $targetDir/$start_publisher_file
+
 sed -i -e 's|    address: BAM,BAN,BAK|    address: '$hostConfig'|g' $applicationYml
 sed -i -e 's|    connectionStr: BAM:2181,BAN:2181,BAK:2181|    connectionStr: '$connectionStr'|g' $applicationYml
 sed -i -e 's|    bootstrapAddress: BAM:9092,BAN:9092,BAK:9092|    bootstrapAddress: '$bootstrapAddress'|g' $applicationYml
@@ -70,6 +76,7 @@ sed -i -e 's|  qManager: SBENAIM|  qManager: '$mqManager'|g' $applicationYml
 sed -i -e 's|  queueName: ACPT.YY.ODS.MATACH_TRANSACTIONS.R|  queueName: '$queueName'|g' $applicationYml
 sed -i -e 's|  sslChipherSuite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256|  sslChipherSuite: '$sslChipherSuite'|g' $applicationYml
 sed -i -e 's|  port: 1414|  port: '$mqPort'|g' $applicationYml
+
 
 mv $home_dir_sh/$start_adabas_feeder_file /tmp
 mv $home_dir_sh/$stop_adabas_feeder_file /tmp
