@@ -100,7 +100,7 @@ def getStatusOfNBHost(server):
 def getConsolidatedStatus(node):
     output=''
     logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status odsxcr8", "systemctl status telegraf"]
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd))
         logger.info("Getting status.. :"+str(cmd))

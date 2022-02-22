@@ -431,9 +431,9 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
 
         global spaceNameCfg
-        spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
-        while(len(str(spaceNameCfg))==0):
-            spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
+        spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name [bllspace] : "+Fore.RESET))
+        if(len(str(spaceNameCfg))==0):
+            spaceNameCfg = 'bllspace'
         logger.info("space.name :"+str(spaceNameCfg))
 
         data={
@@ -538,9 +538,9 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         logger.info("resource :"+str(resource))
 
         global resourceName
-        resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
-        while(len(str(resourceName))==0):
-            resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
+        resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy [bllservice] : "+Fore.RESET))
+        if(len(str(resourceName))==0):
+            resourceName = 'bllservice'
         logger.info("nameOfPU :"+str(resourceName))
 
         global partition
@@ -552,9 +552,9 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         logger.info("Enter partition required :"+str(partition))
 
         global zoneOfPU
-        zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
+        zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy [bll] :"+Fore.RESET))
         while(len(str(zoneOfPU))==0):
-            zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
+            zoneOfPU = 'bll'
         logger.info("Zone Of PU :"+str(zoneOfPU))
 
         global maxInstancesPerMachine

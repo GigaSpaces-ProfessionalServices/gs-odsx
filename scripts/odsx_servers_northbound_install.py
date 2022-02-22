@@ -587,6 +587,7 @@ def validate_nb_install():
         servers.append(host)
 
     logger.info("Agent and consul servers : : "+str(servers))
+    '''
     for hostip in nbConfig.get("CONSUL_SERVERS").replace(" ", "").split(","):
         logger.info("Executing command : sleep 5; export CONSUL_HTTP_ADDR="+str(hostip)+":8500; consul members ")
         hostip = str(hostip).replace('"', '')
@@ -623,6 +624,7 @@ def validate_nb_install():
                 logger.info("Status of :"+str(consul.address)+" is not-alive :"+str(consul.status))
                 return False
         break;
+    '''
     return True
 
 
