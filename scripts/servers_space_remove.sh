@@ -23,6 +23,7 @@ fi
 #rm -r install/*.zip
 source setenv.sh
 systemctl stop gsc.service
+systemctl stop gsa.service
 sleep 5
 rm -rf $GS_HOME
 rm -rf setenv.sh gs install install.tar /dbagiga/giga* /dbagigadata/* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
