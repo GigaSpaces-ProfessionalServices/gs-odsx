@@ -3,7 +3,7 @@ import os
 import platform
 
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_manager_node, config_get_space_node, config_get_nb_list, config_cdc_list
+from utils.ods_cluster_config import config_get_manager_node, config_get_space_node, config_get_nb_list, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -17,7 +17,7 @@ def getOptions():
     options.update({counter + 1: "Manager servers"})
     options.update({counter + 2: "Space servers"})
     options.update({counter + 3: "Northbound servers"})
-    options.update({counter + 4: "Cdc servers"})
+    options.update({counter + 4: "DI servers"})
     options.update({counter + 5: "Specific servers"})
     options.update({99: "ESC"})
     return options
@@ -82,7 +82,7 @@ def getServerIps(optionSelected):
         else:
             ips = proceedForSpecificNBServer(nodes,int(inputServer),ips)
     if optionSelected == 1 or optionSelected == 5:
-        nodes = config_cdc_list()
+        nodes = config_get_dataIntegration_nodes()
         for node in nodes:
             ips.append(node.ip)
     if optionSelected == 6:

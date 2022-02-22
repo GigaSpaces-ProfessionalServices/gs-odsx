@@ -155,7 +155,7 @@ def executeCommandForUnInstall():
             if(len(nodesCount)>1):
                 removeType = str(input(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
-                confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove Adabus service ["+nodes+"] (y/n) [y]: "+Fore.RESET))
+                confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove Adabas service ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
@@ -183,7 +183,7 @@ def executeCommandForUnInstall():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Data Engine -> List -> MQ Connector -> Adabus Service -> Remove")
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> List -> MQ Connector -> Adabas Service -> Remove")
     try:
         removeInputUserAndHost()
         executeCommandForUnInstall()
