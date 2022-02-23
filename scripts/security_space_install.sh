@@ -369,7 +369,7 @@ function gsCreateGSServeice {
   userNameParam=$prefix1$prefix2
   prefix3='(/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='$appId' -p Query="Safe='$safeId';Folder=;Object='$objectId';" -o Password)'
   passwordParam=$prefix1$prefix3
-  cmd="sleep 20;$GS_HOME/bin/gs.sh --username=$userNameParam --password=$passwordParam container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
+  cmd="sleep 60;$GS_HOME/bin/gs.sh --username=$userNameParam --password=$passwordParam container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
