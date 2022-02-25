@@ -9,7 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 
@@ -89,7 +89,7 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, resumeMode, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration,dataValidation):
+    def __init__(self, resumeMode, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation):
         self.resumeMode = resumeMode
         self.managers = managers
         self.cdc = cdc
@@ -99,6 +99,7 @@ class AllServers:
         self.influxdb = influxdb
         self.dataIntegration = dataIntegration
         self.dataValidation = dataValidation
+        self.dataEngine = dataEngine
 
 class Managers:
     def __init__(self, node):
@@ -132,6 +133,7 @@ class DataIntegration:
         self.nodes = nodes
 
 class DataValidation:
+class DataEngine:
     def __init__(self,resumeMode,nodes):
         self.resumeMode = resumeMode
         self.nodes = nodes
@@ -139,6 +141,15 @@ class DataValidation:
 class Nodes:
     def __init__(self, ip, name, role, resumeMode, type):
         self.name = name
+        self.type = type
+        self.ip = ip
+        self.role = role
+        self.resumeMode = resumeMode
+
+class Nodes1:
+    def __init__(self, ip, name, engine, role, resumeMode, type):
+        self.name = name
+        self.engine = engine
         self.type = type
         self.ip = ip
         self.role = role
@@ -265,6 +276,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     influxdb = []
     dataIntegration = []
     dataValidation = []
+    dataEngine = []
     if hasattr(config_data.cluster.servers, 'grafana'):
         for node1 in list(config_data.cluster.servers.grafana.node):
             nodes.append(Node(node1.ip, node1.name, node1.role, node1.resumeMode))
@@ -286,6 +298,12 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         for node1 in list(config_data.cluster.servers.dataValidation.nodes):
             nodes.append(Nodes(node1.ip, node1.name, node1.role, node1.resumeMode, node1.type))
         dataValidation = DataValidation(config_data.cluster.servers.dataValidation.resumeMode,nodes)
+        
+    nodes = []    
+    if hasattr(config_data.cluster.servers, 'dataEngine'):
+        for node1 in list(config_data.cluster.servers.dataEngine.nodes):
+            nodes.append(Nodes1(node1.ip, node1.name, node1.engine, node1.role, node1.resumeMode, node1.type))
+        dataEngine = DataEngine(config_data.cluster.servers.dataEngine.resumeMode,nodes)
 
     partition = Partitions(config_data.cluster.servers.spaces.partitions.primary,
                            config_data.cluster.servers.spaces.partitions.backup)
@@ -295,7 +313,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
 
     spaces = Spaces(partition, Servers(hosts))
     allservers = AllServers(config_data.cluster.servers.resumeMode, managers, cdc,
-                            nb, spaces, grafana, influxdb, dataIntegration, dataValidation)
+                            nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation)
 
     streams = []
     for stream in list(config_data.cluster.streams):
@@ -491,14 +509,20 @@ def config_get_space_hosts_list(filePath='config/cluster.config'):
     return  hosts
 
 def config_get_space_list_with_status(user,filePath='config/cluster.config'):
+    logger.info("config_get_space_list_with_status()")
     host_nic_dict_obj = host_nic_dictionary()
     spaceServers = config_get_space_hosts()
     for server in spaceServers:
-        cmd = 'systemctl is-active gs.service'
+        cmd = 'ps -ef | grep GSA'
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutput(server.ip, 'root', cmd)
             #output = executeRemoteShCommandAndGetOutput(server.ip,user,cmd)
-            host_nic_dict_obj.add(server.ip,str(output))
+            if(str(output).__contains__('services=GSA')):
+                logger.info("services=GSA")
+                host_nic_dict_obj.add(server.ip,"ON")
+            else:
+                logger.info("services!=GSA")
+                host_nic_dict_obj.add(server.ip,"OFF")
 
     spaceNodes = config_get_space_node()
     verboseHandle.printConsoleWarning("Please choose an option from below :")
@@ -516,13 +540,6 @@ def config_get_space_list_with_status(user,filePath='config/cluster.config'):
         spaceDict.update({counter: server})
         #verboseHandle.printConsoleInfo(str(counter) + ". "+spaceNode.name + " (" + spaceNode.ip + ")")
         status = host_nic_dict_obj.get(server.ip)
-        if(status=="3"):
-            status="OFF"
-        elif(status=="0"):
-            status="ON"
-        else:
-            logger.info("Host Not reachable..")
-            status="OFF"
         if(status=="ON"):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+server.ip+Fore.RESET,
@@ -799,6 +816,9 @@ def config_get_dataIntegration_nodes(filePath='config/cluster.config'):
 def config_get_dataValidation_nodes(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.dataValidation.nodes
 
+def config_get_dataEngine_nodes(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.dataEngine.nodes
+
 def isInfluxdbNodeExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
@@ -812,6 +832,7 @@ def isDataIntegrationNodeExist(existingNodes, hostIp):
     return "false"
 
 def isDataValidationNodeExist(existingNodes, hostIp):
+def isDataEngineNodeExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
             return 'true'
@@ -954,6 +975,51 @@ def config_remove_dataValidation_byNameIP(dataValidationName,dataValidationIP,fi
         counter=counter+1
 
     config_data.cluster.servers.dataValidation.nodes = dataValidationNodes
+    
+def config_add_dataEngine_node(hostIp, hostName, engine, role, resumeMode, type, filePath='config/cluster.config'):
+    logger.info("config_add_dataEngine_node")
+    newNode = Nodes1(hostIp, hostName, engine, role, resumeMode,type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.dataEngine.nodes
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isdataEngineNodeExist(existingNodes,hostIp) "+isDataEngineNodeExist(existingNodes,hostIp))
+        if(isDataEngineNodeExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.dataEngine.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+
+def config_remove_dataEngine_byNameIP(dataEngineName,dataEngineIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_dataEngine_byNameIP () : dataEngineName :"+str(dataEngineName)+" nbIp:"+str(dataEngineIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    dataEngineNodes = config_data.cluster.servers.dataEngine.nodes
+    counter=0
+    for dataEngineNode in dataEngineNodes:
+        logger.info(dataEngineNode.name+" :: "+dataEngineName)
+        if(dataEngineNode.name==dataEngineName and (dataEngineNode.role=='dataEngine' or dataEngineNode.role=='mq-connector')):
+            logger.info("dataEngine name : "+dataEngineName+" dataEngine IP:"+dataEngineIP+" has been removed.")
+            dataEngineNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.dataEngine.nodes = dataEngineNodes
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
 
@@ -1166,3 +1232,7 @@ if __name__ == "__main__":
     #config_remove_dataIntegration_byNameIP("jay-desktop-2","127.0.0.11","../config/cluster.config")
     # config_add_nb_node("127.0.0.1", "jay-desktop-2", "admin", "true","../config/cluster.config")
     # config_add_space_node("127.0.0.1", "jay-desktop-3", "admin", "true", "../config/cluster.config")
+
+    #print(config_get_dataEngine_nodes("../config/cluster.config"))
+    #config_add_dataEngine_node("127.0.0.1", "jay-desktop-3","cr8", "dataEngine", "true", "Master","../config/cluster.config")
+    #config_remove_dataEngine_byNameIP("jay-desktop-3","127.0.0.1","../config/cluster.config")

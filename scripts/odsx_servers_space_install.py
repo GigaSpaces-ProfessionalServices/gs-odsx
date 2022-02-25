@@ -6,9 +6,10 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
 from colorama import Fore
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
 from scripts.spinner import Spinner
+from utils.ods_scp import scp_upload
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -76,8 +77,10 @@ def getHostConfiguration():
         if(len(str(applicativeUser))==0):
             applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
-        set_value_in_property_file_generic('User',applicativeUser,'install/gs.service','Service')
-        set_value_in_property_file_generic('Group',applicativeUser,'install/gs.service','Service')
+        set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
+        set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
+        set_value_in_property_file_generic('Group',applicativeUser,'install/gs/gsc.service','Service')
+        set_value_in_property_file_generic('Group',applicativeUser,'install/gs/gsc.service','Service')
 
         if(len(hostsConfig)==2):
             hostsConfig=hostsConfig.replace('"','')
@@ -102,12 +105,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         targetDirectory=''
         gsOptionExtFromConfig = str(readValueByConfigObj("app.space.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.BLUE+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
         targetDirectory=str(additionalParam)
         if(len(additionalParam)==0):
             targetDirectory='/dbagiga'
         logger.info("targetDirecory :"+str(targetDirectory))
-        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.BLUE+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
+        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
             gsOptionExt=gsOptionExtFromConfig
@@ -118,7 +121,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.BLUE+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
+        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsManagerOptions))==0):
             #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
             gsManagerOptions=gsManagerOptionsFromConfig
@@ -129,7 +132,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.BLUE+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLogsConfigFile))==0):
             #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
             gsLogsConfigFile=gsLogsConfigFileFromConfig
@@ -140,18 +143,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         licenseConfig = readValueByConfigObj("app.manager.license")
         #licenseConfig='"{}"'.format(licenseConfig)
-        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.BLUE+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLicenseFile))==0):
             gsLicenseFile = licenseConfig
         #else:
         #    gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
-        applicativeUser = read_value_in_property_file_generic_section('User','install/gs.service','Service')
+        applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.BLUE+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
+        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
         if(len(str(nofileLimitFile))==0):
             nofileLimitFile = nofileLimit
@@ -159,12 +162,36 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
+        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "+Fore.RESET))
+        if(len(str(wantToInstallJava))==0):
+            wantToInstallJava='n'
 
+        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "+Fore.RESET))
+        if(len(str(wantToInstallUnzip))==0):
+            wantToInstallUnzip='n'
+        global gscCount
+        global memoryGSC
+        global zoneGSC
+        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create [20]: "+Fore.RESET))
+        if(len(str(gscCount))==0):
+            gscCount = '20'
+
+        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC [15g]: "+Fore.RESET))
+        if(len(str(memoryGSC))==0):
+            memoryGSC = '15g'
+
+        zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
+        if(len(str(zoneGSC))==0):
+            zoneGSC = 'bll'
+
+        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
+        if(len(str(sourceDirectoryForJar))==0):
+            sourceDirectoryForJar='/dbagiga'
 
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
@@ -186,13 +213,24 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             host_nic_dict_obj.add(host,'')
         set_value_in_property_file('app.space.hosts',spaceHostConfig)
         #print("hostnic without"+str(host_nic_dict_obj))
-        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
+        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
+        if(len(str(wantNicAddress))==0):
+            wantNicAddress='n'
         if(wantNicAddress=="yes" or wantNicAddress=="y"):
             for host in host_nic_dict_obj:
                 nicAddr = str(input(Fore.YELLOW+"Enter GS_NIC_ADDRESS of space host"+str(host)+" :"+Fore.RESET))
                 logger.debug("host enter:"+host+" nicAddr :"+nicAddr)
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
+
+        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
+        cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        db2jccJarInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc-4.26.14.jar")).replace('[','').replace(']','')
+        db2jccJarInput = sourceDirectoryForJar+'/'+db2jccJarInput
+        db2jccJarLicenseInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
+        db2jccJarLicenseInput=sourceDirectoryForJar+'/'+db2jccJarLicenseInput
+        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -221,9 +259,38 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"8. "+
               Fore.GREEN+"Space hosts = "+Fore.RESET,
               Fore.GREEN+spaceHostConfig.replace('"','')+Fore.RESET)
-        #print(Fore.GREEN+"8. "+
-        #      Fore.GREEN+"Space hosts NIC_ADDRESS= "+Fore.RESET,
-        #      Fore.GREEN+str(host_nic_dict_obj).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"9. "+
+              Fore.GREEN+"Do you want to install Java ? "+Fore.RESET,
+              Fore.GREEN+wantToInstallJava+Fore.RESET)
+        print(Fore.GREEN+"10. "+
+              Fore.GREEN+"Do you want to install Unzip ? "+Fore.RESET,
+              Fore.GREEN+wantToInstallUnzip+Fore.RESET)
+        print(Fore.GREEN+"11. "+
+              Fore.GREEN+"Enter number of GSC to create : "+Fore.RESET,
+              Fore.GREEN+gscCount+Fore.RESET)
+        print(Fore.GREEN+"12. "+
+              Fore.GREEN+"Enter memory required to create GSC : "+Fore.RESET,
+              Fore.GREEN+memoryGSC+Fore.RESET)
+        print(Fore.GREEN+"13. "+
+              Fore.GREEN+"Enter zone to create GSC : "+Fore.RESET,
+              Fore.GREEN+zoneGSC+Fore.RESET)
+        print(Fore.GREEN+"14. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"15. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"16. "+
+              Fore.GREEN+"db2jcc-4.26.14.jar source : "+Fore.RESET,
+              Fore.GREEN+str(db2jccJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"17. "+
+              Fore.GREEN+"db2jcc_license_cu-4.16.53.jar source : "+Fore.RESET,
+              Fore.GREEN+str(db2jccJarLicenseInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"18. "+
+              Fore.GREEN+"DB2 Feeder jars target : "+Fore.RESET,
+              Fore.GREEN+str(db2FeederJarTargetInput).replace('"','')+Fore.RESET)
+
+
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -234,6 +301,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 gsNicAddress = host_nic_dict_obj[host]
                 #print(host+"  "+gsNicAddress)
                 additionalParam=additionalParam+' '+gsNicAddress
+                logger.info("additionalParam - Installation :")
                 logger.info("Building .tar file : tar -cvf install/install.tar install")
                 cmd = 'tar -cvf install/install.tar install'
                 with Spinner():
@@ -241,8 +309,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     logger.info("Creating tar file status : "+str(status))
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')
-                    scp_upload(host, user, 'install/gs.service', '')
-
+                    #scp_upload(host, user, 'install/gs.service', '')
                 cmd = 'tar -xvf install.tar'
                 verboseHandle.printConsoleInfo("Extracting..")
                 logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
@@ -251,12 +318,21 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 verboseHandle.printConsoleInfo(output)
 
                 commandToExecute="scripts/servers_space_install.sh"
-                #print(additionalParam)
+                logger.info("additionalParam : "+str(additionalParam))
                 logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
                 with Spinner():
                     outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                     logger.debug("script output"+str(outputShFile))
                     #print(outputShFile)
+                    #Upload CEF logging jar
+                    scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                    #UPLOAD DB2FEEDER JAR
+                    #if(confirmDb2FeederJar=='y'):
+                    #print("source :"+db2jccJarInput)
+                    scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                    #print("source2 :"+db2jccJarLicenseInput)
+                    scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
                 serverHost=''
                 try:
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)

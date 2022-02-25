@@ -115,7 +115,7 @@ function setGSHome {
     #home_dir=$(pwd)
     #path="export GS_HOME="$home_dir/gigaspaces-${gsType}-enterprise-${gsVersion}
     #rm setenv.sh
-    path="export GS_HOME="$targetDir/gigaspaces-${gsType}-enterprise-${gsVersion}
+    path="export GS_HOME="$targetDir/gigaspaces-smart-ods
     sed -i '/export GS_HOME/d' setenv.sh
     echo "">>setenv.sh
     echo "$path">>setenv.sh
@@ -223,7 +223,7 @@ function installAirGapGS {
    echo $installation_path"/"$installation_file
    pwd
    #sudo -u 'root' -H sh -c "unzip $installation_path"/"$installation_file -d  $targetDir"
-   unzip $installation_path"/"$installation_file -d  $targetDir
+   unzip -qq $installation_path"/"$installation_file -d  $targetDir
 
    # Configure license and additional params to setenv-override and set GS home
     if [ "$gsNicAddress" == "x" ] ; then   # Replaced dummy param with blank and no required to append GS_NIC_ADDR to setenv.over..
@@ -293,7 +293,7 @@ function installAirGapGS {
    fi
    #set GS_HOME to start stop remove Gigaspaces
    cd
-   path="export GS_HOME="$targetDir/$extracted_folder
+   path="export GS_HOME="$targetDir/gigaspaces-smart-ods
    #sed -i '/export GS_HOME/d' $home_dir/setenv.sh
    echo "">>setenv.sh
    echo "$path">>setenv.sh
@@ -302,8 +302,10 @@ function installAirGapGS {
    cd
    # Moving the required files to other folder
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir"
-   sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
-   cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+   if [ ! -f "$targetConfigDir/xap_logging.properties" ]; then                #Condition added on 02Feb22 if file exist dont override it
+     sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
+     cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+   fi
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir"
    if [ ! -f "$targetConfigDir/metrics.xml" ]; then                #Condition added on 20Oct21 if file exist dont override it
     echo "File $targetConfigDir/metrics.xml not exist so copying"
@@ -321,6 +323,9 @@ function installAirGapGS {
    echo $limitContent>>/etc/security/limits.conf
    echo $limitContentSoft>>/etc/security/limits.conf
 
+   cd $targetDir
+   ln -s $extracted_folder gigaspaces-smart-ods
+
    echo "Installation & configuration Gigaspace  -Done!"
 }
 function loadEnv {
@@ -335,29 +340,43 @@ function gsCreateGSServeice {
   chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
-  start_gs_file="start_gs.sh"
-  stop_gs_file="stop_gs.sh"
-  gs_service_file="gs.service"
+  start_gsa_file="start_gsa.sh"
+  start_gsc_file="start_gsc.sh"
+  stop_gsa_file="stop_gsa.sh"
+  stop_gsc_file="stop_gsc.sh"
+  gsa_service_file="gsa.service"
+  gsc_service_file="gsc.service"
 
   home_dir_sh=$(pwd)
   echo "homedir: "$home_dir_sh
   source $home_dir_sh/setenv.sh
   echo "GS_HOME :"$GS_HOME
 
-  #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug journalctl -u gs.service
+  #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
-  echo "$cmd">>$start_gs_file
-  #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug journalctl -u gs.service
+  echo "$cmd">>$start_gsa_file
+  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m '`hostname`'"
+  echo "$cmd">>$start_gsc_file
+
+  #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
-  echo "$cmd">>$stop_gs_file
+  echo "$cmd">>$stop_gsa_file
+  #cmd="$GS_HOME/bin/gs.sh container kill --zones bll;sleep 20;"
+  cmd="ps -ef | grep GSC | grep java | awk '{print $2}' | xargs kill -9"
+  echo "$cmd">>$stop_gsc_file
 
+  #comment GSC requires param in Manager
+  sed -i -e 's|Requires = gsc.service|#Requires = gsc.service|g' $home_dir_sh/install/gs/$gsa_service_file
 
-  mv $home_dir_sh/st*_gs.sh /tmp
-  mv $home_dir_sh/$gs_service_file /tmp
-  mv /tmp/st*_gs.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_gs.sh
-  mv /tmp/gs.service /etc/systemd/system/
-  #sudo -u 'root' -H sh -c "cd /;  mv $home_dir_sh/$stop_gs_file $targetShDir; cd /; cd $targetShDir; chmod +x $stop_gs_file "
+  mv $home_dir_sh/st*_gs*.sh /tmp
+  mv $home_dir_sh/install/gs/$gsa_service_file /tmp
+  mv $home_dir_sh/install/gs/$gsc_service_file /tmp
+  mv /tmp/st*_gs*.sh /usr/local/bin/
+  chmod +x /usr/local/bin/st*_gs*.sh
+  mv /tmp/gs*.service /etc/systemd/system/
+
+  #rm -rf gs.service
+
   #======================================
   #mkdir $GS_HOME/tools/gs-webui/work
   #chmod 777 -R $GS_HOME/tools/gs-webui/work
@@ -368,7 +387,10 @@ function gsCreateGSServeice {
   chmod -R +x /dbagiga
 
   systemctl daemon-reload
-  systemctl enable gs.service
+  systemctl enable $gsa_service_file
+  systemctl enable $gsc_service_file
+
+
   : '
   sudo systemctl daemon-reload
   sudo systemctl start gs.service
@@ -393,7 +415,9 @@ gsLogsConfigFile=$6
 gsLicenseConfig=$7
 applicativeUser=$8
 nofileLimitFile=$9
-gsNicAddress=${10}
+wantInstallJava=${10}
+wantInstallUnzip=${11}
+gsNicAddress=${12}
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts
@@ -403,7 +427,9 @@ echo "param6"$gsLogsConfigFile
 echo "param7"$gsLicenseConfig
 echo "param8"$applicativeUser
 echo "param9"$nofileLimitFile
-echo "param10"$gsNicAddress
+echo "param10"$wantInstallJava
+echo "param11"$wantInstallUnzip
+echo "param12"$gsNicAddress
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else
@@ -411,10 +437,15 @@ else
 fi
 echo "TargetDir:"$targetDir
 if [ $1 == 'true' ]; then
-  echo "Setup AirGapJava"
-  installAirGapJava
-  echo "Setup AirGap unzip"
-  installAirGapUnzip
+
+  if [ "$wantInstallJava" == "y" ]; then
+    echo "Setup AirGapJava"
+    installAirGapJava
+  fi
+  if [ "$wantInstallUnzip" == "y" ]; then
+    echo "Setup AirGap unzip"
+    installAirGapUnzip
+  fi
   echo "Setup AirGap GS InsightEdge "
   installAirGapGS $targetDir
   echo "Load env"

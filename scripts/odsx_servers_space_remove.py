@@ -1,10 +1,11 @@
 #!/usr/bin/env python3
 import os, subprocess, sys, argparse, platform
 from scripts.logManager import LogManager
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput, connectExecuteSSH
+from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list, config_remove_space_nodeByIP
 from colorama import Fore
 from utils.ods_app_config import readValuefromAppConfig
+from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -14,6 +15,28 @@ class bcolors:
     WARNING = '\033[93m'  # YELLOW
     FAIL = '\033[91m'  # RED
     RESET = '\033[0m'  # RESET COLOR
+
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
 
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
@@ -29,6 +52,20 @@ def myCheckArg(args=None):
                         help='Dry run flag',
                         default='false', action='store_true')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
+
+def execute_scriptBuilder(host):
+    logger.info("execute_scriptBuilder(args)")
+    commandToExecute="scripts/servers_space_remove.sh"
+    additionalParam = removeJava+' '+removeUnzip
+    logger.info("additionalParam : "+str(additionalParam))
+    with Spinner():
+        #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)
+        outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+        print(outputShFile)
+        logger.info("Output : scripts/servers_manager_remove.sh :"+str(outputShFile))
+        config_remove_space_nodeByIP(host)
+        logger.debug(str(host)+" has been removed.")
+        verboseHandle.printConsoleInfo(str(host)+" has been removed.")
 
 def exitAndDisplay(isMenuDriven):
     logger.info("exitAndDisplay(isMenuDriven)")
@@ -60,6 +97,8 @@ if __name__ == '__main__':
         #    user="root"
         #logger.info("user :"+str(user))
         user='root'
+        global removeJava
+        global removeUnzip
         streamDict = config_get_space_list_with_status(user)
         serverStartType = str(input(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStartType:"+str(serverStartType))
@@ -69,6 +108,12 @@ if __name__ == '__main__':
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     managerRemove = streamDict.get(optionMainMenu)
+                    removeJava = str(input(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+                    if(len(str(removeJava))==0):
+                        removeJava='n'
+                    removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+                    if(len(str(removeUnzip))==0):
+                        removeUnzip='n'
                     choice = str(input(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
                         choice = str(input(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
@@ -136,8 +181,9 @@ if __name__ == '__main__':
                         logger.info("Arguments"+str(args))
                         args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
                         #print(args)
-                        os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
+                        #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
                         #os.system('python3 scripts/remote_script_exec.py '+args)
+                        execute_scriptBuilder(managerRemove.ip)
                 else:
                     verboseHandle.printConsoleError("please select valid option")
                     optionMainMenu=''
@@ -148,9 +194,15 @@ if __name__ == '__main__':
         elif(serverStartType =='99'):
             logger.info("99")
         else:
-            confirm = str(input(Fore.YELLOW+"Are you sure want to remove all server ? [yes (y)] / [no (n)]"+Fore.RESET))
+            removeJava = str(input(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+            if(len(str(removeJava))==0):
+                removeJava='n'
+            removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+            if(len(str(removeUnzip))==0):
+                removeUnzip='n'
+            confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()
@@ -169,7 +221,8 @@ if __name__ == '__main__':
                     logger.debug('Arguments :'+argsString)
                     argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
                     #print(argsString)
-                    os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
+                    #os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
+                    execute_scriptBuilder(host)
                     logger.info("AFTER")
                     args.remove(menuDrivenFlag)
                     args.remove("--host")
@@ -186,4 +239,5 @@ if __name__ == '__main__':
 
     except Exception as e:
         logger.error("Error while removing space host:"+str(e))
-        verboseHandle.printConsoleError("Invalid argument")
+        verboseHandle.printConsoleError("Invalid argument"+str(e))
+        handleException(e)
