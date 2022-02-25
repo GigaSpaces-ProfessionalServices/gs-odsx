@@ -1,6 +1,6 @@
 [Unit]
-Description="GigaSpaces Service Grid"
-After=network.target
+Description = "GigaSpaces Service Grid"
+After = network.target
 
 [Service]
 Type=simple
@@ -11,4 +11,5 @@ ExecStop=/bin/bash /usr/local/bin/stop_gs.sh
 Restart=always
 
 [Install]
-WantedBy=multi-user.target
+WantedBy = multi-user.target
+

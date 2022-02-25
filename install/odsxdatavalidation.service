@@ -1,0 +1,14 @@
+[Unit]
+Description="Data Validation Service"
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/bin/bash /usr/local/bin/start_data_validation.sh
+ExecStop=/bin/bash /usr/local/bin/stop_data_validation.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
