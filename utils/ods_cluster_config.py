@@ -133,6 +133,10 @@ class DataIntegration:
         self.nodes = nodes
 
 class DataValidation:
+    def __init__(self,resumeMode,nodes):
+        self.resumeMode = resumeMode
+        self.nodes = nodes
+
 class DataEngine:
     def __init__(self,resumeMode,nodes):
         self.resumeMode = resumeMode
@@ -832,6 +836,11 @@ def isDataIntegrationNodeExist(existingNodes, hostIp):
     return "false"
 
 def isDataValidationNodeExist(existingNodes, hostIp):
+    for node in existingNodes:
+        if(str(node.ip)==str(hostIp)):
+            return 'true'
+    return "false"
+
 def isDataEngineNodeExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
