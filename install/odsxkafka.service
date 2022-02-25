@@ -1,14 +1,13 @@
 [Unit]
 Description="Kafka Service"
-After=network.target
+Requires=odsxzookeeper.service
 
 [Service]
 Type=simple
-User=root
-Group=root
+User=gsods
+Group=gsods
 ExecStart=/bin/bash /usr/local/bin/start_kafka.sh
 ExecStop=/bin/bash /usr/local/bin/stop_kafka.sh
-RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

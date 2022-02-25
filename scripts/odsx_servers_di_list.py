@@ -56,14 +56,30 @@ def myCheckArg(args=None):
                         default='false', action='store_true')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+def getKafkaStatus(node):
+    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    cmdList = [ "systemctl status odsxzookeeper" , "systemctl status odsxkafka"]
+    for cmd in cmdList:
+        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
+        logger.info("Getting status.. :"+str(cmd))
+        user = 'root'
+        with Spinner():
+            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            logger.info("output1 : "+str(output))
+            if(output!=0):
+                #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
+                logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+            return output
 
 def getConsolidatedStatus(node):
     output=''
     logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status odsxcr8", "systemctl status telegraf"]
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
-        if(str(node.type)=='Witness' and cmd=='systemctl status odsxcr8'):
+        if(str(node.type)=='kafka Broker 1b' and cmd=='systemctl status odsxzookeeper'):
+            output=0
+        elif(str(node.type)=='Zookeeper Witness' and cmd=='systemctl status odsxkafka'):
             output=0
         else:
             logger.info("Getting status.. :"+str(cmd))
@@ -94,27 +110,48 @@ def roleOfCurrentNode(ip):
 def listDIServers():
     logger.info("listDIServers()")
     host_dict_obj = obj_type_dictionary()
-    dIServers = config_get_dataIntegration_nodes()
+    dIServers = config_get_dataIntegration_nodes("config/cluster.config")
     headers = [Fore.YELLOW+"Sr Num"+Fore.RESET,
                Fore.YELLOW+"Name"+Fore.RESET,
                Fore.YELLOW+"Type"+Fore.RESET,
                Fore.YELLOW+"Resume Mode"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET,
+               Fore.YELLOW+"Kafka Status"+Fore.RESET,
                Fore.YELLOW+"DIRole"+Fore.RESET]
     data=[]
     counter=1
     for node in dIServers:
         host_dict_obj.add(str(counter),str(node.ip))
         output = getConsolidatedStatus(node)
+        kafkaOutput = getKafkaStatus(node)
         role = roleOfCurrentNode(node.ip)
-        if(output==0):
+        if(kafkaOutput==0 and output==0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
                        Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.GREEN+str(role)+Fore.RESET]
+        elif(kafkaOutput==0 and output!=1):
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       Fore.GREEN+node.resumeMode+Fore.RESET,
+                       Fore.GREEN+node.role+Fore.RESET,
+                       Fore.RED+"OFF"+Fore.RESET,
+                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.GREEN+str(role)+Fore.RESET]
+        elif(kafkaOutput!=1 and output==0):
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       Fore.GREEN+node.resumeMode+Fore.RESET,
+                       Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.RED+"OFF"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
@@ -122,6 +159,7 @@ def listDIServers():
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
+                       Fore.RED+"OFF"+Fore.RESET,
                        Fore.RED+"OFF"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         data.append(dataArray)

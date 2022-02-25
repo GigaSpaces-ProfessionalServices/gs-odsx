@@ -30,6 +30,28 @@ class host_dictionary_obj(dict):
     def add(self, key, value):
         self[key] = value
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def getManagerServerDataArray(managerNodes, gs_servers_host_dictionary_obj,dataTable):
     logger.info("getManagerServerDataArray()")
     for node in managerNodes:
@@ -655,3 +677,4 @@ if __name__ == '__main__':
     except Exception as e:
         logger.error("Exception in Menu->Validators"+str(e))
         verboseHandle.printConsoleError("Exception in Menu->Validators"+str(e))
+        handleException(e)

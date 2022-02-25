@@ -26,6 +26,22 @@ def myCheckArg(args=None):
                         default='false', action='store_true')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+def getVersion(ip):
+    logger.info("getVersion () "+str(ip))
+    output=''
+    cmdToExecute = "cd /dbagiga/nb-infra/;./install_nb_infra.sh -v;"
+    with Spinner():
+        output = executeRemoteCommandAndGetOutputPython36(ip, 'root', cmdToExecute)
+    logger.info(cmdToExecute+" :"+str(output))
+    if(output==0):
+        logger.info("cmdToExecute : "+str(cmdToExecute))
+        with Spinner():
+            output = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
+        output=str(output).replace('\n','')
+        logger.info("output : "+str(output))
+    else:
+        output="None"
+    return str(output)
 
 def listNB():
     logger.debug("listing NB servers")
@@ -36,7 +52,9 @@ def listNB():
                Fore.YELLOW+"Host"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
                Fore.YELLOW+"Resume Mode"+Fore.RESET,
-               Fore.YELLOW+"Status"+Fore.RESET]
+               Fore.YELLOW+"Status"+Fore.RESET,
+               Fore.YELLOW+"Version"+Fore.RESET]
+
     data=[]
     #print("==========\t\t=========\t\t==========\t===========")
     for stream in nbServers:
@@ -50,18 +68,21 @@ def listNB():
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(stream.ip, user, cmd)
         logger.info(cmd+" :"+str(output))
+        version = getVersion(stream.ip)
         if(output==0):
             dataArray=[Fore.GREEN+stream.ip+Fore.RESET,
                        Fore.GREEN+stream.name+Fore.RESET,
                        Fore.GREEN+stream.role+Fore.RESET,
                        Fore.GREEN+stream.resumeMode+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET]
+                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.GREEN+version+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+stream.ip+Fore.RESET,
                        Fore.GREEN+stream.name+Fore.RESET,
                        Fore.GREEN+stream.role+Fore.RESET,
                        Fore.GREEN+stream.resumeMode+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET]
+                       Fore.RED+"OFF"+Fore.RESET,
+                       Fore.GREEN+version+Fore.RESET]
         data.append(dataArray)
 
     printTabular(None,headers,data)
