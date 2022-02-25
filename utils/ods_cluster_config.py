@@ -89,7 +89,7 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, resumeMode, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration, dataEngine):
+    def __init__(self, resumeMode, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation):
         self.resumeMode = resumeMode
         self.managers = managers
         self.cdc = cdc
@@ -98,6 +98,7 @@ class AllServers:
         self.grafana = grafana
         self.influxdb = influxdb
         self.dataIntegration = dataIntegration
+        self.dataValidation = dataValidation
         self.dataEngine = dataEngine
 
 class Managers:
@@ -131,6 +132,7 @@ class DataIntegration:
         self.resumeMode = resumeMode
         self.nodes = nodes
 
+class DataValidation:
 class DataEngine:
     def __init__(self,resumeMode,nodes):
         self.resumeMode = resumeMode
@@ -273,6 +275,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     grafana = []
     influxdb = []
     dataIntegration = []
+    dataValidation = []
     dataEngine = []
     if hasattr(config_data.cluster.servers, 'grafana'):
         for node1 in list(config_data.cluster.servers.grafana.node):
@@ -291,6 +294,12 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         dataIntegration = DataIntegration(config_data.cluster.servers.dataIntegration.resumeMode,nodes)
 
     nodes = []
+    if hasattr(config_data.cluster.servers, 'dataValidation'):
+        for node1 in list(config_data.cluster.servers.dataValidation.nodes):
+            nodes.append(Nodes(node1.ip, node1.name, node1.role, node1.resumeMode, node1.type))
+        dataValidation = DataValidation(config_data.cluster.servers.dataValidation.resumeMode,nodes)
+        
+    nodes = []    
     if hasattr(config_data.cluster.servers, 'dataEngine'):
         for node1 in list(config_data.cluster.servers.dataEngine.nodes):
             nodes.append(Nodes1(node1.ip, node1.name, node1.engine, node1.role, node1.resumeMode, node1.type))
@@ -304,7 +313,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
 
     spaces = Spaces(partition, Servers(hosts))
     allservers = AllServers(config_data.cluster.servers.resumeMode, managers, cdc,
-                            nb, spaces, grafana, influxdb, dataIntegration,dataEngine)
+                            nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation)
 
     streams = []
     for stream in list(config_data.cluster.streams):
@@ -804,9 +813,11 @@ def config_get_influxdb_node(filePath='config/cluster.config'):
 def config_get_dataIntegration_nodes(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.dataIntegration.nodes
 
+def config_get_dataValidation_nodes(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.dataValidation.nodes
+
 def config_get_dataEngine_nodes(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.dataEngine.nodes
-
 
 def isInfluxdbNodeExist(existingNodes, hostIp):
     for node in existingNodes:
@@ -820,6 +831,7 @@ def isDataIntegrationNodeExist(existingNodes, hostIp):
             return 'true'
     return "false"
 
+def isDataValidationNodeExist(existingNodes, hostIp):
 def isDataEngineNodeExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
@@ -919,7 +931,51 @@ def config_remove_dataIntegration_byNameIP(dataIntegrationName,dataIntegrationIP
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
 
+def config_add_dataValidation_node(hostIp, hostName, role, resumeMode, type, filePath='config/cluster.config'):
+    logger.info("config_add_dataValidation_node")
+    newNode = Nodes(hostIp, hostName, role, resumeMode,type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.dataValidation.nodes
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isdataValidationNodeExist(existingNodes,hostIp) "+isDataValidationNodeExist(existingNodes,hostIp))
+        if(isDataValidationNodeExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.dataValidation.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
 
+def config_remove_dataValidation_byNameIP(dataValidationName,dataValidationIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_dataValidation_byNameIP () : dataValidationName :"+str(dataValidationName)+" nbIp:"+str(dataValidationIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    dataValidationNodes = config_data.cluster.servers.dataValidation.nodes
+    counter=0
+    for dataValidationNode in dataValidationNodes:
+        logger.info(dataValidationNode.name+" :: "+dataValidationName)
+        if(dataValidationNode.name==dataValidationName and dataValidationNode.role=='dataValidation'):
+            logger.info("dataValidation name : "+dataValidationName+" dataValidation IP:"+dataValidationIP+" has been removed.")
+            dataValidationNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.dataValidation.nodes = dataValidationNodes
+    
 def config_add_dataEngine_node(hostIp, hostName, engine, role, resumeMode, type, filePath='config/cluster.config'):
     logger.info("config_add_dataEngine_node")
     newNode = Nodes1(hostIp, hostName, engine, role, resumeMode,type)

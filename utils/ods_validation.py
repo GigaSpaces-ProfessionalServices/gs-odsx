@@ -50,6 +50,16 @@ def getSpaceServerStatus(host):
     else:
         return "OFF"
 
+def getDataValidationServerStatus(host,port):
+    if(isValidHost(host)):
+        status = port_check(host,port)
+        if(status):
+            return "ON"
+        else:
+            return "OFF"
+    else:
+        return "OFF"
+
 
 def port_check_config(host, port):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
