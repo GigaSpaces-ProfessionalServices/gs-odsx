@@ -320,8 +320,8 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     #usernameSpaceHost = getUsernameByHost(host)
                     #passwordSpaceHost = getPasswordByHost(host)
                     cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
-                    logger.info("cmd : "+str(cmd))
-                    print(str(cmd))
+                    logger.info("security deploy cmd : "+str(cmd))
+                    #print(str(cmd))
                     with Spinner():
                         output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
                     logger.info("Extracting .tar file :"+str(output))
