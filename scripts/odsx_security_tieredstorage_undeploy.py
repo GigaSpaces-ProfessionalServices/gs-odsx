@@ -325,8 +325,8 @@ def removeGSC(managerHost):
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
         cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill --zones "+str(zoneToDeleteGSC)
-        logger.info("cmd : "+str(cmd))
-        print(str(cmd))
+        logger.info("security undeploy cmd : "+str(cmd))
+        #print(str(cmd))
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
             print(output)

@@ -95,7 +95,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
             else:
                 host_gsc_dict_obj.add(id,1)
         logger.info("GSC obj: "+str(host_gsc_dict_obj))
-        print(host_gsc_dict_obj)
+        #print(host_gsc_dict_obj)
     except Exception as e:
         logger.error("Error while retrieving from REST :"+str(e))
     logger.info("host_gsc_dict_obj : "+str(host_gsc_dict_obj))
@@ -140,7 +140,7 @@ def listSpaceServer():
         logger.debug("listing space server")
         logger.info("listSpaceServer()")
         spaceServers = config_get_space_hosts()
-        verboseHandle.printConsoleWarning("Servers -> Space -> List\n")
+        verboseHandle.printConsoleWarning("Menu -> Security -> Space -> List\n")
         headers = [Fore.YELLOW+"IP"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
@@ -168,7 +168,7 @@ def listSpaceServer():
                 logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
                 host_nic_dict_obj.add(server.ip,str(output))
             else:
-                logger.info(" Host :"+str(server.ip)+" is not reachable")
+                logger.info(" Host GSC :"+str(server.ip)+" is not reachable")
 
         logger.info("host_nic_dict_obj : "+str(host_nic_dict_obj))
         for server in spaceServers:
@@ -178,13 +178,14 @@ def listSpaceServer():
             gsc=''
             if (port_check_config(server.ip,22)):
                 status = getStatusOfSpaceHost(str(server.ip))
-                logger.info("status : "+str(status))
-                logger.info("Host:"+str(server.name))
-                print(server.name)
-                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(server.name).__getitem__(0)))
+                logger.info("status GSC : "+str(status))
+                logger.info("Host GSC :"+str(server.name))
+                #print(server.name)
+                gsc = host_gsc_dict_obj.get(str(server.name))
                 logger.info("GSC : "+str(gsc))
             else:
                 status="NOT REACHABLE"
+                #gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(server.name).__getitem__(0)))
                 gsc = host_gsc_dict_obj.get(str(server.name))
                 logger.info(" Host :"+str(server.ip)+" is not reachable")
             #version = getVersion(server.ip)
