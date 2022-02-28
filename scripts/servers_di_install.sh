@@ -1,18 +1,26 @@
+#!/bin/bash
 echo "Starting DI Installation."
 #echo "Extracting install.tar to "$targetDir
-echo " installtelegrafFlag "$1
-echo " kafkaBrokerHost1 "$2" kafkaBrokerHost2 "$3" kafkaBrokerHost3 "$4" witnessHost "$5" counter ID "$6" installtelegrafFlag "$1
+#echo " installtelegrafFlag "$1
+
+echo " kafkaBrokerHost1 "$2" kafkaBrokerHost2 "$3" kafkaBrokerHost3 "$4" witnessHost "$5" counter ID "$6" installtelegrafFlag "$1" baseFolderLocation "$7
 installtelegrafFlag=$1
 kafkaBrokerHost1=$2
 kafkaBrokerHost2=$3
 kafkaBrokerHost3=$4
 witnessHost=$5
 id=$6
-
+baseFolderLocation=$7
+dataFolderKafka=$8
+dataFolderZK=$9
+logsFolderKafka=${10}
+logsFolderZK=${11}
+echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK
 cd /home/dbsh/
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
+echo "">>setenv.sh
 if [[ ${#javaInstalled} -eq 0 ]]; then
   installation_path=$home_dir/install/java
   installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
@@ -21,7 +29,7 @@ if [[ ${#javaInstalled} -eq 0 ]]; then
   rpm -ivh $installation_path"/"$installation_file
   sed -i '/export JAVA_HOME=/d' setenv.sh
   java_home_path="export JAVA_HOME='$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")'"
-  echo "">>setenv.sh
+
   echo "$java_home_path">>setenv.sh
   echo "installAirGapJava -Done!"
 else
@@ -35,16 +43,24 @@ if [[ $id != 4 ]]; then
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.tgz" -printf "%f\n")
     echo "InstallationFile:"$installation_file
-    mkdir -p /opt/Kafka
-    tar -xzf $installation_path"/"$installation_file -C /opt/Kafka
+    mkdir -p $baseFolderLocation
+    mkdir -p $dataFolderKafka
+    mkdir -p $logsFolderKafka
+    tar -xzf $installation_path"/"$installation_file -C $baseFolderLocation
     var=$installation_file
     echo "var"$var
     replace=""
     extracted_folder=${var//'.tgz'/$replace}
     sed -i '/export KAFKAPATH/d' setenv.sh
+    sed -i '/export KAFKA_DATA_PATH/d' setenv.sh
+    sed -i '/export KAFKA_LOGS_PATH/d' setenv.sh
     echo "extracted_folder: "$extracted_folder
-    kafka_home_path="export KAFKAPATH=/opt/Kafka/"$extracted_folder
+    kafka_home_path="export KAFKAPATH="$baseFolderLocation$extracted_folder
     echo "$kafka_home_path">>setenv.sh
+    echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
+    echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
+
+    cp $home_dir"/install/jolokia/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
 fi
 
 #zookeeper setup
@@ -53,13 +69,19 @@ if [[ $id != 2 ]]; then
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.gz" -printf "%f\n")
     echo "InstallationFile:"$installation_file
-    tar -xzf $installation_path"/"$installation_file -C /opt/Kafka
+    mkdir -p $baseFolderLocation
+    mkdir -p $dataFolderZK
+    mkdir -p $logsFolderZK
+    tar -xzf $installation_path"/"$installation_file -C $baseFolderLocation
     var=$installation_file
     echo "var"$var
     replace=""
     extracted_folder=${var//'.tar.gz'/$replace}
-    zk_home_path="export ZOOKEEPERPATH=/opt/Kafka/"$extracted_folder
+    zk_home_path="export ZOOKEEPERPATH="$baseFolderLocation$extracted_folder
     echo "$zk_home_path">>setenv.sh
+    echo "export ZOOKEEPER_DATA_PATH="$dataFolderZK >> setenv.sh
+    echo "export ZOOKEEPER_LOGS_PATH="$logsFolderZK >> setenv.sh
+
 fi
 
 # Configuration of log dir
@@ -69,20 +91,21 @@ echo "kafkaPath :"$KAFKAPATH
 #mkdir -p $KAFKAPATH/log/kafka
 #mkdir -p $KAFKAPATH/log/zookeeper
 
-rm -rf /data/zookeeper/
-rm -rf /data/kafka-logs/
-rm -rf /data/kafka-data/
+rm -rf $dataFolderZK
+rm -rf $logsFolderKafka
+rm -rf $dataFolderKafka
 
 
-mkdir -p /data/zookeeper/
-mkdir -p /data/kafka-logs/
-mkdir -p /data/kafka-data/
+mkdir -p $dataFolderZK
+mkdir -p $logsFolderKafka
+mkdir -p $dataFolderKafka
 
 cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
 
-sed -i -e 's|$ZOOKEEPERPATH/log/kafka|/data/zookeeper/|g' $ZOOKEEPERPATH/conf/zoo.cfg
-sed -i -e 's|/tmp/zookeeper|/data/zookeeper/|g' $ZOOKEEPERPATH/conf/zoo.cfg
-sed -i -e 's|${kafka.logs.dir}|/data/kafka-logs|g' $KAFKAPATH/config/log4j.properties
+sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
+sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
+sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
+sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/config/log4j.properties
 
 if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # removing all existing properties
@@ -117,34 +140,41 @@ if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
     sed -i '/^transaction.state.log.replication.factor/d' $KAFKAPATH/config/server.properties
     sed -i '/^transaction.state.log.min.isr/d' $KAFKAPATH/config/server.properties
     sed -i '/^min.insync.replicas/d' $KAFKAPATH/config/server.properties
+    sed -i '/^exec $base_dir/d' $KAFKAPATH/bin/kafka-server-start.sh
 
     echo "# Internal Topic Settings">>$KAFKAPATH/config/server.properties
     echo "offsets.topic.replication.factor=3">>$KAFKAPATH/config/server.properties
     echo "transaction.state.log.replication.factor=3">>$KAFKAPATH/config/server.properties
     echo "transaction.state.log.min.isr=3">>$KAFKAPATH/config/server.properties
     echo "min.insync.replicas=2">>$KAFKAPATH/config/server.properties
+
+    echo "export JMX_PORT=9999" >> $KAFKAPATH/bin/kafka-server-start.sh
+    echo "export RMI_HOSTNAME=127.0.0.1" >> $KAFKAPATH/bin/kafka-server-start.sh
+    echo 'export KAFKA_JMX_OPTS="-javaagent:'$KAFKAPATH'/libs/jolokia-agent.jar=port=8778,host=$RMI_HOSTNAME -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$RMI_HOSTNAME -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT"' >> $KAFKAPATH/bin/kafka-server-start.sh
+    echo 'exec $base_dir/kafka-run-class.sh $EXTRA_ARGS kafka.Kafka "$@"' >> $KAFKAPATH/bin/kafka-server-start.sh
   fi
   if [[ $id == 1 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$kafkaBrokerHost1':9092|g' $KAFKAPATH/config/server.properties
     sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$kafkaBrokerHost1'' $KAFKAPATH/config/server.properties
   elif [[ $id == 2 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$kafkaBrokerHost2':9092|g' $KAFKAPATH/config/server.properties
-    sed -i '/advertised.listeners=PLAINTEXT/a advertised.host.name='$kafkaBrokerHost2'' $KAFKAPATH/config/server.properties
+    sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$kafkaBrokerHost2'' $KAFKAPATH/config/server.properties
   elif [[ $id == 3 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$kafkaBrokerHost3':9092|g' $KAFKAPATH/config/server.properties
-    sed -i '/advertised.listeners=PLAINTEXT/a advertised.host.name='$kafkaBrokerHost3'' $KAFKAPATH/config/server.properties
+    sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$kafkaBrokerHost3'' $KAFKAPATH/config/server.properties
  # elif [[ $id == 4 ]]; then
  #   sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$witnessHost':9092|g' $KAFKAPATH/config/server.properties
  #   sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$witnessHost'' $KAFKAPATH/config/server.properties
   fi
   if [[ $id != 2 ]]; then
-    echo "$id">/data/zookeeper/myid
+    echo "$dataFolderZK"myid
+    echo "$id">"$dataFolderZK"myid
   fi
   echo "added params"
 fi
 
 #sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
-sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs=/data/kafka-data/|g' $KAFKAPATH/config/server.properties
+sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs='$dataFolderKafka'|g' $KAFKAPATH/config/server.properties
 rm -f /var/log/kafka/*
 start_kafka_file="start_kafka.sh"
 start_zookeeper_file="start_zookeeper.sh"
@@ -206,17 +236,21 @@ if [[ $installtelegrafFlag == "y" ]]; then
   echo "Installation File :"$installation_file
   echo $installation_path"/"$installation_file
   yum install -y $installation_path"/"$installation_file
+  cp $home_dir"/install/jolokia/kafka.conf" /etc/telegraf/telegraf.d/
+  sed -i -e 's|"http://KAFKA_SERVER_IP_ADDRESS:8778/jolokia"|"http://'$kafkaBrokerHost1':8778/jolokia","http://'$kafkaBrokerHost2':8778/jolokia","http://'$kafkaBrokerHost3':8778/jolokia"|g' /etc/telegraf/telegraf.d/kafka.conf
+  sed -i -e 's|":2181"|"'$kafkaBrokerHost1':2181","'$witnessHost':2181","'$kafkaBrokerHost3':2181"|g' /etc/telegraf/telegraf.d/kafka.conf
+
 fi
 
-chown gsods:gsods -R /opt/Kafka/*
-chown gsods:gsods -R /data/kafka-logs
-chown gsods:gsods -R /data/kafka-data
-chown gsods:gsods -R /data/zookeeper
+chown gsods:gsods -R $baseFolderLocation*
+chown gsods:gsods -R $logsFolderKafka
+chown gsods:gsods -R $dataFolderKafka
+chown gsods:gsods -R $dataFolderZK
 
-chmod 777 -R /opt/Kafka/
-chmod 777 -R /data/kafka-logs
-chmod 777 -R /data/kafka-data
-chmod 777 -R /data/zookeeper
+chmod 777 -R $baseFolderLocation
+chmod 777 -R $logsFolderKafka
+chmod 777 -R $dataFolderKafka
+chmod 777 -R $dataFolderZK
 
 sudo service mongod stop
 sudo yum erase $(rpm -qa | grep mongodb-enterprise)
