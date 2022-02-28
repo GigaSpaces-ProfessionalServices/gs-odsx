@@ -130,6 +130,11 @@ def installCluster():
 #    global cr8InstallFlag
     global telegrafInstallFlag
     telegrafInstallFlag="y"
+    global baseFolderLocation
+    global dataFolderKafka
+    global dataFolderZK
+    global logsFolderKafka
+    global logsFolderZK
 
     kafkaBrokerHost1 = str(input(Fore.YELLOW + "Enter kafka broker 1a host  :" + Fore.RESET))
     while (len(kafkaBrokerHost1) == 0):
@@ -151,8 +156,27 @@ def installCluster():
     if (len(str(user)) == 0):
         user = "root"
     logger.info(" user: " + str(user))
+    baseFolderLocation = str(input(Fore.YELLOW + "Enter installation base folder for Kafka and Zookeeper [/opt/Kafka/]:" + Fore.RESET))
+    if (len(str(baseFolderLocation)) == 0):
+        baseFolderLocation = "/opt/Kafka/"
+    dataFolderKafka = str(input(Fore.YELLOW + "Enter data folder for Kafka [/data/kafka-data/]:" + Fore.RESET))
+    if (len(str(dataFolderKafka)) == 0):
+        dataFolderKafka = "/data/kafka-data/"
+    logger.info(" dataFolderKafka: " + str(dataFolderKafka))
+    dataFolderZK = str(input(Fore.YELLOW + "Enter data folder for Zookeeper [/data/zookeeper/]:" + Fore.RESET))
+    if (len(str(dataFolderZK)) == 0):
+        dataFolderZK = "/data/zookeeper/"
+    logger.info(" dataFolderZK: " + str(dataFolderZK))
+    logsFolderKafka = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/data/kafka-logs/]:" + Fore.RESET))
+    if (len(str(logsFolderKafka)) == 0):
+        logsFolderKafka = "/data/kafka-logs/"
+    logger.info(" logsFolderKafka: " + str(logsFolderKafka))
+    logsFolderZK = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/data/zookeeper-logs/]:" + Fore.RESET))
+    if (len(str(logsFolderZK)) == 0):
+        logsFolderZK = "/data/zookeeper-logs/"
+    logger.info(" logsFolderZK: " + str(logsFolderZK))
 
-  #  telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
+    #  telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
   #  logger.info("Selected answer telegraf:" + str(telegrafInstallFlag))
   #  if (telegrafInstallFlag.lower() == "y"):
   #      telegrafInstallFlag = "y"
@@ -223,10 +247,11 @@ def executeCommandForInstall(host, type, count):
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
         if (len(clusterHosts) == 4):
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count)
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)
 
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
+        print(additionalParam)
         with Spinner():
             outputShFile = connectExecuteSSH(host, user, commandToExecute, additionalParam)
             logger.info("outputShFile kafka : " + str(outputShFile))
