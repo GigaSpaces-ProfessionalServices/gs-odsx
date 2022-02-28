@@ -58,11 +58,17 @@ def myCheckArg(args=None):
 
 def getKafkaStatus(node):
     logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxzookeeper" , "systemctl status odsxkafka"]
+    cmdList = ["systemctl status odsxkafka"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
         logger.info("Getting status.. :"+str(cmd))
         user = 'root'
+        if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
+            output=0
+            return output
+        if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
+            output=0
+            return output
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
             logger.info("output1 : "+str(output))
@@ -70,6 +76,28 @@ def getKafkaStatus(node):
                 #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
                 logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
             return output
+
+def getZookeeperStatus(node):
+    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    cmdList = ["systemctl status odsxzookeeper"]
+    for cmd in cmdList:
+        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
+        logger.info("Getting status.. :"+str(cmd))
+        user = 'root'
+        if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
+            output=0
+            return output
+        if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
+            output=0
+            return output
+        with Spinner():
+            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            logger.info("output1 : "+str(output))
+            if(output!=0):
+                #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
+                logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+            return output
+
 
 def getConsolidatedStatus(node):
     output=''
@@ -118,6 +146,7 @@ def listDIServers():
                Fore.YELLOW+"Role"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET,
                Fore.YELLOW+"Kafka Status"+Fore.RESET,
+               Fore.YELLOW+"Zookeeper Status"+Fore.RESET,
                Fore.YELLOW+"DIRole"+Fore.RESET]
     data=[]
     counter=1
@@ -125,33 +154,52 @@ def listDIServers():
         host_dict_obj.add(str(counter),str(node.ip))
         output = getConsolidatedStatus(node)
         kafkaOutput = getKafkaStatus(node)
+        zkOutput = getZookeeperStatus(node)
         role = roleOfCurrentNode(node.ip)
-        if(kafkaOutput==0 and output==0):
+        #print(node.ip)
+        #print(kafkaOutput)
+        #print(zkOutput)
+        #print(output)
+        #print("======")
+        if(kafkaOutput==0 and zkOutput==0 and output==0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.GREEN+"OK"+Fore.RESET,
+                       Fore.GREEN+"OK"+Fore.RESET,
+                       Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
-        elif(kafkaOutput==0 and output!=1):
+        elif(kafkaOutput==0 and zkOutput==0 and output!=0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
+                       Fore.GREEN+"OK"+Fore.RESET,
+                       Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
-        elif(kafkaOutput!=1 and output==0):
+        elif(kafkaOutput!=0 and zkOutput==0 and output!=0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+node.name+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
+                       Fore.GREEN+"OK"+Fore.RESET,
+                       Fore.GREEN+str(role)+Fore.RESET]
+        elif(kafkaOutput==0 and zkOutput!=0 and output!=0):
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       Fore.GREEN+node.resumeMode+Fore.RESET,
+                       Fore.GREEN+node.role+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
+                       Fore.GREEN+"OK"+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
@@ -159,8 +207,9 @@ def listDIServers():
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.resumeMode+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
+                       Fore.RED+"NOK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         data.append(dataArray)
         counter=counter+1
