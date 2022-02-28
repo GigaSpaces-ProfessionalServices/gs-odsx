@@ -11,6 +11,7 @@ mqManager=$8
 queueName=$9
 sslChipherSuite=${10}
 mqPort=${11}
+influxhost=${12}
 
 rootDir='/dbagigasoft'
 #targetDir='/dbagigasoft/Adabas'
@@ -76,6 +77,7 @@ sed -i -e 's|  qManager: SBENAIM|  qManager: '$mqManager'|g' $applicationYml
 sed -i -e 's|  queueName: ACPT.YY.ODS.MATACH_TRANSACTIONS.R|  queueName: '$queueName'|g' $applicationYml
 sed -i -e 's|  sslChipherSuite: TLS_ECDHE_RSA_WITH_AES_128_CBC_SHA256|  sslChipherSuite: '$sslChipherSuite'|g' $applicationYml
 sed -i -e 's|  port: 1414|  port: '$mqPort'|g' $applicationYml
+sed -i -e 's|<influxhost>|'$influxhost'|g' $applicationYml
 
 
 mv $home_dir_sh/$start_adabas_feeder_file /tmp
