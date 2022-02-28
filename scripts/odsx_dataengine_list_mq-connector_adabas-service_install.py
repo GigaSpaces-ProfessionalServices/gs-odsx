@@ -6,7 +6,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
-from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
+from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node, config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 
@@ -186,6 +186,13 @@ def getBootstrapAddress(hostConfig):
     logger.info("getBootstrapAddress : "+str(bootstrapAddress))
     return bootstrapAddress
 
+def getInfluxdbHost():
+    host=''
+    nodeList = config_get_influxdb_node()
+    for host in nodeList:
+        host = host.ip
+    return host
+
 def proceedForInstallation(hostConfig):
     logger.info("proceedForInstallation()")
     confirmInstallation=str(input(Fore.YELLOW+"Are you sure want to proceed for Installation on hosts ["+hostConfig+"] ? (y/n) [y] : "))
@@ -194,8 +201,11 @@ def proceedForInstallation(hostConfig):
         hostList = hostConfig.split(',')
         connectionStr = getConnectionStr(hostConfig)
         bootstrapAddress = getBootstrapAddress(hostConfig)
+        influxdbhost = str(getInfluxdbHost())
+        if(len(influxdbhost)==0):
+            verboseHandle.printConsoleWarning("No influxdb configuration found.")
         additionalParam = ""+targetDir+' '+hostConfig+' '+connectionStr+' '+bootstrapAddress+' '+os.path.basename(sourceAdabasJarFile)
-        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort
+        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort+' '+influxdbhost
         print(additionalParam)
         logger.info("additionalParam : "+str(additionalParam))
         user='root'

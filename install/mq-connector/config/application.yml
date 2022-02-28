@@ -30,13 +30,12 @@ management:
   server:
     port: 8071
   metrics:
+    enable:
+      jvm : false
     export:
       influx:
-        enabled : false
-      statsd:
-        enabled: false
-        flavor: telegraf
-        port: 8125
+        enabled : true
+        url : http://<influxhost>:8086
   endpoints:
     web:
       port: 8071
