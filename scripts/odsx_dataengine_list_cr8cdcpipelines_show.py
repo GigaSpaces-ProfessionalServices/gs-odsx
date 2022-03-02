@@ -3,7 +3,6 @@ import argparse
 import json
 import os
 import sys
-from datetime import datetime
 
 import requests
 
@@ -49,18 +48,19 @@ def show_details(args):
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     configName = pipelineDict.get(selectedOption)
-#    print(configName)
+    #    print(configName)
     try:
         response = requests.get(
             'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getConfigurations/' + configName,
             headers={'Accept': 'application/json'})
         streamConfig = json.loads(response.text)
     except Exception as e:
-        with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-single-test.json',
-                  'r') as myfile:
-            data1 = myfile.read()
-        # parse file
-        streamConfig = json.loads(data1)
+        verboseHandle.printConsoleError("Error occurred")
+        # with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-single-test.json',
+        #          'r') as myfile:
+        #    data1 = myfile.read()
+        ## parse file
+        # streamConfig = json.loads(data1)
 
     verboseHandle.printConsoleWarning("-------------------------------------------")
     verboseHandle.printConsoleInfo("Configuration Name : " + streamConfig["configurationName"])
