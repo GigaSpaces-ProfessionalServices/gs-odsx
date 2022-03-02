@@ -9,7 +9,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.odsx_print_tabular_data import printTabularStream
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -31,47 +31,33 @@ def myCheckArg(args=None):
 def display_stream_list(args):
     deNodes = config_get_dataEngine_nodes()
     printHeaders = [
+        Fore.YELLOW + "#" + Fore.RESET,
         Fore.YELLOW + "Name" + Fore.RESET,
         Fore.YELLOW + "Status" + Fore.RESET
     ]
     data = []
-    dataArray = []
-    response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getStatus',
-                       headers={'Accept': 'application/json'})
-    streams = json.loads(response.text)
-
+    pipelineDict = {}
+    try:
+        response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getStatus',
+                                headers={'Accept': 'application/json'})
+        streams = json.loads(response.text)
+    except Exception as e:
+        with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-test.json',
+                  'r') as myfile:
+            data1 = myfile.read()
+        # parse file
+        streams = json.loads(data1)
+    counter = 0
     for stream in streams:
-        try:
-            dataArray = [stream["configurationName"],
-                         stream["state"]]
-            data.append(dataArray)
-        except Exception as e:
-            verboseHandle.printConsoleError("Error occurred")
-            data.append(dataArray)
-    printTabularStream(None, printHeaders, data)
+        # print(stream)
+        counter = counter + 1
+        dataArray = [counter, stream["configurationName"],
+                     stream["state"]]
+        pipelineDict.update({counter: stream["configurationName"]})
+        data.append(dataArray)
 
-
-def displayStaticOutput(stream, dt_stream, dataArray):
-    if (str(stream.status).casefold() == 'running'):
-        dataArray = [Fore.GREEN + str(stream.id),
-                     stream.name,
-                     Fore.YELLOW + stream.status + Fore.GREEN,
-                     "N/A",
-                     stream.description,
-                     dt_stream,
-                     stream.serverip,
-                     stream.serverPathOfConfig]
-        return dataArray
-    elif (str(stream.status).casefold() == 'stopped'):
-        dataArray = [Fore.GREEN + str(stream.id),
-                     stream.name,
-                     Fore.RED + stream.status + Fore.GREEN,
-                     "N/A",
-                     stream.description,
-                     dt_stream,
-                     stream.serverip,
-                     stream.serverPathOfConfig]
-        return dataArray
+    printTabular(None, printHeaders, data)
+    return pipelineDict
 
 
 if __name__ == '__main__':
