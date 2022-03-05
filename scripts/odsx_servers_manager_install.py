@@ -6,7 +6,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
 from colorama import Fore
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,connectExecuteSSH
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 
@@ -29,6 +29,15 @@ class host_nic_dictionary(dict):
         self[key] = value
 
 host_nic_dict_obj = host_nic_dictionary()
+
+class obj_type_dictionary(dict):
+    # __init__ function
+    def __init__(self):
+        self = dict()
+
+    # Function to add key:value
+    def add(self, key, value):
+        self[key] = value
 
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
@@ -430,6 +439,45 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     except Exception as e:
         handleException(e)
 
+def getPlainOutput(input):
+    input = str(input).replace('\\n','').replace("b'","").replace("'","").replace('"','')
+    return input
+
+def validateRPMS():
+    logger.info("validateRPM()")
+    installerArray = []
+    cmd = "pwd"
+    home = executeLocalCommandAndGetOutput(cmd)
+    home = getPlainOutput(home)
+    logger.info("home dir : " + str(home))
+
+    cmd = 'find ' + str(home) + '/install/java/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    javaRpm = executeLocalCommandAndGetOutput(cmd)
+    javaRpm = getPlainOutput(javaRpm)
+    logger.info("javaRpm found :" + str(javaRpm))
+
+    cmd = 'find ' + str(home) + '/install/unzip/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    unZip = executeLocalCommandAndGetOutput(cmd)
+    unZip = getPlainOutput(unZip)
+    logger.info("unZip found :" + str(unZip))
+
+    cmd = 'find ' + str(home) + '/install/gs/ -name *.zip -printf "%f\n"'  # Checking .zip file on Pivot machine
+    gsZip = executeLocalCommandAndGetOutput(cmd)
+    gsZip = getPlainOutput(gsZip)
+    logger.info("Gigaspace Zip found :" + str(gsZip))
+
+    di_installer_dict = obj_type_dictionary()
+    di_installer_dict.add('Java', javaRpm)
+    di_installer_dict.add('unZip', unZip)
+    di_installer_dict.add('gsZip', gsZip)
+
+    for name, installer in di_installer_dict.items():
+        if (len(str(installer)) == 0):
+            verboseHandle.printConsoleInfo(
+                "Pre-requisite installer " + str(home) + "/install/" + str(name) + " not found")
+            return False
+    return True
+
 if __name__ == '__main__':
     logger.info("odsx_servers_manager_install")
     verboseHandle.printConsoleWarning('Servers -> Manager -> Install')
@@ -439,49 +487,52 @@ if __name__ == '__main__':
     #print('Flag : ',sys.argv[0])
     args.append(sys.argv[0])
     try:
-        if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-            arguments = myCheckArg(sys.argv[1:])
-            if(arguments.dryrun==True):
-                current_os = platform.system().lower()
-                logger.debug("Current OS:"+str(current_os))
-                if current_os == "windows":
-                    parameter = "-n"
-                else:
-                    parameter = "-c"
-                exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                if(exit_code == 0):
-                    verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                    logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                else:
-                    verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                    logger.debug("Unable to connect to server.:"+arguments.host)
-                quit()
-            for arg in sys.argv[1:]:
-                args.append(arg)
-           # print('install :',args)
-        elif(sys.argv[1]==menuDrivenFlag):
-            args.append(menuDrivenFlag)
-            #host = str(input("Enter your host: "))
-            #args.append('--host')
-            #args.append(host)
-            #user = readValuefromAppConfig("app.server.user")
-            user = str(input("Enter your user [root]: "))
-            if(len(str(user))==0):
-                user="root"
-            args.append('-u')
-            args.append(user)
-        hostsConfig = readValuefromAppConfig("app.manager.hosts")
-        args.append('--id')
-        hostsConfig=getHostConfiguration()
-        args = str(args)
-        args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-        args =args+' '+str(hostsConfig)
-        logger.debug('Arguments :'+args)
-        if(config_get_cluster_airgap):
-            execute_ssh_server_manager_install(hostsConfig,user)
-        #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
-        ## Execution script flow diverted to this file hence major changes required and others scripts will going to distrub
-
+        isValidRPMs = validateRPMS()
+        if(isValidRPMs):
+            if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
+                arguments = myCheckArg(sys.argv[1:])
+                if(arguments.dryrun==True):
+                    current_os = platform.system().lower()
+                    logger.debug("Current OS:"+str(current_os))
+                    if current_os == "windows":
+                        parameter = "-n"
+                    else:
+                        parameter = "-c"
+                    exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
+                    if(exit_code == 0):
+                        verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
+                        logger.debug("Connected to server with dryrun mode.!"+arguments.host)
+                    else:
+                        verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
+                        logger.debug("Unable to connect to server.:"+arguments.host)
+                    quit()
+                for arg in sys.argv[1:]:
+                    args.append(arg)
+               # print('install :',args)
+            elif(sys.argv[1]==menuDrivenFlag):
+                args.append(menuDrivenFlag)
+                #host = str(input("Enter your host: "))
+                #args.append('--host')
+                #args.append(host)
+                #user = readValuefromAppConfig("app.server.user")
+                user = str(input("Enter your user [root]: "))
+                if(len(str(user))==0):
+                    user="root"
+                args.append('-u')
+                args.append(user)
+            hostsConfig = readValuefromAppConfig("app.manager.hosts")
+            args.append('--id')
+            hostsConfig=getHostConfiguration()
+            args = str(args)
+            args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+            args =args+' '+str(hostsConfig)
+            logger.debug('Arguments :'+args)
+            if(config_get_cluster_airgap):
+                execute_ssh_server_manager_install(hostsConfig,user)
+            #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
+            ## Execution script flow diverted to this file hence major changes required and others scripts will going to distrub
+        else:
+            pass
     except Exception as e:
         handleException(e)
         logger.error("Invalid argument. "+str(e))

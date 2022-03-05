@@ -355,8 +355,8 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m '`hostname`'"
-  echo "$cmd">>$start_gsc_file
+  #cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m '`hostname`'"
+  #echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
