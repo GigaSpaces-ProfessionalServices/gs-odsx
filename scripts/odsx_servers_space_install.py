@@ -8,6 +8,7 @@ from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
+from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
 from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload
 
@@ -356,49 +357,52 @@ if __name__ == '__main__':
     #print('Flag : ',sys.argv[0])
     args.append(sys.argv[0])
     try:
-        if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-            arguments = myCheckArg(sys.argv[1:])
-            if(arguments.dryrun==True):
-                current_os = platform.system().lower()
-                logger.debug("Current OS:"+str(current_os))
-                if current_os == "windows":
-                    parameter = "-n"
-                else:
-                    parameter = "-c"
-                exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                if(exit_code == 0):
-                    verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                    logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                else:
-                    verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                    logger.debug("Unable to connect to server.:"+arguments.host)
-                quit()
-            for arg in sys.argv[1:]:
-                args.append(arg)
-        # print('install :',args)
-        elif(sys.argv[1]==menuDrivenFlag):
-            args.append(menuDrivenFlag)
-            #host = str(input("Enter your host: "))
-            #args.append('--host')
-            #args.append(host)
-            #user = readValuefromAppConfig("app.server.user")
-            user = str(input("Enter your user [root]: "))
-            if(len(str(user))==0):
-                user="root"
-            args.append('-u')
-            args.append(user)
-        hostsConfig = readValuefromAppConfig("app.manager.hosts")
-        args.append('--id')
-        hostsConfig=getHostConfiguration()
-        args = str(args)
-        args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-        args =args+' '+str(hostsConfig)
-        logger.debug('Arguments :'+args)
-        if(config_get_cluster_airgap):
-            execute_ssh_server_manager_install(hostsConfig,user)
-        #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
-        ## Execution script flow diverted to this file hence major changes required and others scripts will going to distrub
-
+        isValidRPMs = validateRPMS()
+        if(isValidRPMs):
+            if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
+                arguments = myCheckArg(sys.argv[1:])
+                if(arguments.dryrun==True):
+                    current_os = platform.system().lower()
+                    logger.debug("Current OS:"+str(current_os))
+                    if current_os == "windows":
+                        parameter = "-n"
+                    else:
+                        parameter = "-c"
+                    exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
+                    if(exit_code == 0):
+                        verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
+                        logger.debug("Connected to server with dryrun mode.!"+arguments.host)
+                    else:
+                        verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
+                        logger.debug("Unable to connect to server.:"+arguments.host)
+                    quit()
+                for arg in sys.argv[1:]:
+                    args.append(arg)
+            # print('install :',args)
+            elif(sys.argv[1]==menuDrivenFlag):
+                args.append(menuDrivenFlag)
+                #host = str(input("Enter your host: "))
+                #args.append('--host')
+                #args.append(host)
+                #user = readValuefromAppConfig("app.server.user")
+                user = str(input("Enter your user [root]: "))
+                if(len(str(user))==0):
+                    user="root"
+                args.append('-u')
+                args.append(user)
+            hostsConfig = readValuefromAppConfig("app.manager.hosts")
+            args.append('--id')
+            hostsConfig=getHostConfiguration()
+            args = str(args)
+            args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+            args =args+' '+str(hostsConfig)
+            logger.debug('Arguments :'+args)
+            if(config_get_cluster_airgap):
+                execute_ssh_server_manager_install(hostsConfig,user)
+            #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
+            ## Execution script flow diverted to this file hence major changes required and others scripts will going to distrub
+        else:
+            pass
     except Exception as e:
         handleException(e)
 
