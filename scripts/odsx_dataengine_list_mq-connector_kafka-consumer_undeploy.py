@@ -170,15 +170,16 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["name"]+Fore.RESET,
-                         Fore.GREEN+data["resource"]+Fore.RESET,
-                         Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                         Fore.GREEN+data["processingUnitType"]+Fore.RESET
-                         ]
-            gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-            counter=counter+1
-            dataTable.append(dataArray)
+            if(str(data["name"]).casefold().__contains__('consumer')):
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+data["resource"]+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+data["processingUnitType"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:
