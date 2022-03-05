@@ -243,9 +243,9 @@ def createGSCInputParam(managerHost,spaceNode):
         zoneGSC='adsCons'
     logger.info("zoneGSC :"+str(zoneGSC))
 
-    memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [12g] : "+Fore.RESET))
+    memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
     while(len(str(memoryGSC))==0):
-        memoryGSC='12g'
+        memoryGSC='1g'
     dPipelineSourceConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.source")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     dPipelineLocationSourceInput = str(input(Fore.YELLOW+"Enter -Dpipeline.config.location source ["+str(dPipelineSourceConfig)+"] : "+Fore.RESET))
     if(len(str(dPipelineLocationSourceInput))==0):
@@ -353,7 +353,7 @@ def displaySummaryOfInputParam():
     if(confirmCreateGSC=='y'):
         verboseHandle.printConsoleWarning("Enter number of GSCs per host :"+str(numberOfGSC))
         verboseHandle.printConsoleWarning("Enter zone of GSC to create :"+zoneGSC)
-        verboseHandle.printConsoleWarning("Enter memory of GSC [12g] :"+memoryGSC)
+        verboseHandle.printConsoleWarning("Enter memory of GSC [1g] :"+memoryGSC)
         verboseHandle.printConsoleWarning("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
         verboseHandle.printConsoleWarning("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
     verboseHandle.printConsoleWarning("Name of resource will be deploy : "+resource)
