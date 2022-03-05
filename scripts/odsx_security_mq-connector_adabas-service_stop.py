@@ -146,7 +146,7 @@ def stopAdabusService(args):
             executeService(host)
         elif(len(str(inputChoice))==0):
             nodes = getDEServerHostList()
-            choice = str(input(Fore.YELLOW + "Are you sure, you want to stop adabus service for [" + str(
+            choice = str(input(Fore.YELLOW + "Are you sure, you want to stop adabas service for [" + str(
                 nodes) + "] ? (y/n) [y]: " + Fore.RESET))
             if choice.casefold() == 'n':
                 exit(0)

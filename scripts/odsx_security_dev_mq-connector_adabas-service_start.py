@@ -152,7 +152,7 @@ def startAdabusService(args):
             if len(nodes) == 0:
                 verboseHandle.printConsoleError("Adabas Service not installed on any host")
             else:
-                choice = str(input(Fore.YELLOW + "Are you sure, you want to start adabus service for [" + str(
+                choice = str(input(Fore.YELLOW + "Are you sure, you want to start adabas service for [" + str(
                     nodes) + "] ? (y/n) [y]: " + Fore.RESET))
                 if choice.casefold() == 'n':
                     exit(0)
