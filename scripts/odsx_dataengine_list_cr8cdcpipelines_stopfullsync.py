@@ -51,14 +51,14 @@ def stopStream(args):
         cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl stop " + configName
         output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
         verboseHandle.printConsoleInfo(str(output))
-        if str(output).text.__contains__("stop"):
+        if str(output).contains("stop"):
             verboseHandle.printConsoleInfo("Stopped full sync " + configName)
         else:
             verboseHandle.printConsoleInfo("Failed to stop full sync " + configName)
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> Stop online stream')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> Stop Full sync')
     try:
         args = []
         args = myCheckArg()

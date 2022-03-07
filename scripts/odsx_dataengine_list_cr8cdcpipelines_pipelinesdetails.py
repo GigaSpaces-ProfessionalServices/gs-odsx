@@ -66,12 +66,17 @@ def show_details(args):
                 streamConfig = json.loads(data1)
 
             verboseHandle.printConsoleWarning("-------------------------------------------")
-            verboseHandle.printConsoleInfo("Configuration Name : " + streamConfig["configurationName"])
-            verboseHandle.printConsoleInfo("Source Db Type : " + streamConfig["sourceDbType"])
-            verboseHandle.printConsoleInfo("Target Db Type : " + streamConfig["targetDBType"])
-            verboseHandle.printConsoleInfo("State : " + streamConfig["state"])
-            verboseHandle.printConsoleInfo("State Timestamp : " + str(streamConfig["stateTimeStamp"]))
-            verboseHandle.printConsoleInfo("isValidTimeStamp : " + str(streamConfig["isValidTimeStamp"]))
+            verboseHandle.printConsoleDebug("Source : ")
+            verboseHandle.printConsoleInfo("Name : " + streamConfig["name"])
+            verboseHandle.printConsoleInfo("DB Type : " + streamConfig["basicProperties"]["source"]["dBType"])
+            verboseHandle.printConsoleInfo("Host : " + streamConfig["basicProperties"]["source"]["host"])
+            verboseHandle.printConsoleInfo("Port : " + streamConfig["basicProperties"]["source"]["port"])
+            verboseHandle.printConsoleInfo("Service Name : " + streamConfig["basicProperties"]["source"]["serviceName"])
+            verboseHandle.printConsoleInfo("Username : " + streamConfig["basicProperties"]["source"]["username"])
+            verboseHandle.printConsoleDebug("Target : ")
+            verboseHandle.printConsoleInfo("DB Type : " + streamConfig["basicProperties"]["target"]["dBType"])
+            verboseHandle.printConsoleInfo("Host : " + streamConfig["basicProperties"]["target"]["host"])
+            verboseHandle.printConsoleInfo("Kafka Topic : " + streamConfig["basicProperties"]["target"]["kafkaTopic"])
             verboseHandle.printConsoleWarning("-------------------------------------------")
 
 

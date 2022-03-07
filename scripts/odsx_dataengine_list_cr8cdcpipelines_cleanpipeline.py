@@ -3,10 +3,11 @@ import argparse
 import os
 import sys
 
+import requests
+
 from scripts.logManager import LogManager
 from scripts.odsx_dataengine_list_cr8cdcpipelines_list import display_stream_list
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -41,27 +42,27 @@ def handleException(e):
     })))
 
 
-def startStream(args):
+def validate(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     if (selectedOption != 99):
         configName = pipelineDict.get(selectedOption)
-        user = 'root'
-        cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName
-        output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
-        verboseHandle.printConsoleInfo(str(output))
-        if str(output).contains("start"):
-            verboseHandle.printConsoleInfo("Started full sync " + configName)
+        response = requests.delete(
+            'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/cleanConfigurationEnv/' + configName)
+        logger.info(str(response.status_code))
+        logger.info(str(response.text))
+        if response.status_code == 200:
+            verboseHandle.printConsoleInfo("Cleaned Pipeline Successful")
         else:
-            verboseHandle.printConsoleInfo("Failed to start full sync " + configName)
+            verboseHandle.printConsoleInfo("Failed to clean Pipeline")
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> Start Full sync')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> Clean pipeline')
     try:
         args = []
         args = myCheckArg()
-        startStream(args)
+        validate(args)
     except Exception as e:
         handleException(e)
