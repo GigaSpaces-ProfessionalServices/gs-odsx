@@ -37,17 +37,18 @@ def display_stream_list(args):
     ]
     data = []
     pipelineDict = {}
+    global streams
     try:
         response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getStatus',
                                 headers={'Accept': 'application/json'})
         streams = json.loads(response.text)
     except Exception as e:
         verboseHandle.printConsoleError("Error occurred")
-        # with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-test.json',
-        #          'r') as myfile:
-        #    data1 = myfile.read()
+        with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-test.json',
+                  'r') as myfile:
+            data1 = myfile.read()
         # parse file
-        # streams = json.loads(data1)
+        streams = json.loads(data1)
     counter = 0
     for stream in streams:
         # print(stream)
