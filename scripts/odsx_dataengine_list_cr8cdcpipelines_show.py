@@ -44,36 +44,39 @@ def handleException(e):
 
 
 def show_details(args):
-    deNodes = config_get_dataEngine_nodes()
+    deNodes = config_get_dataEngine_nodes("config/cluster.config")
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
-    configName = pipelineDict.get(selectedOption)
-    #    print(configName)
-    try:
-        response = requests.get(
-            'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getConfigurations/' + configName,
-            headers={'Accept': 'application/json'})
-        streamConfig = json.loads(response.text)
-    except Exception as e:
-        verboseHandle.printConsoleError("Error occurred")
-        # with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-single-test.json',
-        #          'r') as myfile:
-        #    data1 = myfile.read()
-        ## parse file
-        # streamConfig = json.loads(data1)
+    streamConfig = ""
+    if(selectedOption != 99):
+        if selectedOption in pipelineDict:
+            configName = pipelineDict.get(selectedOption)
+            print(configName)
+            try:
+                response = requests.get(
+                    'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getConfigurations/' + configName,
+                    headers={'Accept': 'application/json'})
+                streamConfig = json.loads(response.text)
+            except Exception as e:
+                verboseHandle.printConsoleError("Error occurred")
+                with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-single-test.json',
+                         'r') as myfile:
+                   data1 = myfile.read()
+                # parse file
+                streamConfig = json.loads(data1)
 
-    verboseHandle.printConsoleWarning("-------------------------------------------")
-    verboseHandle.printConsoleInfo("Configuration Name : " + streamConfig["configurationName"])
-    verboseHandle.printConsoleInfo("Source Db Type : " + streamConfig["sourceDbType"])
-    verboseHandle.printConsoleInfo("Target Db Type : " + streamConfig["targetDBType"])
-    verboseHandle.printConsoleInfo("State : " + streamConfig["state"])
-    verboseHandle.printConsoleInfo("State Timestamp : " + str(streamConfig["stateTimeStamp"]))
-    verboseHandle.printConsoleInfo("isValidTimeStamp : " + str(streamConfig["isValidTimeStamp"]))
-    verboseHandle.printConsoleWarning("-------------------------------------------")
+            verboseHandle.printConsoleWarning("-------------------------------------------")
+            verboseHandle.printConsoleInfo("Configuration Name : " + streamConfig["configurationName"])
+            verboseHandle.printConsoleInfo("Source Db Type : " + streamConfig["sourceDbType"])
+            verboseHandle.printConsoleInfo("Target Db Type : " + streamConfig["targetDBType"])
+            verboseHandle.printConsoleInfo("State : " + streamConfig["state"])
+            verboseHandle.printConsoleInfo("State Timestamp : " + str(streamConfig["stateTimeStamp"]))
+            verboseHandle.printConsoleInfo("isValidTimeStamp : " + str(streamConfig["isValidTimeStamp"]))
+            verboseHandle.printConsoleWarning("-------------------------------------------")
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> List')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> Show')
     try:
         args = []
         args = myCheckArg()
