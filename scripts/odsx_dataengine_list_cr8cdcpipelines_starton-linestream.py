@@ -51,10 +51,11 @@ def startStream(args):
     if (selectedOption != 99):
         configName = pipelineDict.get(selectedOption)
         response = requests.get(
-            'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/start/' + configName,
-            headers={'Accept': 'application/json'})
+            'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/start/' + configName)
         logger.info(str(response.status_code))
+        print(str(response.status_code))
         logger.info(str(response.text))
+        print(str(response.text))
         if response.status_code == 200 and response.text.__contains__("started"):
             verboseHandle.printConsoleInfo("Started online stream " + configName)
         else:
