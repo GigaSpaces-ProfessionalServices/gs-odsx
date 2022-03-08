@@ -48,7 +48,7 @@ def show_details(args):
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     streamConfig = ""
-    if(selectedOption != 99):
+    if (selectedOption != 99):
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)
             print(configName)
@@ -59,9 +59,10 @@ def show_details(args):
                 streamConfig = json.loads(response.text)
             except Exception as e:
                 verboseHandle.printConsoleError("Error occurred")
-                with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-single-test.json',
-                         'r') as myfile:
-                   data1 = myfile.read()
+                with open(
+                        '/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-single-test.json',
+                        'r') as myfile:
+                    data1 = myfile.read()
                 # parse file
                 streamConfig = json.loads(data1)
 
@@ -73,7 +74,7 @@ def show_details(args):
             verboseHandle.printConsoleInfo("Port : " + streamConfig["basicProperties"]["source"]["port"])
             verboseHandle.printConsoleInfo("Service Name : " + streamConfig["basicProperties"]["source"]["serviceName"])
             verboseHandle.printConsoleInfo("Username : " + streamConfig["basicProperties"]["source"]["username"])
-            verboseHandle.printConsoleDebug("Target : ")
+            verboseHandle.printConsoleDebug("Destination : ")
             verboseHandle.printConsoleInfo("DB Type : " + streamConfig["basicProperties"]["target"]["dBType"])
             verboseHandle.printConsoleInfo("Host : " + streamConfig["basicProperties"]["target"]["host"])
             verboseHandle.printConsoleInfo("Kafka Topic : " + streamConfig["basicProperties"]["target"]["kafkaTopic"])
