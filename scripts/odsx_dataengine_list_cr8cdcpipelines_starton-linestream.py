@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 import argparse
-import json
 import os
 import sys
 
@@ -9,7 +8,6 @@ import requests
 from scripts.logManager import LogManager
 from scripts.odsx_dataengine_list_cr8cdcpipelines_list import display_stream_list
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

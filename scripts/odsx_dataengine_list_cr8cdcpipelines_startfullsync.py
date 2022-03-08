@@ -6,7 +6,7 @@ import sys
 from scripts.logManager import LogManager
 from scripts.odsx_dataengine_list_cr8cdcpipelines_list import display_stream_list
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -48,10 +48,14 @@ def startStream(args):
     if (selectedOption != 99):
         configName = pipelineDict.get(selectedOption)
         user = 'root'
-        cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName
-        output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
-        verboseHandle.printConsoleInfo(str(output))
-        if str(output).contains("start"):
+        scriptUser = 'dbsh'
+        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName + "'"
+        output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+        print(str(output))
+        # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName
+        # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
+        # verboseHandle.printConsoleInfo(str(output))
+        if str(output).__contains__("start"):
             verboseHandle.printConsoleInfo("Started full sync " + configName)
         else:
             verboseHandle.printConsoleInfo("Failed to start full sync " + configName)
