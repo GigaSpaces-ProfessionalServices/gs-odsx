@@ -49,7 +49,7 @@ def stopStream(args):
         configName = pipelineDict.get(selectedOption)
         user = 'root'
         scriptUser = 'dbsh'
-        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl stop " + configName + "'"
+        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl stop " + configName + "'"
         output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
         print(str(output))
         # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl stop " + configName
@@ -58,7 +58,7 @@ def stopStream(args):
         if str(output).__contains__("stop"):
             verboseHandle.printConsoleInfo("Stopped full sync " + configName)
         else:
-            verboseHandle.printConsoleInfo("Failed to stop full sync " + configName)
+            verboseHandle.printConsoleError("Failed to stop full sync " + configName)
 
 
 if __name__ == '__main__':

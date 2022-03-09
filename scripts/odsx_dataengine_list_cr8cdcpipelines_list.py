@@ -33,7 +33,11 @@ def display_stream_list(args):
     printHeaders = [
         Fore.YELLOW + "#" + Fore.RESET,
         Fore.YELLOW + "Name" + Fore.RESET,
-        Fore.YELLOW + "Status" + Fore.RESET
+        Fore.YELLOW + "Status" + Fore.RESET,
+        Fore.YELLOW + "Rows Completed" + Fore.RESET,
+        Fore.YELLOW + "Time Completed" + Fore.RESET,
+        Fore.YELLOW + "Work Completed (%)" + Fore.RESET,
+        Fore.YELLOW + "Progress Update Time" + Fore.RESET
     ]
     data = []
     pipelineDict = {}
@@ -52,9 +56,17 @@ def display_stream_list(args):
     counter = 0
     for stream in streams:
         # print(stream)
+        response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getFullSyncProgress/' + str(
+            stream["configurationName"]))
+        streamSyncData = json.loads(response.text)
+        print(str(streamSyncData))
         counter = counter + 1
+        state = Fore.GREEN + "RUNNING" + Fore.RESET
+        if str(stream["state"]).upper() == "STOPPED":
+            state = Fore.RED + "STOPPED" + Fore.RESET
         dataArray = [counter, stream["configurationName"],
-                     stream["state"]]
+                     state, streamSyncData["rowsCompleted"], streamSyncData["timeCompleted"],
+                     streamSyncData["pctWorkCompleted"], streamSyncData["progressUpdateTime"]]
         pipelineDict.update({counter: stream["configurationName"]})
         data.append(dataArray)
 

@@ -63,7 +63,7 @@ def validate(args):
         if str(output).__contains__('true'):
             verboseHandle.printConsoleInfo("Validation Successful")
         else:
-            verboseHandle.printConsoleInfo("Validation Failed")
+            verboseHandle.printConsoleError("Validation Failed")
 
 
 if __name__ == '__main__':
