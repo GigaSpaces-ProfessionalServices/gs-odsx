@@ -52,10 +52,10 @@ def stopStream(args):
             'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/stop/' + configName)
         logger.info(str(response.status_code))
         logger.info(str(response.text))
-        if response.status_code == 200 and response.text.__contains__("stopped"):
+        if response.status_code == 200 and response.text.__contains__("has been killed"):
             verboseHandle.printConsoleInfo("Stopped online stream " + configName)
         else:
-            verboseHandle.printConsoleInfo("Failed to stop stream " + configName)
+            verboseHandle.printConsoleError("Failed to stop stream " + configName)
 
 
 if __name__ == '__main__':

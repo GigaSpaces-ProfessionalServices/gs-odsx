@@ -57,7 +57,7 @@ def startStream(args):
         if response.status_code == 200 and response.text.__contains__("started"):
             verboseHandle.printConsoleInfo("Started online stream " + configName)
         else:
-            verboseHandle.printConsoleInfo("Failed to start stream " + configName)
+            verboseHandle.printConsoleError("Failed to start stream " + configName)
 
 
 if __name__ == '__main__':
