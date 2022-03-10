@@ -380,7 +380,7 @@ def proceedForGSCRemove():
 
 if __name__ == '__main__':
     logger.info("odsx_tieredstorage_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> List -> MQ-Connector -> Kafka consumer -> UnDeploy")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> MQ-Connector -> Kafka consumer -> UnDeploy")
     try:
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):

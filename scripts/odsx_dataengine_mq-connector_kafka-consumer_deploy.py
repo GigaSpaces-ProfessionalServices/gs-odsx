@@ -426,7 +426,7 @@ def proceedToDeployPUInputParam(managerHost):
         return
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> List -> MQ-Connector -> Kafka consumer -> Deploy')
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> MQ-Connector -> Kafka consumer -> Deploy')
     try:
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))

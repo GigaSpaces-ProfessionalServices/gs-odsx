@@ -159,7 +159,7 @@ def stopAdabusService(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Data Engine -> List -> MQ Connector -> Adabas Service -> Stop")
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> MQ Connector -> Adabas Service -> Stop")
     args = []
     args = myCheckArg()
     stopAdabusService(args)

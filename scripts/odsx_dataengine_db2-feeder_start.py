@@ -139,8 +139,8 @@ def proceedToStartDB2Feeder(fileNumberToStart):
     #print(output)
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_list_db2-feeder_start")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> List -> DB2-Feeder -> Start")
+    logger.info("odsx_dataengine_db2-feeder_start")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> DB2-Feeder -> Start")
     try:
         displayDB2FeederShFiles()
         inputParam()

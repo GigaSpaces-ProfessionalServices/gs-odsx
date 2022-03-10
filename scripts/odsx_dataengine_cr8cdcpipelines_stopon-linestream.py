@@ -1,12 +1,10 @@
 #!/usr/bin/env python3
 import argparse
-import datetime
 import json
 import os
 import sys
 
 import requests
-from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
@@ -91,8 +89,6 @@ def display_stream_list(args):
         dataArray = [counter, streamSyncData["streamStatus"]["name"],
                      streamSyncData["isRunning"], streamSyncData["streamStatus"]["state"], dateTime]
         pipelineDict.update({counter: stream["configurationName"]})
-        datetime1 = datetime.datetime.fromtimestamp(streamSyncData["streamStatus"]["stateTimeStamp"])
-        print(datetime1)
 
         data.append(dataArray)
 
@@ -100,29 +96,27 @@ def display_stream_list(args):
     return pipelineDict
 
 
-def startStream(args):
+def stopStream(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     if (selectedOption != 99):
         configName = pipelineDict.get(selectedOption)
         response = requests.get(
-            'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/start/' + configName)
+            'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/stop/' + configName)
         logger.info(str(response.status_code))
-        print(str(response.status_code))
         logger.info(str(response.text))
-        print(str(response.text))
-        if response.status_code == 200 and response.text.__contains__("started"):
-            verboseHandle.printConsoleInfo("Started online stream " + configName)
+        if response.status_code == 200 and response.text.__contains__("has been killed"):
+            verboseHandle.printConsoleInfo("Stopped online stream " + configName)
         else:
-            verboseHandle.printConsoleError("Failed to start stream " + configName)
+            verboseHandle.printConsoleError("Failed to stop stream " + configName)
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> Start online stream')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Stop online stream')
     try:
         args = []
         args = myCheckArg()
-        startStream(args)
+        stopStream(args)
     except Exception as e:
         handleException(e)

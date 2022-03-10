@@ -286,7 +286,7 @@ def addNodeToCluster(nodes):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 -> Install')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 -> Install')
     try:
         if (validateRPM()):
             deServerType = getDEServerTypeInstall()

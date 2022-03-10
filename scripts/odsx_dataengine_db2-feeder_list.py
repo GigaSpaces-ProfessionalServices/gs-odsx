@@ -143,8 +143,8 @@ def listDeployed(managerHost):
         handleException(e)
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_list_db2-feeder_list")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> List -> DB2-Feeder -> List")
+    logger.info("odsx_dataengine_db2-feeder_list")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> DB2-Feeder -> List")
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
