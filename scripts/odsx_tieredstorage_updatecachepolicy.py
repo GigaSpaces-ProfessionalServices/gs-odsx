@@ -224,11 +224,11 @@ def listUpdatedGSCStatus(display):
             updatedDescription='NONE'
             if(spaceIdResponseCodeDict.__contains__(str(data["id"]))):
                 spaceIdResponseCode = spaceIdResponseCodeDict.get(str(data["id"]))
-                if(str(spaceIdResponseCode).isdigit()):
-                    updatedStatus = validateResponse(spaceIdResponseCode)
-                    updatedDescription = validateResponseGetDescription(spaceIdResponseCode)
-                else:
-                    updatedDescription= spaceIdResponseCodeDict.get(str(data["id"]))
+                #if(str(spaceIdResponseCode).isdigit()):
+                updatedStatus = validateResponse(spaceIdResponseCode)
+                updatedDescription = validateResponseGetDescription(spaceIdResponseCode)
+                #else:
+                #    updatedDescription= spaceIdResponseCodeDict.get(str(data["id"]))
             if((counter+1)%2==0): # To display containers based on couple instead of each incremental
                 dataArray = [
                     Fore.GREEN+str('')+Fore.RESET,
@@ -329,22 +329,18 @@ def proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate):
         logger.info("newbackUpRestartresponse.content : "+str(newbackUpRestartresponse.content))
         backUPResponseCode = str(newbackUpRestartresponse.content.decode('utf-8'))
         logger.info("backUPResponseCode : "+str(backUPResponseCode))
-        if(backUPResponseCode.isdigit()):
-            status = validateResponse(backUPResponseCode)
-            with Spinner():
-                while(status.casefold() != 'successful'):
-                    time.sleep(2)
-                    status = validateResponse(backUPResponseCode)
-                    logger.info("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                    #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                    verboseHandle.printConsoleInfo("SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                Status : "+str(status))
-                    loggerTiered.info("SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                Status : "+str(status))
-            verboseHandle.printConsoleInfo(" SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                  Status : "+str(status))
-            loggerTiered.info("SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                  Status : "+str(status))
-        else:
-            logger.info("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(backUPResponseCode))
-            verboseHandle.printConsoleInfo("spaceID Restart        :"+str(spaceIdToBeRestarted)+"               Status : "+str(backUPResponseCode))
-            loggerTiered.info("spaceID Restart        :"+str(spaceIdToBeRestarted)+"               Status : "+str(backUPResponseCode))
+        status = validateResponse(backUPResponseCode)
+        with Spinner():
+            while(status.casefold() != 'successful'):
+                time.sleep(2)
+                status = validateResponse(backUPResponseCode)
+                logger.info("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                verboseHandle.printConsoleInfo("SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                Status : "+str(status))
+                loggerTiered.info("SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                Status : "+str(status))
+        verboseHandle.printConsoleInfo(" SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                  Status : "+str(status))
+        loggerTiered.info("SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                  Status : "+str(status))
+
         with Spinner():
             verboseHandle.printConsoleInfo("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
             loggerTiered.info("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
@@ -373,22 +369,18 @@ def proceedForDemotePrimaryContainer(gscNumberToBeRollingUpdate):
         primaryDemoteResponseCode = str(primaryDemoteResponse.content.decode('utf-8'))
         with Spinner():
             time.sleep(5)
-        if(primaryDemoteResponseCode.isdigit()):
-            status = validateResponse(primaryDemoteResponseCode)
-            with Spinner():
-                while(status.casefold() != 'successful'):
-                    time.sleep(2)
-                    status = validateResponse(primaryDemoteResponseCode)
-                    #verboseHandle.printConsoleInfo("Demote :"+str(spaceIdToBeDemoted)+" Status :"+str(status))
-                    verboseHandle.printConsoleInfo("Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
-                    loggerTiered.info("Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
-            #verboseHandle.printConsoleInfo("Demote :"+str(spaceIdToBeDemoted)+" Status :"+str(status))
-            verboseHandle.printConsoleInfo(" Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
-            loggerTiered.info("Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
-        else:
-            logger.info("Demote :"+str(spaceIdToBeDemoted)+" Status :"+str(primaryDemoteResponseCode))
-            verboseHandle.printConsoleInfo("Demote :"+str(spaceIdToBeDemoted)+" Status :"+str(primaryDemoteResponseCode))
-            loggerTiered.info("Demote :"+str(spaceIdToBeDemoted)+" Status :"+str(primaryDemoteResponseCode))
+
+        status = validateResponse(primaryDemoteResponseCode)
+        with Spinner():
+            while(status.casefold() != 'successful'):
+                time.sleep(2)
+                status = validateResponse(primaryDemoteResponseCode)
+                #verboseHandle.printConsoleInfo("Demote :"+str(spaceIdToBeDemoted)+" Status :"+str(status))
+                verboseHandle.printConsoleInfo("Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
+                loggerTiered.info("Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
+        #verboseHandle.printConsoleInfo("Demote :"+str(spaceIdToBeDemoted)+" Status :"+str(status))
+        verboseHandle.printConsoleInfo(" Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
+        loggerTiered.info("Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
         with Spinner():
             verboseHandle.printConsoleInfo("Waiting for partition become healthy..."+str(demoteSleeptime)+"s")
             loggerTiered.info("Waiting for partition become healthy..."+str(demoteSleeptime)+"s")
@@ -425,23 +417,18 @@ def proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate):
         backUpIndividualGSCRestartresponse = requests.post("http://"+str(managerHostConfig)+":8090/v2/containers/"+str(backupContainerId)+"/restart",headers=requestHeader)
         logger.info("backUpIndividualGSCRestartresponse : "+str(backUpIndividualGSCRestartresponse.content))
         backUPRestartResponseCode = str(backUpIndividualGSCRestartresponse.content.decode('utf-8'))
-        if(backUPRestartResponseCode.isdigit()):
-            status = validateResponse(backUPRestartResponseCode)
-            with Spinner():
-                while(status.casefold() != 'successful'):
-                    time.sleep(2)
-                    status = validateResponse(backUPRestartResponseCode)
-                    #verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
-                    verboseHandle.printConsoleInfo("Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
-                    loggerTiered.info("Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
-                    logger.info("Backup : "+str(backupSpaceId)+" Status : "+str(status))
-            #verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
-            verboseHandle.printConsoleInfo(" Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
-            loggerTiered.info("Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
-        else:
-            logger.info("Backup :"+str(backupSpaceId)+" Status :"+str(backUPRestartResponseCode))
-            verboseHandle.printConsoleInfo("Backup : "+str(backupSpaceId)+" Status : "+str(backUPRestartResponseCode))
-            loggerTiered.info("Backup : "+str(backupSpaceId)+" Status : "+str(backUPRestartResponseCode))
+        status = validateResponse(backUPRestartResponseCode)
+        with Spinner():
+            while(status.casefold() != 'successful'):
+                time.sleep(2)
+                status = validateResponse(backUPRestartResponseCode)
+                #verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
+                verboseHandle.printConsoleInfo("Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
+                loggerTiered.info("Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
+                logger.info("Backup : "+str(backupSpaceId)+" Status : "+str(status))
+        #verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
+        verboseHandle.printConsoleInfo(" Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
+        loggerTiered.info("Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
         with Spinner():
             verboseHandle.printConsoleInfo("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
             loggerTiered.info("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
