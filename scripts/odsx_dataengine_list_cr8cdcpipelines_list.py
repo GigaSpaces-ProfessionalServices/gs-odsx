@@ -8,7 +8,9 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -33,11 +35,9 @@ def display_stream_list(args):
     printHeaders = [
         Fore.YELLOW + "#" + Fore.RESET,
         Fore.YELLOW + "Name" + Fore.RESET,
-        Fore.YELLOW + "Status" + Fore.RESET,
-        Fore.YELLOW + "Rows Completed" + Fore.RESET,
-        Fore.YELLOW + "Time Completed" + Fore.RESET,
-        Fore.YELLOW + "Work Completed (%)" + Fore.RESET,
-        Fore.YELLOW + "Progress Update Time" + Fore.RESET
+        Fore.YELLOW + "getStatus" + Fore.RESET,
+        Fore.YELLOW + "getFullSyncProgress Status" + Fore.RESET,
+        Fore.YELLOW + "Stream status" + Fore.RESET
     ]
     data = []
     pipelineDict = {}
@@ -55,18 +55,24 @@ def display_stream_list(args):
         streams = json.loads(data1)
     counter = 0
     for stream in streams:
-        # print(stream)
         response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getFullSyncProgress/' + str(
             stream["configurationName"]))
-        streamSyncData = json.loads(response.text)
-        print(str(streamSyncData))
+        fullSyncData = json.loads(response.text)
+
+        user = 'root'
+        scriptUser = 'dbsh'
+        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl status " + str(
+            stream["configurationName"]) + "'"
+        with Spinner():
+            streamStatus = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+        streamStatusJson = json.loads(str(streamStatus))
+
         counter = counter + 1
-        state = Fore.GREEN + "RUNNING" + Fore.RESET
-        if str(stream["state"]).upper() == "STOPPED":
-            state = Fore.RED + "STOPPED" + Fore.RESET
-        dataArray = [counter, stream["configurationName"],
-                     state, streamSyncData["rowsCompleted"], streamSyncData["timeCompleted"],
-                     streamSyncData["pctWorkCompleted"], streamSyncData["progressUpdateTime"]]
+        # state = Fore.GREEN + "RUNNING" + Fore.RESET
+        # if str(stream["state"]).upper() == "STOPPED":
+        #    state = Fore.RED + "STOPPED" + Fore.RESET
+        dataArray = [counter, stream["configurationName"], stream["state"], fullSyncData["status"],
+                     streamStatusJson["streamStatus"]["state"]]
         pipelineDict.update({counter: stream["configurationName"]})
         data.append(dataArray)
 
