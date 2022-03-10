@@ -7,6 +7,7 @@ import requests
 
 from scripts.logManager import LogManager
 from scripts.odsx_dataengine_list_cr8cdcpipelines_list import display_stream_list
+from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -44,14 +45,16 @@ def handleException(e):
 
 def validate(args):
     deNodes = config_get_dataEngine_nodes()
-    pipelineDict = display_stream_list(args)
+    with Spinner():
+        pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     if (selectedOption != 99):
         configName = pipelineDict.get(selectedOption)
-        response = requests.delete(
-            'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/cleanConfigurationEnv/' + configName)
-        logger.info(str(response.status_code))
-        logger.info(str(response.text))
+        with Spinner():
+            response = requests.delete(
+                'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/cleanConfigurationEnv/' + configName)
+            logger.info(str(response.status_code))
+            logger.info(str(response.text))
         if response.status_code == 200:
             verboseHandle.printConsoleInfo("Cleaned Pipeline Successful")
         else:

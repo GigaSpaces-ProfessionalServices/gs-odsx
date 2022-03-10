@@ -4,7 +4,7 @@ import os
 import sys
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_list_cr8cdcpipelines_list import display_stream_list
+from scripts.odsx_dataengine_list_cr8cdcpipelines_startfullsync import display_stream_list
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput
 
