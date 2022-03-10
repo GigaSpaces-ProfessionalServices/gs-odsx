@@ -105,7 +105,7 @@ def listDeployed(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_tieredstorage_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> List -> MQ-Connector -> Kafka consumer -> List")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> MQ-Connector -> Kafka consumer -> List")
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))

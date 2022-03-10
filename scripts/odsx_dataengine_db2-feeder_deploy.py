@@ -463,7 +463,7 @@ def proceedToDeployPUInputParam(managerHost):
         return
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> List -> DB2-Feeder -> Deploy')
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> DB2-Feeder -> Deploy')
     try:
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))

@@ -4,7 +4,7 @@ import os
 import sys
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_list_cr8cdcpipelines_startfullsync import display_stream_list
+from scripts.odsx_dataengine_cr8cdcpipelines_startfullsync import display_stream_list
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput
 
@@ -62,7 +62,7 @@ def stopStream(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> List -> CR8 CDC pipelines  -> Stop Full sync')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Stop Full sync')
     try:
         args = []
         args = myCheckArg()

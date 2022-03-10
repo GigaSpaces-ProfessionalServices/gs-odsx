@@ -165,7 +165,7 @@ def startAdabusService(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Data Engine -> List -> MQ Connector -> Adabas Service -> Start")
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> MQ Connector -> Adabas Service -> Start")
     args = []
     args = myCheckArg()
     startAdabusService(args)

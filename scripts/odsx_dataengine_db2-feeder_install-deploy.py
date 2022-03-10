@@ -508,8 +508,8 @@ def proceedToDeployPUInputParam(managerHost):
         return
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_list_db2-feeder_install")
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> List -> DB2-Feeder -> Install-Deploy')
+    logger.info("odsx_dataengine_db2-feeder_install")
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> DB2-Feeder -> Install-Deploy')
     try:
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))

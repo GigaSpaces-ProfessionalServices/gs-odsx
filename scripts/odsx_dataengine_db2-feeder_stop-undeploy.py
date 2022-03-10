@@ -369,8 +369,8 @@ def proceedForGSCRemove():
         removeGSC(managerHost)
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_list_db2-feeder_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> List -> DB2-Feeder -> Stop-UnDeploy")
+    logger.info("odsx_dataengine_db2-feeder_undeploy")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> DB2-Feeder -> Stop-UnDeploy")
     try:
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):
