@@ -69,3 +69,11 @@ else
 fi
 
 source ~/.bashrc
+#SQLite
+cd
+mkdir -p dbagigawork/sqlite
+cd dbagigawork/sqlite
+wget https://www.sqlite.org/2022/sqlite-tools-linux-x86-3380000.zip
+unzip sqlite-tools-linux-x86-3380000.zip
+mv sqlite-tools-linux-x86-3380000/* .
+rm -rf sqlite-tools-linux-x86-3380000
