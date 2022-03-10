@@ -204,19 +204,16 @@ def proceedForAllUndeploy(managerHost):
             if(response.status_code==202):
                 undeployResponseCode = str(response.content.decode('utf-8'))
                 logger.info("backUPResponseCode : "+str(undeployResponseCode))
-                if(undeployResponseCode.isdigit()):
-                    status = validateResponse(undeployResponseCode)
-                    with Spinner():
-                        while(status.casefold() != 'successful'):
-                            time.sleep(2)
-                            status = validateResponse(undeployResponseCode)
-                            logger.info("UndeployAll :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
-                            #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                            verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                    verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                else:
-                    logger.info("UndeployAll  :"+str(spaceTobeUndeploy)+"   status :"+str(undeployResponseCode))
-                    verboseHandle.printConsoleInfo("Undeploy :"+str(spaceTobeUndeploy)+"   Status : "+str(undeployResponseCode))
+
+                status = validateResponse(undeployResponseCode)
+                with Spinner():
+                    while(status.casefold() != 'successful'):
+                        time.sleep(2)
+                        status = validateResponse(undeployResponseCode)
+                        logger.info("UndeployAll :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
+                        #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                        verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
             else:
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
                 verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
@@ -252,20 +249,16 @@ def proceedToUndeployPU(managerHost):
                 if(response.status_code==202):
                     undeployResponseCode = str(response.content.decode('utf-8'))
                     logger.info("backUPResponseCode : "+str(undeployResponseCode))
-                    if(undeployResponseCode.isdigit()):
-                        status = validateResponse(undeployResponseCode)
-                        with Spinner():
-                            while(status.casefold() != 'successful'):
-                                time.sleep(2)
-                                status = validateResponse(undeployResponseCode)
-                                logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
-                                #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                                verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                        verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                    else:
-                        logger.info("Undeploy  :"+str(spaceTobeUndeploy)+"   status :"+str(undeployResponseCode))
-                        verboseHandle.printConsoleInfo("Undeploy  :"+str(spaceTobeUndeploy)+"   Status : "+str(undeployResponseCode))
 
+                    status = validateResponse(undeployResponseCode)
+                    with Spinner():
+                        while(status.casefold() != 'successful'):
+                            time.sleep(2)
+                            status = validateResponse(undeployResponseCode)
+                            logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
+                            #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                            verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                    verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
             else:
                     logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
                     verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
