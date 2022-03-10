@@ -89,7 +89,7 @@ def listDeployed(managerHost):
                 hostId=data2["hostId"]
             if(len(str(hostId))==0):
                hostId="N/A"
-            if(str(data["name"]).casefold().__contains__('consumer')):
+            if(str(data["name"]).casefold().__contains__('adabasconsumer')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,

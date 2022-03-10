@@ -322,29 +322,25 @@ def proceedToDeployPU(data):
     deployResponseCode = str(response.content.decode('utf-8'))
     print("deployResponseCode : "+str(deployResponseCode))
     logger.info("deployResponseCode :"+str(deployResponseCode))
-    if(deployResponseCode.isdigit()):
-        status = validateResponseGetDescription(deployResponseCode)
-        logger.info("response.status_code :"+str(response.status_code))
-        logger.info("response.content :"+str(response.content) )
-        if(response.status_code==202):
-            logger.info("Response :"+str(status))
-            retryCount=5
-            while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                status = validateResponseGetDescription(deployResponseCode)
-                verboseHandle.printConsoleInfo("Response :"+str(status))
-                retryCount = retryCount-1
-                time.sleep(2)
-                if(str(status).casefold().__contains__('successful')):
-                    return
-                elif(str(status).casefold().__contains__('failed')):
-                    return
-        else:
-            logger.info("Unable to deploy :"+str(status))
-            verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
-    else:
-        logger.info("Unable to deploy :"+str(deployResponseCode))
-        verboseHandle.printConsoleInfo("Unable to deploy : "+str(deployResponseCode))
 
+    status = validateResponseGetDescription(deployResponseCode)
+    logger.info("response.status_code :"+str(response.status_code))
+    logger.info("response.content :"+str(response.content) )
+    if(response.status_code==202):
+        logger.info("Response :"+str(status))
+        retryCount=5
+        while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+            status = validateResponseGetDescription(deployResponseCode)
+            verboseHandle.printConsoleInfo("Response :"+str(status))
+            retryCount = retryCount-1
+            time.sleep(2)
+            if(str(status).casefold().__contains__('successful')):
+                return
+            elif(str(status).casefold().__contains__('failed')):
+                return
+    else:
+        logger.info("Unable to deploy :"+str(status))
+        verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
