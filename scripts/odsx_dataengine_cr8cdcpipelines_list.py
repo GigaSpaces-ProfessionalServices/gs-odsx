@@ -10,7 +10,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -61,18 +61,23 @@ def display_stream_list(args):
 
         user = 'root'
         scriptUser = 'dbsh'
-        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl status " + str(
+        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl.sh status " + str(
             stream["configurationName"]) + "'"
         with Spinner():
-            streamStatus = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
-        streamStatusJson = json.loads(str(streamStatus))
+            streamStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
+        streamStatus = streamStatus.split("\n", 1)[1]
+        if streamStatus != "":
+            streamStatusJson = json.loads(str(streamStatus))
+            streamStatus = streamStatusJson["streamStatus"]["state"]
+        else:
+            streamStatus = ""
 
         counter = counter + 1
         # state = Fore.GREEN + "RUNNING" + Fore.RESET
         # if str(stream["state"]).upper() == "STOPPED":
         #    state = Fore.RED + "STOPPED" + Fore.RESET
         dataArray = [counter, stream["configurationName"], stream["state"], fullSyncData["status"],
-                     streamStatusJson["streamStatus"]["state"]]
+                     streamStatus]
         pipelineDict.update({counter: stream["configurationName"]})
         data.append(dataArray)
 

@@ -75,7 +75,7 @@ def display_stream_list(args):
         # print(stream)
         user = 'root'
         scriptUser = 'dbsh'
-        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl status " + str(
+        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl.sh status " + str(
             stream["configurationName"]) + "'"
         with Spinner():
             response = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
