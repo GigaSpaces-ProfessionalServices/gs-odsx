@@ -345,7 +345,7 @@ function gsCreateGSServeice {
   stop_gsa_file="stop_gsa.sh"
   stop_gsc_file="stop_gsc.sh"
   gsa_service_file="gsa.service"
-  gsc_service_file="gsc.service"
+  #gsc_service_file="gsc.service"
 
   home_dir_sh=$(pwd)
   echo "homedir: "$home_dir_sh
@@ -370,7 +370,7 @@ function gsCreateGSServeice {
 
   mv $home_dir_sh/st*_gs*.sh /tmp
   mv $home_dir_sh/install/gs/$gsa_service_file /tmp
-  mv $home_dir_sh/install/gs/$gsc_service_file /tmp
+  #mv $home_dir_sh/install/gs/$gsc_service_file /tmp
   mv /tmp/st*_gs*.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
@@ -388,7 +388,7 @@ function gsCreateGSServeice {
 
   systemctl daemon-reload
   systemctl enable $gsa_service_file
-  systemctl enable $gsc_service_file
+  #systemctl enable $gsc_service_file
 
 
   : '
