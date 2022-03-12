@@ -10,6 +10,7 @@ from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
 from scripts.spinner import Spinner
+from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -172,12 +173,13 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
+            queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
             if(str(data["name"]).__contains__('db2')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+data["processingUnitType"]+Fore.RESET
+                             Fore.GREEN+str(queryStatus)+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 gs_pu_zone_dictionary_obj.add(str(counter+1),str(data["sla"]["zones"]))

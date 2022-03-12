@@ -116,16 +116,17 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["name"]+Fore.RESET,
-                         Fore.GREEN+data["resource"]+Fore.RESET,
-                         Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                         Fore.GREEN+data["processingUnitType"]+Fore.RESET,
-                         Fore.GREEN+data["status"]+Fore.RESET
-                         ]
-            gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-            counter=counter+1
-            dataTable.append(dataArray)
+            if(str(data["name"]).casefold().__contains__("db2feeder") or str(data["processingUnitType"]).casefold().__contains__("stateful")):
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+data["resource"]+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+data["processingUnitType"]+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:
@@ -387,7 +388,6 @@ def proceedToDeployPU():
                     time.sleep(2)
                     if(str(status).casefold().__contains__('successful')):
                         time.sleep(2)
-                        #createDB2EntryInMySQL(myCoursor,puName,file,restPort)
                         createDB2EntryInSqlLite(puName,file,restPort)
                         cmd = "rm -f "+sourceDB2FeederShFilePath+resource
                         logger.info("cmd : "+str(cmd))
@@ -438,7 +438,7 @@ def proceedToDeployPUInputParam(managerHost):
     lastChar = str(sourceDB2FeederShFilePath[-1])
     logger.info("last char:"+str(lastChar))
     if(lastChar!='/'):
-        sourceDB2FeederShFilePath+'/'
+        sourceDB2FeederShFilePath = sourceDB2FeederShFilePath+'/'
     set_value_in_property_file("app.dataengine.db2-feeder.filePath.shFile",sourceDB2FeederShFilePath)
 
     uploadFileRest(managerHost)
