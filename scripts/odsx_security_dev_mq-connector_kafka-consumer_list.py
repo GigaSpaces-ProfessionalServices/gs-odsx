@@ -105,24 +105,6 @@ def listDeployed(managerHost):
     except Exception as e:
         handleException(e)
 
-def getUsernameByHost(managerHost):
-    logger.info("getUsernameByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Username : "+output)
-    return output
-
-def getPasswordByHost(managerHost):
-    logger.info("getPasswordByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Password : "+output)
-    return  output
-
 if __name__ == '__main__':
     logger.info("odsx_security_mq-connector_kafka-consumer_undeploy")
     verboseHandle.printConsoleWarning("Menu -> Security -> Dev -> MQ-Connector -> Kafka consumer -> List")
