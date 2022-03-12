@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json, subprocess, glob,mysql, mysql.connector,sqlite3
+import os, time, requests,json, subprocess, glob,sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
@@ -127,7 +127,6 @@ def sqlLiteGetHostAndPortByFileName(shFileName):
 def proceedToStartDB2Feeder(fileNumberToStart):
     logger.info("proceedToStartDB2Feeder()")
     shFileName = fileNameDict.get(str(fileNumberToStart))
-    #hostAndPort = str(mySQLgetHostAndPortByFileName(shFileName)).split(',')
     hostAndPort = str(sqlLiteGetHostAndPortByFileName(shFileName)).split(',')
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])

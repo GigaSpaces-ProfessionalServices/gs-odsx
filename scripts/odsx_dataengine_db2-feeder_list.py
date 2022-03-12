@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json,mysql, mysql.connector, subprocess, sqlite3
+import os, time, requests,json, subprocess, sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import readValueByConfigObj
+from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
+
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -59,43 +60,6 @@ def getManagerHost(managerNodes):
         return managerHost
     except Exception as e:
         handleException(e)
-
-def executeLocalCommandAndGetOutput(commandToExecute):
-    logger.info("executeLocalCommandAndGetOutput() cmd :" + str(commandToExecute))
-    cmd = commandToExecute
-    cmdArray = cmd.split(" ")
-    #process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE)
-    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
-    out, error = process.communicate()
-    out = out.decode()
-    return str(out).replace('\n', '')
-
-def getQueryStatusFromSqlLite(feederName):
-    logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
-    try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
-        cnx = sqlite3.connect(db_file)
-        logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL : SELECT host,port FROM db2_host_port where feeder_name like '%"+str(feederName)+"%' ")
-        mycursor = cnx.execute("SELECT host,port FROM db2_host_port where feeder_name like '%"+str(feederName)+"%' ")
-        myresult = mycursor.fetchall()
-        cnx.close()
-        host = ''
-        port = ''
-        output='NA'
-        for row in myresult:
-            logger.info("host : "+str(row[0]))
-            host = str(row[0])
-            logger.info("port : "+str(row[1]))
-            port = str(row[1])
-            cmd = "curl "+host+":"+port+"/table-feed/status"
-            logger.info("cmd : "+str(cmd))
-            output = executeLocalCommandAndGetOutput(cmd);
-            logger.info("Output ::"+str(output))
-        return output
-    except Exception as e:
-        handleException(e)
-
 
 def listDeployed(managerHost):
     logger.info("listDeployed()")
