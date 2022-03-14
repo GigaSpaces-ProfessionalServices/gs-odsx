@@ -58,11 +58,33 @@ def executeRemoteCommandAndGetOutputPython36(host, user, commandToExecute):
     logger.info("cmdArray:"+str(cmdArray))
     #out = subprocess.call(cmdArray)
     p = Popen(cmdArray,stdin=PIPE, stdout=PIPE, stderr=PIPE)
-    output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+    output = p.communicate(b"input data that is passed to subprocess' stdin")
     rc = p.returncode
     logger.info("output : rc:"+str(rc))
     return rc
 
+def executeRemoteCommandAndGetOutputValuePython36(host, user, commandToExecute):
+    logger.info("executeRemoteCommandAndGetOutputPython36 : "+str(user)+" host:"+str(host)+" "+str(commandToExecute))
+    pemFileName = readValuefromAppConfig("cluster.pemFile")
+    logger.info("cluster.pemFile :"+str(pemFileName))
+    isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
+    logger.info("cluster.usingPemFile :"+str(isConnectUsingPem))
+    if(isConnectUsingPem=='True'):
+        cmd = "ssh -i " + pemFileName + " " + user + "@" + host + " " + commandToExecute
+    else:
+        cmd = "ssh" +" " + host + " " + commandToExecute
+    logger.info("cmd :"+str(cmd))
+    cmdArray = cmd.split(" ")
+    logger.info("cmdArray:"+str(cmdArray))
+    #out = subprocess.call(cmdArray)
+    p = Popen(cmdArray,stdin=PIPE, stdout=PIPE, stderr=PIPE)
+    output, err = p.communicate(b"input data that is passed to subprocess' stdin")
+    rc = p.returncode
+    logger.info("output : rc:"+str(rc))
+    logger.info("output : output:"+str(output))
+    logger.info("output : err:"+str(err))
+    print(output.decode("utf-8"))
+    return output.decode("utf-8")
 
 def executeRemoteShCommandAndGetOutput(host, user, additionalparam, commandToExecute):
     logger.info("executeRemoteShCommandAndGetOutput host:"+str(host)+" user:"+str(user)+" additinalparam:"+str(additionalparam)+" cmdtoexec:"+str(commandToExecute))
