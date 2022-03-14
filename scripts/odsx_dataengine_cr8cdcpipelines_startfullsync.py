@@ -8,6 +8,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
+from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
@@ -46,7 +47,7 @@ def handleException(e):
     })))
 
 
-def display_stream_list(args):
+def display_stream_list1(args):
     deNodes = config_get_dataEngine_nodes()
     printHeaders = [
         Fore.YELLOW + "#" + Fore.RESET,

@@ -53,8 +53,8 @@ def stopStream(args):
         output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
         print(str(output))
         # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl stop " + configName
-        output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
-        verboseHandle.printConsoleInfo(str(output))
+        # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
+        # verboseHandle.printConsoleInfo(str(output))
         if str(output).__contains__("stop"):
             verboseHandle.printConsoleInfo("Stopped full sync " + configName)
         else:

@@ -9,9 +9,10 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
+from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -47,7 +48,7 @@ def handleException(e):
     })))
 
 
-def display_stream_list(args):
+def display_stream_list1(args):
     deNodes = config_get_dataEngine_nodes()
     printHeaders = [
         Fore.YELLOW + "#" + Fore.RESET,
@@ -78,9 +79,9 @@ def display_stream_list(args):
         cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl.sh status " + str(
             stream["configurationName"]) + "'"
         with Spinner():
-            response = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+            response = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
         streamSyncData = json.loads(str(response))
-        print(str(streamSyncData))
+        # print(str(streamSyncData))
         dateTime = ""
         if streamSyncData["streamStatus"]["stateTimeStamp"] != "":
             epochTimeresponse = requests.get(
