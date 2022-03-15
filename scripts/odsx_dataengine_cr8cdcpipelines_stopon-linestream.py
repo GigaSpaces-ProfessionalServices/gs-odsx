@@ -102,13 +102,13 @@ def stopStream(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
-    if (selectedOption != 99):
+    if selectedOption != 99 and selectedOption not in pipelineDict:
         configName = pipelineDict.get(selectedOption)
         response = requests.get(
             'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/stop/' + configName)
         logger.info(str(response.status_code))
         logger.info(str(response.text))
-        if response.status_code == 200 and response.text.__contains__("has been killed"):
+        if response.status_code == 200 and response.text.__contains__("stopped"):
             verboseHandle.printConsoleInfo("Stopped online stream " + configName)
         else:
             verboseHandle.printConsoleError("Failed to stop stream " + configName)
