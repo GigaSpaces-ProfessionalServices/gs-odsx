@@ -45,25 +45,28 @@ def validate(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
-    if selectedOption != 99 and selectedOption not in pipelineDict:
-        configName = pipelineDict.get(selectedOption)
-        user = 'root'
-        scriptUser = 'dbsh'
-        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/updateCMDB.sh /home/dbsh/cr8/latest_cr8/etc/" + configName + ".json'"
-        output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
-        print(str(output))
-        # jsonout = json.loads(output)
-        # logger.info("output" + str(jsonout))
-        # response = requests.post(
-        #    'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/validateConfigurations/' + configName,
-        #    data=json.dumps(jsonout),
-        #    headers={'Accept': 'application/json'})
-        # logger.info(str(response.status_code))
-        # logger.info(str(response.text))
-        if str(output).__contains__('true'):
-            verboseHandle.printConsoleInfo("Validation Successful")
+    if selectedOption != 99:
+        if selectedOption in pipelineDict:
+            configName = pipelineDict.get(selectedOption)
+            user = 'root'
+            scriptUser = 'dbsh'
+            cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/updateCMDB.sh /home/dbsh/cr8/latest_cr8/etc/" + configName + ".json'"
+            output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+            print(str(output))
+            # jsonout = json.loads(output)
+            # logger.info("output" + str(jsonout))
+            # response = requests.post(
+            #    'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/validateConfigurations/' + configName,
+            #    data=json.dumps(jsonout),
+            #    headers={'Accept': 'application/json'})
+            # logger.info(str(response.status_code))
+            # logger.info(str(response.text))
+            if str(output).__contains__('true'):
+                verboseHandle.printConsoleInfo("Validation Successful")
+            else:
+                verboseHandle.printConsoleError("Validation Failed")
         else:
-            verboseHandle.printConsoleError("Validation Failed")
+            verboseHandle.printConsoleError("Wrong option selected")
 
 
 if __name__ == '__main__':
