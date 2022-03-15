@@ -83,7 +83,7 @@ def executeRemoteCommandAndGetOutputValuePython36(host, user, commandToExecute):
     logger.info("output : rc:"+str(rc))
     logger.info("output : output:"+str(output))
     logger.info("output : err:"+str(err))
-    print(output.decode("utf-8"))
+    # print(output.decode("utf-8"))
     return output.decode("utf-8")
 
 def executeRemoteShCommandAndGetOutput(host, user, additionalparam, commandToExecute):
