@@ -45,7 +45,7 @@ def validate(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
-    if (selectedOption != 99):
+    if selectedOption != 99 and selectedOption not in pipelineDict:
         configName = pipelineDict.get(selectedOption)
         user = 'root'
         scriptUser = 'dbsh'
