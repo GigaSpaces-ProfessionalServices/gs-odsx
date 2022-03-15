@@ -79,6 +79,19 @@ def display_stream_list(args):
         fullSyncStatusDisplay = "STOPPED"
         if fullSyncStatus.__contains__("is running"):
             fullSyncStatusDisplay = "RUNNING"
+            fullSyncStatusDisplay = Fore.GREEN + fullSyncStatusDisplay + Fore.RESET
+        elif fullSyncStatusDisplay == "STOPPED":
+            fullSyncStatusDisplay = Fore.YELLOW + fullSyncStatusDisplay + Fore.RESET
+        elif streamStatus == "CLEANED":
+            fullSyncStatusDisplay = Fore.WHITE + fullSyncStatusDisplay + Fore.RESET
+
+        if streamStatus == "STARTED":
+            streamStatus = "RUNNING"
+            streamStatus = Fore.GREEN + streamStatus + Fore.RESET
+        elif streamStatus == "STOPPED":
+            streamStatus = Fore.YELLOW + streamStatus + Fore.RESET
+        elif streamStatus == "CLEANED":
+            streamStatus = Fore.WHITE + streamStatus + Fore.RESET
 
         counter = counter + 1
         # state = Fore.GREEN + "RUNNING" + Fore.RESET
