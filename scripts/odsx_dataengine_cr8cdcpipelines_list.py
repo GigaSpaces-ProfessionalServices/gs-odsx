@@ -104,7 +104,8 @@ def display_stream_list(args):
                      streamStatus]
         pipelineDict.update({counter: stream["configurationName"]})
         data.append(dataArray)
-
+    dataArray = ["99", "Exit"]
+    data.append(dataArray)
     printTabular(None, printHeaders, data)
     return pipelineDict
 

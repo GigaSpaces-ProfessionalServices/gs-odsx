@@ -49,16 +49,19 @@ def validate(args):
         pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     if (selectedOption != 99):
-        configName = pipelineDict.get(selectedOption)
-        with Spinner():
-            response = requests.delete(
-                'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/cleanConfigurationEnv/' + configName)
-            logger.info(str(response.status_code))
-            logger.info(str(response.text))
-        if response.status_code == 200:
-            verboseHandle.printConsoleInfo("Cleaned Pipeline Successful")
+        if selectedOption in pipelineDict:
+            configName = pipelineDict.get(selectedOption)
+            with Spinner():
+                response = requests.delete(
+                    'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/cleanConfigurationEnv/' + configName)
+                logger.info(str(response.status_code))
+                logger.info(str(response.text))
+            if response.status_code == 200:
+                verboseHandle.printConsoleInfo("Cleaned Pipeline Successful")
+            else:
+                verboseHandle.printConsoleInfo("Failed to clean Pipeline")
         else:
-            verboseHandle.printConsoleInfo("Failed to clean Pipeline")
+            verboseHandle.printConsoleError("Wrong option selected")
 
 
 if __name__ == '__main__':

@@ -97,20 +97,23 @@ def startStream(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
-    if selectedOption != 99 and selectedOption not in pipelineDict:
-        configName = pipelineDict.get(selectedOption)
-        user = 'root'
-        scriptUser = 'dbsh'
-        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl start " + configName + "'"
-        with Spinner():
-            output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
-        # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName
-        # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
-        # verboseHandle.printConsoleInfo(str(output))
-        if str(output).__contains__("start"):
-            verboseHandle.printConsoleInfo("Started full sync " + configName)
+    if selectedOption != 99:
+        if selectedOption in pipelineDict:
+            configName = pipelineDict.get(selectedOption)
+            user = 'root'
+            scriptUser = 'dbsh'
+            cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl start " + configName + "'"
+            with Spinner():
+                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+            # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName
+            # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
+            # verboseHandle.printConsoleInfo(str(output))
+            if str(output).__contains__("start"):
+                verboseHandle.printConsoleInfo("Started full sync " + configName)
+            else:
+                verboseHandle.printConsoleError("Failed to start full sync " + configName)
         else:
-            verboseHandle.printConsoleError("Failed to start full sync " + configName)
+            verboseHandle.printConsoleError("Wrong option selected")
 
 
 if __name__ == '__main__':

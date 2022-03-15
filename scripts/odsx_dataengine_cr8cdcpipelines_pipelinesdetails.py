@@ -79,7 +79,8 @@ def show_details(args):
             verboseHandle.printConsoleInfo("Host : " + streamConfig["basicProperties"]["target"]["host"])
             verboseHandle.printConsoleInfo("Kafka Topic : " + streamConfig["basicProperties"]["target"]["kafkaTopic"])
             verboseHandle.printConsoleWarning("-------------------------------------------")
-
+        else:
+            verboseHandle.printConsoleError("Wrong option selected")
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Show')
