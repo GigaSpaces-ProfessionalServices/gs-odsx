@@ -5,6 +5,7 @@ import sys
 
 from scripts.logManager import LogManager
 from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
+from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 
@@ -51,8 +52,9 @@ def validate(args):
             user = 'root'
             scriptUser = 'dbsh'
             cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/updateCMDB.sh /home/dbsh/cr8/latest_cr8/etc/" + configName + ".json'"
-            output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
-            print(str(output))
+            with Spinner():
+                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+                print(str(output))
             # jsonout = json.loads(output)
             # logger.info("output" + str(jsonout))
             # response = requests.post(
