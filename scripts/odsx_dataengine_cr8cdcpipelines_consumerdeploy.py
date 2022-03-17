@@ -340,42 +340,9 @@ def proceedToDeployPUInputParam(managerHost):
     global partition
     partition = '1'
 
-    global zoneOfPU
-    zoneOfPU = zoneGSC  # str(input(Fore.YELLOW + "Enter zone of processing unit to deploy [tn_mati] :" + Fore.RESET))
-
     global maxInstancesPerMachine
     maxInstancesPerMachine = '1'
     logger.info("maxInstancePerVM Of PU :" + str(maxInstancesPerMachine))
-
-    # global spaceName
-    # spaceName = str(input(Fore.YELLOW + "Enter space.name [bllspace] : " + Fore.RESET))
-    # if (len(str(spaceName)) == 0):
-    #    spaceName = 'bllspace'
-
-    # global feederWriteBatchSize
-    # feederWriteBatchSize = str(input(Fore.YELLOW + "Enter feeder.writeBatchSize [10000] :" + Fore.RESET))
-    # if (len(feederWriteBatchSize) == 0):
-    #    feederWriteBatchSize = '10000'
-
-    # global feederSleepAfterWrite
-    # feederSleepAfterWrite = str(input(Fore.YELLOW + "Enter feeder.sleepAfterWriteInMillis [500] :" + Fore.RESET))
-    # if (len(feederSleepAfterWrite) == 0):
-    #   feederSleepAfterWrite = '500'
-
-    # global startDb2FeederQueryString
-    # prefixQuery = 'curl -XPOST "http://hostID:8015/table-feed/start?schema-name=bll&'
-    # startDb2FeederQueryString = str(
-    #    input(Fore.YELLOW + "Enter start db2-feeder query string for [" + prefixQuery + "] : " + Fore.RESET))
-    # startDb2FeederQueryString = prefixQuery + startDb2FeederQueryString + '"'
-    # startDb2FeederQueryString = startDb2FeederQueryString.replace('"', '\"').replace('&', '\&')
-
-    # global targetDB2FeederFilePath
-    # targetDB2FeederFilePath = str(input(
-    #    Fore.YELLOW + "Enter target file path of start-db2-feeder.sh file [" + readValuefromAppConfig(
-    #        "app.dataengine.db2-feeder.file") + "]" + Fore.RESET))
-    # if (len(str(targetDB2FeederFilePath)) == 0):
-    #    targetDB2FeederFilePath = str(readValuefromAppConfig("app.dataengine.db2-feeder.file")).replace('"', '')
-    # set_value_in_property_file("app.dataengine.db2-feeder.file", targetDB2FeederFilePath)
 
     proceedToCreateGSC()
     proceedToDeployPU(getDataPUREST())
