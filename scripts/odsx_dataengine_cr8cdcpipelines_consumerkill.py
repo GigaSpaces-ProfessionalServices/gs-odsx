@@ -168,6 +168,25 @@ def listSpacesOnServer(managerNodes):
         handleException(e)
 
 
+def proceedToKillResource(spaceNodes):
+    logger.info("proceedToUndeployResource()")
+    resourceName = str(
+        input(Fore.YELLOW + "Enter name of zone kill [consumer_hb_jp_g] :" + Fore.RESET))
+    if (len(str(resourceName)) == 0):
+        resourceName = 'consumer_hb_jp_g'
+    logger.info("resourceName :" + str(resourceName))
+
+    # for host in spaceNodes:
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones " + str(
+        resourceName)
+    print(commandToExecute)
+    logger.info(commandToExecute)
+    with Spinner():
+        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+        print(output)
+        logger.info("Output:" + str(output))
+
+
 def get_gs_host_details(managerNodes):
     try:
         logger.info("get_gs_host_details() : managerNodes :" + str(managerNodes))
@@ -217,147 +236,8 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         handleException(e)
 
 
-def proceedToCreateGSC():
-    logger.info("proceedToCreateGSC()")
-    # for host in managerNodes:
-    #    scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
-    spaceNodes = config_get_space_hosts()
-    for host in spaceNodes:
-        # scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
-        # commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)
-        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count=" + str(
-            numberOfGSC) + " --zone=" + str(zoneGSC) + " --memory=" + str(
-            memoryGSC) + " " + str(host.ip)
-        print(commandToExecute)
-        logger.info(commandToExecute)
-        with Spinner():
-            output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
-            print(output)
-            logger.info("Output:" + str(output))
-
-
-def createGSCInputParam(managerHost, spaceNode, confirmCreateGSC):
-    logger.info("createGSCInputParam()")
-    global numberOfGSC
-    global zoneGSC
-    global memoryGSC
-    global createGsc
-
-    numberOfGSC = str(input(Fore.YELLOW + "Enter number of GSCs per host [1] : " + Fore.RESET))
-    while (len(str(numberOfGSC)) == 0):
-        numberOfGSC = 1
-    logger.info("numberOfGSC :" + str(numberOfGSC))
-
-    zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to create [consumer_hb_jp_g] : " + Fore.RESET))
-    while (len(str(zoneGSC)) == 0):
-        zoneGSC = 'consumer_hb_jp_g'
-    logger.info("zoneGSC :" + str(zoneGSC))
-
-    memoryGSC = str(input(Fore.YELLOW + "Enter memory of GSC [4g] : " + Fore.RESET))
-    while (len(str(memoryGSC)) == 0):
-        memoryGSC = '4g'
-
-    if confirmCreateGSC == "y" or confirmCreateGSC == "yes":
-        createGsc = True
-    else:
-        createGsc = False
-
-
-def uploadFileRest(managerHostConfig):
-    try:
-        logger.info("uploadFileRest : managerHostConfig : " + str(managerHostConfig))
-        pathOfSourcePU = resourcePath + "/" + resourceName
-
-        logger.info("url : " + "curl -X PUT -F 'file=@" + str(
-            pathOfSourcePU) + "' http://" + managerHostConfig + ":8090/v2/pus/resources")
-        status = os.system(
-            "curl -X PUT -F 'file=@" + str(pathOfSourcePU) + "' http://" + managerHostConfig + ":8090/v2/pus/resources")
-        logger.info("status : " + str(status))
-    except Exception as e:
-        handleException(e)
-
-
-def validateResponseGetDescription(responseCode):
-    logger.info("validateResponse() " + str(responseCode))
-    response = requests.get("http://" + managerHost + ":8090/v2/requests/" + str(responseCode))
-    jsonData = json.loads(response.text)
-    logger.info("response : " + str(jsonData))
-    if (str(jsonData["status"]).__contains__("failed")):
-        return "Status :" + str(jsonData["status"]) + " Description:" + str(jsonData["error"])
-    else:
-        return "Status :" + str(jsonData["status"]) + " Description:" + str(jsonData["description"])
-
-
-def proceedToDeployPU(data):
-    logger.info("proceedToDeployPU()")
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    logger.info("url : " + "http://" + managerHost + ":8090/v2/pus")
-
-    response = requests.post("http://" + managerHost + ":8090/v2/pus", data=json.dumps(data), headers=headers)
-    deployResponseCode = str(response.content.decode('utf-8'))
-    print("deployResponseCode : " + str(deployResponseCode))
-    logger.info("deployResponseCode :" + str(deployResponseCode))
-    if (deployResponseCode.isdigit()):
-        status = validateResponseGetDescription(deployResponseCode)
-        logger.info("response.status_code :" + str(response.status_code))
-        logger.info("response.content :" + str(response.content))
-        if (response.status_code == 202):
-            logger.info("Response :" + str(status))
-        else:
-            logger.info("Unable to deploy :" + str(status))
-            verboseHandle.printConsoleInfo("Unable to deploy : " + str(status))
-    else:
-        logger.info("Unable to deploy :" + str(deployResponseCode))
-        verboseHandle.printConsoleInfo("Unable to deploy : " + str(deployResponseCode))
-
-
-def getDataPUREST():
-    data = {
-        "resource": "" + resourceName + "",
-        "topology": {
-            "instances": partition,
-        },
-        "sla": {
-            "zones": [
-                "" + zoneGSC + ""
-            ],
-        },
-        "name": "" + resourceName + "",
-        "maxInstancesPerMachine": int(maxInstancesPerMachine)
-    }
-    return data
-
-
-def proceedToDeployPUInputParam(managerHost):
-    logger.info("proceedToDeployPUInputParam()")
-    global resourceName
-    resourceName = str(
-        input(Fore.YELLOW + "Enter name of PU to deploy [hb_jp_g_garage1-dih-consumer.war] :" + Fore.RESET))
-    if (len(str(resourceName)) == 0):
-        resourceName = 'hb_jp_g_garage1-dih-consumer.war'
-    logger.info("nameOfPU :" + str(resourceName))
-
-    global resourcePath
-    resourcePath = str(input(Fore.YELLOW + "Enter path of PU to deploy [/dbagiga] :" + Fore.RESET))
-    if (len(str(resourcePath)) == 0):
-        resourcePath = '/dbagiga'
-    logger.info("nameOfPU :" + str(resourcePath))
-
-    uploadFileRest(managerHost)
-    global partition
-    partition = '1'
-
-    global maxInstancesPerMachine
-    maxInstancesPerMachine = '1'
-    logger.info("maxInstancePerVM Of PU :" + str(maxInstancesPerMachine))
-
-    if createGsc:
-        proceedToCreateGSC()
-    proceedToDeployPU(getDataPUREST())
-
-
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> Consumer Deploy')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> Consumer Undeploy')
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main" + str(managerNodes))
@@ -365,18 +245,11 @@ if __name__ == '__main__':
             spaceNodes = config_get_space_hosts()
             logger.info("spaceNodes: main" + str(spaceNodes))
             managerHost = getManagerHost(managerNodes)
-            # proceedToCreateStartDb2FeederFile("oar")
             logger.info("managerHost : main" + str(managerHost))
             if (len(str(managerHost)) > 0):
-                # listSpacesOnServer(managerNodes)
-                # listDeployed(managerHost)
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes, spaceNodes)
                 if (len(space_dict_obj) > 0):
-                    confirmCreateGSC = str(input(Fore.YELLOW + "Do you want to create GSC ? (y/n) [y] : "))
-                    if (len(str(confirmCreateGSC)) == 0 or confirmCreateGSC == 'y'):
-                        confirmCreateGSC = 'y'
-                        createGSCInputParam(managerHost, spaceNodes, confirmCreateGSC)
-                    proceedToDeployPUInputParam(managerHost)
+                    proceedToKillResource(space_dict_obj)
                 else:
                     logger.info("Please check space server.")
                     verboseHandle.printConsoleInfo("Please check space server.")
