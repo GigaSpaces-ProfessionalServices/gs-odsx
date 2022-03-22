@@ -172,7 +172,7 @@ def proceedTostartConsumer(spaceNodes):
     offsetVal = str(
         input(Fore.YELLOW + "Enter offset [end] :" + Fore.RESET))
     consumerName = str(
-        input(Fore.YELLOW + "Enter pipeline name [hb_jp_g_garage1-dih-consumer] :" + Fore.RESET))
+        input(Fore.YELLOW + "Enter pipeline name [consumer_hb_jp_g] :" + Fore.RESET))
     if (len(str(consumerName)) == 0):
         consumerName = 'end'
     data = {

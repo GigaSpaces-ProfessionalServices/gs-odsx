@@ -173,7 +173,7 @@ def proceedToUndeployResource(spaceNodes):
     resourceName = str(
         input(Fore.YELLOW + "Enter name of resource to undeploy [consumer_hb_jp_g] :" + Fore.RESET))
     if (len(str(resourceName)) == 0):
-        resourceName = 'hb_jp_g_garage1-dih-consumer'
+        resourceName = 'consumer_hb_jp_g'
     logger.info("resourceName :" + str(resourceName))
 
     # for host in spaceNodes:
