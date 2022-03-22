@@ -171,7 +171,7 @@ def listSpacesOnServer(managerNodes):
 def proceedToUndeployResource(spaceNodes):
     logger.info("proceedToUndeployResource()")
     resourceName = str(
-        input(Fore.YELLOW + "Enter name of resource to undeploy [hb_jp_g_garage1-dih-consumer] :" + Fore.RESET))
+        input(Fore.YELLOW + "Enter name of resource to undeploy [consumer_hb_jp_g] :" + Fore.RESET))
     if (len(str(resourceName)) == 0):
         resourceName = 'hb_jp_g_garage1-dih-consumer'
     logger.info("resourceName :" + str(resourceName))
@@ -182,9 +182,12 @@ def proceedToUndeployResource(spaceNodes):
     print(commandToExecute)
     logger.info(commandToExecute)
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
-        print(output)
-        logger.info("Output:" + str(output))
+        try:
+            output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+            print(output)
+            logger.info("Output:" + str(output))
+        except:
+            verboseHandle.printConsoleError("Something went wrong.")
 
 
 def get_gs_host_details(managerNodes):
@@ -218,6 +221,7 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         space_dict_obj = host_dictionary_obj()
         logger.info("space_dict_obj : " + str(space_dict_obj))
         for node in spaceNodes:
+            print(node.name)
             if (gs_host_details_obj.__contains__(str(node.name)) or (str(node.name) in gs_host_details_obj.values())):
                 space_dict_obj.add(str(counter + 1), node.name)
                 counter = counter + 1
