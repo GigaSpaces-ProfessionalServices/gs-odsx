@@ -253,14 +253,18 @@ def createGSCInputParam(managerHost, spaceNode, confirmCreateGSC):
             numberOfGSC = 1
         logger.info("numberOfGSC :" + str(numberOfGSC))
 
-        zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to create [consumer_hb_jp_g] : " + Fore.RESET))
+        zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to create [consumer] : " + Fore.RESET))
         while (len(str(zoneGSC)) == 0):
-            zoneGSC = 'consumer_hb_jp_g'
+            zoneGSC = 'consumer'
         logger.info("zoneGSC :" + str(zoneGSC))
         memoryGSC = str(input(Fore.YELLOW + "Enter memory of GSC [4g] : " + Fore.RESET))
         while (len(str(memoryGSC)) == 0):
             memoryGSC = '4g'
-
+    else:
+        zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to deploy PU [consumer] : " + Fore.RESET))
+        while (len(str(zoneGSC)) == 0):
+            zoneGSC = 'consumer'
+        logger.info("zoneGSC :" + str(zoneGSC))
 
 def uploadFileRest(managerHostConfig):
     try:
@@ -328,18 +332,18 @@ def proceedToDeployPUInputParam(managerHost):
     global resourcePath
 
     resourceName = str(
-        input(Fore.YELLOW + "Enter name of PU to deploy [hb_jp_g_garage1-dih-consumer.war] :" + Fore.RESET))
+        input(Fore.YELLOW + "Enter name of PU to deploy [cdc_tables-dih-consumer.war] :" + Fore.RESET))
     if (len(str(resourceName)) == 0):
-        resourceName = 'hb_jp_g_garage1-dih-consumer.war'
+        resourceName = 'cdc_tables-dih-consumer.war'
     logger.info("nameOfPU :" + str(resourceName))
 
     resourcePath = str(input(Fore.YELLOW + "Enter path of PU to deploy [/dbagiga] :" + Fore.RESET))
     if (len(str(resourcePath)) == 0):
         resourcePath = '/dbagiga'
     logger.info("nameOfPU :" + str(resourcePath))
-    processingUnitName = str(input(Fore.YELLOW + "Enter Resource Name [consumer_hb_jp_g] : " + Fore.RESET))
+    processingUnitName = str(input(Fore.YELLOW + "Enter Resource Name [consumer] : " + Fore.RESET))
     while (len(str(processingUnitName)) == 0):
-        processingUnitName = 'consumer_hb_jp_g'
+        processingUnitName = 'consumer'
     logger.info("processingUnitName :" + str(processingUnitName))
 
     uploadFileRest(managerHost)
