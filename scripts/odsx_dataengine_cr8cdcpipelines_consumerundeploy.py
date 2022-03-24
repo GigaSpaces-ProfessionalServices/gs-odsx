@@ -171,9 +171,9 @@ def listSpacesOnServer(managerNodes):
 def proceedToUndeployResource(spaceNodes):
     logger.info("proceedToUndeployResource()")
     resourceName = str(
-        input(Fore.YELLOW + "Enter name of resource to undeploy [consumer_hb_jp_g] :" + Fore.RESET))
+        input(Fore.YELLOW + "Enter name of resource to undeploy [consumer] :" + Fore.RESET))
     if (len(str(resourceName)) == 0):
-        resourceName = 'consumer_hb_jp_g'
+        resourceName = 'consumer'
     logger.info("resourceName :" + str(resourceName))
 
     # for host in spaceNodes:

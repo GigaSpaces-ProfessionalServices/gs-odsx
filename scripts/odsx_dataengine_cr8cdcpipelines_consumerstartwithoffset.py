@@ -171,10 +171,12 @@ def proceedTostartConsumer(spaceNodes):
     logger.info("proceedTostartConsumer()")
     offsetVal = str(
         input(Fore.YELLOW + "Enter offset [end] :" + Fore.RESET))
+    if (len(str(offsetVal)) == 0):
+        offsetVal = 'end'
     consumerName = str(
-        input(Fore.YELLOW + "Enter pipeline name [consumer_hb_jp_g] :" + Fore.RESET))
+        input(Fore.YELLOW + "Enter pipeline name [cdc_tables] :" + Fore.RESET))
     if (len(str(consumerName)) == 0):
-        consumerName = 'end'
+        consumerName = 'cdc_tables'
     data = {
         "offset": "" + offsetVal + "",
     }

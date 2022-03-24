@@ -170,9 +170,9 @@ def listSpacesOnServer(managerNodes):
 def proceedTostopConsumer(spaceNodes):
     logger.info("proceedTostopConsumer()")
     consumerName = str(
-        input(Fore.YELLOW + "Enter pipeline name [consumer_hb_jp_g] :" + Fore.RESET))
+        input(Fore.YELLOW + "Enter pipeline name [cdc_tables] :" + Fore.RESET))
     if (len(str(consumerName)) == 0):
-        consumerName = 'end'
+        consumerName = 'cdc_tables'
     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
     with Spinner():
