@@ -84,6 +84,35 @@ def getQueryStatusFromSqlLite(feederName):
     except Exception as e:
         handleException(e)
 
+def getMSSQLQueryStatusFromSqlLite(feederName):
+    logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
+    try:
+        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        cnx = sqlite3.connect(db_file)
+        logger.info("Db connection obtained."+str(cnx))
+        logger.info("CREATE TABLE IF NOT EXISTS mssql_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.execute("CREATE TABLE IF NOT EXISTS mssql_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.commit()
+        logger.info("SQL : SELECT host,port FROM mssql_host_port where feeder_name like '%"+str(feederName)+"%' ")
+        mycursor = cnx.execute("SELECT host,port FROM mssql_host_port where feeder_name like '%"+str(feederName)+"%' ")
+        myresult = mycursor.fetchall()
+        cnx.close()
+        host = ''
+        port = ''
+        output='NA'
+        for row in myresult:
+            logger.info("host : "+str(row[0]))
+            host = str(row[0])
+            logger.info("port : "+str(row[1]))
+            port = str(row[1])
+            cmd = "curl "+host+":"+port+"/table-feed/status"
+            logger.info("cmd : "+str(cmd))
+            output = executeLocalCommandAndGetOutput(cmd);
+            logger.info("Output ::"+str(output))
+        return output
+    except Exception as e:
+        handleException(e)
+
 def getUsernameByHost(managerHost,appId,safeId,objectId):
     logger.info("getUsernameByHost()")
     cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'

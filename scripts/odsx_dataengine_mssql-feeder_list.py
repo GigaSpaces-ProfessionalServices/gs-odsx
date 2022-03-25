@@ -6,9 +6,8 @@ from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
-from requests.auth import HTTPBasicAuth
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite
+
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -67,7 +66,7 @@ def listDeployed(managerHost):
     global gs_space_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -84,14 +83,14 @@ def listDeployed(managerHost):
         dataTable=[]
         for data in jsonArray:
             hostId=''
-            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
+            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
             jsonArray2 = json.loads(response2.text)
-            queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
+            queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
             for data2 in jsonArray2:
                 hostId=data2["hostId"]
             if(len(str(hostId))==0):
                hostId="N/A"
-            if(str(data["name"]).__contains__('db2')):
+            if(str(data["name"]).__contains__('mssql')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
@@ -108,14 +107,9 @@ def listDeployed(managerHost):
         handleException(e)
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_db2-feeder_list")
-    verboseHandle.printConsoleWarning("Menu -> Security -> Dev -> DataEngine -> DB2-Feeder -> List")
-    username = ""
-    password = ""
+    logger.info("odsx_dataengine_mssql-feeder_list")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> MSSQL-Feeder -> List")
     try:
-        username =  str(readValuefromAppConfig("app.manager.dev.security.username")).replace('"','')
-        password =  str(readValuefromAppConfig("app.manager.dev.security.password")).replace('"','')
-        logger.info("username : "+str(username)+" password : "+str(password))
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
         if(len(str(managerNodes))>0):

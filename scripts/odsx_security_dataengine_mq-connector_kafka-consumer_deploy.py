@@ -1,8 +1,13 @@
 #!/usr/bin/env python3
 
-import os,time,subprocess,requests, json, math, glob, sqlite3
+import os,time,subprocess,requests, json, math
+from colorama import Fore
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
 from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
+from utils.ods_scp import scp_upload
+from utils.ods_ssh import connectExecuteSSH
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
@@ -11,7 +16,7 @@ from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.ods_scp import scp_upload
 from requests.auth import HTTPBasicAuth
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -56,15 +61,6 @@ class host_dictionary_obj(dict):
     # Function to add key:value
     def add(self, key, value):
         self[key] = value
-
-def executeLocalCommandAndGetOutput(commandToExecute):
-    logger.info("executeLocalCommandAndGetOutput() cmd :" + str(commandToExecute))
-    cmd = commandToExecute
-    cmdArray = cmd.split(" ")
-    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE)
-    out, error = process.communicate()
-    out = out.decode()
-    return str(out).replace('\n', '')
 
 def getDIServerHostList():
     nodeList = config_get_dataIntegration_nodes()
@@ -118,7 +114,7 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            if(str(data["name"]).casefold().__contains__("db2feeder") or str(data["processingUnitType"]).casefold().__contains__("stateful")):
+            if(str(data["name"]).casefold().__contains__('consumer') or str(data["processingUnitType"]).casefold().__contains__("stateful")):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,
@@ -215,68 +211,75 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         handleException(e)
 
 
-def proceedToCreateGSC(zoneGSC):
+def proceedToCreateGSC():
     logger.info("proceedToCreateGSC()")
+    #for host in managerNodes:
+    #    scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
     for host in spaceNodes:
-        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Ddb2.jcc.charsetDecoderEncoder=3  "+str(host.ip)+" | grep -v JAVA_HOME"
-        verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(host.ip))
-        logger.info("commandToExecute : "+str(commandToExecute))
+        scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
+        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)
+        #print(commandToExecute)
+        logger.info(commandToExecute)
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
             print(output)
             logger.info("Output:"+str(output))
 
-def createGSCInputParam():
+
+def createGSCInputParam(managerHost,spaceNode):
     logger.info("createGSCInputParam()")
     global numberOfGSC
+    global zoneGSC
     global memoryGSC
+    global dPipelineLocationTarget
+    global dPipelineLocationSource
 
     numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
     while(len(str(numberOfGSC))==0):
         numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
+    zoneGSC = str(input(Fore.YELLOW+"Enter zone of GSC to create [adsCons] : "+Fore.RESET))
+    while(len(str(zoneGSC))==0):
+        zoneGSC='adsCons'
+    logger.info("zoneGSC :"+str(zoneGSC))
+
     memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
     while(len(str(memoryGSC))==0):
         memoryGSC='1g'
+    dPipelineSourceConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.source")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    dPipelineLocationSourceInput = str(input(Fore.YELLOW+"Enter -Dpipeline.config.location source ["+str(dPipelineSourceConfig)+"] : "+Fore.RESET))
+    if(len(str(dPipelineLocationSourceInput))==0):
+        dPipelineLocationSource=str(dPipelineSourceConfig)
 
-def updateAndCopyJarFileFromSourceToShFolder(puName):
-    global filePrefix
-    logger.info("updateAndCopyJarFileFromSourceToShFolder()")
-    #sourceDB2FeederShFilePath = '/home/ec2-user/db2-feeder'
-    #sourceDB2JarFilePath = '/home/ec2-user/db2feeder-1.0.0.jar'
-    head , tail = os.path.split(sourceDB2JarFilePath)
-    fileName= str(tail).replace('.jar','')
-    filePrefix = fileName
-    targetJarFile=sourceDB2FeederShFilePath+fileName+puName+'.jar'
-    cmd = "cp "+sourceDB2JarFilePath+' '+sourceDB2FeederShFilePath+fileName+puName+'.jar'
-    logger.info("cmd : "+str(cmd))
-    home = executeLocalCommandAndGetOutput(cmd)
-    logger.info("home: "+str(home))
-    return targetJarFile
+    dPipelineTargetConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.target")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    dPipelineLocationTargetInput = str(input(Fore.YELLOW+"Enter -Dpipeline.config.location target ["+str(dPipelineTargetConfig)+"] : "+Fore.RESET))
+    if(len(str(dPipelineLocationTargetInput))==0):
+        dPipelineLocationTarget=str(dPipelineTargetConfig)
+
+    #proceedToCreateGSC()
 
 def uploadFileRest(managerHostConfig):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
-        directory = os.getcwd()
-        os.chdir(sourceDB2FeederShFilePath)
-        for file in glob.glob("load_*.sh"):
-            os.chdir(directory)
-            puName = str(file).replace('load','').replace('.sh','').casefold()
-            pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
-            #print("pathOfSourcePU : "+str(pathOfSourcePU))
-            #print("jarName :"+jarName)
-            zoneGSC = 'db2_'+puName
-            verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
-            logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-            logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-            status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
-            print("\n")
-            logger.info("status : "+str(status))
+        #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
+        global pathOfSourcePU
+        pathOfSourcePU = str(readValuefromAppConfig("app.dataengine.mq.kafkaconnector.jar")).replace('"','')
+        pathOfSourcePUInput = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
+        if(len(str(pathOfSourcePUInput))>0):
+            pathOfSourcePU = pathOfSourcePUInput
+        while(len(str(pathOfSourcePU))==0):
+            pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+        logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
+        set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
+
+        logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+        status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
+        logger.info("status : "+str(status))
     except Exception as e:
         handleException(e)
 
-def getDataPUREST(resource,resourceName,zoneOfPU,restPort):
+def getDataPUREST():
     backUpRequired=0
     data={
         "resource": ""+resource+"",
@@ -287,22 +290,18 @@ def getDataPUREST(resource,resourceName,zoneOfPU,restPort):
             "zones": [
                 ""+zoneOfPU+""
             ],
+            "maxInstancePerVM" : 0
         },
         "name": ""+resourceName+"",
         "maxInstancesPerMachine": int(maxInstancesPerMachine),
         "contextProperties": {#"pu.autogenerated-instance-sla" :""+slaProperties+"",
-            #"tieredCriteriaConfig.filePath" : ""+tieredCriteriaConfigFilePathTarget+"",
-            "rest.port" : ""+restPort+"",
-            "db2.host" : ""+db2Host+"",
-            "db2.port" : ""+db2Port+"",
-            "db2.database" : ""+db2Database+"",
-            "db2.user" : ""+db2Username+"",
-            "db2.password" : ""+db2Password+"",
-            "feeder.writeBatchSize" : ""+feederWriteBatchSize+"",
+            "tieredCriteriaConfig.filePath" : "",
+            "spring.kafka.bootstrap-servers" : ""+kafkaBootStrapServers+"",
             "space.name" : ""+spaceName+"",
-            "feeder.sleepAfterWriteInMillis" : ""+feederSleepAfterWrite+""
+            "spring.kafka.consumer-group" : ""+consumerGroup+""
         }
     }
+    logger.info("data : "+str(data))
     #print(data)
     return data
 
@@ -316,189 +315,103 @@ def validateResponseGetDescription(responseCode):
     else:
         return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
 
-def sqlLiteCreateTableDB():
-    logger.info("sqlLiteCreateTableDB()")
-    try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
-        logger.info("dbFile : "+str(db_file))
-        cnx = sqlite3.connect(db_file)
-        logger.info("Db connection obtained."+str(cnx)+" Sqlite V: "+str(sqlite3.version))
-        cnx.execute("DROP TABLE IF EXISTS db2_host_port")
-        cnx.execute("CREATE TABLE db2_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
-        cnx.commit()
-        cnx.close()
-    except Exception as e:
-        handleException(e)
+def proceedToDeployPU(data):
+    logger.info("proceedToDeployPU()")
+    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+    logger.info("url : "+"http://"+managerHost+":8090/v2/pus")
 
-def createDB2EntryInSqlLite(puName, file, restPort):
-    logger.info("createDB2EntryInSqlLite()")
-    try:
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(puName)+"/instances",auth = HTTPBasicAuth(username, password))
-        jsonArray = json.loads(response.text)
-        logger.info("response : "+str(jsonArray))
-        hostId = ''
-        for data in jsonArray:
-            hostId = str(data["hostId"])
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
-        cnx = sqlite3.connect(db_file)
-        cnx.execute("INSERT INTO db2_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
-        cnx.commit()
-        cnx.close()
-    except Exception as e:
-        handleException(e)
+    response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
+    deployResponseCode = str(response.content.decode('utf-8'))
+    print("deployResponseCode : "+str(deployResponseCode))
+    logger.info("deployResponseCode :"+str(deployResponseCode))
 
-def proceedToDeployPU():
-    global restPort
-    try:
-        logger.info("proceedToDeployPU()")
-        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        logger.info("url : "+"http://"+managerHost+":8090/v2/pus")
-        sqlLiteCreateTableDB()
-        directory = os.getcwd()
-        os.chdir(sourceDB2FeederShFilePath)
-        #os.system("pwd")
-        restPort = 8014
-        for file in glob.glob("load_*.sh"):
-            restPort = restPort+1
-            os.chdir(directory)
-            puName = str(file).replace('load_','').replace('.sh','').casefold()
-            zoneGSC = 'db2_'+puName
-            logger.info("filePrefix : "+filePrefix)
-            resource = filePrefix+'_'+puName+'.jar'
-            puName = 'db2feeder_'+puName
-            if(confirmCreateGSC=='y'):
-                proceedToCreateGSC(zoneGSC)
-            verboseHandle.printConsoleInfo("Resource : "+resource+" : rest.port : "+str(restPort))
-            data = getDataPUREST(resource,puName,zoneGSC,str(restPort))
-            logger.info("data of payload :"+str(data))
-
-            response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
-            deployResponseCode = str(response.content.decode('utf-8'))
-            print("deployResponseCode : "+str(deployResponseCode))
-            logger.info("deployResponseCode :"+str(deployResponseCode))
-
+    status = validateResponseGetDescription(deployResponseCode)
+    logger.info("response.status_code :"+str(response.status_code))
+    logger.info("response.content :"+str(response.content) )
+    if(response.status_code==202):
+        logger.info("Response :"+str(status))
+        retryCount=5
+        while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
             status = validateResponseGetDescription(deployResponseCode)
-            logger.info("response.status_code :"+str(response.status_code))
-            logger.info("response.content :"+str(response.content) )
-            if(response.status_code==202):
-                logger.info("Response :"+str(status))
-                retryCount=5
-                while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                    status = validateResponseGetDescription(deployResponseCode)
-                    verboseHandle.printConsoleInfo("Response :"+str(status))
-                    retryCount = retryCount-1
-                    time.sleep(2)
-                    if(str(status).casefold().__contains__('successful')):
-                        time.sleep(2)
-                        #createDB2EntryInMySQL(myCoursor,puName,file,restPort)
-                        createDB2EntryInSqlLite(puName,file,restPort)
-                        cmd = "rm -f "+sourceDB2FeederShFilePath+resource
-                        logger.info("cmd : "+str(cmd))
-                        home = executeLocalCommandAndGetOutput(cmd)
-                        break
-                    elif(str(status).casefold().__contains__('failed')):
-                        break
-            else:
-                logger.info("Unable to deploy 1 :"+str(status))
-                verboseHandle.printConsoleInfo("Unable to deploy 1 : "+str(status))
-    except Exception as e :
-        handleException(e)
-
+            verboseHandle.printConsoleInfo("Response :"+str(status))
+            retryCount = retryCount-1
+            time.sleep(2)
+            if(str(status).casefold().__contains__('successful')):
+                return
+            elif(str(status).casefold().__contains__('failed')):
+                return
+    else:
+        logger.info("Unable to deploy :"+str(status))
+        verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
-    verboseHandle.printConsoleInfo("------------------------------------------------------------")
-    verboseHandle.printConsoleInfo("***Summary***")
+    verboseHandle.printConsoleWarning("------------------------------------------------------------")
+    verboseHandle.printConsoleWarning("***Summary***")
     if(confirmCreateGSC=='y'):
-        verboseHandle.printConsoleInfo("Enter number of GSCs per host :"+str(numberOfGSC))
-        verboseHandle.printConsoleInfo("Enter memory of GSC [1g] :"+memoryGSC)
-        #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
-        #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
-    verboseHandle.printConsoleInfo("Enter db2.host : "+str(db2Host))
-    verboseHandle.printConsoleInfo("Enter db2.port : "+str(db2Port))
-    verboseHandle.printConsoleInfo("Enter db2.database : "+str(db2Database))
-    verboseHandle.printConsoleInfo("Enter db2.user : "+str(db2Username))
-    verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
-    verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
-    verboseHandle.printConsoleInfo("Enter source file path of db2-feeder .jar file including file name : "+str(sourceDB2JarFilePath))
-    verboseHandle.printConsoleInfo("Enter source file path of db2-feeder *.sh file : "+str(sourceDB2FeederShFilePath))
+        verboseHandle.printConsoleWarning("Enter number of GSCs per host :"+str(numberOfGSC))
+        verboseHandle.printConsoleWarning("Enter zone of GSC to create :"+zoneGSC)
+        verboseHandle.printConsoleWarning("Enter memory of GSC [1g] :"+memoryGSC)
+        verboseHandle.printConsoleWarning("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
+        verboseHandle.printConsoleWarning("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
+    verboseHandle.printConsoleWarning("Name of resource will be deploy : "+resource)
+    verboseHandle.printConsoleWarning("Enter name of PU to deploy :"+resourceName)
+    verboseHandle.printConsoleWarning("Enter zone of processing unit to deploy :"+zoneOfPU)
+    verboseHandle.printConsoleWarning("spring.kafka.bootstrap-servers : "+str(kafkaBootStrapServers))
+    verboseHandle.printConsoleWarning("Enter spring.kafka.consumer-group :"+consumerGroup)
+
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
 
-    global sourceDB2JarFilePath
-    sourceDb2JarFileConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.jar"))
-    sourceDB2JarFilePath = str(input(Fore.YELLOW+"Enter source file path of db2-feeder .jar file including file name ["+sourceDb2JarFileConfig+"] : "+Fore.RESET))
-    if(len(str(sourceDB2JarFilePath))==0):
-        sourceDB2JarFilePath = sourceDb2JarFileConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.jar",sourceDB2JarFilePath)
-
-    global sourceDB2FeederShFilePath
-    sourceDB2FeederShFilePathConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.filePath.shFile"))
-    sourceDB2FeederShFilePath = str(input(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceDB2FeederShFilePathConfig+"] : "+Fore.RESET))
-    if(len(str(sourceDB2FeederShFilePath))==0):
-        sourceDB2FeederShFilePath = sourceDB2FeederShFilePathConfig
-    lastChar = str(sourceDB2FeederShFilePath[-1])
-    logger.info("last char:"+str(lastChar))
-    if(lastChar!='/'):
-        sourceDB2FeederShFilePath = sourceDB2FeederShFilePath+'/'
-    set_value_in_property_file("app.dataengine.db2-feeder.filePath.shFile",sourceDB2FeederShFilePath)
-
     uploadFileRest(managerHost)
+
+    head , tail = os.path.split(pathOfSourcePU)
+    logger.info("tail :"+str(tail))
+    global resource
+    resource = str(tail)
+    print("\n")
+    print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
+    #while(len(str(resource))==0):
+    #    resource = tail
+    logger.info("resource :"+str(resource))
+
+    global resourceName
+    resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy [adabasConsumer] :"+Fore.RESET))
+    if(len(str(resourceName))==0):
+        resourceName = 'adabasConsumer'
+    logger.info("nameOfPU :"+str(resourceName))
 
     global partition
     partition='1'
 
+    global zoneOfPU
+    zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy [adsCons] :"+Fore.RESET))
+    if(len(str(zoneOfPU))==0):
+        zoneOfPU = 'adsCons'
+    logger.info("Zone Of PU :"+str(zoneOfPU))
+
     global maxInstancesPerMachine
     maxInstancesPerMachine = '1'
     logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
+
+    global kafkaBootStrapServers
+    hostConfig = getDIServerHostList()
+    kafkaBootStrapServers = getBootstrapAddress(hostConfig)
+    verboseHandle.printConsoleWarning("spring.kafka.bootstrap-servers : ["+str(kafkaBootStrapServers)+"]")
 
     global spaceName
     spaceName = str(input(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
     if(len(str(spaceName))==0):
         spaceName='bllspace'
 
-    global db2Host
-    db2HostConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.host"))
-    db2Host = str(input(Fore.YELLOW+"Enter db2.host ["+db2HostConfig+"]: "+Fore.RESET))
-    if(len(str(db2Host))==0):
-        db2Host = db2HostConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.host",db2Host)
+    global consumerGroup
+    consumerGroup = str(input(Fore.YELLOW+"Enter spring.kafka.consumer-group [DIH] :"+Fore.RESET))
+    if(len(consumerGroup)==0):
+        consumerGroup='DIH'
 
-    global db2Port
-    db2PortConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.port"))
-    db2Port = str(input(Fore.YELLOW+"Enter db2.port ["+db2PortConfig+"] : "+Fore.RESET))
-    if(len(str(db2Port))==0):
-        db2Port = db2PortConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.port",db2Port)
-
-    global db2Database
-    db2DatabaseConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.database"))
-    db2Database = str(input(Fore.YELLOW+"Enter db2.database ["+db2DatabaseConfig+"] : "+Fore.RESET))
-    if(len(str(db2Database))==0):
-        db2Database = db2DatabaseConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.database",db2Database)
-
-    global db2Username
-    db2UsernameConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.username"))
-    db2Username = str(input(Fore.YELLOW+"Enter db2.user ["+db2UsernameConfig+"]: "))
-    if(len(str(db2Username))==0):
-        db2Username = db2UsernameConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.username",db2Username)
-
-    global db2Password
-    db2Password = str(input(Fore.YELLOW+"Enter db2Password : "+Fore.RESET))
-
-    global feederWriteBatchSize
-    feederWriteBatchSize = str(input(Fore.YELLOW+"Enter feeder.writeBatchSize [10000] :"+Fore.RESET))
-    if(len(feederWriteBatchSize)==0):
-        feederWriteBatchSize='10000'
-
-    global feederSleepAfterWrite
-    feederSleepAfterWrite = str(input(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis [500] :"+Fore.RESET))
-    if(len(feederSleepAfterWrite)==0):
-        feederSleepAfterWrite='500'
-
+    data = getDataPUREST()
+    #print(data)
     displaySummaryOfInputParam()
 
     finalConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
@@ -506,19 +419,42 @@ def proceedToDeployPUInputParam(managerHost):
         finalConfirm='y'
     if(finalConfirm=='y'):
         logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
-        proceedToDeployPU()
+        if(confirmCreateGSC=='y'):
+            logger.info("Creating GSC :")
+            proceedToCreateGSC()
+        proceedToDeployPU(data)
     else:
         return
 
+def getUsernameByHost(managerHost):
+    logger.info("getUsernameByHost()")
+    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
+    logger.info("cmdToExecute : "+str(cmdToExecute))
+    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
+    output=str(output).replace('\n','')
+    logger.info("Username : "+output)
+    return output
+
+def getPasswordByHost(managerHost):
+    logger.info("getPasswordByHost()")
+    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
+    logger.info("cmdToExecute : "+str(cmdToExecute))
+    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
+    output=str(output).replace('\n','')
+    logger.info("Password : "+output)
+    return  output
+
 if __name__ == '__main__':
-    logger.info("odsx_security_dataengine_db2-feeder_install")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Dev -> DataEngine -> DB2-Feeder -> Install-Deploy')
+    verboseHandle.printConsoleWarning('Menu -> Security -> MQ-Connector -> Kafka consumer -> Deploy')
     username = ""
     password = ""
+    appId=""
+    safeId=""
+    objectId=""
     try:
-        username =  str(readValuefromAppConfig("app.manager.dev.security.username")).replace('"','')
-        password =  str(readValuefromAppConfig("app.manager.dev.security.password")).replace('"','')
-        logger.info("username : "+str(username)+" password : "+str(password))
+        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))
         if(len(nodes)>0):
@@ -528,9 +464,10 @@ if __name__ == '__main__':
                 spaceNodes = config_get_space_hosts()
                 logger.info("spaceNodes: main"+str(spaceNodes))
                 managerHost = getManagerHost(managerNodes)
-                #updateAndCopyJarFileFromSourceToShFolder()
                 logger.info("managerHost : main"+str(managerHost))
                 if(len(str(managerHost))>0):
+                    username = str(getUsernameByHost(managerHost))
+                    password = str(getPasswordByHost(managerHost))
                     listSpacesOnServer(managerNodes)
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
@@ -538,7 +475,7 @@ if __name__ == '__main__':
                         confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
-                            createGSCInputParam()
+                            createGSCInputParam(managerHost,spaceNodes)
                         proceedToDeployPUInputParam(managerHost)
                     else:
                         logger.info("Please check space server.")

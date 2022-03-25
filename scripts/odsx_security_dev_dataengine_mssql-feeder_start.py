@@ -4,12 +4,11 @@ import os, time, requests,json, subprocess, glob,sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import readValueByConfigObj,readValuefromAppConfig
-from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
+from utils.ods_app_config import readValuefromAppConfig,readValueByConfigObj
+from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite
 from requests.auth import HTTPBasicAuth
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -72,19 +71,19 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     out = out.decode()
     return str(out).replace('\n', '')
 
-def displayDB2FeederShFiles():
-    logger.info("startDB2Feeder()")
+def displayMSSQLFeederShFiles():
+    logger.info("startMSSQLFeeder()")
     global fileNameDict
-    global sourceDB2FeederShFilePath
+    global sourceMSSQLFeederShFilePath
     global fileNamePuNameDict
-    sourceDB2FeederShFilePath = str(readValueByConfigObj("app.dataengine.db2-feeder.filePath.shFile"))
+    sourceMSSQLFeederShFilePath = str(readValueByConfigObj("app.dataengine.mssql-feeder.filePath.shFile"))
     counter=1
     directory = os.getcwd()
-    os.chdir(sourceDB2FeederShFilePath)
+    os.chdir(sourceMSSQLFeederShFilePath)
     fileNameDict = host_dictionary_obj()
     fileNamePuNameDict = host_dictionary_obj()
     headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-               Fore.YELLOW+"Name of db2-feeder file"+Fore.RESET
+               Fore.YELLOW+"Name of mssql-feeder file"+Fore.RESET
                ]
     dataTable=[]
     for file in glob.glob("load_*.sh"):
@@ -94,7 +93,7 @@ def displayDB2FeederShFiles():
         dataTable.append(dataArray)
         fileNameDict.add(str(counter),str(file))
         puName = str(file).replace('load','').replace('.sh','').casefold()
-        puName = 'db2feeder'+puName
+        puName = 'mssqlfeeder'+puName
         fileNamePuNameDict.add(str(puName),str(file))
         counter=counter+1
     logger.info("fileNameDict : "+str(fileNameDict))
@@ -125,12 +124,12 @@ def listDeployed(managerHost):
             hostId=''
             response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
             jsonArray2 = json.loads(response2.text)
-            queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
+            queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
             for data2 in jsonArray2:
                 hostId=data2["hostId"]
             if(len(str(hostId))==0):
                 hostId="N/A"
-            if(str(data["name"]).__contains__('db2')):
+            if(str(data["name"]).__contains__('mssql')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
@@ -154,22 +153,22 @@ def inputParam():
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):
-        inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
+        inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start mssql-feeder : "+Fore.RESET))
         if(len(str(inputNumberToStart))==0):
-            inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
-        proceedToStartDB2Feeder(inputNumberToStart)
+            inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start mssql-feeder : "+Fore.RESET))
+        proceedToStartMSSQLFeeder(inputNumberToStart)
     if(len(str(inputChoice))==0):
         elements = len(fileNameDict)
         for i in range (1,elements+1):
-            proceedToStartDB2Feeder(str(i))
+            proceedToStartMSSQLFeeder(str(i))
 
 def sqlLiteGetHostAndPortByFileName(shFileName):
     logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(shFileName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        mycursor = cnx.execute("SELECT host,port FROM db2_host_port where file like '%"+str(shFileName)+"%' ")
+        mycursor = cnx.execute("SELECT host,port FROM mssql_host_port where file like '%"+str(shFileName)+"%' ")
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
@@ -179,8 +178,8 @@ def sqlLiteGetHostAndPortByFileName(shFileName):
     except Exception as e:
         handleException(e)
 
-def proceedToStartDB2Feeder(fileNumberToStart):
-    logger.info("proceedToStartDB2Feeder()")
+def proceedToStartMSSQLFeeder(fileNumberToStart):
+    logger.info("proceedToStartMSSQLFeeder()")
     #shFileName = fileNameDict.get(str(fileNumberToStart))
     puName = gs_space_dictionary_obj.get(str(fileNumberToStart))
     print(puName)
@@ -189,32 +188,25 @@ def proceedToStartDB2Feeder(fileNumberToStart):
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
-    cmd = str(sourceDB2FeederShFilePath)+'/'+shFileName+' '+host+" "+port
+    cmd = str(sourceMSSQLFeederShFilePath)+'/'+shFileName+' '+host+" "+port
     print(cmd)
     os.system(cmd)
     #output = executeLocalCommandAndGetOutput(cmd)
     #print(output)
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_db2-feeder_start")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> Start")
+    logger.info("odsx_security_dataengine_mssql-feeder_start")
+    verboseHandle.printConsoleWarning("Menu ->Security-> Dev -> DataEngine -> MSSQL-Feeder -> Start")
     username = ""
     password = ""
-    appId=""
-    safeId=""
-    objectId=""
     try:
-        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
-        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
-        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
-        logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+        username =  str(readValuefromAppConfig("app.manager.dev.security.username")).replace('"','')
+        password =  str(readValuefromAppConfig("app.manager.dev.security.password")).replace('"','')
         managerHost=''
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes);
         if(len(str(managerHost))>0):
-            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
-            displayDB2FeederShFiles()
+            displayMSSQLFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
                 inputParam()
@@ -225,5 +217,5 @@ if __name__ == '__main__':
             logger.info("No manager status ON.")
             verboseHandle.printConsoleInfo("No manager status ON.")
     except Exception as e:
-        verboseHandle.printConsoleError("Eror in odsx_db2-feeder_start : "+str(e))
+        verboseHandle.printConsoleError("Eror in odsx_mssql-feeder_start : "+str(e))
         handleException(e)

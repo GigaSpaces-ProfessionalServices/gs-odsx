@@ -154,6 +154,7 @@ def getUserInput(managerHost):
 
 def listDeployed(managerHost):
     global gs_space_dictionary_obj
+    global gs_pu_zone_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username,password))
@@ -167,6 +168,7 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"processingUnitType"+Fore.RESET
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
+        gs_pu_zone_dictionary_obj = host_dictionary_obj()
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
         counter=0
         dataTable=[]
@@ -179,6 +181,7 @@ def listDeployed(managerHost):
                              Fore.GREEN+data["processingUnitType"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                gs_pu_zone_dictionary_obj.add(str(counter+1),str(data["sla"]["zones"]))
                 counter=counter+1
                 dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
@@ -189,6 +192,8 @@ def listDeployed(managerHost):
 def proceedForAllUndeploy(managerHost):
     logger.info("proceedForAllUndeploy()")
     try:
+        counter=1
+        gscRemove=''
         for key,value in gs_space_dictionary_obj.items():
             logger.info(str(key)+" : "+str(value))
             spaceTobeUndeploy = gs_space_dictionary_obj.get(str(key))
@@ -213,12 +218,17 @@ def proceedForAllUndeploy(managerHost):
                         #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
                         verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
                 verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                proceedForPersistUndeploy()
-                proceedForGSCRemove()
-
             else:
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
                 verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
+            if(len(gscRemove)==0):
+                gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+            if(len(str(gscRemove))==0):
+                gscRemove='y'
+            if(gscRemove=='y'):
+                managerHost = getManagerHost(managerNodes)
+                removeGSC(managerHost,str(counter),'all')
+            counter=counter+1
     except Exception as e:
         handleException(e)
 
@@ -261,10 +271,13 @@ def proceedToUndeployPU(managerHost):
                             #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
                             verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
                     verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-
-            else:
-                logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
-                verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
+                    proceedForPersistUndeploy()
+            gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+            if(len(str(gscRemove))==0):
+                gscRemove='y'
+            if(gscRemove=='y'):
+                managerHost = getManagerHost(managerNodes)
+                removeGSC(managerHost,spaceNumberTobeRemove,'')
         elif(typeOfRemove=='99'):
             logger.info("99")
             return
@@ -325,21 +338,28 @@ def proceedForCount(zoneToDeleteGSC):
                     var = str(var).replace("Containers:",'').replace(" ",'')
                     return int(var)
 
-
-def removeGSC(managerHost):
+def removeGSC(managerHost,spaceNumberTobeRemove,flag):
     logger.info("removeGSC()")
-    zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
-    while(len(str(zoneToDeleteGSC))==0):
-        zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
-    logger.info("zoneToDeleteGSC : "+str(zoneToDeleteGSC))
-    confirmRemoveGSC = str(input(Fore.YELLOW+"Are you sure want to remove GSCs under zone ["+str(zoneToDeleteGSC)+"] ? (y/n) [y] :"))
-    if(len(str(confirmRemoveGSC))==0):
+    logger.info(str(spaceNumberTobeRemove)+" :: "+str(gs_pu_zone_dictionary_obj))
+    zoneToRemove =gs_pu_zone_dictionary_obj.get(str(spaceNumberTobeRemove))
+    zoneToRemove = str(zoneToRemove).replace("'","").replace(']','').replace('[','')
+    zoneToDeleteGSC=''
+    if(str(flag)!='all'):
+        zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC ["+str(zoneToRemove)+"] : "+Fore.RESET))
+        if(len(zoneToDeleteGSC)==0):
+            zoneToDeleteGSC=zoneToRemove
+        logger.info("zoneToDeleteGSC : "+str(zoneToDeleteGSC))
+        confirmRemoveGSC = str(input(Fore.YELLOW+"Are you sure want to remove GSCs under zone ["+str(zoneToDeleteGSC)+"] ? (y/n) [y] :"))
+        if(len(str(confirmRemoveGSC))==0):
+            confirmRemoveGSC='y'
+    else:
+        zoneToDeleteGSC = zoneToRemove
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
         #countGSC = proceedForCount(zoneToDeleteGSC)
         cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh  --username="+username+" --password="+password+" container kill --zones "+str(zoneToDeleteGSC)
         logger.info("cmd : "+str(cmd))
-        #print(str(cmd))
+        verboseHandle.printConsoleInfo("Killing container of zone : "+str(zoneToDeleteGSC))
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
             print(output)

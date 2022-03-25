@@ -113,16 +113,17 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["name"]+Fore.RESET,
-                         Fore.GREEN+data["resource"]+Fore.RESET,
-                         Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                         Fore.GREEN+data["processingUnitType"]+Fore.RESET,
-                         Fore.GREEN+data["status"]+Fore.RESET
-                         ]
-            gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-            counter=counter+1
-            dataTable.append(dataArray)
+            if(str(data["name"]).casefold().__contains__('consumer') or str(data["processingUnitType"]).casefold().__contains__("stateful")):
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+data["resource"]+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+data["processingUnitType"]+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:
@@ -216,7 +217,7 @@ def proceedToCreateGSC():
     for host in spaceNodes:
         scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
         commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)
-        print(commandToExecute)
+        verboseHandle.printConsoleInfo("Creating container : count="+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" host="+str(host.ip))
         logger.info(commandToExecute)
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
@@ -232,9 +233,9 @@ def createGSCInputParam(managerHost,spaceNode):
     global dPipelineLocationTarget
     global dPipelineLocationSource
 
-    numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [2] : "+Fore.RESET))
+    numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
     while(len(str(numberOfGSC))==0):
-        numberOfGSC=2
+        numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
     zoneGSC = str(input(Fore.YELLOW+"Enter zone of GSC to create [adsCons] : "+Fore.RESET))
@@ -319,29 +320,25 @@ def proceedToDeployPU(data):
     deployResponseCode = str(response.content.decode('utf-8'))
     print("deployResponseCode : "+str(deployResponseCode))
     logger.info("deployResponseCode :"+str(deployResponseCode))
-    if(deployResponseCode.isdigit()):
-        status = validateResponseGetDescription(deployResponseCode)
-        logger.info("response.status_code :"+str(response.status_code))
-        logger.info("response.content :"+str(response.content) )
-        if(response.status_code==202):
-            logger.info("Response :"+str(status))
-            retryCount=5
-            while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                status = validateResponseGetDescription(deployResponseCode)
-                verboseHandle.printConsoleInfo("Response :"+str(status))
-                retryCount = retryCount-1
-                time.sleep(2)
-                if(str(status).casefold().__contains__('successful')):
-                    return
-                elif(str(status).casefold().__contains__('failed')):
-                    return
-        else:
-            logger.info("Unable to deploy :"+str(status))
-            verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
-    else:
-        logger.info("Unable to deploy :"+str(deployResponseCode))
-        verboseHandle.printConsoleInfo("Unable to deploy : "+str(deployResponseCode))
 
+    status = validateResponseGetDescription(deployResponseCode)
+    logger.info("response.status_code :"+str(response.status_code))
+    logger.info("response.content :"+str(response.content) )
+    if(response.status_code==202):
+        logger.info("Response :"+str(status))
+        retryCount=5
+        while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+            status = validateResponseGetDescription(deployResponseCode)
+            verboseHandle.printConsoleInfo("Response :"+str(status))
+            retryCount = retryCount-1
+            time.sleep(2)
+            if(str(status).casefold().__contains__('successful')):
+                return
+            elif(str(status).casefold().__contains__('failed')):
+                return
+    else:
+        logger.info("Unable to deploy :"+str(status))
+        verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
