@@ -4,9 +4,9 @@ import os, time, requests,json, subprocess, glob,sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import readValueByConfigObj,readValuefromAppConfig
+from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj,readValuefromAppConfig
 from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
 from requests.auth import HTTPBasicAuth
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
@@ -67,13 +67,13 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     logger.info("executeLocalCommandAndGetOutput() cmd :" + str(commandToExecute))
     cmd = commandToExecute
     cmdArray = cmd.split(" ")
-    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE)
+    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out, error = process.communicate()
     out = out.decode()
     return str(out).replace('\n', '')
 
 def displayDB2FeederShFiles():
-    logger.info("startDB2Feeder()")
+    logger.info("stopDB2Feeder()")
     global fileNameDict
     global sourceDB2FeederShFilePath
     global fileNamePuNameDict
@@ -148,20 +148,20 @@ def listDeployed(managerHost):
 
 def inputParam():
     logger.info("inputParam()")
-    inputNumberToStart =''
+    inputNumberToStop =''
     inputChoice=''
-    inputChoice = str(input(Fore.YELLOW+"Enter [1] For individual start \n[Enter] For all \n[99] For exit : "+Fore.RESET))
+    inputChoice = str(input(Fore.YELLOW+"Enter [1] For individual stop \n[Enter] For all \n[99] For exit : "+Fore.RESET))
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):
-        inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
-        if(len(str(inputNumberToStart))==0):
-            inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
-        proceedToStartDB2Feeder(inputNumberToStart)
+        inputNumberToStop = str(input(Fore.YELLOW+"Enter serial number to stop db2-feeder : "+Fore.RESET))
+        if(len(str(inputNumberToStop))==0):
+            inputNumberToStop = str(input(Fore.YELLOW+"Enter serial number to stop db2-feeder : "+Fore.RESET))
+        proceedToStopDB2Feeder(inputNumberToStop)
     if(len(str(inputChoice))==0):
         elements = len(fileNameDict)
         for i in range (1,elements+1):
-            proceedToStartDB2Feeder(str(i))
+            proceedToStopDB2Feeder(str(i))
 
 def sqlLiteGetHostAndPortByFileName(shFileName):
     logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(shFileName))
@@ -179,25 +179,26 @@ def sqlLiteGetHostAndPortByFileName(shFileName):
     except Exception as e:
         handleException(e)
 
-def proceedToStartDB2Feeder(fileNumberToStart):
-    logger.info("proceedToStartDB2Feeder()")
-    #shFileName = fileNameDict.get(str(fileNumberToStart))
-    puName = gs_space_dictionary_obj.get(str(fileNumberToStart))
+def proceedToStopDB2Feeder(fileNumberToStop):
+    logger.info("proceedToStopDB2Feeder()")
+    #shFileName = fileNameDict.get(str(fileNumberToStop))
+    puName = gs_space_dictionary_obj.get(str(fileNumberToStop))
     print(puName)
     shFileName = fileNamePuNameDict.get(str(puName))
     hostAndPort = str(sqlLiteGetHostAndPortByFileName(shFileName)).split(',')
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
-    cmd = str(sourceDB2FeederShFilePath)+'/'+shFileName+' '+host+" "+port
+    cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
     print(cmd)
-    os.system(cmd)
-    #output = executeLocalCommandAndGetOutput(cmd)
-    #print(output)
+    logger.info("cmd : "+str(cmd))
+    output = executeLocalCommandAndGetOutput(cmd);
+    print(str(output))
+    logger.info("Output ::"+str(output))
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_db2-feeder_start")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> Start")
+    logger.info("odsx_security_dataengine_db2-feeder_stop")
+    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> stop")
     username = ""
     password = ""
     appId=""
@@ -225,5 +226,5 @@ if __name__ == '__main__':
             logger.info("No manager status ON.")
             verboseHandle.printConsoleInfo("No manager status ON.")
     except Exception as e:
-        verboseHandle.printConsoleError("Eror in odsx_db2-feeder_start : "+str(e))
+        verboseHandle.printConsoleError("Eror in odsx_security_db2-feeder_stop : "+str(e))
         handleException(e)

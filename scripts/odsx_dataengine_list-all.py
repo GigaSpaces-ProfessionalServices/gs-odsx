@@ -1,14 +1,12 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json
+import os, time, requests,json, subprocess, sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -62,11 +60,13 @@ def getManagerHost(managerNodes):
     except Exception as e:
         handleException(e)
 
+
 def listDeployed(managerHost):
+    logger.info("listDeployed - db2-Feeder list")
     global gs_space_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username,password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -74,7 +74,7 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"Name"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
-                   Fore.YELLOW+"processingUnitType"+Fore.RESET,
+                   Fore.YELLOW+"Query Status"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
@@ -83,43 +83,69 @@ def listDeployed(managerHost):
         dataTable=[]
         for data in jsonArray:
             hostId=''
-            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username,password))
+            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
             jsonArray2 = json.loads(response2.text)
+            queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
             for data2 in jsonArray2:
                 hostId=data2["hostId"]
             if(len(str(hostId))==0):
-               hostId="N/A"
-            if(str(data["name"]).casefold().__contains__('adabasconsumer')):
+                hostId="N/A"
+            if(str(data["name"]).__contains__('db2')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+data["processingUnitType"]+Fore.RESET,
+                             Fore.GREEN+str(queryStatus)+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
+
+        # For Kafka - Consumer
+        logger.info("managerHost :"+str(managerHost))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
+        jsonArray2 = json.loads(response.text)
+        for data in jsonArray:
+            hostId=''
+            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
+            jsonArray2 = json.loads(response2.text)
+            for data2 in jsonArray2:
+                hostId=data2["hostId"]
+            if(len(str(hostId))==0):
+                hostId="N/A"
+            if(str(data["name"]).casefold().__contains__('adabasconsumer')):
+                dataArray = [Fore.GREEN+str(counter)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+str(hostId)+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+str("-")+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
+
         printTabular(None,headers,dataTable)
-        return gs_space_dictionary_obj
+
     except Exception as e:
         handleException(e)
 
 if __name__ == '__main__':
-    logger.info("odsx_security_mq-connector_kafka-consumer_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> Dev -> MQ-Connector -> Kafka consumer -> List")
-    username = ""
-    password = ""
+    logger.info("odsx_dataengine_list-all")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine ->List-All")
     try:
-        username = str(readValuefromAppConfig("app.manager.dev.security.username")).replace('"','')
-        password = str(readValuefromAppConfig("app.manager.dev.security.password")).replace('"','')
-        logger.info("username : "+str(username)+" password : "+str(password))
         managerNodes = config_get_manager_node()
-        logger.info("managerNodes: main"+str(managerNodes))
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
-            listDeployed(managerHost)
+            if(len(str(managerHost))>0):
+                listDeployed(managerHost)
+            else:
+                logger.info("No manager status ON.")
+                verboseHandle.printConsoleInfo("No manager status ON.")
+        else:
+            logger.info("No manager found.")
+            verboseHandle.printConsoleInfo("No manager found.")
     except Exception as e:
-        verboseHandle.printConsoleError("Eror in odsx_tieredstorage_undeployed : "+str(e))
-        logger.error("Exception in tieredStorage_undeployed.py"+str(e))
         handleException(e)

@@ -553,9 +553,9 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         logger.info("nameOfPU :"+str(resourceName))
 
         global partition
-        partition = str(input(Fore.YELLOW+"Enter partition required [1] :"+Fore.RESET))
+        partition = str(input(Fore.YELLOW+"Enter partition required [50] :"+Fore.RESET))
         if(len(str(partition))==0):
-            partition='1'
+            partition='50'
         while( not partition.isdigit()):
             partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
         logger.info("Enter partition required :"+str(partition))

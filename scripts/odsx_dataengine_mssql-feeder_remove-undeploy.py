@@ -10,9 +10,7 @@ from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
 from scripts.spinner import Spinner
-from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -72,7 +70,7 @@ def listUndeployedPUsOnServer(managerHost):
     global gs_pu_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/undeployed",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/undeployed")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Persist resources on cluster:")
@@ -104,7 +102,7 @@ def proceedForIndividualUndeployed(managerHost):
         spaceTobeUndeploy = gs_pu_dictionary_obj.get(puSrNumber)
         logger.info("spaceTobeUndeploy :"+str(spaceTobeUndeploy))
         logger.info("managerHost :"+managerHost)
-        response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy),auth = HTTPBasicAuth(username, password))
+        response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy))
         verboseHandle.printConsoleInfo(str(response.status_code))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         if(response.status_code==200):
@@ -124,7 +122,7 @@ def proceedForAllUndeployed(managerHost):
             spaceTobeUndeploy = gs_pu_dictionary_obj.get(str(key))
             print(spaceTobeUndeploy)
 
-            response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy),auth = HTTPBasicAuth(username, password))
+            response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy))
             verboseHandle.printConsoleInfo(str(response.status_code))
             logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
             if(response.status_code==200):
@@ -159,7 +157,7 @@ def listDeployed(managerHost):
     global gs_pu_zone_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -175,8 +173,8 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
-            if(str(data["name"]).__contains__('db2')):
+            queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
+            if(str(data["name"]).__contains__('mssql')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,
@@ -206,25 +204,22 @@ def proceedForAllUndeploy(managerHost):
             #response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy))
             logger.info("managerHost All: "+str(managerHost)+" drainMode: "+str(drainMode)+" drainTimeout: "+str(drainTimeout))
             logger.info("URL DrainMode : http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
-            response = requests.delete("http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout),auth = HTTPBasicAuth(username, password))
+            response = requests.delete("http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
             verboseHandle.printConsoleInfo(str(response.status_code))
             logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
             if(response.status_code==202):
                 undeployResponseCode = str(response.content.decode('utf-8'))
                 logger.info("backUPResponseCode : "+str(undeployResponseCode))
-                if(undeployResponseCode.isdigit()):
-                    status = validateResponse(undeployResponseCode)
-                    with Spinner():
-                        while(status.casefold() != 'successful'):
-                            time.sleep(2)
-                            status = validateResponse(undeployResponseCode)
-                            logger.info("UndeployAll :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
-                            #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                            verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                    verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                else:
-                    logger.info("UndeployAll  :"+str(spaceTobeUndeploy)+"   status :"+str(undeployResponseCode))
-                    verboseHandle.printConsoleInfo("Undeploy :"+str(spaceTobeUndeploy)+"   Status : "+str(undeployResponseCode))
+
+                status = validateResponse(undeployResponseCode)
+                with Spinner():
+                    while(status.casefold() != 'successful'):
+                        time.sleep(2)
+                        status = validateResponse(undeployResponseCode)
+                        logger.info("UndeployAll :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
+                        #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                        verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
             else:
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
                 verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
@@ -263,31 +258,24 @@ def proceedToUndeployPU(managerHost):
                 #response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy))
                 logger.info("managerHost undeploy: "+str(managerHost)+" drainMode: "+str(drainMode)+" drainTimeout: "+str(drainTimeout))
                 logger.info("URL DrainMode :   http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
-                response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout),auth = HTTPBasicAuth(username, password))
+                response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
                 verboseHandle.printConsoleInfo(str(response.status_code))
                 logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
                 if(response.status_code==202):
                     undeployResponseCode = str(response.content.decode('utf-8'))
                     logger.info("backUPResponseCode : "+str(undeployResponseCode))
-                    if(undeployResponseCode.isdigit()):
-                        status = validateResponse(undeployResponseCode)
-                        with Spinner():
-                            while(status.casefold() != 'successful'):
-                                time.sleep(2)
-                                status = validateResponse(undeployResponseCode)
-                                logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
-                                #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                                verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                        verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                        proceedForPersistUndeploy()
-                        proceedForGSCRemove()
-                    else:
-                        logger.info("Undeploy  :"+str(spaceTobeUndeploy)+"   status :"+str(undeployResponseCode))
-                        verboseHandle.printConsoleInfo("Undeploy  :"+str(spaceTobeUndeploy)+"   Status : "+str(undeployResponseCode))
 
-            else:
-                logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
-                verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
+                    status = validateResponse(undeployResponseCode)
+                    with Spinner():
+                        while(status.casefold() != 'successful'):
+                            time.sleep(2)
+                            status = validateResponse(undeployResponseCode)
+                            logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
+                            #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                            verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                    verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                    proceedForPersistUndeploy()
+
             gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
             if(len(str(gscRemove))==0):
                 gscRemove='y'
@@ -306,7 +294,7 @@ def proceedToUndeployPU(managerHost):
 def validateResponse(responseCode):
     logger.info("validateResponse() "+str(responseCode))
     try:
-        response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode),auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode))
         jsonData = json.loads(response.text)
         logger.info("response : "+str(jsonData))
         return str(jsonData["status"])
@@ -349,7 +337,7 @@ def removeGSC(managerHost,spaceNumberTobeRemove,flag):
         zoneToDeleteGSC = zoneToRemove
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
-        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill --zones "+str(zoneToDeleteGSC)
+        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)
         logger.info("cmd : "+str(cmd))
         verboseHandle.printConsoleInfo("Killing container of zone : "+str(zoneToDeleteGSC))
         with Spinner():
@@ -364,27 +352,10 @@ def proceedForPersistUndeploy():
         logger.info("No space/pu undeployed found.")
         verboseHandle.printConsoleInfo("No space/pu undeployed found.")
 
-def proceedForGSCRemove():
-    gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
-    if(len(str(gscRemove))==0):
-        gscRemove='y'
-    if(gscRemove=='y'):
-        managerHost = getManagerHost(managerNodes)
-        removeGSC(managerHost)
-
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_db2-feeder_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> Stop-UnDeploy")
-    username = ""
-    password = ""
-    appId=""
-    safeId=""
-    objectId=""
+    logger.info("odsx_dataengine_mssql-feeder_undeploy")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> MSSQL-Feeder -> Stop-UnDeploy")
     try:
-        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
-        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
-        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
-        logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):
             logger.info("managerNodes: main"+str(managerNodes))
@@ -394,8 +365,6 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 managerHostConfig = str(input(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 if(len(str(managerHostConfig))>0):
                     managerHost = managerHostConfig
                 logger.info("Manager Host :"+str(managerHost))
@@ -405,23 +374,6 @@ if __name__ == '__main__':
                 else:
                     logger.info("No space/pu found.")
                     verboseHandle.printConsoleInfo("No space/pu found.")
-                #with Spinner():
-                #    time.sleep(30)
-                #gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost)
-                #if(len(gs_pu_dictionary_obj)>0):
-                #    getUserInput(managerHost)
-                #else:
-                #    logger.info("No space/pu undeployed found.")
-                #    verboseHandle.printConsoleInfo("No space/pu undeployed found.")
-                #confirmParamAndRestartGSC()
-                '''
-                gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
-                if(len(str(gscRemove))==0):
-                    gscRemove='y'
-                if(gscRemove=='y'):
-                    managerHost = getManagerHost(managerNodes)
-                    removeGSC(managerHost,spaceNumberTobeRemove)
-                '''
             else:
                 logger.info("Please check manager server status.")
                 verboseHandle.printConsoleInfo("Please check manager server status.")
