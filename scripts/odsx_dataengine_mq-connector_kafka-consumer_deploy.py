@@ -216,7 +216,7 @@ def proceedToCreateGSC():
     #    scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
     for host in spaceNodes:
         scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
-        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)
+        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)+" | grep -v JAVA_HOME"
         verboseHandle.printConsoleInfo("Creating container : count="+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" host="+str(host.ip))
         logger.info(commandToExecute)
         with Spinner():

@@ -87,10 +87,27 @@ def getManagerHost(managerNodes):
     except Exception as e:
         handleException(e)
 
+def getTieredStorageSpaces():
+    logger.info("getTieredStorageSpaces()")
+    #check for Tiered storage space
+    tieredSpace = []
+    try:
+        responseTiered = requests.get("http://"+str(managerHost)+":8090/v2/internal/spaces/utilization")
+        logger.info("Response status of spaces/utilization : "+str(responseTiered.status_code)+" content : "+str(responseTiered.content))
+        jsonArrayTiered = json.loads(responseTiered.text)
+        for data in jsonArrayTiered:
+            if(data["tiered"]==True):
+                tieredSpace.append(str(data["name"]))
+        logger.info("tieresSpaces : "+str(tieredSpace))
+    except Exception as e:
+        handleException(e)
+    return tieredSpace
+
 def listSpacesOnServer(managerHost):
     logger.info("listSpacesOnServer : managerNodes :"+str(managerHost))
     global gs_space_host_dictionary_obj
     try:
+        tieredSpaces = getTieredStorageSpaces()
         logger.info("managerHost :"+str(managerHost))
         response = requests.get("http://"+str(managerHost)+":8090/v2/spaces")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code))
@@ -107,19 +124,20 @@ def listSpacesOnServer(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            if(str(data["topology"]["backupsPerPartition"])=="1"):
-                isBackup="YES"
-            if(str(data["topology"]["backupsPerPartition"])=="0"):
-                isBackup="NO"
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["name"]+Fore.RESET,
-                         Fore.GREEN+data["processingUnitName"]+Fore.RESET,
-                         Fore.GREEN+str(data["topology"]["partitions"])+Fore.RESET,
-                         Fore.GREEN+isBackup+Fore.RESET
-                         ]
-            gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
-            counter=counter+1
-            dataTable.append(dataArray)
+            if(tieredSpaces.__contains__(str(data["name"]))):
+                if(str(data["topology"]["backupsPerPartition"])=="1"):
+                    isBackup="YES"
+                if(str(data["topology"]["backupsPerPartition"])=="0"):
+                    isBackup="NO"
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+data["processingUnitName"]+Fore.RESET,
+                             Fore.GREEN+str(data["topology"]["partitions"])+Fore.RESET,
+                             Fore.GREEN+isBackup+Fore.RESET
+                             ]
+                gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
         return gs_space_host_dictionary_obj
     except Exception as e:
@@ -538,6 +556,7 @@ def copyFilesFromODSXToSpaceServer():
         logger.info("tieredCriteriaConfigFilePathBckupFile : "+str(tieredCriteriaConfigFilePathBckupFile))
         cmd = "cp "+str(tieredCriteriaConfigFilePath)+" "+str(tieredCriteriaConfigFilePathBckupFile)
         logger.info("cmd : "+str(cmd))
+        set_value_in_property_file('app.tieredstorage.criteria.filepathbackup.prev',str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup")))
         set_value_in_property_file('app.tieredstorage.criteria.filepathbackup',str(tieredCriteriaConfigFilePathBckupFile))
         status = os.system(cmd)
         logger.info("cp status :"+str(status))

@@ -6,7 +6,7 @@ from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
+from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite, getMSSQLQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -126,7 +126,30 @@ def listDeployed(managerHost):
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
-
+        # For MS-SQL-Feeder
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
+        jsonArray = json.loads(response.text)
+        for data in jsonArray:
+            hostId=''
+            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
+            jsonArray2 = json.loads(response2.text)
+            queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
+            for data2 in jsonArray2:
+                hostId=data2["hostId"]
+            if(len(str(hostId))==0):
+                hostId="N/A"
+            if(str(data["name"]).__contains__('mssql')):
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+str(hostId)+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+str(queryStatus)+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
 
     except Exception as e:
