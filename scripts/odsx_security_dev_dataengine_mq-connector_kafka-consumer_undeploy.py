@@ -321,7 +321,7 @@ def printProgressBar(i,max,postText):
     print(f"[{'=' * int(n_bar * j):{n_bar}s}] {int(100 * j)}%  {postText}")
 
 def proceedForCount(zoneToDeleteGSC):
-    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container list --zones "+str(zoneToDeleteGSC)
+    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container list --zones "+str(zoneToDeleteGSC)+" | grep -v JAVA_HOME"
     logger.info("cmd : "+str(cmd))
     #print(str(cmd))
     count=0

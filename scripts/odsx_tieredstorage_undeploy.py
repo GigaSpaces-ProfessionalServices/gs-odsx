@@ -63,6 +63,18 @@ def getManagerHost(managerNodes):
     except Exception as e:
         handleException(e)
 
+def getTieredStorageSpaces():
+    logger.info("getTieredStorageSpaces()")
+    #check for Tiered storage space
+    responseTiered = requests.get("http://"+str(managerHost)+":8090/v2/internal/spaces/utilization")
+    logger.info("Response status of spaces/utilization : "+str(responseTiered.status_code)+" content : "+str(responseTiered.content))
+    jsonArrayTiered = json.loads(responseTiered.text)
+    tieredSpace = []
+    for data in jsonArrayTiered:
+        if(data["tiered"]==True):
+            tieredSpace.append(str(data["serviceName"]))
+    logger.info("tieresSpace : "+str(tieredSpace))
+    return tieredSpace
 
 def listUndeployedPUsOnServer(managerHost):
     logger.info("listUndeployedPUsOnServer()")
@@ -170,17 +182,19 @@ def listDeployed(managerHost):
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
         counter=0
         dataTable=[]
+        tieredSpaces = getTieredStorageSpaces()
         for data in jsonArray:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["name"]+Fore.RESET,
-                         Fore.GREEN+data["resource"]+Fore.RESET,
-                         Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                         Fore.GREEN+data["processingUnitType"]+Fore.RESET,
-                         Fore.GREEN+data["status"]+Fore.RESET
-                        ]
-            gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-            counter=counter+1
-            dataTable.append(dataArray)
+            if(tieredSpaces.__contains__(str(data["name"]))):
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+data["resource"]+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+data["processingUnitType"]+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                            ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:
@@ -362,15 +376,15 @@ if __name__ == '__main__':
                 gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost)
                 if(len(gs_pu_dictionary_obj)>0):
                     getUserInput(managerHost)
+                    gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+                    if(len(str(gscRemove))==0):
+                        gscRemove='y'
+                    if(gscRemove=='y'):
+                        managerHost = getManagerHost(managerNodes)
+                        removeGSC(managerHost)
                 else:
                     logger.info("No space/pu undeployed found.")
                     verboseHandle.printConsoleInfo("No space/pu undeployed found.")
-                gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
-                if(len(str(gscRemove))==0):
-                    gscRemove='y'
-                if(gscRemove=='y'):
-                    managerHost = getManagerHost(managerNodes)
-                    removeGSC(managerHost)
                 #confirmParamAndRestartGSC()
             else:
                 logger.info("Please check manager server status.")

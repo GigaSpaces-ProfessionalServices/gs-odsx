@@ -596,7 +596,7 @@ if __name__ == '__main__':
                 sourceFile = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath")).replace('"','')
                 logger.info("sourceFile : "+str(sourceFile))
                 global backupCriteriaFile
-                backupCriteriaFile = str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup")).replace('"','')
+                backupCriteriaFile = str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup.prev")).replace('"','')
                 logger.info("backupFile : "+str(backupCriteriaFile))
                 if(Path(backupCriteriaFile).is_file()):
                     logger.info("File exist"+str(backupCriteriaFile))

@@ -355,7 +355,7 @@ def removeGSC(managerHost,spaceNumberTobeRemove,flag):
         zoneToDeleteGSC = zoneToRemove
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
-        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)
+        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)+" | grep -v JAVA_HOME"
         logger.info("cmd : "+str(cmd))
         verboseHandle.printConsoleInfo("Killing container of zone : "+str(zoneToDeleteGSC))
         with Spinner():
