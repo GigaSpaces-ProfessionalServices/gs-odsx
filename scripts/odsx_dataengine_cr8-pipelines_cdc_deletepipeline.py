@@ -73,10 +73,6 @@ def deletePipeline(args):
             #    headers={'Accept': 'application/json'})
             # logger.info(str(response.status_code))
             # logger.info(str(response.text))
-            if str(output).__contains__('true'):
-                verboseHandle.printConsoleInfo("Validation Successful")
-            else:
-                verboseHandle.printConsoleError("Validation Failed")
         else:
             verboseHandle.printConsoleError("Wrong option selected")
 
