@@ -8,10 +8,10 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
+from scripts.odsx_dataengine_cr8cdcpipelines_cdc_list import display_stream_list
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -52,11 +52,9 @@ def display_stream_list1(args):
     printHeaders = [
         Fore.YELLOW + "#" + Fore.RESET,
         Fore.YELLOW + "Name" + Fore.RESET,
-        Fore.YELLOW + "Status" + Fore.RESET,
-        Fore.YELLOW + "Rows Completed" + Fore.RESET,
-        Fore.YELLOW + "Time Completed" + Fore.RESET,
-        Fore.YELLOW + "Work Completed (%)" + Fore.RESET,
-        Fore.YELLOW + "Progress Update Time" + Fore.RESET
+        Fore.YELLOW + "isRunning" + Fore.RESET,
+        Fore.YELLOW + "State" + Fore.RESET,
+        Fore.YELLOW + "State Timestamp" + Fore.RESET,
     ]
     data = []
     pipelineDict = {}
@@ -75,52 +73,55 @@ def display_stream_list1(args):
     counter = 0
     for stream in streams:
         # print(stream)
-        response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getFullSyncProgress/' + str(
-            stream["configurationName"]))
-        streamSyncData = json.loads(response.text)
+        user = 'root'
+        scriptUser = 'dbsh'
+        cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl.sh status " + str(
+            stream["configurationName"]) + "'"
+        with Spinner():
+            response = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
+        streamSyncData = json.loads(str(response))
         print(str(streamSyncData))
+        dateTime = ""
+        if streamSyncData["streamStatus"]["stateTimeStamp"] != "":
+            epochTimeresponse = requests.get(
+                'http://' + deNodes[0].ip + ':2050/CR8/utils/getDateTimeFromEpoch/' + streamSyncData["streamStatus"][
+                    "stateTimeStamp"])
+            dateTime = str(epochTimeresponse.text)
         counter = counter + 1
-        state = Fore.GREEN + "RUNNING" + Fore.RESET
-        if str(stream["state"]).upper() == "STOPPED":
-            state = Fore.RED + "STOPPED" + Fore.RESET
-        dataArray = [counter, stream["configurationName"],
-                     state, streamSyncData["rowsCompleted"], streamSyncData["timeCompleted"],
-                     streamSyncData["pctWorkCompleted"], streamSyncData["progressUpdateTime"]]
+        dataArray = [counter, streamSyncData["streamStatus"]["name"],
+                     streamSyncData["isRunning"], streamSyncData["streamStatus"]["state"], dateTime]
         pipelineDict.update({counter: stream["configurationName"]})
+
         data.append(dataArray)
 
     printTabular(None, printHeaders, data)
     return pipelineDict
 
 
-def startStream(args):
+def stopStream(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     if selectedOption != 99:
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)
-            user = 'root'
-            scriptUser = 'dbsh'
-            cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl start " + configName + "'"
-            with Spinner():
-                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
-            # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName
-            # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
-            # verboseHandle.printConsoleInfo(str(output))
-            if str(output).__contains__("start"):
-                verboseHandle.printConsoleInfo("Started full sync " + configName)
+            response = requests.get(
+                'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/stop/' + configName)
+            logger.info(str(response.status_code))
+            logger.info(str(response.text))
+            if response.status_code == 200 and response.text.__contains__("stopped"):
+                verboseHandle.printConsoleInfo("Stopped online stream " + configName)
             else:
-                verboseHandle.printConsoleError("Failed to start full sync " + configName)
+                verboseHandle.printConsoleError("Failed to stop stream " + configName)
         else:
             verboseHandle.printConsoleError("Wrong option selected")
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Start Full sync')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> CDC -> Stop online stream')
     try:
         args = []
         args = myCheckArg()
-        startStream(args)
+        stopStream(args)
     except Exception as e:
         handleException(e)

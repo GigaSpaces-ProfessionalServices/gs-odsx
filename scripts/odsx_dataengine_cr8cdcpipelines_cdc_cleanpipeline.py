@@ -6,7 +6,7 @@ import sys
 import requests
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
+from scripts.odsx_dataengine_cr8cdcpipelines_cdc_list import display_stream_list
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 
@@ -65,7 +65,7 @@ def validate(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Clean pipeline')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> CDC -> Clean pipeline')
     try:
         args = []
         args = myCheckArg()

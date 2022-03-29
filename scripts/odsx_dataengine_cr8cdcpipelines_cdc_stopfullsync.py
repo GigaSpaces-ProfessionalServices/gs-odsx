@@ -4,10 +4,9 @@ import os
 import sys
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
-from scripts.spinner import Spinner
+from scripts.odsx_dataengine_cr8cdcpipelines_cdc_startfullsync import display_stream_list
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -42,7 +41,7 @@ def handleException(e):
     })))
 
 
-def validate(args):
+def stopStream(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
@@ -51,31 +50,25 @@ def validate(args):
             configName = pipelineDict.get(selectedOption)
             user = 'root'
             scriptUser = 'dbsh'
-            cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/updateCMDB.sh /home/dbsh/cr8/latest_cr8/etc/" + configName + ".json'"
-            with Spinner():
-                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
-                print(str(output))
-            # jsonout = json.loads(output)
-            # logger.info("output" + str(jsonout))
-            # response = requests.post(
-            #    'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/validateConfigurations/' + configName,
-            #    data=json.dumps(jsonout),
-            #    headers={'Accept': 'application/json'})
-            # logger.info(str(response.status_code))
-            # logger.info(str(response.text))
-            if str(output).__contains__('true'):
-                verboseHandle.printConsoleInfo("Validation Successful")
+            cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl stop " + configName + "'"
+            output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+            print(str(output))
+            # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl stop " + configName
+            # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
+            # verboseHandle.printConsoleInfo(str(output))
+            if str(output).__contains__("has been killed"):
+                verboseHandle.printConsoleInfo("Stopped full sync " + configName)
             else:
-                verboseHandle.printConsoleError("Validation Failed")
+                verboseHandle.printConsoleError("Failed to stop full sync " + configName)
         else:
             verboseHandle.printConsoleError("Wrong option selected")
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Validate')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> CDC -> Stop Full sync')
     try:
         args = []
         args = myCheckArg()
-        validate(args)
+        stopStream(args)
     except Exception as e:
         handleException(e)
