@@ -167,8 +167,7 @@ def listSpacesOnServer(managerNodes):
     except Exception as e:
         handleException(e)
 
-
-def proceedToKillResource(spaceNodes):
+def proceedToKillResource(managerHost):
     logger.info("proceedToUndeployResource()")
     resourceName = str(
         input(Fore.YELLOW + "Enter name of zone kill [consumer] :" + Fore.RESET))
@@ -185,6 +184,27 @@ def proceedToKillResource(spaceNodes):
         output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
         print(output)
         logger.info("Output:" + str(output))
+
+def proceedToUndeployResource(managerHost):
+    logger.info("proceedToUndeployResource()")
+    resourceName = str(
+        input(Fore.YELLOW + "Enter name of resource to undeploy [consumer] :" + Fore.RESET))
+    if (len(str(resourceName)) == 0):
+        resourceName = 'consumer'
+    logger.info("resourceName :" + str(resourceName))
+
+    # for host in spaceNodes:
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh service undeploy --drain-mode=ATTEMPT " + str(
+        resourceName)
+    print(commandToExecute)
+    logger.info(commandToExecute)
+    with Spinner():
+        try:
+            output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+            print(output)
+            logger.info("Output:" + str(output))
+        except:
+            verboseHandle.printConsoleError("Something went wrong.")
 
 
 def get_gs_host_details(managerNodes):
@@ -218,6 +238,7 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         space_dict_obj = host_dictionary_obj()
         logger.info("space_dict_obj : " + str(space_dict_obj))
         for node in spaceNodes:
+            print(node.name)
             if (gs_host_details_obj.__contains__(str(node.name)) or (str(node.name) in gs_host_details_obj.values())):
                 space_dict_obj.add(str(counter + 1), node.name)
                 counter = counter + 1
@@ -237,7 +258,7 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> Consumer Kill')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> Consumer -> Consumer Undeploy')
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main" + str(managerNodes))
@@ -249,7 +270,8 @@ if __name__ == '__main__':
             if (len(str(managerHost)) > 0):
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes, spaceNodes)
                 if (len(space_dict_obj) > 0):
-                    proceedToKillResource(space_dict_obj)
+                    proceedToUndeployResource(managerHost)
+                    proceedToKillResource(managerHost)
                 else:
                     logger.info("Please check space server.")
                     verboseHandle.printConsoleInfo("Please check space server.")

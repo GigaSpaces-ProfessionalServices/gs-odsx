@@ -10,6 +10,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 
@@ -167,28 +168,23 @@ def listSpacesOnServer(managerNodes):
         handleException(e)
 
 
-def proceedTostartConsumer(spaceNodes):
-    logger.info("proceedTostartConsumer()")
-    offsetVal = str(
-        input(Fore.YELLOW + "Enter offset [end] :" + Fore.RESET))
-    if (len(str(offsetVal)) == 0):
-        offsetVal = 'end'
-    consumerName = str(
-        input(Fore.YELLOW + "Enter pipeline name [cdc_tables] :" + Fore.RESET))
-    if (len(str(consumerName)) == 0):
-        consumerName = 'cdc_tables'
-    data = {
-        "offset": "" + offsetVal + "",
-    }
-    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-    logger.info("offset value : " + str(offsetVal))
+def proceedToKillResource(spaceNodes):
+    logger.info("proceedToUndeployResource()")
+    resourceName = str(
+        input(Fore.YELLOW + "Enter name of zone kill [consumer] :" + Fore.RESET))
+    if (len(str(resourceName)) == 0):
+        resourceName = 'consumer'
+    logger.info("resourceName :" + str(resourceName))
 
+    # for host in spaceNodes:
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones " + str(
+        resourceName)
+    print(commandToExecute)
+    logger.info(commandToExecute)
     with Spinner():
-        response = requests.post(
-            "http://" + managerHost + ":8090/v2/data-pipelines/" + consumerName + "/consumer/start",
-            data=json.dumps(data), headers=headers)
-        print(str(response.status_code))
-        print(response.text)
+        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+        print(output)
+        logger.info("Output:" + str(output))
 
 
 def get_gs_host_details(managerNodes):
@@ -241,7 +237,7 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> Consumer start with offset')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> Consumer -> Consumer Kill')
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main" + str(managerNodes))
@@ -253,7 +249,7 @@ if __name__ == '__main__':
             if (len(str(managerHost)) > 0):
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes, spaceNodes)
                 if (len(space_dict_obj) > 0):
-                    proceedTostartConsumer(space_dict_obj)
+                    proceedToKillResource(space_dict_obj)
                 else:
                     logger.info("Please check space server.")
                     verboseHandle.printConsoleInfo("Please check space server.")

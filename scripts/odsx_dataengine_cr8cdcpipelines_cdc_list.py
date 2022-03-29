@@ -9,8 +9,10 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_dataEngine_nodes
+from utils.ods_cluster_config import config_get_dataEngine_nodes, config_get_manager_node, \
+    config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -29,15 +31,52 @@ def myCheckArg(args=None):
     parser.add_argument('m', nargs='?')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
+def getManagerHost(managerNodes):
+    managerHost=""
+    try:
+        logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
+        for node in managerNodes:
+            status = getSpaceServerStatus(node.ip)
+            if(status=="ON"):
+                managerHost = node.ip
+        return managerHost
+    except Exception as e:
+        handleException(e)
 
 def display_stream_list(args):
     deNodes = config_get_dataEngine_nodes()
+    managerNodes = config_get_manager_node()
+    diNodes = config_get_dataIntegration_nodes()
     printHeaders = [
         Fore.YELLOW + "#" + Fore.RESET,
-        Fore.YELLOW + "Name" + Fore.RESET,
+        Fore.YELLOW + "pipeline name (topic)" + Fore.RESET,
+        Fore.YELLOW + "Consumer Status" + Fore.RESET,
+        Fore.YELLOW + "messages in topic (count)" + Fore.RESET,
         # Fore.YELLOW + "getStatus" + Fore.RESET,
-        Fore.YELLOW + "Full Sync Status" + Fore.RESET,
-        Fore.YELLOW + "Stream status" + Fore.RESET
+        Fore.YELLOW + "full sync fetch to Kafka status" + Fore.RESET,
+        Fore.YELLOW + "online stream fetch to Kafka status" + Fore.RESET
     ]
     data = []
     pipelineDict = {}
@@ -66,9 +105,19 @@ def display_stream_list(args):
 
         cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl.sh status " + str(
             stream["configurationName"]) + "'"
+
+        topicCountCmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$KAFKAPATH/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list "+diNodes[0].ip+":9092 --topic " + str(
+            stream["configurationName"]) +" | awk -F  \":\" '{sum += $3} END {print sum}'"
         with Spinner():
             streamStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
             fullSyncStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, fullSyncCmd)
+            topicCountResponse = executeRemoteCommandAndGetOutputValuePython36(diNodes[0].ip, user, topicCountCmd)
+
+            managerNode = getManagerHost(managerNodes)
+            responseManager = requests.get('http://' + managerNode + ':8090/v2/data-pipelines/'+stream["configurationName"]+'/consumer/status',
+                                           headers={'Accept': 'application/json'})
+            jsonResponseManager = json.loads(response.text)
+
         streamStatus = streamStatus.split("\n", 1)[1]
         if streamStatus != "":
             streamStatusJson = json.loads(str(streamStatus))
@@ -98,20 +147,21 @@ def display_stream_list(args):
         # if str(stream["state"]).upper() == "STOPPED":
         #    state = Fore.RED + "STOPPED" + Fore.RESET
         dataArray = [counter, stream["configurationName"],
+                     jsonResponseManager["status"],
+                     str(topicCountResponse),
                      #    stream["state"],
                      #    stream["state"],
                      fullSyncStatusDisplay,
                      streamStatus]
         pipelineDict.update({counter: stream["configurationName"]})
         data.append(dataArray)
-    dataArray = ["99", "Exit"]
     data.append(dataArray)
     printTabular(None, printHeaders, data)
     return pipelineDict
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Data Engine -> CR8 CDC pipelines  -> List")
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> CR8 CDC pipelines -> CDC -> List")
     args = []
     args = myCheckArg()
     display_stream_list(args)

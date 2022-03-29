@@ -7,7 +7,7 @@ import sys
 import requests
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
+from scripts.odsx_dataengine_cr8cdcpipelines_cdc_list import display_stream_list
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -83,7 +83,7 @@ def show_details(args):
             verboseHandle.printConsoleError("Wrong option selected")
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Show')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> CDC -> Show')
     try:
         args = []
         args = myCheckArg()

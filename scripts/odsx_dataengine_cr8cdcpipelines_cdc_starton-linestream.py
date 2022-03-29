@@ -9,7 +9,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_cr8cdcpipelines_list import display_stream_list
+from scripts.odsx_dataengine_cr8cdcpipelines_cdc_list import display_stream_list
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
@@ -123,7 +123,7 @@ def startStream(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> Start online stream')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> CDC -> Start online stream')
     try:
         args = []
         args = myCheckArg()
