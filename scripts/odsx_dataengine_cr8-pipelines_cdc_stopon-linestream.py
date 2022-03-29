@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 import argparse
-import datetime
+import importlib
 import json
 import os
 import sys
@@ -9,7 +9,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_cr8cdcpipelines_cdc_list import display_stream_list
+cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
@@ -81,7 +81,7 @@ def display_stream_list1(args):
         with Spinner():
             response = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
         streamSyncData = json.loads(str(response))
-        # print(str(streamSyncData))
+        print(str(streamSyncData))
         dateTime = ""
         if streamSyncData["streamStatus"]["stateTimeStamp"] != "":
             epochTimeresponse = requests.get(
@@ -92,8 +92,6 @@ def display_stream_list1(args):
         dataArray = [counter, streamSyncData["streamStatus"]["name"],
                      streamSyncData["isRunning"], streamSyncData["streamStatus"]["state"], dateTime]
         pipelineDict.update({counter: stream["configurationName"]})
-        datetime1 = datetime.datetime.fromtimestamp(streamSyncData["streamStatus"]["stateTimeStamp"])
-        print(datetime1)
 
         data.append(dataArray)
 
@@ -101,32 +99,30 @@ def display_stream_list1(args):
     return pipelineDict
 
 
-def startStream(args):
+def stopStream(args):
     deNodes = config_get_dataEngine_nodes()
-    pipelineDict = display_stream_list(args)
+    pipelineDict = cdclist.display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     if selectedOption != 99:
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)
             response = requests.get(
-                'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/start/' + configName)
+                'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/stop/' + configName)
             logger.info(str(response.status_code))
-            print(str(response.status_code))
             logger.info(str(response.text))
-            print(str(response.text))
-            if response.status_code == 200 and response.text.__contains__("started"):
-                verboseHandle.printConsoleInfo("Started online stream " + configName)
+            if response.status_code == 200 and response.text.__contains__("stopped"):
+                verboseHandle.printConsoleInfo("Stopped online stream " + configName)
             else:
-                verboseHandle.printConsoleError("Failed to start stream " + configName)
+                verboseHandle.printConsoleError("Failed to stop stream " + configName)
         else:
             verboseHandle.printConsoleError("Wrong option selected")
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines -> CDC -> Start online stream')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 pipelines -> CDC -> Stop online stream')
     try:
         args = []
         args = myCheckArg()
-        startStream(args)
+        stopStream(args)
     except Exception as e:
         handleException(e)

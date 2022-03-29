@@ -161,7 +161,7 @@ def display_stream_list(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Data Engine -> CR8 CDC pipelines -> Consumer -> List")
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> CR8 pipelines -> Consumer -> List")
     args = []
     args = myCheckArg()
     display_stream_list(args)
