@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 import argparse
+import importlib
 import json
 import os
 import sys
@@ -7,7 +8,7 @@ import sys
 import requests
 
 from scripts.logManager import LogManager
-from scripts.odsx_dataengine_cr8cdcpipelines_cdc_list import display_stream_list
+cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -45,7 +46,7 @@ def handleException(e):
 
 def show_details(args):
     deNodes = config_get_dataEngine_nodes("config/cluster.config")
-    pipelineDict = display_stream_list(args)
+    pipelineDict = cdclist.display_stream_list(args)
     selectedOption = int(input("Enter your option: "))
     streamConfig = ""
     if (selectedOption != 99):
@@ -83,7 +84,7 @@ def show_details(args):
             verboseHandle.printConsoleError("Wrong option selected")
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 CDC pipelines  -> CDC -> Show')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 pipelines  -> CDC -> Show')
     try:
         args = []
         args = myCheckArg()
