@@ -31,6 +31,7 @@ def myCheckArg(args=None):
     parser.add_argument('m', nargs='?')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+
 def handleException(e):
     logger.info("handleException()")
     trace = []
@@ -53,17 +54,19 @@ def handleException(e):
         'trace': trace
     })))
 
+
 def getManagerHost(managerNodes):
-    managerHost=""
+    managerHost = ""
     try:
-        logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
+        logger.info("getManagerHost() : managerNodes :" + str(managerNodes))
         for node in managerNodes:
             status = getSpaceServerStatus(node.ip)
-            if(status=="ON"):
+            if (status == "ON"):
                 managerHost = node.ip
         return managerHost
     except Exception as e:
         handleException(e)
+
 
 def display_stream_list(args):
     deNodes = config_get_dataEngine_nodes()
@@ -106,17 +109,26 @@ def display_stream_list(args):
         cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl.sh status " + str(
             stream["configurationName"]) + "'"
 
-        topicCountCmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$KAFKAPATH/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list "+diNodes[0].ip+":9092 --topic " + str(
-            stream["configurationName"]) +" | awk -F  \":\" '{sum += $3} END {print sum}'"
+        topicCountCmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$KAFKAPATH/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list " + \
+                        diNodes[0].ip + ":9092 --topic " + str(
+            stream["configurationName"]) + " | awk -F  \":\" '{sum += $3} END {print sum}'"
         with Spinner():
             streamStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
             fullSyncStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, fullSyncCmd)
             topicCountResponse = executeRemoteCommandAndGetOutputValuePython36(diNodes[0].ip, user, topicCountCmd)
 
             managerNode = getManagerHost(managerNodes)
-            responseManager = requests.get('http://' + managerNode + ':8090/v2/data-pipelines/'+stream["configurationName"]+'/consumer/status',
-                                           headers={'Accept': 'application/json'})
-            jsonResponseManager = json.loads(response.text)
+            responseManager = requests.get(
+                'http://' + managerNode + ':8090/v2/data-integration/di-consumer/' + stream["configurationName"] + '/status',
+                headers={'Accept': 'text/plain'})
+            print(responseManager.text)
+            consumerStatus = "N/A"
+            if responseManager.text.__contains__("status"):
+                # jsonResponseManager = json.loads(responseManager.text.split("GSKafkaConsumerStatus")[1])
+                for responseWord in responseManager.text.split("GSKafkaConsumerStatus")[1].replace("{", "").replace("}","").split(","):
+                    if responseWord.split("=")[0] == "status":
+                        print(responseWord.split("=")[1])
+                        consumerStatus = responseWord.split("=")[1]
 
         streamStatus = streamStatus.split("\n", 1)[1]
         if streamStatus != "":
@@ -147,7 +159,7 @@ def display_stream_list(args):
         # if str(stream["state"]).upper() == "STOPPED":
         #    state = Fore.RED + "STOPPED" + Fore.RESET
         dataArray = [counter, stream["configurationName"],
-                     jsonResponseManager["status"],
+                     consumerStatus,
                      str(topicCountResponse),
                      #    stream["state"],
                      #    stream["state"],
