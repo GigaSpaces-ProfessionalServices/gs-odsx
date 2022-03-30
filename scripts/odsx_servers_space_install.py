@@ -173,13 +173,16 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         global gscCount
         global memoryGSC
         global zoneGSC
-        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create [20]: "+Fore.RESET))
+
+        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create ["+str(readValuefromAppConfig("app.space.gsc.count"))+"]: "+Fore.RESET))
         if(len(str(gscCount))==0):
             gscCount = '20'
+        set_value_in_property_file("app.space.gsc.count",str(gscCount))
 
-        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC [15g]: "+Fore.RESET))
+        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC ["+readValuefromAppConfig("app.space.gsc.memory")+"]: "+Fore.RESET))
         if(len(str(memoryGSC))==0):
-            memoryGSC = '15g'
+            memoryGSC = '8g'
+        set_value_in_property_file("app.space.gsc.memory",str(memoryGSC))
 
         zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
         if(len(str(zoneGSC))==0):
