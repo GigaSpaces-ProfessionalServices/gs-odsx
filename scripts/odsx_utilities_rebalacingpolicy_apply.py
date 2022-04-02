@@ -100,14 +100,14 @@ def getInputParam():
 
     gscCount = str(host_gsc_dict_obj.get(hostAddress))
     logger.info("GSC for host "+hostAddress+" : "+str(gscCount))
-    verboseHandle.printConsoleWarning("Enter expected gsc count ["+gscCount+"] to rebalance host ["+hostToRebalance+"] : "+Fore.RESET)
+    verboseHandle.printConsoleInfo("Gsc count ["+gscCount+"] to rebalance host ["+hostToRebalance+"] : "+Fore.RESET)
 
     currWorkingDir = format(os.getcwd())
     cmd = "scripts/utilities_rebalancingpolicy_apply.sh"+' '+locators+' '+hostToRebalance+' '+zone+' '+gscCount+' '+currWorkingDir
     status=''
     with Spinner():
         output = subprocess.check_output(cmd,shell=True)
-        #print(output)
+        print(output)
         logger.info("Rebalancing log start : ")
         logger.info(str(output))
         logger.info("Rebalancing log end : ")

@@ -382,7 +382,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)
                 except Exception as e:
                     serverHost=host
-                managerList = config_add_space_node(host, host, "N/A", "true")
+                managerList = config_add_space_node(host, host, "N/A")
                 logger.info("Installation of space server "+str(host)+" has been done!")
                 verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):

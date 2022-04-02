@@ -120,7 +120,6 @@ def listSpaceServer():
         headers = [Fore.YELLOW+"IP"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
-                   Fore.YELLOW+"Resume Mode"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET
                    #Fore.YELLOW+"Version"+Fore.RESET
                    ]
@@ -156,6 +155,7 @@ def listSpaceServer():
                 status = getStatusOfSpaceHost(str(server.ip))
                 logger.info("status : "+str(status))
                 logger.info("Host:"+str(server.name))
+                #gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(server.name).__getitem__(0)))
                 gsc = host_gsc_dict_obj.get(str(server.name))
                 logger.info("GSC : "+str(gsc))
             else:
@@ -167,7 +167,6 @@ def listSpaceServer():
                 dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                            Fore.GREEN+server.name+Fore.RESET,
                            Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.GREEN+server.resumeMode+Fore.RESET,
                            Fore.GREEN+str(status)+Fore.RESET
                            #Fore.GREEN+str(version)+Fore.RESET
                            ]
@@ -175,7 +174,6 @@ def listSpaceServer():
                 dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                            Fore.GREEN+server.name+Fore.RESET,
                            Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.GREEN+server.resumeMode+Fore.RESET,
                            Fore.RED+str(status)+Fore.RESET
                            #Fore.GREEN+str(version)+Fore.RESET
                            ]

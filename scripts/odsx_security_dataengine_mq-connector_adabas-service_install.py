@@ -214,7 +214,7 @@ def proceedForInstallation(hostConfig):
                 print(outputShFile)
                 logger.info("outputShFile kafka : " + str(outputShFile))
 
-            config_add_dataEngine_node(host, host, "dataEngine", "mq-connector", "true", "")
+            config_add_dataEngine_node(host, host, "dataEngine", "mq-connector",  "")
             verboseHandle.printConsoleInfo("Installation of mq-connector done on host :"+str(host))
 
 if __name__ == '__main__':
