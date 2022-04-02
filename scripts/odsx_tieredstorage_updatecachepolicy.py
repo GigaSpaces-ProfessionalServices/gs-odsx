@@ -106,6 +106,7 @@ def getTieredStorageSpaces():
 def listSpacesOnServer(managerHost):
     logger.info("listSpacesOnServer : managerNodes :"+str(managerHost))
     global gs_space_host_dictionary_obj
+    global gs_service_dictionary_obj
     try:
         tieredSpaces = getTieredStorageSpaces()
         logger.info("managerHost :"+str(managerHost))
@@ -120,7 +121,9 @@ def listSpacesOnServer(managerHost):
                    Fore.YELLOW+"Backup Partition"+Fore.RESET
                    ]
         gs_space_host_dictionary_obj = host_dictionary_obj()
+        gs_service_dictionary_obj = host_dictionary_obj()
         logger.info("gs_space_host_dictionary_obj : "+str(gs_space_host_dictionary_obj))
+        logger.info("gs_service_dictionary_obj : "+str(gs_service_dictionary_obj))
         counter=0
         dataTable=[]
         for data in jsonArray:
@@ -136,6 +139,7 @@ def listSpacesOnServer(managerHost):
                              Fore.GREEN+isBackup+Fore.RESET
                              ]
                 gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
+                gs_service_dictionary_obj.add(str(counter+1),str(data["processingUnitName"]))
                 counter=counter+1
                 dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
@@ -329,6 +333,19 @@ def updateSpaceIdContainerID():
     except Exception as e:
         handleException(e)
 
+def getSpaceCurrentStatus():
+    logger.info("getSpaceCurrentStatus()")
+    try:
+        serviceName = gs_service_dictionary_obj.get(spaceNumber)
+        logger.info("Getting status URL : http://"+str(managerHost)+":8090/v2/pus/"+str(serviceName))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(serviceName))
+        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
+        jsonArray = json.loads(response.text)
+        logger.info("status : "+str(jsonArray["status"]))
+        return str(jsonArray["status"])
+    except Exception as e:
+        handleException(e)
+
 def proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate):
     logger.info("proceedForNewBackUpRollingUpdate()")
     try:
@@ -360,9 +377,15 @@ def proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate):
         loggerTiered.info("SpaceID Restart        : "+str(spaceIdToBeRestarted)+"                  Status : "+str(status))
 
         with Spinner():
-            verboseHandle.printConsoleInfo("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
-            loggerTiered.info("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
-            time.sleep(int(restartContainerSleeptime))
+            status = 'intact'
+            time.sleep(5)
+            while(status != str(getSpaceCurrentStatus())):
+                verboseHandle.printConsoleInfo("Waiting for partition become healthy. Current status : "+str(getSpaceCurrentStatus()))
+                loggerTiered.info("Waiting for partition become. Current status "+getSpaceCurrentStatus())
+                time.sleep(3)
+            verboseHandle.printConsoleInfo("Final status : "+str(getSpaceCurrentStatus()))
+            logger.info("Final status : "+str(getSpaceCurrentStatus()))
+            time.sleep(2)
         spaceIdResponseCodeDict[str(spaceIdToBeRestarted)]=str(backUPResponseCode)
         updateSpaceIdContainerID()
         logger.info("updated After Restart : spaceIdContainerIdDict"+str(spaceIdContainerIdDict))
@@ -389,6 +412,7 @@ def proceedForDemotePrimaryContainer(gscNumberToBeRollingUpdate):
             time.sleep(5)
 
         status = validateResponse(primaryDemoteResponseCode)
+        verboseHandle.printConsoleInfo("primaryDemoteResponseCode :"+str(primaryDemoteResponseCode))
         with Spinner():
             while(status.casefold() != 'successful'):
                 time.sleep(2)
@@ -400,9 +424,15 @@ def proceedForDemotePrimaryContainer(gscNumberToBeRollingUpdate):
         verboseHandle.printConsoleInfo(" Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
         loggerTiered.info("Demote                  : "+str(spaceIdToBeDemoted)+"                  Status : "+str(status))
         with Spinner():
-            verboseHandle.printConsoleInfo("Waiting for partition become healthy..."+str(demoteSleeptime)+"s")
-            loggerTiered.info("Waiting for partition become healthy..."+str(demoteSleeptime)+"s")
-            time.sleep(int(demoteSleeptime))
+            status = 'intact'
+            time.sleep(5)
+            while(status != str(getSpaceCurrentStatus())):
+                verboseHandle.printConsoleInfo("Waiting for partition become healthy. Current status : "+str(getSpaceCurrentStatus()))
+                loggerTiered.info("Waiting for partition become healthy. Current status "+getSpaceCurrentStatus())
+                time.sleep(3)
+            verboseHandle.printConsoleInfo("Final status : "+str(getSpaceCurrentStatus()))
+            logger.info("Final status : "+str(getSpaceCurrentStatus()))
+            time.sleep(2)
         spaceIdResponseCodeDict[str(spaceIdToBeDemoted)]=str(primaryDemoteResponseCode)
         updateSpaceIdContainerID()
         logger.info("updated After Demote : spaceIdContainerIdDict :"+str(spaceIdContainerIdDict))
@@ -417,8 +447,6 @@ def proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate):
         with Spinner():
             time.sleep(5)
         updateSpaceIdContainerID()
-        logger.info("restartContainerSleeptime :"+str(restartContainerSleeptime)+" :: demoteSleeptime "+str(demoteSleeptime))
-        loggerTiered.info("restartContainerSleeptime :"+str(restartContainerSleeptime)+" :: demoteSleeptime "+str(demoteSleeptime))
         logger.info("RollingUpdate SrNo number : "+gscNumberToBeRollingUpdate)
         loggerTiered.info("RollingUpdate SrNo number : "+gscNumberToBeRollingUpdate)
         verboseHandle.printConsoleInfo("RollingUpdate SrNo number: "+gscNumberToBeRollingUpdate)
@@ -448,9 +476,15 @@ def proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate):
         verboseHandle.printConsoleInfo(" Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
         loggerTiered.info("Backup                  : "+str(backupSpaceId)+"          Restart Status : "+str(status))
         with Spinner():
-            verboseHandle.printConsoleInfo("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
-            loggerTiered.info("Waiting for partition become healthy..."+str(restartContainerSleeptime)+"s")
-            time.sleep(int(restartContainerSleeptime))
+            status = 'intact'
+            time.sleep(5)
+            while(status != str(getSpaceCurrentStatus())):
+                verboseHandle.printConsoleInfo("Waiting for partition become healthy. Current status : "+str(getSpaceCurrentStatus()))
+                loggerTiered.info("Waiting for partition become healthy. Current status "+getSpaceCurrentStatus())
+                time.sleep(3)
+            verboseHandle.printConsoleInfo("Final status : "+str(getSpaceCurrentStatus()))
+            logger.info("Final status : "+str(getSpaceCurrentStatus()))
+            time.sleep(2)
         updateSpaceIdContainerID()
         spaceIdResponseCodeDict[str(backupSpaceId)]=str(backUPRestartResponseCode)
         logger.info("updated After Backup Restart : spaceIdContainerIdDict"+str(spaceIdContainerIdDict))
@@ -484,9 +518,10 @@ def confirmAndProceedForIndividualRestartGSC():
 
 def inputParams():
     logger.info("inputParams()")
-    global restartContainerSleeptime
-    global demoteSleeptime
+    #global restartContainerSleeptime
+    #global demoteSleeptime
     try:
+        '''
         restartcontainerSleeptimeConfig = str(readValuefromAppConfig("app.tieredstorage.restartcontainer.sleeptime")).replace('"','')
         restartContainerSleeptime = str(input(Fore.YELLOW+"Enter restart container sleeptime ["+restartcontainerSleeptimeConfig+"]: "))
         if(len(str(restartContainerSleeptime))==0):
@@ -499,7 +534,7 @@ def inputParams():
         if(len(str(demoteSleeptime))==0):
             demoteSleeptime = demoteSleeptimeConfig
         logger.info("demoteSleeptimeConfig : "+str(demoteSleeptimeConfig))
-
+        '''
     except Exception as e:
         handleException(e)
 

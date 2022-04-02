@@ -17,6 +17,28 @@ verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 nbConfig = {}
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def getManagementHostList():
     logger.info("getManagementHostList()")
     nodeList = config_get_nb_list()
@@ -290,14 +312,6 @@ def setConfProperties():
         ssl_ca_certificate =ssl_ca_certificate_input
     logger.info("ssl_ca_certificate : "+str(ssl_ca_certificate))
 
-    max_upload_size = str(nbConfig.get("MAX_UPLOAD_SIZE")).replace('"','')
-    if(len(str(max_upload_size).replace('"',''))==0):
-        max_upload_size="20m"
-    maxUploadSize_input = str(input(Fore.YELLOW+"Enter MAX_UPLOAD_SIZE ["+max_upload_size+"]:"+Fore.RESET))
-    if(len(str(maxUploadSize_input))>0):
-        max_upload_size =maxUploadSize_input
-    logger.info("max_upload_size : "+str(max_upload_size))
-
     # Check if Application Service if yes then allow Agent else Ask for OPS Manager
     gridui_servers=""
     opsmanager_servers=""
@@ -371,7 +385,6 @@ def setConfProperties():
     lines = update_app_config_file("ssl_certificate=".upper(), ssl_certificate, lines)
     lines = update_app_config_file("ssl_private_key=".upper(), ssl_private_key, lines)
     lines = update_app_config_file("ssl_ca_certificate=".upper(), ssl_ca_certificate, lines)
-    lines = update_app_config_file("max_upload_size=".upper(),max_upload_size,lines)
     lines = update_app_config_file("gridui_servers=".upper(), gridui_servers, lines)
     lines = update_app_config_file("grafana_servers=".upper(), grafana_servers, lines)
     lines = update_app_config_file("influxdb_servers=".upper(), influxdb_servers, lines)
@@ -514,7 +527,7 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
                 logger.info("connectExecuteSSH : hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
                 connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " ")
             logger.info("Adding server-node :"+str(hostip))
-            config_add_nb_node(hostip, hostip, "applicative server", "false", "config/cluster.config")
+            config_add_nb_node(hostip, hostip, "applicative server",  "config/cluster.config")
 
             cmd =  "sed -i '/export CONSUL_HTTP_ADDR=/d' .bash_profile;  echo export CONSUL_HTTP_ADDR="+str(hostip)+":8500 >>.bash_profile;"
             logger.info("agent : cmd :"+str(cmd))
@@ -540,7 +553,7 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
                 logger.info("connectExecuteSSH Agent: hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
                 connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --agent")
             logger.info("Adding agent-node :"+str(hostip))
-            config_add_nb_node(hostip, hostip, "agent server", "false", "config/cluster.config")
+            config_add_nb_node(hostip, hostip, "agent server", "config/cluster.config")
             logger.info("Completed Installation for agent server:"+str(hostip))
             verboseHandle.printConsoleInfo("Completed Installation for agent server:"+str(hostip))
         logger.info("Completed installation for all agent server")
@@ -557,7 +570,7 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
                 logger.info("connectExecuteSSH Agent: hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
                 connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --management")
             logger.info("Adding agent-node :"+str(hostip))
-            config_add_nb_node(hostip, hostip, "management server", "false", "config/cluster.config")
+            config_add_nb_node(hostip, hostip, "management server",  "config/cluster.config")
             logger.info("Completed Installation for management server:"+str(hostip))
             verboseHandle.printConsoleInfo("Completed Installation for management server:"+str(hostip))
         logger.info("Completed installation for all management server")
@@ -665,5 +678,7 @@ if __name__ == '__main__':
             else:
                 pass
     except Exception as e:
-        logger.error("Exception in northbound install : "+str(e))
-        verboseHandle.printConsoleError("Exception in northbound install : "+str(e))
+        handleException(e)
+
+
+

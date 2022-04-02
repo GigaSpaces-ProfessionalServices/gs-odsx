@@ -120,7 +120,7 @@ def executeCommandForInstall(host,type,count):
             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
             logger.info("outputShFile : "+str(outputShFile))
 
-            config_add_dataValidation_node(host, host, "dataValidation", "true", type)
+            config_add_dataValidation_node(host, host, "dataValidation", type)
             set_value_in_property_file('app.dv.hosts',host)
             verboseHandle.printConsoleInfo("Node has been added :"+str(host))
 

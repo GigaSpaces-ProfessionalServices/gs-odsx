@@ -89,8 +89,7 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, resumeMode, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation):
-        self.resumeMode = resumeMode
+    def __init__(self, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation):
         self.managers = managers
         self.cdc = cdc
         self.nb = nb
@@ -107,64 +106,54 @@ class Managers:
 
 
 class CDC:
-    def __init__(self, resumeMode, node):
-        self.resumeMode = resumeMode
+    def __init__(self,  node):
         self.node = node
 
 
 class NB:
-    def __init__(self, resumeMode, node):
-        self.resumeMode = resumeMode
+    def __init__(self, node):
         self.node = node
 
 class Grafana:
-    def __init__(self,resumeMode,node):
-        self.resumeMode = resumeMode
+    def __init__(self,node):
         self.node = node
 
 class Influxdb:
-    def __init__(self,resumeMode,node):
-        self.resumeMode = resumeMode
+    def __init__(self,node):
         self.node = node
 
 class DataIntegration:
-    def __init__(self,resumeMode,nodes):
-        self.resumeMode = resumeMode
+    def __init__(self,nodes):
         self.nodes = nodes
 
 class DataValidation:
-    def __init__(self,resumeMode,nodes):
-        self.resumeMode = resumeMode
+    def __init__(self,nodes):
         self.nodes = nodes
 
 class DataEngine:
-    def __init__(self,resumeMode,nodes):
-        self.resumeMode = resumeMode
+    def __init__(self,nodes):
         self.nodes = nodes
 
 class Nodes:
-    def __init__(self, ip, name, role, resumeMode, type):
+    def __init__(self, ip, name, role, type):
         self.name = name
         self.type = type
         self.ip = ip
         self.role = role
-        self.resumeMode = resumeMode
 
 class Nodes1:
-    def __init__(self, ip, name, engine, role, resumeMode, type):
+    def __init__(self, ip, name, engine, role, type):
         self.name = name
         self.engine = engine
         self.type = type
         self.ip = ip
         self.role = role
-        self.resumeMode = resumeMode
 
 class Node:
-    def __init__(self, ip, name, role, resumeMode):
+    def __init__(self, ip, name, role):
         self.name = name
         self.ip = ip
         self.role = role
-        self.resumeMode = resumeMode
 
 
 class Spaces:
@@ -185,10 +174,9 @@ class Servers:
 
 
 class Host:
-    def __init__(self, ip, name, gsc, resumeMode):
+    def __init__(self, ip, name, gsc):
         self.name = name
         self.ip = ip
-        self.resumeMode = resumeMode
         self.gsc = gsc
 
 
@@ -216,8 +204,8 @@ def customClusterDecoder(clusterDict):
 
 
 def create_sample_config_file():
-    hostDetail1 = Host("127.0.0.1", "jay-desktop-1", "2", "true")
-    hostDetail2 = Host("127.0.0.1", "jay-desktop-2", "2", "true")
+    hostDetail1 = Host("127.0.0.1", "jay-desktop-1", "2")
+    hostDetail2 = Host("127.0.0.1", "jay-desktop-2", "2")
 
     hostDetailList = []
     hostDetailList.append(hostDetail1)
@@ -226,21 +214,21 @@ def create_sample_config_file():
     partitions = Partitions("1", "true")
     spaces = Spaces(partitions, server)
 
-    node1 = Node("127.0.0.1", "jay-desktop-1", "admin", "true")
-    node2 = Node("127.0.0.1", "jay-desktop-2", "admin", "true")
+    node1 = Node("127.0.0.1", "jay-desktop-1", "admin")
+    node2 = Node("127.0.0.1", "jay-desktop-2", "admin")
     nodeList = [node1, node2]
 
-    nb = NB("true", nodeList)
+    nb = NB( nodeList)
 
-    cdc = CDC("true", nodeList)
+    cdc = CDC( nodeList)
 
     manager = Managers(nodeList)
 
-    grafana = Grafana("true",nodeList)
+    grafana = Grafana(nodeList)
 
-    influxdb = Influxdb("true",nodeList)
+    influxdb = Influxdb(nodeList)
 
-    allservers = AllServers("true", manager, cdc, nb, spaces, grafana, influxdb)
+    allservers = AllServers(manager, cdc, nb, spaces, grafana, influxdb)
 
     dt_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     streams = Streams("123", "demo-stream", "demo stream", "2021-06-11 20:16:34", "jay-desktop-2", "18.116.28.1",
@@ -253,7 +241,7 @@ def create_sample_config_file():
 
 
 def parse_config_json(filePath):
-    f = open(filePath, )
+    f = open(filePath)
     clusterObj = json.load(f, object_hook=customClusterDecoder)
     return clusterObj
 
@@ -265,16 +253,16 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     config_data = parse_config_json(filePath)
     nodes = []
     for node1 in list(config_data.cluster.servers.managers.node):
-        nodes.append(Node(node1.ip, node1.name, node1.role, node1.resumeMode))
+        nodes.append(Node(node1.ip, node1.name, node1.role))
     managers = Managers(nodes)
     nodes = []
     for node1 in list(config_data.cluster.servers.cdc.node):
-        nodes.append(Node(node1.ip, node1.name, node1.role, node1.resumeMode))
-    cdc = CDC(config_data.cluster.servers.cdc.resumeMode, nodes)
+        nodes.append(Node(node1.ip, node1.name, node1.role))
+    cdc = CDC(nodes)
     nodes = []
     for node1 in list(config_data.cluster.servers.nb.node):
-        nodes.append(Node(node1.ip, node1.name, node1.role, node1.resumeMode))
-    nb = NB(config_data.cluster.servers.nb.resumeMode, nodes)
+        nodes.append(Node(node1.ip, node1.name, node1.role))
+    nb = NB(nodes)
     nodes = []
     grafana = []
     influxdb = []
@@ -283,40 +271,40 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     dataEngine = []
     if hasattr(config_data.cluster.servers, 'grafana'):
         for node1 in list(config_data.cluster.servers.grafana.node):
-            nodes.append(Node(node1.ip, node1.name, node1.role, node1.resumeMode))
-        grafana = Grafana(config_data.cluster.servers.grafana.resumeMode,nodes)
+            nodes.append(Node(node1.ip, node1.name, node1.role))
+        grafana = Grafana(nodes)
     nodes = []
     if hasattr(config_data.cluster.servers, 'influxdb'):
         for node1 in list(config_data.cluster.servers.influxdb.node):
-            nodes.append(Node(node1.ip, node1.name, node1.role, node1.resumeMode))
-        influxdb = Influxdb(config_data.cluster.servers.influxdb.resumeMode,nodes)
+            nodes.append(Node(node1.ip, node1.name, node1.role))
+        influxdb = Influxdb(nodes)
 
     nodes = []
     if hasattr(config_data.cluster.servers, 'dataIntegration'):
         for node1 in list(config_data.cluster.servers.dataIntegration.nodes):
-            nodes.append(Nodes(node1.ip, node1.name, node1.role, node1.resumeMode, node1.type))
-        dataIntegration = DataIntegration(config_data.cluster.servers.dataIntegration.resumeMode,nodes)
+            nodes.append(Nodes(node1.ip, node1.name, node1.role,  node1.type))
+        dataIntegration = DataIntegration(nodes)
 
     nodes = []
     if hasattr(config_data.cluster.servers, 'dataValidation'):
         for node1 in list(config_data.cluster.servers.dataValidation.nodes):
-            nodes.append(Nodes(node1.ip, node1.name, node1.role, node1.resumeMode, node1.type))
-        dataValidation = DataValidation(config_data.cluster.servers.dataValidation.resumeMode,nodes)
+            nodes.append(Nodes(node1.ip, node1.name, node1.role, node1.type))
+        dataValidation = DataValidation(nodes)
         
     nodes = []    
     if hasattr(config_data.cluster.servers, 'dataEngine'):
         for node1 in list(config_data.cluster.servers.dataEngine.nodes):
-            nodes.append(Nodes1(node1.ip, node1.name, node1.engine, node1.role, node1.resumeMode, node1.type))
-        dataEngine = DataEngine(config_data.cluster.servers.dataEngine.resumeMode,nodes)
+            nodes.append(Nodes1(node1.ip, node1.name, node1.engine, node1.role, node1.type))
+        dataEngine = DataEngine(nodes)
 
     partition = Partitions(config_data.cluster.servers.spaces.partitions.primary,
                            config_data.cluster.servers.spaces.partitions.backup)
     hosts = []
     for host in list(config_data.cluster.servers.spaces.servers.host):
-        hosts.append(Host(host.ip, host.name, host.gsc, host.resumeMode))
+        hosts.append(Host(host.ip, host.name, host.gsc,))
 
     spaces = Spaces(partition, Servers(hosts))
-    allservers = AllServers(config_data.cluster.servers.resumeMode, managers, cdc,
+    allservers = AllServers( managers, cdc,
                             nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation)
 
     streams = []
@@ -384,8 +372,8 @@ def isMangerExist(existingNodes,hostIp):
             return 'true'
     return "false"
 
-def config_add_manager_node(hostIp, hostName, role, resumeMode, filePath='config/cluster.config'):
-    newNode = Node(hostIp, hostName, role, resumeMode)
+def config_add_manager_node(hostIp, hostName, role, filePath='config/cluster.config'):
+    newNode = Node(hostIp, hostName, role)
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.managers.node
     sizeOfNodes = len(existingNodes)
@@ -628,8 +616,9 @@ def config_remove_space_nodeByIP(spaceIP,filePath='config/cluster.config',verbos
 
 
 
-def config_add_space_node(hostIp, hostName, gsc, resumeMode, filePath='config/cluster.config'):
-    newHost = Host(hostIp, hostName, gsc, resumeMode)
+def config_add_space_node(hostIp, hostName, gsc,  filePath='config/cluster.config'):
+    newHost = Host(hostIp, hostName, gsc)
+    print("Filepath : "+str(filePath))
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.spaces.servers.host
     sizeOfNodes = len(existingNodes)
@@ -694,8 +683,8 @@ def isNbNodeExist(existingNodes,hostIp):
             return 'true'
     return "false"
 
-def config_add_nb_node(hostIp, hostName, role, resumeMode, filePath='config/cluster.config'):
-    newNode = Node(hostIp, hostName, role, resumeMode)
+def config_add_nb_node(hostIp, hostName, role, filePath):
+    newNode = Node(hostIp, hostName, role)
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.nb.node
     sizeOfNodes = len(existingNodes)
@@ -761,9 +750,10 @@ def isGrafanaNodeExist(existingNodes,hostIp):
             return 'true'
     return "false"
 
-def config_add_grafana_node(hostIp, hostName, role, resumeMode, filePath='config/cluster.config'):
+def config_add_grafana_node(hostIp, hostName, role,  filePath='config/cluster.config'):
     logger.info("config_add_grafana_node")
-    newNode = Node(hostIp, hostName, role, resumeMode)
+    newNode = Node(hostIp, hostName, role)
+    filePath='config/cluster.config'
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.grafana.node
     sizeOfNodes = len(existingNodes)
@@ -847,9 +837,10 @@ def isDataEngineNodeExist(existingNodes, hostIp):
             return 'true'
     return "false"
 
-def config_add_influxdb_node(hostIp, hostName, role, resumeMode, filePath='config/cluster.config'):
+def config_add_influxdb_node(hostIp, hostName, role,  filePath='config/cluster.config'):
     logger.info("config_add_influxdb_node")
-    newNode = Node(hostIp, hostName, role, resumeMode)
+    newNode = Node(hostIp, hostName, role )
+    filePath='config/cluster.config'
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.influxdb.node
     sizeOfNodes = len(existingNodes)
@@ -893,9 +884,9 @@ def config_remove_influxdb_byNameIP(influxdbName,influxdbIP,filePath='config/clu
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
 
-def config_add_dataIntegration_node(hostIp, hostName, role, resumeMode, type, filePath='config/cluster.config'):
+def config_add_dataIntegration_node(hostIp, hostName, role, type, filePath='config/cluster.config'):
     logger.info("config_add_dataIntegration_node")
-    newNode = Nodes(hostIp, hostName, role, resumeMode,type)
+    newNode = Nodes(hostIp, hostName, role, type)
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.dataIntegration.nodes
     sizeOfNodes = len(existingNodes)
@@ -940,9 +931,9 @@ def config_remove_dataIntegration_byNameIP(dataIntegrationName,dataIntegrationIP
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
 
-def config_add_dataValidation_node(hostIp, hostName, role, resumeMode, type, filePath='config/cluster.config'):
+def config_add_dataValidation_node(hostIp, hostName, role,  type, filePath='config/cluster.config'):
     logger.info("config_add_dataValidation_node")
-    newNode = Nodes(hostIp, hostName, role, resumeMode,type)
+    newNode = Nodes(hostIp, hostName, role, type)
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.dataValidation.nodes
     sizeOfNodes = len(existingNodes)
@@ -985,9 +976,9 @@ def config_remove_dataValidation_byNameIP(dataValidationName,dataValidationIP,fi
 
     config_data.cluster.servers.dataValidation.nodes = dataValidationNodes
     
-def config_add_dataEngine_node(hostIp, hostName, engine, role, resumeMode, type, filePath='config/cluster.config'):
+def config_add_dataEngine_node(hostIp, hostName, engine, role, type, filePath='config/cluster.config'):
     logger.info("config_add_dataEngine_node")
-    newNode = Nodes1(hostIp, hostName, engine, role, resumeMode,type)
+    newNode = Nodes1(hostIp, hostName, engine, role, type)
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.dataEngine.nodes
     sizeOfNodes = len(existingNodes)
@@ -1197,9 +1188,9 @@ def config_get_space_hosts(filePath='config/cluster.config'):
 def config_add_cdc_node(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.cdc.node
 
-def config_add_cdc_node(hostIp, hostName, role, resumeMode, filePath='config/cluster.config'):
+def config_add_cdc_node(hostIp, hostName, role, filePath='config/cluster.config'):
     print("Addiing node")
-    newNode = Node(hostIp, hostName, role, resumeMode)
+    newNode = Node(hostIp, hostName, role)
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.cdc.node
     existingNodes.append(newNode)

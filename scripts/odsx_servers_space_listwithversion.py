@@ -120,7 +120,6 @@ def listSpaceServer():
         headers = [Fore.YELLOW+"IP"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
-                   Fore.YELLOW+"Resume Mode"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET,
                    Fore.YELLOW+"Version"+Fore.RESET
                    ]
@@ -157,7 +156,6 @@ def listSpaceServer():
                 dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                            Fore.GREEN+server.name+Fore.RESET,
                            Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.GREEN+server.resumeMode+Fore.RESET,
                            Fore.GREEN+str(status)+Fore.RESET,
                            Fore.GREEN+str(version)+Fore.RESET
                            ]
@@ -165,7 +163,6 @@ def listSpaceServer():
                 dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                            Fore.GREEN+server.name+Fore.RESET,
                            Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.GREEN+server.resumeMode+Fore.RESET,
                            Fore.RED+str(status)+Fore.RESET,
                            Fore.GREEN+str(version)+Fore.RESET
                            ]

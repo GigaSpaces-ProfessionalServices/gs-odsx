@@ -48,7 +48,7 @@ def discoveryManager():
             serverHost = socket.gethostbyaddr(host).__getitem__(0)
         except Exception as e:
             serverHost=host
-        config_add_manager_node(host,serverHost,"admin","true")
+        config_add_manager_node(host,serverHost,"admin")
         verboseHandle.printConsoleInfo("Host "+host+" added successfully.")
     os.system('python3 scripts/odsx_servers_manager_list.py ')
 
@@ -68,7 +68,7 @@ def discoverySpace(host):
         serverHost = socket.gethostbyaddr(host).__getitem__(0)
     except Exception as e:
         serverHost=host
-    config_add_space_node(host, serverHost, str(len(containers)), "true")
+    config_add_space_node(host, serverHost, str(len(containers)))
     verboseHandle.printConsoleInfo("Space host "+host+" added successfully.")
     os.system('python3 scripts/odsx_servers_space_list.py ')
 
@@ -145,7 +145,7 @@ def discoverCDC():
     except Exception as e:
         host=hostIP
     if(len(host)>0):
-        config_add_cdc_node(hostIP, host, "admin", "true")
+        config_add_cdc_node(hostIP, host, "admin")
     else:
         logger.info("Invalid host")
         verboseHandle.printConsoleError("Invalid host.")

@@ -211,7 +211,7 @@ def executeCommandForInstall(host, type, count):
             logger.info("outputShFile kafka : " + str(outputShFile))
             print("Checking for Type ::::" + str(type))
 
-            config_add_dataEngine_node(host, host, "cr8", "dataEngine", "true", type)
+            config_add_dataEngine_node(host, host, "cr8", "dataEngine", type)
             set_value_in_property_file('app.dataengine.hosts', host)
             verboseHandle.printConsoleInfo("Node has been added :" + str(host))
 

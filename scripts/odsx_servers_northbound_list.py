@@ -51,7 +51,6 @@ def listNB():
     headers = [Fore.YELLOW+"IP"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
-               Fore.YELLOW+"Resume Mode"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET,
                Fore.YELLOW+"Version"+Fore.RESET]
 
@@ -73,14 +72,12 @@ def listNB():
             dataArray=[Fore.GREEN+stream.ip+Fore.RESET,
                        Fore.GREEN+stream.name+Fore.RESET,
                        Fore.GREEN+stream.role+Fore.RESET,
-                       Fore.GREEN+stream.resumeMode+Fore.RESET,
                        Fore.GREEN+"ON"+Fore.RESET,
                        Fore.GREEN+version+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+stream.ip+Fore.RESET,
                        Fore.GREEN+stream.name+Fore.RESET,
                        Fore.GREEN+stream.role+Fore.RESET,
-                       Fore.GREEN+stream.resumeMode+Fore.RESET,
                        Fore.RED+"OFF"+Fore.RESET,
                        Fore.GREEN+version+Fore.RESET]
         data.append(dataArray)

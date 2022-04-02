@@ -221,7 +221,7 @@ def remote_run(arguments,cmdFile):
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)
                 except Exception as e:
                     serverHost=host
-                config_add_space_node(host, serverHost, "N/A", "true")
+                config_add_space_node(host, serverHost, "N/A")
                 logger.debug("Host "+str(host)+" Added to config. ")
                 #or (cmdFile.__contains__('streams_resumeonline') and status==0 and streamStatus=='Started')
             if(cmdFile.__contains__('servers_manager_remove') and status ==0):
@@ -273,7 +273,7 @@ def remote_run(arguments,cmdFile):
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)
                 except Exception as e:
                     serverHost=host
-                config_add_cdc_node(host, serverHost, "admin", "true")
+                config_add_cdc_node(host, serverHost, "admin")
 
     else:
         verboseHandle.printConsoleError("Shell script "+cmdFile+" does not exist.")
