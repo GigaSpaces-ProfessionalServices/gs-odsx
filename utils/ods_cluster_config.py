@@ -618,7 +618,7 @@ def config_remove_space_nodeByIP(spaceIP,filePath='config/cluster.config',verbos
 
 def config_add_space_node(hostIp, hostName, gsc,  filePath='config/cluster.config'):
     newHost = Host(hostIp, hostName, gsc)
-    print("Filepath : "+str(filePath))
+    filePath='config/cluster.config'
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.spaces.servers.host
     sizeOfNodes = len(existingNodes)

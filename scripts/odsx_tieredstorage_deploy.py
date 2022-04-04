@@ -312,7 +312,7 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     host = space_dict_obj.get(str(i))
                     cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
                     logger.info("cmd : "+str(cmd))
-                    print(str(cmd))
+                    verboseHandle.printConsoleInfo("zone="+str(zoneGSC)+" count="+str(numberOfGSC)+" memory="+str(memoryGSC)+" "+str(host))
                     with Spinner():
                         output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
                     logger.info("Extracting .tar file :"+str(output))
