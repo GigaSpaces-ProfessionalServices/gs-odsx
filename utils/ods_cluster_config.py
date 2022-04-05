@@ -23,16 +23,13 @@ class Clusters:
 
 
 class Cluster:
-    def __init__(self, name, configVersion, timestamp, airGap, resumeModeAll, servers, streams, replications, policyConfiguration):
+    def __init__(self, name, configVersion, timestamp, airGap, resumeModeAll, servers):
         self.name = name
         self.configVersion = configVersion
         self.timestamp = timestamp
         self.airGap = airGap
         self.resumeModeAll = resumeModeAll
         self.servers = servers
-        self.streams = streams
-        self.replications = replications
-        self.policyConfiguration = policyConfiguration
 
 
 class Streams:
@@ -89,9 +86,8 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, managers, cdc, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation):
+    def __init__(self, managers, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation):
         self.managers = managers
-        self.cdc = cdc
         self.nb = nb
         self.spaces = spaces
         self.grafana = grafana
@@ -103,12 +99,6 @@ class AllServers:
 class Managers:
     def __init__(self, node):
         self.node = node
-
-
-class CDC:
-    def __init__(self,  node):
-        self.node = node
-
 
 class NB:
     def __init__(self, node):
@@ -220,21 +210,19 @@ def create_sample_config_file():
 
     nb = NB( nodeList)
 
-    cdc = CDC( nodeList)
-
     manager = Managers(nodeList)
 
     grafana = Grafana(nodeList)
 
     influxdb = Influxdb(nodeList)
 
-    allservers = AllServers(manager, cdc, nb, spaces, grafana, influxdb)
+    allservers = AllServers(manager, nb, spaces, grafana, influxdb)
 
     dt_string = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     streams = Streams("123", "demo-stream", "demo stream", "2021-06-11 20:16:34", "jay-desktop-2", "18.116.28.1",
                       "/home/dbsh/cr8/latest_cr8/etc/CR8Config.json","Stopped")
 
-    cluster = Cluster("cluster-1", "1.0", dt_string, "false", "true", allservers, streams)
+    cluster = Cluster("cluster-1", "1.0", dt_string, "false", "true", allservers)
     clusters = Clusters(cluster)
     with open('config/cluster.config', 'w') as outfile:
         json.dump(clusters, outfile, indent=2, cls=ClusterEncoder)
@@ -255,10 +243,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     for node1 in list(config_data.cluster.servers.managers.node):
         nodes.append(Node(node1.ip, node1.name, node1.role))
     managers = Managers(nodes)
-    nodes = []
-    for node1 in list(config_data.cluster.servers.cdc.node):
-        nodes.append(Node(node1.ip, node1.name, node1.role))
-    cdc = CDC(nodes)
+
     nodes = []
     for node1 in list(config_data.cluster.servers.nb.node):
         nodes.append(Node(node1.ip, node1.name, node1.role))
@@ -304,43 +289,12 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         hosts.append(Host(host.ip, host.name, host.gsc,))
 
     spaces = Spaces(partition, Servers(hosts))
-    allservers = AllServers( managers, cdc,
-                            nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation)
-
-    streams = []
-    for stream in list(config_data.cluster.streams):
-        streams.append(Streams(stream.id, stream.name,
-                               stream.description, stream.creationDate,
-                               stream.serverName, stream.serverip,
-                               stream.serverPathOfConfig,
-                               stream.status))
-
-    replications = []
-    if hasattr(config_data.cluster, 'replications'):
-        for replication in list(config_data.cluster.replications):
-            replications.append(
-                Replications(replication.id, replication.spacename, replication.serverName, replication.serverip,
-                             replication.locator, replication.lookup))
-
-    policies = []
-    policiesAssociations = []
-    if hasattr(config_data.cluster, 'policyConfiguration'):
-        for policy in list(config_data.cluster.policyConfiguration.policies):
-            policies.append(Policies(policy.name, policy.description, policy.type, policy.definition, Parameters(policy.parameters.waitIntervalAfterServerDown, policy.parameters.waitIntervalForContainerCheckAfterServerUp, policy.parameters.waitIntervalForDeletionAfterDemote)))
-
-        for policiesAssociation in list(config_data.cluster.policyConfiguration.policyAssociations):
-            policiesAssociations.append(PolicyAssociations(policiesAssociation.targetNodeType, policiesAssociation.nodes, policiesAssociation.policy, Gsc(policiesAssociation.gsc.count, policiesAssociation.gsc.zones)))
-            #policiesAssociationGsc=[]
-            #for eachGsc in list(policiesAssociation.gsc):
-            #    print(eachGsc)
-            #    policiesAssociationGsc.append(Gsc(eachGsc.count, eachGsc.zones))
-            #policiesAssociations.append(PolicyAssociations(policiesAssociation.targetNodeType, policiesAssociation.nodes, policiesAssociation.policy, policiesAssociationGsc))
-
+    allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation)
 
     # print(config_data.cluster.timestamp)
     cluster = Cluster(config_data.cluster.name, config_data.cluster.configVersion,
                       config_data.cluster.timestamp, config_data.cluster.airGap,
-                      config_data.cluster.resumeModeAll, allservers, streams, replications,Policyconfiguration(policies, policiesAssociations))
+                      config_data.cluster.resumeModeAll, allservers)
     config_data = Clusters(cluster)
     return config_data
 

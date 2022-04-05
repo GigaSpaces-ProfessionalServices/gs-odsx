@@ -191,9 +191,7 @@ def proceedToStopMSSQLFeeder(fileNumberToStop):
     cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
     print(cmd)
     logger.info("cmd : "+str(cmd))
-    output = executeLocalCommandAndGetOutput(cmd);
-    print(str(output))
-    logger.info("Output ::"+str(output))
+    os.system(cmd)
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_mssql-feeder_stop")
