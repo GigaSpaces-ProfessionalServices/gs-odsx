@@ -65,7 +65,9 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     logger.info("executeLocalCommandAndGetOutput() cmd :" + str(commandToExecute))
     cmd = commandToExecute
     cmdArray = cmd.split(" ")
-    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE)
+    print(cmdArray)
+    #process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE)
+    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out, error = process.communicate()
     out = out.decode()
     return str(out).replace('\n', '')
@@ -190,9 +192,8 @@ def proceedToStopDB2Feeder(fileNumberToStop):
     cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
     print(cmd)
     logger.info("cmd : "+str(cmd))
-    output = executeLocalCommandAndGetOutput(cmd);
-    print(str(output))
-    logger.info("Output ::"+str(output))
+    print(cmd)
+    os.system(cmd)
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_db2-feeder_stop")
