@@ -255,6 +255,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         javaPasswordJarInput = str(readValuefromAppConfig("app.manager.security.spring.javaPassword.jar")).replace('[','').replace(']','')
         javaPasswordJarInput=sourceDirectoryForJar+'/'+javaPasswordJarInput
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
+        msSqlFeederFileSource = str(readValuefromAppConfig("app.space.mssqlfeeder.files.source")).replace('[','').replace(']','')
+        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
@@ -340,6 +342,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"25. "+
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"26. "+
+              Fore.GREEN+"MsSQL Feeder files source : "+Fore.RESET,
+              Fore.GREEN+str(msSqlFeederFileSource).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"27. "+
+              Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
+              Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
