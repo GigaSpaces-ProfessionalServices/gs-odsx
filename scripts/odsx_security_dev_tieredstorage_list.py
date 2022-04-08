@@ -64,6 +64,7 @@ def getManagerHost(managerNodes):
 def getTieredStorageSpaces():
     logger.info("getTieredStorageSpaces()")
     #check for Tiered storage space
+    logger.info("URL : http://"+str(managerHost)+":8090/v2/internal/spaces/utilization")
     responseTiered = requests.get("http://"+str(managerHost)+":8090/v2/internal/spaces/utilization",auth = HTTPBasicAuth(username, password))
     logger.info("Response status of spaces/utilization : "+str(responseTiered.status_code)+" content : "+str(responseTiered.content))
     jsonArrayTiered = json.loads(responseTiered.text)
@@ -87,7 +88,7 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"Name"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
-                   Fore.YELLOW+"processingUnitType"+Fore.RESET,
+                   Fore.YELLOW+"ProcessingUnitType"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
@@ -99,6 +100,7 @@ def listDeployed(managerHost):
         for data in jsonArray:
             hostId=''
             if(tieredSpaces.__contains__(str(data["name"]))):
+                logger.info("URL : http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
                 response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
                 jsonArray2 = json.loads(response2.text)
                 for data2 in jsonArray2:
@@ -135,7 +137,11 @@ if __name__ == '__main__':
         logger.info("managerNodes: main"+str(managerNodes))
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
-            listDeployed(managerHost)
+            if(len(str(managerHost))>0):
+                listDeployed(managerHost)
+            else:
+                logger.info("Please check manager server status.")
+                verboseHandle.printConsoleInfo("Please check manager server status.")
     except Exception as e:
         verboseHandle.printConsoleError("Eror in odsx_tieredstorage_list : "+str(e))
         logger.error("Exception in tieredStorage_list.py"+str(e))

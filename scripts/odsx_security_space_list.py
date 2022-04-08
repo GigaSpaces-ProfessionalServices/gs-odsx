@@ -13,6 +13,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShComma
 from utils.ods_app_config import readValuefromAppConfig
 import requests, json
 from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -181,9 +182,6 @@ def listSpaceServer():
                 logger.info("Host GSC :"+str(server.name))
                 #gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(server.name).__getitem__(0)))
                 gsc = host_gsc_dict_obj.get(str(server.name))
-                #if(str(gsc).__contains__(None)):
-                #    print("NNNO")
-                print("GSC :"+str(len(gsc)))
                 logger.info("GSC : "+str(gsc))
             else:
                 status="NOT REACHABLE"
@@ -210,6 +208,7 @@ def listSpaceServer():
         printTabular(None,headers,data)
     except Exception as e:
         logger.error("Error in odsx_servers_space_list "+str(e))
+        handleException(e)
 
 def getManagerHost(managerNodes):
     managerHost=""
@@ -223,23 +222,6 @@ def getManagerHost(managerNodes):
     except Exception as e:
         handleException(e)
 
-def getUsernameByHost(managerHost):
-    logger.info("getUsernameByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Username : "+output)
-    return output
-
-def getPasswordByHost(managerHost):
-    logger.info("getPasswordByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Password : "+output)
-    return  output
 
 if __name__ == '__main__':
     args = []
@@ -261,7 +243,8 @@ if __name__ == '__main__':
         logger.info("managerHost : main"+str(managerHost))
         username = str(getUsernameByHost(managerHost))
         password = str(getPasswordByHost(managerHost))
+        with Spinner():
+            listSpaceServer()
     except Exception as e:
         handleException(e)
-    with Spinner():
-        listSpaceServer()
+

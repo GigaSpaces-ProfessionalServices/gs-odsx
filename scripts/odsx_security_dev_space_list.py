@@ -207,6 +207,7 @@ def listSpaceServer():
         printTabular(None,headers,data)
     except Exception as e:
         logger.error("Error in odsx_servers_space_list "+str(e))
+        handleException(e)
 
 def getManagerHost(managerNodes):
     managerHost=""

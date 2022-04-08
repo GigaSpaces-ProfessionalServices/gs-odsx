@@ -13,6 +13,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_scp import scp_upload
 import logging
 from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -319,7 +320,7 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     host = space_dict_obj.get(str(i))
                     #usernameSpaceHost = getUsernameByHost(host)
                     #passwordSpaceHost = getPasswordByHost(host)
-                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
+                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+" | grep -v JAVA_HOME"
                     logger.info("security deploy cmd : "+str(cmd))
                     #print(str(cmd))
                     with Spinner():
@@ -662,25 +663,6 @@ def validateResponseGetDescription(responseCode):
         return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["error"])
     else:
         return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
-
-
-def getUsernameByHost(managerHost):
-    logger.info("getUsernameByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Username : "+output)
-    return output
-
-def getPasswordByHost(managerHost):
-    logger.info("getPasswordByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Password : "+output)
-    return  output
 
 if __name__ == '__main__':
     logger.info("Menu -> Security -> TieredStorage -> Deploy")
