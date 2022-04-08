@@ -310,7 +310,7 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                 counter=0
                 for i in range(1,len(space_dict_obj)+1):
                     host = space_dict_obj.get(str(i))
-                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
+                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+" | grep -v JAVA_HOME"
                     logger.info("cmd : "+str(cmd))
                     verboseHandle.printConsoleInfo("zone="+str(zoneGSC)+" count="+str(numberOfGSC)+" memory="+str(memoryGSC)+" "+str(host))
                     with Spinner():

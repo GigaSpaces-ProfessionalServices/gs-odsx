@@ -149,14 +149,12 @@ def getUserInput(managerHost):
     logger.info("getUserInput()")
     try:
         typeOfRemove = str(input(Fore.YELLOW+"[1] For individual undeployed PU\n[Enter] For all above undeployed PUs \n[99] For exist. :"+Fore.RESET))
-        print(typeOfRemove)
         logger.info("typeOfRemove : "+str(typeOfRemove))
         if(typeOfRemove=='1'):
             proceedForIndividualUndeployed(managerHost)
         elif(str(typeOfRemove)=='99'):
-            print("99")
             logger.info("99")
-            return
+            return "99"
         elif(len(str(typeOfRemove))==0):
             proceedForAllUndeployed(managerHost)
     except Exception as e:
@@ -331,9 +329,9 @@ def removeGSC(managerHost):
     if(len(str(confirmRemoveGSC))==0):
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
-        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)
+        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)+" | grep -v JAVA_HOME"
         logger.info("cmd : "+str(cmd))
-        print(str(cmd))
+        #print(str(cmd))
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
             print(output)
@@ -366,7 +364,7 @@ if __name__ == '__main__':
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
                 gs_space_dictionary_obj = listDeployed(managerHost)
-                if(len(gs_space_dictionary_obj)>0):
+                if(len(str(gs_space_dictionary_obj))>0):
                     proceedToUndeployPU(managerHost)
                 else:
                     logger.info("No space/pu found.")
@@ -375,13 +373,14 @@ if __name__ == '__main__':
                 #    time.sleep(30)
                 gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost)
                 if(len(gs_pu_dictionary_obj)>0):
-                    getUserInput(managerHost)
-                    gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
-                    if(len(str(gscRemove))==0):
-                        gscRemove='y'
-                    if(gscRemove=='y'):
-                        managerHost = getManagerHost(managerNodes)
-                        removeGSC(managerHost)
+                    userInput = getUserInput(managerHost)
+                    if(userInput!="99"):
+                        gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+                        if(len(str(gscRemove))==0):
+                            gscRemove='y'
+                        if(gscRemove=='y'):
+                            managerHost = getManagerHost(managerNodes)
+                            removeGSC(managerHost)
                 else:
                     logger.info("No space/pu undeployed found.")
                     verboseHandle.printConsoleInfo("No space/pu undeployed found.")
