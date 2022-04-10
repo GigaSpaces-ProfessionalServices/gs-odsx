@@ -46,7 +46,7 @@ printNoColor() {
 destinationPath=$1
 newPackagename=$2
 applicativeUser=$3
-info "stopping gs"
+info "stopping gs...\n"
 systemctl stop gsa
 sleep 30
 source setenv.sh
@@ -59,16 +59,16 @@ cd ..
 parentPathGS=$(pwd)
 newPackagenameWithoutExt="${newPackagename%.*}"
 cd
-unzip install/gs/upgrade/$newPackagename -d $parentPathGS
+unzip -q install/gs/upgrade/$newPackagename -d $parentPathGS
 cd -P $parentPathGS
 rm gigaspaces-smart-ods
-info "changing version to $newPackagenameWithoutExt"
+info "changing version to $newPackagenameWithoutExt\n"
 ln -s $newPackagenameWithoutExt gigaspaces-smart-ods
 cd -P $GS_HOME
 cp $currentGSPath/bin/setenv-overrides.sh bin/
 cp -r $currentGSPath/work .
 chown -R $applicativeUser:$applicativeUser *
 sleep 10
-info "starting gs"
+info "starting gs...\n"
 systemctl start gsa
 sleep 30

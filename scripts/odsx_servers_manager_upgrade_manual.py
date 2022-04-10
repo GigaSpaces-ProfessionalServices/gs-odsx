@@ -13,7 +13,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 
@@ -86,6 +86,29 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     return managerDict
 
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
+
 if __name__ == '__main__':
     logger.info("servers - manager - upgrade - manual ")
     verboseHandle.printConsoleWarning('Servers -> Manager -> Upgrade -> Manual')
@@ -127,26 +150,16 @@ if __name__ == '__main__':
 
                         cmd = "df " + destPath + "|grep -v Avail|awk '{print $4/$2 * 100.0}'"
                         freeStoragePerc = executeRemoteCommandAndGetOutputValuePython36(managerUpgrade.ip, user, cmd)
-                        response = requests.get('http://' + managerUpgrade.ip + ':8090/v2/hosts/',
-                                                headers={'Accept': 'application/json'})
-                        hostInfoArray = response.json()
                         managerCount = 0
                         for node in config_get_manager_node():
                             status = getSpaceServerStatus(node.ip)
                             if status == "ON":
                                 managerCount = managerCount + 1
-                        # managerConfigList = []
-                        # for key, value in managerDict:
-                        #    managerConfigList.append(value.ip)
-                        # managerCount = len(hostInfoArray)
-                        # for hostInfo in hostInfoArray:
-                        #    if managerConfigList.__contains__(hostInfo["address"]):
-                        #        managerCount = managerCount + 1
 
                         executeRemoteCommandAndGetOutputValuePython36(managerUpgrade.ip, user,
                                                                       "mkdir -p install/gs/upgrade/")
                         freeStoragePerc = str(freeStoragePerc).replace("\n", "")
-                        #print("freeStoragePerc: " + str(freeStoragePerc) + ", managerCount: " + str(managerCount))
+                        # print("freeStoragePerc: " + str(freeStoragePerc) + ", managerCount: " + str(managerCount))
                         if float(freeStoragePerc) > 10 and managerCount >= 2:
                             verboseHandle.printConsoleWarning("***Summary***")
                             verboseHandle.printConsoleInfo(
@@ -155,26 +168,27 @@ if __name__ == '__main__':
                             verboseHandle.printConsoleInfo(
                                 "3. Source path is proper. New package to upload : " + str(dir_list))
                             confirm = str(input(
-                                Fore.YELLOW + "Are you sure want to stop server ? [yes (y)] / [no (n)]" + Fore.RESET))
+                                Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
                             while (len(str(confirm)) == 0):
                                 confirm = str(input(
                                     Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
                             logger.info("confirm :" + str(confirm))
                             if confirm == 'yes' or confirm == 'y':
-                                scp_upload(managerUpgrade.ip, user, sourcePath + "/" + packageName, "install/gs/upgrade/")
+                                scp_upload(managerUpgrade.ip, user, sourcePath + "/" + packageName,
+                                           "install/gs/upgrade/")
                                 commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
-                                # cmd = "systemctl stop gsa && source setenv.sh && cd -P $GS_HOME && mkdir /dbagiga/rollback/$(basename $pwd)"
                                 applicativeUserFile = readValuefromAppConfig("app.server.user")
                                 additionalParam = destPath + " " + packageName + " " + applicativeUserFile
-                                outputShFile = executeRemoteShCommandAndGetOutput(managerUpgrade.ip, user,
-                                                                                  additionalParam,
-                                                                                  commandToExecute)
-                                # executeRemoteCommandAndGetOutputValuePython36(managerUpgrade.ip, user, cmd)
-                                # cmd = "tar -xvf " + destPath + "/" + packageName + " && cd " + destPath + " && ln -s " + \
-                                #      packageName.split(".")[0] + ""
-                                # fullSyncStatus = executeRemoteCommandAndGetOutputValuePython36(managerUpgrade.ip, user,
-                                #                                                              cmd)
-                                # cmd = ""
+                                isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
+                                pemFileName = readValuefromAppConfig("cluster.pemFile")
+                                ssh = ""
+                                if isConnectUsingPem == 'True':
+                                    ssh = ''.join(
+                                        ['ssh', ' -i ', pemFileName, ' ', user, '@', str(managerUpgrade.ip), ' '])
+                                else:
+                                    ssh = ''.join(['ssh', ' ', str(managerUpgrade.ip), ' '])
+                                cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_manual.sh'
+                                os.system(cmd)
                                 config_get_manager_listWithStatus()
                         else:
                             if managerCount < 2:
@@ -190,5 +204,6 @@ if __name__ == '__main__':
         elif (hostConfiguration == '99'):
             logger.info("99 - Exist stop")
     except Exception as e:
+        handleException(e)
         logger.error("Invalid arguement " + str(e))
-        verboseHandle.printConsoleError("Invalid argument")
+        verboseHandle.printConsoleError("Invalid argument" + str(e))
