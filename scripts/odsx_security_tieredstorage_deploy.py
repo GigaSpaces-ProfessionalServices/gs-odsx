@@ -687,8 +687,8 @@ if __name__ == '__main__':
             logger.info("managerHost : main"+str(managerHost))
 
             if(len(str(managerHost))>0):
-                username = str(getUsernameByHost(managerHost))
-                password = str(getPasswordByHost(managerHost))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 managerHostConfig = managerHost
                 logger.info("managerHostConfig : "+str(managerHost))
                 listSpacesOnServer(managerNodes)

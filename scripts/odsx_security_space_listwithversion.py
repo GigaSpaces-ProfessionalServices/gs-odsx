@@ -246,8 +246,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes)
         logger.info("managerHost : main"+str(managerHost))
-        username = str(getUsernameByHost(managerHost))
-        password = str(getPasswordByHost(managerHost))
+        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
     except Exception as e:
         handleException(e)
     with Spinner():
