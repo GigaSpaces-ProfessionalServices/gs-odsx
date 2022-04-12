@@ -161,19 +161,21 @@ def inputParam():
         for i in range (1,elements+1):
             proceedToStartMSSQLFeeder(str(i))
 
-def sqlLiteGetHostAndPortByFileName(shFileName):
-    logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(shFileName))
+def sqlLiteGetHostAndPortByFileName(puName):
+    logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(puName))
     try:
         db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        mycursor = cnx.execute("SELECT host,port FROM mssql_host_port where file like '%"+str(shFileName)+"%' ")
+        logger.info("SQL : SELECT host,port,file FROM mssql_host_port where feeder_name like '%"+str(puName)+"%' ")
+        mycursor = cnx.execute("SELECT host,port,file FROM mssql_host_port where feeder_name like '%"+str(puName)+"%' ")
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
             logger.info("host : "+str(row[0]))
             logger.info("port : "+str(row[1]))
-            return str(row[0])+','+str(row[1])
+            logger.info("file : "+str(row[2]))
+            return str(row[0])+','+str(row[1])+','+str(row[2])
     except Exception as e:
         handleException(e)
 
@@ -183,11 +185,13 @@ def proceedToStartMSSQLFeeder(fileNumberToStart):
     puName = gs_space_dictionary_obj.get(str(fileNumberToStart))
     print(puName)
     shFileName = fileNamePuNameDict.get(str(puName))
-    hostAndPort = str(sqlLiteGetHostAndPortByFileName(shFileName)).split(',')
+    hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
+    shFileName = str(hostAndPort[2])
     cmd = str(sourceMSSQLFeederShFilePath)+'/'+shFileName+' '+host+" "+port
+    logger.info("cmd : "+str(cmd))
     print(cmd)
     os.system(cmd)
     #output = executeLocalCommandAndGetOutput(cmd)
