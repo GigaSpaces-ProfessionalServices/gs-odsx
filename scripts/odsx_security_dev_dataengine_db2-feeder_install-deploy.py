@@ -11,6 +11,7 @@ from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.odsx_db2feeder_utilities import getPortNotExistInDB2Feeder
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from requests.auth import HTTPBasicAuth
 
@@ -358,14 +359,24 @@ def proceedToDeployPU():
         os.chdir(sourceDB2FeederShFilePath)
         #os.system("pwd")
         restPort = 8014
+        restPort = restPort+1
+
+        logger.info("Resport : "+str(restPort))
         for file in glob.glob("load_*.sh"):
-            restPort = restPort+1
             os.chdir(directory)
             puName = str(file).replace('load_','').replace('.sh','').casefold()
             zoneGSC = 'db2_'+puName
             logger.info("filePrefix : "+filePrefix)
             resource = filePrefix+'_'+puName+'.jar'
             puName = 'db2feeder_'+puName
+            port = getPortNotExistInDB2Feeder(restPort)
+            logger.info("dbPort : "+str(port))
+            if(len(str(port))!=0):
+                while(len(str(port))!=0):
+                    restPort = int(port)+1
+                    port = getPortNotExistInDB2Feeder(restPort)
+                #else:
+                #    dbPort = restPort
             if(confirmCreateGSC=='y'):
                 proceedToCreateGSC(zoneGSC)
             verboseHandle.printConsoleInfo("Resource : "+resource+" : rest.port : "+str(restPort))
@@ -383,21 +394,22 @@ def proceedToDeployPU():
             if(response.status_code==202):
                 logger.info("Response :"+str(status))
                 retryCount=5
-                while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                    status = validateResponseGetDescription(deployResponseCode)
-                    verboseHandle.printConsoleInfo("Response :"+str(status))
-                    retryCount = retryCount-1
-                    time.sleep(2)
-                    if(str(status).casefold().__contains__('successful')):
+                with Spinner():
+                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                        status = validateResponseGetDescription(deployResponseCode)
+                        verboseHandle.printConsoleInfo("Response :"+str(status))
+                        retryCount = retryCount-1
                         time.sleep(2)
-                        #createDB2EntryInMySQL(myCoursor,puName,file,restPort)
-                        createDB2EntryInSqlLite(puName,file,restPort)
-                        cmd = "rm -f "+sourceDB2FeederShFilePath+resource
-                        logger.info("cmd : "+str(cmd))
-                        home = executeLocalCommandAndGetOutput(cmd)
-                        break
-                    elif(str(status).casefold().__contains__('failed')):
-                        break
+                        if(str(status).casefold().__contains__('successful')):
+                            time.sleep(2)
+                            createDB2EntryInSqlLite(puName,file,restPort)
+                            verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
+                            cmd = "rm -f "+sourceDB2FeederShFilePath+resource
+                            logger.info("cmd : "+str(cmd))
+                            home = executeLocalCommandAndGetOutput(cmd)
+                            break
+                        elif(str(status).casefold().__contains__('failed')):
+                            break
             else:
                 logger.info("Unable to deploy 1 :"+str(status))
                 verboseHandle.printConsoleInfo("Unable to deploy 1 : "+str(status))

@@ -12,6 +12,7 @@ from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -318,8 +319,8 @@ def sqlLiteCreateTableDB():
         logger.info("dbFile : "+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx)+" Sqlite V: "+str(sqlite3.version))
-        cnx.execute("DROP TABLE IF EXISTS mssql_host_port")
-        cnx.execute("CREATE TABLE mssql_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        #cnx.execute("DROP TABLE IF EXISTS db2_host_port")
+        cnx.execute("CREATE TABLE IF NOT EXISTS mssql_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -353,14 +354,24 @@ def proceedToDeployPU():
         os.chdir(sourceMSSQLFeederShFilePath)
         #os.system("pwd")
         restPort = 8014
+        restPort = restPort+1
+
+        logger.info("Resport : "+str(restPort))
         for file in glob.glob("load_*.sh"):
-            restPort = restPort+1
             os.chdir(directory)
             puName = str(file).replace('load_','').replace('.sh','').casefold()
             zoneGSC = 'mssql_'+puName
             logger.info("filePrefix : "+filePrefix)
             resource = filePrefix+'_'+puName+'.jar'
             puName = 'mssqlfeeder_'+puName
+            port = getPortNotExistInMSSQLFeeder(restPort)
+            logger.info("dbPort : "+str(port))
+            if(len(str(port))!=0):
+                while(len(str(port))!=0):
+                    restPort = int(port)+1
+                    port = getPortNotExistInMSSQLFeeder(restPort)
+                #else:
+                #    dbPort = restPort
             if(confirmCreateGSC=='y'):
                 proceedToCreateGSC(zoneGSC)
             verboseHandle.printConsoleInfo("Resource : "+resource+" : rest.port : "+str(restPort))
@@ -378,20 +389,22 @@ def proceedToDeployPU():
             if(response.status_code==202):
                 logger.info("Response :"+str(status))
                 retryCount=5
-                while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                    status = validateResponseGetDescription(deployResponseCode)
-                    verboseHandle.printConsoleInfo("Response :"+str(status))
-                    retryCount = retryCount-1
-                    time.sleep(2)
-                    if(str(status).casefold().__contains__('successful')):
+                with Spinner():
+                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                        status = validateResponseGetDescription(deployResponseCode)
+                        verboseHandle.printConsoleInfo("Response :"+str(status))
+                        retryCount = retryCount-1
                         time.sleep(2)
-                        createMSSQLEntryInSqlLite(puName,file,restPort)
-                        cmd = "rm -f "+sourceMSSQLFeederShFilePath+resource
-                        logger.info("cmd : "+str(cmd))
-                        home = executeLocalCommandAndGetOutput(cmd)
-                        break
-                    elif(str(status).casefold().__contains__('failed')):
-                        break
+                        if(str(status).casefold().__contains__('successful')):
+                            time.sleep(2)
+                            createMSSQLEntryInSqlLite(puName,file,restPort)
+                            verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
+                            cmd = "rm -f "+sourceMSSQLFeederShFilePath+resource
+                            logger.info("cmd : "+str(cmd))
+                            home = executeLocalCommandAndGetOutput(cmd)
+                            break
+                        elif(str(status).casefold().__contains__('failed')):
+                            break
             else:
                 logger.info("Unable to deploy 1 :"+str(status))
                 verboseHandle.printConsoleInfo("Unable to deploy 1 : "+str(status))
