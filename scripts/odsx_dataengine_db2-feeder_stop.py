@@ -163,13 +163,13 @@ def inputParam():
         for i in range (1,elements+1):
             proceedToStopDB2Feeder(str(i))
 
-def sqlLiteGetHostAndPortByFileName(shFileName):
-    logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(shFileName))
+def sqlLiteGetHostAndPortByFileName(puName):
+    logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(puName))
     try:
         db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        mycursor = cnx.execute("SELECT host,port FROM db2_host_port where file like '%"+str(shFileName)+"%' ")
+        mycursor = cnx.execute("SELECT host,port FROM db2_host_port where feeder_name like '%"+str(puName)+"%' ")
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
@@ -185,14 +185,13 @@ def proceedToStopDB2Feeder(fileNumberToStop):
     puName = gs_space_dictionary_obj.get(str(fileNumberToStop))
     print(puName)
     shFileName = fileNamePuNameDict.get(str(puName))
-    hostAndPort = str(sqlLiteGetHostAndPortByFileName(shFileName)).split(',')
-    print("hostAndPort"+str(hostAndPort))
+    hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
+    logger.info("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
     cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
     print(cmd)
     logger.info("cmd : "+str(cmd))
-    print(cmd)
     os.system(cmd)
 
 if __name__ == '__main__':

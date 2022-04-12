@@ -10,7 +10,7 @@ from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
 from scripts.spinner import Spinner
-from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite
+from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite, deleteMSSqlEntryFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -108,6 +108,7 @@ def proceedForIndividualUndeployed(managerHost):
         if(response.status_code==200):
             logger.info("PU :"+str(spaceTobeUndeploy)+" has been undeployed.")
             verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has been undeployed.")
+            deleteMSSqlEntryFromSqlLite(spaceTobeUndeploy)
         else:
             logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
             verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
@@ -128,6 +129,7 @@ def proceedForAllUndeployed(managerHost):
             if(response.status_code==200):
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has been undeployed.")
                 verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has been undeployed.")
+                deleteMSSqlEntryFromSqlLite(spaceTobeUndeploy)
             else:
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
                 verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
@@ -219,6 +221,7 @@ def proceedForAllUndeploy(managerHost):
                         logger.info("UndeployAll :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
                         #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
                         verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                deleteMSSqlEntryFromSqlLite(spaceTobeUndeploy)
                 verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
             else:
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
@@ -273,6 +276,7 @@ def proceedToUndeployPU(managerHost):
                             logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
                             #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
                             verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                    deleteMSSqlEntryFromSqlLite(spaceTobeUndeploy)
                     verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
                     proceedForPersistUndeploy()
 
