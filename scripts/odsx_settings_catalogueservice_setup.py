@@ -14,18 +14,6 @@ verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "catalogue-service.service";
 
-def validate_ip(s):
-    a = s.split('.')
-    if len(a) != 4:
-        return False
-    for x in a:
-        if not x.isdigit():
-            return False
-        i = int(x)
-        if i < 0 or i > 255:
-            return False
-    return True
-
 def handleException(e):
     logger.info("handleException()")
     trace = []
@@ -69,20 +57,12 @@ def setupService():
     if choice.casefold() == 'no':
         exit(0)
 
-    consulHostInput = Fore.YELLOW + "Please enter Consul host (Please provide publis IP):" + Fore.RESET
+    consulHostInput = Fore.YELLOW + "Please enter Consul host (Please provide public IP):" + Fore.RESET
     
     consulHost = str(input(consulHostInput))
     isValidIP = False
     while(len(consulHost) == 0):
         consulHost = str(input(consulHostInput))
-
-    isValidIP = validate_ip(consulHost)
-
-    while(isValidIP == False):
-        verboseHandle.printConsoleError("Invalid host IP");
-        consulHost = str(input(consulHostInput))
-        isValidIP = validate_ip(consulHost)
-
 
     
     commandToExecute = "scripts/settings_catalogueService_setup.sh "+consulHost;
