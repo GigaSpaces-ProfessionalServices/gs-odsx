@@ -59,13 +59,7 @@ def show_details(args):
                     headers={'Accept': 'application/json'})
                 streamConfig = json.loads(response.text)
             except Exception as e:
-                verboseHandle.printConsoleError("Error occurred")
-                with open(
-                        '/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-single-test.json',
-                        'r') as myfile:
-                    data1 = myfile.read()
-                # parse file
-                streamConfig = json.loads(data1)
+                handleException(e)
 
             verboseHandle.printConsoleWarning("-------------------------------------------")
             verboseHandle.printConsoleInfo("Source : ")
