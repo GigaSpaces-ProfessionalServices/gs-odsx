@@ -2,17 +2,39 @@
 import argparse
 import os
 import sys
-
+from utils.ods_cluster_config import config_get_grafana_list,config_get_nb_list
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
 from utils.ods_scp import scp_upload
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeLocalCommandAndGetOutput
 from colorama import Fore
 
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "catalogue-service.service";
+user = "root"
+def getGrafanaServerHostList():
+    nodeList = config_get_grafana_list()
+    nodes=""
+    for node in nodeList:
+        if(len(nodes)==0):
+            nodes = node.ip
+        else:
+            nodes = nodes+','+node.ip
+    return nodes
+
+def getNBServerHostList():
+    nodeList = config_get_nb_list()
+    nodes=""
+    for node in nodeList:
+        if(str(node.role).casefold().__contains__('applicative')):
+            if(len(nodes)==0):
+                nodes = node.ip
+            else:
+                nodes = nodes+','+node.ip
+    return nodes
+
 
 def handleException(e):
     logger.info("handleException()")
@@ -42,7 +64,7 @@ def myCheckArg(args=None):
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
 def removeService():
-    logger.info("removeService() started")
+    logger.info("removeService() : start")
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to remove Catalogue service ? (Yes/No) [Yes]:" + Fore.RESET
     
@@ -61,12 +83,58 @@ def removeService():
     
     try:
         os.system(commandToExecute)
-        logger.info("removeService() completed")
+        logger.info("removeService() : end")
     except Exception as e:
         logger.error("error occurred in removeService()")
+
+def removeGrafanaDashboard():
+    logger.info("removeGrafanaDashboard() : start")
+    verboseHandle.printConsoleInfo("Removing Catalogue dashboard from grafana...")
+    global grafanaHosts
+    grafanaHosts = getGrafanaServerHostList()
+    grafanaHostList = grafanaHosts.split(",")
+
+    for host in grafanaHostList:
+        try:
+            jsonDelete = executeRemoteCommandAndGetOutput(host,user,"rm -f /usr/share/grafana/conf/provisioning/dashboards/catalogue.json")
+            yamlDelete = executeRemoteCommandAndGetOutput(host,user,"rm -f /etc/grafana/provisioning/dashboards/catalogue.yaml")
+        except Exception as e:
+            logger.error("Exception in removing catalogue dashboard in grafana : removeGrafanaDashboard() :"+str(e))
+            verboseHandle.printConsoleError("Exception in removing catalogue dashboard in grafana: removeGrafanaDashboard() : "+str(e))
+
+    restartGrafana()
+    verboseHandle.printConsoleInfo("Catalogue dashboard removed successfully...")
+    logger.info("removeGrafanaDashboard() : end")
+    return
+
+def restartGrafana():
+    logger.info("restartGrafana() : start")
+    verboseHandle.printConsoleInfo("Restarting Grafana service..")
+   
+    try:
+    
+        if(len(grafanaHosts)>0):
+            
+            commandToExecute="scripts/restartGrafana.sh"
+            additionalParam=""
+            logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(grafanaHosts)+" User:"+str(user))
+            with Spinner():
+                outputShFile= connectExecuteSSH(grafanaHosts, user,commandToExecute,additionalParam)
+                verboseHandle.printConsoleInfo("Host "+str(grafanaHosts)+" restart grafana service command executed.")
+        else:
+            logger.info("No server details found.")
+            verboseHandle.printConsoleInfo("No server details found.")
+    except Exception as e:
+        logger.error("Exception in Grafana -> Restart : restartGrafana() : "+str(e))
+        verboseHandle.printConsoleError("Exception in Grafana -> Stop : restartGrafana() : "+str(e))
+    
+    logger.info("restartGrafana(): end")
+
+    verboseHandle.printConsoleInfo("Grafana Restarted successfully!")
 
 if __name__ == '__main__':
     verboseHandle.printConsoleInfo("Removing Catalogue service")
     args = []
     args = myCheckArg()
     removeService()
+    removeGrafanaDashboard()

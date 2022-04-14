@@ -2,17 +2,63 @@
 import argparse
 import os
 import sys
-
 from utils.ods_scp import scp_upload
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeLocalCommandAndGetOutput
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
 from colorama import Fore
-
+from utils.ods_scp import scp_upload
+from utils.ods_cluster_config import config_get_grafana_list,config_get_nb_list
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
-serviceName = "catalogue-service.service";
+serviceName = "catalogue-service.service"
+user = "root"
+
+
+def getGrafanaServerHostList():
+    nodeList = config_get_grafana_list()
+    nodes=""
+    for node in nodeList:
+        if(len(nodes)==0):
+            nodes = node.ip
+        else:
+            nodes = nodes+','+node.ip
+    return nodes
+
+def getNBServerHostList():
+    nodeList = config_get_nb_list()
+    nodes=""
+    for node in nodeList:
+        if(str(node.role).casefold().__contains__('applicative')):
+            if(len(nodes)==0):
+                nodes = node.ip
+            else:
+                nodes = nodes+','+node.ip
+    return nodes
+
+def getConsulHost():
+    logger.info("getConsulHost() : start")
+    consulHost = '0.0.0.0';
+    consulHostList = getNBServerHostList()
+
+    logger.info("All Consul Hosts : "+consulHostList)
+
+    if(len(consulHostList)<=0):
+        verboseHandle.printConsoleInfo("Consul host not found..")
+
+    consulHost = consulHostList.split(",")[0]
+    
+    logger.info("Consul Host : "+consulHost)
+
+    publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent ifconfig.me")
+    logger.info("Consul Host : "+str(publicIP))
+
+    consulHost = str(publicIP)
+    
+    logger.info("getConsulHost() : end")
+    return consulHost
+
 
 def handleException(e):
     logger.info("handleException()")
@@ -44,7 +90,7 @@ def myCheckArg(args=None):
 
 def setupService():
 
-    logger.info("setupService() started")
+    logger.info("setupService() : start")
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Catalogue service ? (Yes/No) [Yes]:" + Fore.RESET
     
@@ -57,14 +103,8 @@ def setupService():
     if choice.casefold() == 'no':
         exit(0)
 
-    consulHostInput = Fore.YELLOW + "Please enter Consul host (Please provide public IP):" + Fore.RESET
-    
-    consulHost = str(input(consulHostInput))
-    isValidIP = False
-    while(len(consulHost) == 0):
-        consulHost = str(input(consulHostInput))
-
-    
+    consulHost = getConsulHost()
+        
     commandToExecute = "scripts/settings_catalogueService_setup.sh "+consulHost;
     logger.info("Command "+commandToExecute)
     try:
@@ -72,10 +112,86 @@ def setupService():
         logger.info("setupService() completed")
     except Exception as e:
         logger.error("error occurred in setupService()")
+    
+    logger.info("setupService() : end")
 
+def setupGrafanaDashboard():
+    logger.info("setupGrafanaDashboard() : start")
+    verboseHandle.printConsoleInfo("Configuring Catalogue dashboard in Grafana..")
+    global grafanaHosts
+    grafanaHosts = getGrafanaServerHostList()
+    grafanaHostList = grafanaHosts.split(",")
+ 
+    for host in grafanaHostList:
+        uploadDashbordJsonFile(host)
+        uploadDashboadProvisionFile(host)
+
+   
+    restartGrafana()
+
+    logger.info("setupGrafanaDashboard() : end")
+    verboseHandle.printConsoleInfo("Catalogue dashboard is configured successfully!")
+
+def restartGrafana():
+    logger.info("restartGrafana() : start")
+    verboseHandle.printConsoleInfo("Restarting Grafana service..")
+   
+    try:
+    
+        if(len(grafanaHosts)>0):
+            
+            commandToExecute="scripts/restartGrafana.sh"
+            additionalParam=""
+            logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(grafanaHosts)+" User:"+str(user))
+            with Spinner():
+                outputShFile= connectExecuteSSH(grafanaHosts, user,commandToExecute,additionalParam)
+                verboseHandle.printConsoleInfo("Host "+str(grafanaHosts)+" restart grafana service command executed.")
+        else:
+            logger.info("No server details found.")
+            verboseHandle.printConsoleInfo("No server details found.")
+    except Exception as e:
+        logger.error("Exception in Grafana -> Restart : restartGrafana() : "+str(e))
+        verboseHandle.printConsoleError("Exception in Grafana -> Stop : restartGrafana() : "+str(e))
+    
+    logger.info("restartGrafana(): end")
+
+    verboseHandle.printConsoleInfo("Grafana Restarted successfully!")
+
+def uploadDashbordJsonFile(host):
+    logger.info("uploadDashbordJsonFile(): start host :" + str(host))
+    
+    
+    localIP = executeLocalCommandAndGetOutput("curl --silent ifconfig.me")
+    localIP = str(localIP)
+    localIP = localIP[1:]
+    catalogue_url = 'http://'+str(localIP)+':3211/'
+    
+    try:
+        with Spinner():
+            logger.info("hostip ::" + str(host) + " user :" + str(user))
+            scp_upload(host, "root", 'systemServices/catalogue/grafana/catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
+
+            executeRemoteCommandAndGetOutput(host, "root","sudo sed -i 's,catalogue_service_url,'"+catalogue_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/catalogue.json")
+            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/catalogue.json")
+    except Exception as e:
+        handleException(e)
+    logger.info("uploadDashbordJsonFile(): end")
+
+def uploadDashboadProvisionFile(host):
+    logger.info("uploadDashboadProvisionFile(): start host :" + str(host))
+    try:
+        with Spinner():
+            logger.info("hostip ::" + str(host) + " user :" + str(user))
+            scp_upload(host, "root", 'systemServices/catalogue/grafana/catalogue.yaml', '/etc/grafana/provisioning/dashboards/')
+            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /etc/grafana/provisioning/dashboards/catalogue.yaml")
+    except Exception as e:
+        handleException(e)
+    
+    logger.info("uploadDashboadProvisionFile(): end")
 
 if __name__ == '__main__':
     verboseHandle.printConsoleInfo("Registering Catalogue service")
     args = []
     args = myCheckArg()
     setupService()
+    setupGrafanaDashboard()
