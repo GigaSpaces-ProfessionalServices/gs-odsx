@@ -65,7 +65,7 @@
       },
       "id": 2,
       "options": {
-        "content": "<iframe src=\"${catalogue_service_url}\" height=\"100%\" width=\"100%\"></iframe>",
+        "content": "<iframe src=\"catalogue_service_url\" height=\"100%\" width=\"100%\"></iframe>",
         "mode": "html"
       },
       "pluginVersion": "7.3.7",
@@ -117,27 +117,7 @@
   "tags": [],
   "templating": {
     "list": [
-      {
-        "current": {
-          "selected": false,
-          "text": "http://3.16.161.22:3211/",
-          "value": "http://3.16.161.22:3211/"
-        },
-        "error": null,
-        "hide": 0,
-        "label": null,
-        "name": "catalogue_service_url",
-        "options": [
-          {
-            "selected": true,
-            "text": "http://3.16.161.22:3211/",
-            "value": "http://3.16.161.22:3211/"
-          }
-        ],
-        "query": "http://3.16.161.22:3211/",
-        "skipUrlSync": false,
-        "type": "textbox"
-      }
+      
     ]
   },
   "time": {
