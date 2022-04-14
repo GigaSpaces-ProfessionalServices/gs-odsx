@@ -255,7 +255,7 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 pipelines -> Consumer -> Consumer start with offset')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 pipelines -> Consumer -> Fullsync -> Consumer start with offset')
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main" + str(managerNodes))

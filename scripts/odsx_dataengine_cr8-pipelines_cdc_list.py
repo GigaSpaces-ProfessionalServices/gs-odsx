@@ -90,11 +90,7 @@ def display_stream_list(args):
         streams = json.loads(response.text)
     except Exception as e:
         verboseHandle.printConsoleError("Error occurred")
-        with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-test.json',
-                  'r') as myfile:
-            data1 = myfile.read()
-        # parse file
-        streams = json.loads(data1)
+        handleException(e)
     counter = 0
     for stream in streams:
         # response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getFullSyncProgress/' + str(
@@ -115,19 +111,23 @@ def display_stream_list(args):
         with Spinner():
             streamStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
             fullSyncStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, fullSyncCmd)
+            print(topicCountCmd)
             topicCountResponse = executeRemoteCommandAndGetOutputValuePython36(diNodes[0].ip, user, topicCountCmd)
+            print(topicCountResponse)
 
             managerNode = getManagerHost(managerNodes)
             responseManager = requests.get(
                 'http://' + managerNode + ':8090/v2/data-integration/di-consumer/' + stream["configurationName"] + '/status',
                 headers={'Accept': 'text/plain'})
-            print(responseManager.text)
+            #print(responseManager.text)
+            logger.info(responseManager.text)
             consumerStatus = "N/A"
             if responseManager.text.__contains__("status"):
                 # jsonResponseManager = json.loads(responseManager.text.split("GSKafkaConsumerStatus")[1])
                 for responseWord in responseManager.text.split("GSKafkaConsumerStatus")[1].replace("{", "").replace("}","").split(","):
                     if responseWord.split("=")[0] == "status":
-                        print(responseWord.split("=")[1])
+                        #print(responseWord.split("=")[1])
+                        logger.info(responseWord.split("=")[1])
                         consumerStatus = responseWord.split("=")[1]
 
         streamStatus = streamStatus.split("\n", 1)[1]
@@ -167,7 +167,7 @@ def display_stream_list(args):
                      streamStatus]
         pipelineDict.update({counter: stream["configurationName"]})
         data.append(dataArray)
-    data.append(dataArray)
+    #data.append(dataArray)
     printTabular(None, printHeaders, data)
     return pipelineDict
 

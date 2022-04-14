@@ -65,12 +65,7 @@ def display_stream_list1(args):
                                 headers={'Accept': 'application/json'})
         streams = json.loads(response.text)
     except Exception as e:
-        verboseHandle.printConsoleError("Error occurred")
-        with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-test.json',
-                  'r') as myfile:
-            data1 = myfile.read()
-        # parse file
-        streams = json.loads(data1)
+        handleException(e)
     counter = 0
     for stream in streams:
         # print(stream)

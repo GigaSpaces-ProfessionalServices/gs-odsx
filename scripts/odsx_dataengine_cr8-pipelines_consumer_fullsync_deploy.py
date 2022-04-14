@@ -310,7 +310,7 @@ def loadConfigurations():
     print("loadConfigurations response_content : " + str(responseCode))
     print("loadConfigurations status_code : " + str(response.status_code))
     logger.info("loadConfigurations ResponseCode :" + str(responseCode))
-    if response.status_code == 202:
+    if response.status_code == 201:
         verboseHandle.printConsoleInfo("Loaded configuration")
     else:
         logger.info("Unable to deploy :" + responseCode)
@@ -440,18 +440,18 @@ def proceedToDeployPUInputParam(managerHost):
         kafkaReceiveBufferConfig = 16777216
 
     resourceName = str(
-        input(Fore.YELLOW + "Enter name of PU to deploy [cdc_tables-dih-consumer-online.war] :" + Fore.RESET))
+        input(Fore.YELLOW + "Enter name of PU to deploy [cdc_tables-dih-consumer-fullsync.war] :" + Fore.RESET))
     if (len(str(resourceName)) == 0):
-        resourceName = 'cdc_tables-dih-consumer-online.war'
+        resourceName = 'cdc_tables-dih-consumer-fullsync.war'
     logger.info("nameOfPU :" + str(resourceName))
 
     resourcePath = str(input(Fore.YELLOW + "Enter path of PU to deploy [/dbagiga] :" + Fore.RESET))
     if (len(str(resourcePath)) == 0):
         resourcePath = '/dbagiga'
     logger.info("nameOfPU :" + str(resourcePath))
-    processingUnitName = str(input(Fore.YELLOW + "Enter Resource Name [consumer] : " + Fore.RESET))
+    processingUnitName = str(input(Fore.YELLOW + "Enter Resource Name [consumer-online] : " + Fore.RESET))
     while (len(str(processingUnitName)) == 0):
-        processingUnitName = 'consumer'
+        processingUnitName = 'consumer-online'
     logger.info("processingUnitName :" + str(processingUnitName))
 
     uploadFileRest(managerHost)
@@ -469,7 +469,7 @@ def proceedToDeployPUInputParam(managerHost):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 pipelines -> Consumer -> Consumer Deploy')
+    verboseHandle.printConsoleWarning('Menu -> Data Engine -> CR8 pipelines -> Consumer -> Fullsync -> Consumer Deploy')
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main" + str(managerNodes))

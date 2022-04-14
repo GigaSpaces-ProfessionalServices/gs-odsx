@@ -89,12 +89,7 @@ def display_stream_list(args):
                                 headers={'Accept': 'application/json'})
         streams = json.loads(response.text)
     except Exception as e:
-        verboseHandle.printConsoleError("Error occurred")
-        with open('/home/jay/work/gigaspace/bofLeumi/intellij-ide/gs-odsx/config/stream-response-test.json',
-                  'r') as myfile:
-            data1 = myfile.read()
-        # parse file
-        streams = json.loads(data1)
+        handleException(e)
     counter = 0
     for stream in streams:
         # response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getFullSyncProgress/' + str(
@@ -173,7 +168,7 @@ def display_stream_list(args):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Data Engine -> CR8 pipelines -> Consumer -> List")
+    verboseHandle.printConsoleWarning("Menu -> Data Engine -> CR8 pipelines -> Consumer -> Online -> List")
     args = []
     args = myCheckArg()
     display_stream_list(args)
