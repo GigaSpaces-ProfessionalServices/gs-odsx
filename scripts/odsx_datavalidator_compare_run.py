@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 
-import os.path
+import os.path, argparse
 from scripts.logManager import LogManager
 from colorama import Fore
 
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_dataValidation_nodes
-from utils.ods_validation import getSpaceServerStatus
-import requests, json, subprocess
+import requests, json
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -61,33 +60,53 @@ def doValidate():
     #    dataValidatorServiceHost = dataValidationHost
 
     dataValidatorServiceHost = dataValidationHost
-
-    verboseHandle.printConsoleWarning('Measurements List:');
+    verboseHandle.printConsoleWarning('');
+    verboseHandle.printConsoleWarning('Measurement List:');
     resultCount = printmeasurementtable(dataValidatorServiceHost)
+    if resultCount > 0:
+        measurementIdA = str(input("Select 1st measurement Id for comparison : "))
+        while(measurementIdA not in measurementids):
+          print(Fore.YELLOW +"Please select 1st measurement Id from above list"+Fore.RESET)
+          measurementIdA = str(input("Select 1st measurement Id for comparison :"))
+        if (len(str(measurementIdA)) == 0):
+          measurementIdA = '1'
+        measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
+        while(measurementIdB not in measurementids):
+           print(Fore.YELLOW +"Please select 2nd measurement Id from above list"+Fore.RESET)
+           measurementIdB = str(input("Select 2nd measurement Id for comparison :"))
+        if (len(str(measurementIdB)) == 0):
+          measurementIdB = '1'
 
-    registernew = 'yes'
-    if resultCount <= 0:
-        verboseHandle.printConsoleWarning("No measurement available.")
-        return
+        executionTime = str(input("Execution time delay (in minutes) [0]: "))
+        if (len(str(executionTime)) == 0):
+            executionTime = '0'
 
-    measurementId = str(input(Fore.YELLOW + "Enter measurement id to remove: " + Fore.RESET))
-    while (measurementId not in measurementIds):
-        print(Fore.YELLOW +"Enter measurement id from above list"+Fore.RESET)
-        measurementId = str(input(Fore.YELLOW + "Enter measurement id to remove: " + Fore.RESET))
+        # http://localhost:7890/compare/avg?dataSource1Type=gigaspaces&dataSource1HostIp=localhost&dataSource1Port=414&schemaName1=demo&dataSource2Type=gigaspaces&dataSource2HostIp=localhost&dataSource2Port=4174&schemaName2=demo2&tableName=com.mycompany.app.Person&fieldName=salary
+        response = requests.get(
+            "http://" + dataValidatorServiceHost + ":7890/compare/" + measurementIdA + "/" + measurementIdB
+            + "?executionTime=" + executionTime)
 
+        if response.status_code == 200:
+            jsonArray = json.loads(response.text)
+            response = json.loads(jsonArray["response"])
+            #print(str(response))
 
-    response = requests.delete(
-        "http://" + dataValidatorServiceHost + ":7890/measurement/remove/" + measurementId)
+            verboseHandle.printConsoleWarning("")
+            verboseHandle.printConsoleWarning("------------------------------------------------------------")
+            # verboseHandle.printConsoleInfo("Test Result:  "+jsonArray["response"])
+            if response["result"] == 'pending':
+                verboseHandle.printConsoleInfo("Test is scheduled")
+            elif response["result"].startswith('FAIL'):
+                verboseHandle.printConsoleError("Test Failed")
+                verboseHandle.printConsoleError("Details: "+response["errorSummary"])
+            else:
+                verboseHandle.printConsoleInfo("Test Result: " + response["result"])
+                verboseHandle.printConsoleInfo("Query: " + response["query"])
+            verboseHandle.printConsoleWarning("------------------------------------------------------------")
+        else:
+            verboseHandle.printConsoleInfo("No measurement available.Please Register first.")
 
-    logger.info(str(response.status_code))
-    jsonArray = json.loads(response.text)
-
-    verboseHandle.printConsoleWarning("")
-    verboseHandle.printConsoleWarning("------------------------------------------------------------")
-    verboseHandle.printConsoleInfo(" " + jsonArray["response"])
-    verboseHandle.printConsoleWarning("------------------------------------------------------------")
-
-measurementIds=[]
+measurementids=[]
 def printmeasurementtable(dataValidatorServiceHost):
     try:
         response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
@@ -110,8 +129,6 @@ def printmeasurementtable(dataValidatorServiceHost):
         if response:
             for measurement in response:
                 # print(measurement)
-                measurementIds.append(str(measurement["id"]))
-
                 queryDetail = "'" + measurement["type"] + "' of '" + measurement["fieldName"] + "' FROM '" + \
                               measurement["tableName"] + "'"
                 if measurement["whereCondition"] != "":
@@ -119,12 +136,12 @@ def printmeasurementtable(dataValidatorServiceHost):
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
                              Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
-                             Fore.GREEN +"( Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
+                             Fore.GREEN +"(Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
                                  "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)
-
+                measurementids.append(str(measurement["id"]) )
         printTabular(None, headers, data)
         verboseHandle.printConsoleWarning('');
         return len(response)
@@ -132,8 +149,8 @@ def printmeasurementtable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Measurement -> Remove")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Measurement -> Remove')
+    logger.info("MENU -> Data Validator -> Perform Validation -> Run Test -> Compare Test")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Run Test -> Compare Test')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

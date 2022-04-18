@@ -1,18 +1,14 @@
 #!/usr/bin/env python3
 
-import os.path, argparse, sys
+import os.path
 from scripts.logManager import LogManager
 from colorama import Fore
 
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_validation import getSpaceServerStatus
 import requests, json, subprocess
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from subprocess import Popen, PIPE
-from scripts.spinner import Spinner
-from utils.ods_validation import isValidHost, getTelnetStatus
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -50,34 +46,56 @@ def getPort(dataSource):
 
 
 def doValidate():
-
     dataValidationNodes = config_get_dataValidation_nodes()
     dataValidationHost = getDataValidationHost(dataValidationNodes)
-    logger.info("dataValidationHost : "+str(dataValidationHost))
+    logger.info("dataValidationHost : " + str(dataValidationHost))
 
     if str(dataValidationHost) == "":
         verboseHandle.printConsoleError("")
-        verboseHandle.printConsoleError("Failed to connect to the Data validation server. Please check that it is running.")
+        verboseHandle.printConsoleError(
+            "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    #dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
-    #if (len(str(dataValidatorServiceHost)) == 0):
+    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
     dataValidatorServiceHost = dataValidationHost
 
+    verboseHandle.printConsoleWarning('Measurements List:');
     resultCount = printmeasurementtable(dataValidatorServiceHost)
 
+    registernew = 'yes'
+    if resultCount <= 0:
+        verboseHandle.printConsoleWarning("No measurement available.")
+        return
 
+    measurementId = str(input(Fore.YELLOW + "Enter measurement id to remove: " + Fore.RESET))
+    while (measurementId not in measurementIds):
+        print(Fore.YELLOW +"Enter measurement id from above list"+Fore.RESET)
+        measurementId = str(input(Fore.YELLOW + "Enter measurement id to remove: " + Fore.RESET))
+
+
+    response = requests.delete(
+        "http://" + dataValidatorServiceHost + ":7890/measurement/remove/" + measurementId)
+
+    logger.info(str(response.status_code))
+    jsonArray = json.loads(response.text)
+
+    verboseHandle.printConsoleWarning("")
+    verboseHandle.printConsoleWarning("------------------------------------------------------------")
+    verboseHandle.printConsoleInfo(" " + jsonArray["response"])
+    verboseHandle.printConsoleWarning("------------------------------------------------------------")
+
+measurementIds=[]
 def printmeasurementtable(dataValidatorServiceHost):
-
     try:
         response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
     except:
         print("An exception occurred")
 
     if response.status_code == 200:
-        #logger.info(str(response.status_code))
+        # logger.info(str(response.status_code))
         jsonArray = json.loads(response.text)
         response = json.loads(jsonArray["response"])
         # print("response2 "+response[0])
@@ -91,8 +109,11 @@ def printmeasurementtable(dataValidatorServiceHost):
         data = []
         if response:
             for measurement in response:
-                #print(measurement)
-                queryDetail= "'"+measurement["type"] +"' of '"+measurement["fieldName"] +"' FROM '"+ measurement["tableName"]+"'"
+                # print(measurement)
+                measurementIds.append(str(measurement["id"]))
+
+                queryDetail = "'" + measurement["type"] + "' of '" + measurement["fieldName"] + "' FROM '" + \
+                              measurement["tableName"] + "'"
                 if measurement["whereCondition"] != "":
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
@@ -102,7 +123,6 @@ def printmeasurementtable(dataValidatorServiceHost):
                                  "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
-
                 data.append(dataArray)
 
         printTabular(None, headers, data)
@@ -112,8 +132,7 @@ def printmeasurementtable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Measurement -> List")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Measurement -> List')
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Measurement -> Remove')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

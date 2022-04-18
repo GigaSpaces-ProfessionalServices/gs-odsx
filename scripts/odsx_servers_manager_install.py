@@ -250,7 +250,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     verboseHandle.printConsoleWarning("DI servers will be confiured ["+str(kafkaHosts)+"] ")
                 else:
                     verboseHandle.printConsoleInfo("No DI server configuration found.")
-                set_value_in_property_file("app.manager.kafka.host",kafkaHost)
+                    set_value_in_property_file("app.manager.kafka.host",kafkaHost)
                 gsOptionExtFromConfig = gsOptionExtFromConfig.replace('<DI servers>:9092',kafkaHosts)
 
         gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))

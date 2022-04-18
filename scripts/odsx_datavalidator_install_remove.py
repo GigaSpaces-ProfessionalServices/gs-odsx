@@ -5,7 +5,7 @@ import platform
 from os import path
 from colorama import Fore
 
-from scripts.odsx_datavalidator_list import listDVServers
+from scripts.odsx_datavalidator_install_list  import listDVServers
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH
@@ -131,7 +131,7 @@ def executeCommandForUnInstall():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> DataValidator -> Remove')
+    verboseHandle.printConsoleWarning('Menu -> DataValidator -> Install -> Remove')
     try:
         removeInputUserAndHost()
         executeCommandForUnInstall()

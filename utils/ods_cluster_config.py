@@ -970,20 +970,22 @@ def config_add_dataValidation_node(hostIp, hostName, role, resumeMode, type, fil
         return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
 
 def config_remove_dataValidation_byNameIP(dataValidationName,dataValidationIP,filePath='config/cluster.config', verbose=False):
-    logger.info("config_remove_dataValidation_byNameIP () : dataValidationName :"+str(dataValidationName)+" nbIp:"+str(dataValidationIP))
+    print("config_remove_dataValidation_byNameIP () : dataValidationName :"+str(dataValidationName)+" nbIp:"+str(dataValidationIP))
     if verbose:
         verboseHandle.setVerboseFlag()
     config_data = get_cluster_obj(filePath)
     dataValidationNodes = config_data.cluster.servers.dataValidation.nodes
     counter=0
     for dataValidationNode in dataValidationNodes:
-        logger.info(dataValidationNode.name+" :: "+dataValidationName)
-        if(dataValidationNode.name==dataValidationName and dataValidationNode.role=='dataValidation'):
-            logger.info("dataValidation name : "+dataValidationName+" dataValidation IP:"+dataValidationIP+" has been removed.")
+        #print(dataValidationNode.name+" :: "+dataValidationName)
+        if(dataValidationNode.name==dataValidationName):
+            #print("dataValidation name : "+dataValidationName+" dataValidation IP:"+dataValidationIP+" has been removed.")
             dataValidationNodes.pop(counter)
         counter=counter+1
 
     config_data.cluster.servers.dataValidation.nodes = dataValidationNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
     
 def config_add_dataEngine_node(hostIp, hostName, engine, role, resumeMode, type, filePath='config/cluster.config'):
     logger.info("config_add_dataEngine_node")

@@ -4,10 +4,11 @@ import os
 import sys
 from colorama import Fore
 from scripts.logManager import LogManager
+from scripts.odsx_datavalidator_install_list import listDVAgents
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from scripts.spinner import Spinner
-from scripts.odsx_datavalidator_list import listDVServers
+from scripts.odsx_datavalidator_install_list import listDVServers
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -57,30 +58,31 @@ def getDVServerHostList():
             nodes = nodes+','+node.ip
     return nodes
 
-def startDataValidationService(args):
+def stopDataValidationService(args):
     try:
         listDVServers()
         nodes = getDVServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to start data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
+        choice = str(input(Fore.YELLOW+"Are you sure, you want to stop data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataValidation_nodes():
-            cmd = "systemctl start odsxdatavalidation.service"
+            cmd = "systemctl stop odsxdatavalidation.service"
             logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
             user = 'root'
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                 if (output == 0):
-                    verboseHandle.printConsoleInfo("Service data validation started successfully on "+str(node.ip))
+                    verboseHandle.printConsoleInfo("Service data validation stop successfully on "+str(node.ip))
                 else:
-                    verboseHandle.printConsoleError("Service data validation failed to start")
+                    verboseHandle.printConsoleError("Service data validation failed to stop")
+
 
     except Exception as e:
         handleException(e)
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> DataValidator -> Start")
+    verboseHandle.printConsoleWarning("Menu -> DataValidator -> Install -> Stop")
     args = []
     args = myCheckArg()
-    startDataValidationService(args)
+    stopDataValidationService(args)

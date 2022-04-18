@@ -6,7 +6,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
 
@@ -57,6 +57,7 @@ def doValidate():
         verboseHandle.printConsoleError(
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
+
 
     # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
@@ -189,8 +190,8 @@ def printDatasourcetable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> DataSource -> Add")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> DataSource -> Add')
+    logger.info("MENU -> Data Validator -> Data Source Registration -> Add")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Data Source Registration -> Add')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

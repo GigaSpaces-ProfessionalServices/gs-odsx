@@ -6,7 +6,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
 
@@ -210,8 +210,8 @@ def printDatasourcetable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> DataSource -> Edit")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> DataSource -> Edit')
+    logger.info("MENU -> Data Validator -> Data Source Registration -> Edit")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Data Source Registration -> Edit')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

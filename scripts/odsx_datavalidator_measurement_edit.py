@@ -6,7 +6,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
 
@@ -208,8 +208,7 @@ def printDatasourcetable(dataValidatorServiceHost):
 
         headers = [Fore.YELLOW + " Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
-                   Fore.YELLOW + "Type" + Fore.RESET ,
-                   Fore.YELLOW + "Host Ip" + Fore.RESET
+                   Fore.YELLOW + "Type" + Fore.RESET
                    ]
         data = []
         if response:
@@ -218,8 +217,7 @@ def printDatasourcetable(dataValidatorServiceHost):
                 dataSourceIds.append(str(datasource["id"]))
                 dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
-                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
-                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET
+                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET
                              ]
                 data.append(dataArray)
 
@@ -229,8 +227,7 @@ def printDatasourcetable(dataValidatorServiceHost):
     return 0
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Measurement -> Edit")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Measurement -> Edit')
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Measurement -> Edit')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():
