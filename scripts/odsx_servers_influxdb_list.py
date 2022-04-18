@@ -19,6 +19,28 @@ class bcolors:
     FAIL = '\033[91m'  # RED
     RESET = '\033[0m'  # RESET COLOR
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
     parser.add_argument('m', nargs='?')
@@ -35,7 +57,6 @@ def listInfluxdb():
     headers = [Fore.YELLOW+"IP"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
-               Fore.YELLOW+"Resume Mode"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET]
     data=[]
     dataArray = getInfluxdbServerDetails(influxdbServers)
@@ -47,8 +68,11 @@ def listInfluxdb():
 
     printTabular(None,headers,data)
 if __name__ == '__main__':
-    args = []
-    menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
-    args.append(sys.argv[0])
-    myCheckArg()
-    listInfluxdb()
+    try:
+        args = []
+        menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
+        args.append(sys.argv[0])
+        myCheckArg()
+        listInfluxdb()
+    except Exception as e:
+        handleException(e)

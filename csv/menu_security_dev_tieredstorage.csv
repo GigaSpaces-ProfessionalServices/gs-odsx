@@ -1,1 +1,1 @@
-Deploy,List,Undeploy,ESC
+Deploy,UpdateCachePolicy,List,Undeploy,Rollback,EXIT

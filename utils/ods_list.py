@@ -18,13 +18,11 @@ def getGrafanaServerDetails(grafanaServers):
             dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                        Fore.GREEN+server.name+Fore.RESET,
                        Fore.GREEN+server.role+Fore.RESET,
-                       Fore.GREEN+server.resumeMode+Fore.RESET,
                        Fore.GREEN+status+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                        Fore.GREEN+server.name+Fore.RESET,
                        Fore.GREEN+server.role+Fore.RESET,
-                       Fore.GREEN+server.resumeMode+Fore.RESET,
                        Fore.RED+status+Fore.RESET]
     return dataArray
 
@@ -36,12 +34,10 @@ def getInfluxdbServerDetails(influxdbServers):
             dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                        Fore.GREEN+server.name+Fore.RESET,
                        Fore.GREEN+server.role+Fore.RESET,
-                       Fore.GREEN+server.resumeMode+Fore.RESET,
                        Fore.GREEN+status+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+server.ip+Fore.RESET,
                        Fore.GREEN+server.name+Fore.RESET,
                        Fore.GREEN+server.role+Fore.RESET,
-                       Fore.GREEN+server.resumeMode+Fore.RESET,
                        Fore.RED+status+Fore.RESET]
     return dataArray

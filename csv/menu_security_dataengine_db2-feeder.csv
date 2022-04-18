@@ -1,1 +1,1 @@
-Install-Deploy,Start,List,Stop-Undeploy,ESC
+Install-Deploy,Start,List,Stop,Remove-Undeploy,Reset_database,ESC

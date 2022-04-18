@@ -1,1 +1,0 @@
-list,pipelines details,validate,start full sync,stop full sync,start on-line stream,stop on-line stream,clean pipeline,consumer deploy,consumer undeploy,consumer kill,consumer start with offset,consumer stop,ESC

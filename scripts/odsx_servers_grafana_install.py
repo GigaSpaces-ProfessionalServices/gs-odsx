@@ -20,6 +20,27 @@ class bcolors:
     FAIL = '\033[91m' #RED
     RESET = '\033[0m' #RESET COLOR
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
 
 def installUserAndTargetDirectory():
     logger.info("installUserAndTargetDirectory():")
@@ -36,8 +57,7 @@ def installUserAndTargetDirectory():
         logger.info(" user: "+str(user))
 
     except Exception as e:
-        logger.error("Exception in Grafana -> Install : installUserAndTargetDirectory() : "+str(e))
-        verboseHandle.printConsoleError("Exception in Grafana -> Install : installUserAndTargetDirectory() : "+str(e))
+        handleException(e)
     logger.info("installUserAndTargetDirectory(): end")
 
 def buildUploadInstallTarToServer():
@@ -63,7 +83,7 @@ def executeCommandForInstall():
         logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
         with Spinner():
             outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
-            config_add_grafana_node(host,host,'grafana','true')
+            config_add_grafana_node(host,host,'grafana')
             set_value_in_property_file('app.grafana.hosts',host)
             verboseHandle.printConsoleInfo("Node has been added :"+str(host))
     except Exception as e:

@@ -10,7 +10,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShComman
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
 from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
 from scripts.spinner import Spinner
-from utils.ods_scp import scp_upload
+from utils.ods_scp import scp_upload,scp_upload_specific_extension
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -173,13 +173,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         global gscCount
         global memoryGSC
         global zoneGSC
-        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create [20]: "+Fore.RESET))
-        if(len(str(gscCount))==0):
-            gscCount = '20'
 
-        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC [15g]: "+Fore.RESET))
+        gscCountConfig = str(readValuefromAppConfig("app.space.gsc.count"))
+        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create ["+str(gscCountConfig)+"]: "+Fore.RESET))
+        if(len(str(gscCount))==0):
+            gscCount = gscCountConfig
+        set_value_in_property_file("app.space.gsc.count",str(gscCount))
+
+        memoryGSCConfig = str(readValuefromAppConfig("app.space.gsc.memory"))
+        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC ["+str(memoryGSCConfig)+"]: "+Fore.RESET))
         if(len(str(memoryGSC))==0):
-            memoryGSC = '15g'
+            memoryGSC = memoryGSCConfig
+        set_value_in_property_file("app.space.gsc.memory",memoryGSC)
 
         zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
         if(len(str(zoneGSC))==0):
@@ -232,6 +237,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         db2jccJarLicenseInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
         db2jccJarLicenseInput=sourceDirectoryForJar+'/'+db2jccJarLicenseInput
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
+        msSqlFeederFileSource = str(readValuefromAppConfig("app.space.mssqlfeeder.files.source")).replace('[','').replace(']','')
+        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -290,7 +297,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"18. "+
               Fore.GREEN+"DB2 Feeder jars target : "+Fore.RESET,
               Fore.GREEN+str(db2FeederJarTargetInput).replace('"','')+Fore.RESET)
-
+        print(Fore.GREEN+"19. "+
+              Fore.GREEN+"MsSQL Feeder files source : "+Fore.RESET,
+              Fore.GREEN+str(msSqlFeederFileSource).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"20. "+
+              Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
+              Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -334,6 +346,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
                     #print("source2 :"+db2jccJarLicenseInput)
                     scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+                    scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
+                    scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
                 serverHost=''
                 try:
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)

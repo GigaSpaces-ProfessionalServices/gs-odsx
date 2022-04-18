@@ -4,9 +4,12 @@ import os, time, requests,json, subprocess, glob,sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
+from utils.ods_app_config import readValueByConfigObj,readValuefromAppConfig
+from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
+from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -73,11 +76,13 @@ def displayDB2FeederShFiles():
     logger.info("startDB2Feeder()")
     global fileNameDict
     global sourceDB2FeederShFilePath
+    global fileNamePuNameDict
     sourceDB2FeederShFilePath = str(readValueByConfigObj("app.dataengine.db2-feeder.filePath.shFile"))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceDB2FeederShFilePath)
     fileNameDict = host_dictionary_obj()
+    fileNamePuNameDict = host_dictionary_obj()
     headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
                Fore.YELLOW+"Name of db2-feeder file"+Fore.RESET
                ]
@@ -88,8 +93,58 @@ def displayDB2FeederShFiles():
                      Fore.GREEN+str(file)+Fore.RESET]
         dataTable.append(dataArray)
         fileNameDict.add(str(counter),str(file))
+        puName = str(file).replace('load','').replace('.sh','').casefold()
+        puName = 'db2feeder'+puName
+        fileNamePuNameDict.add(str(puName),str(file))
         counter=counter+1
-    printTabular(None,headers,dataTable)
+    logger.info("fileNameDict : "+str(fileNameDict))
+    logger.info("fileNamePuNameDict : "+str(fileNamePuNameDict))
+    #printTabular(None,headers,dataTable)
+
+def listDeployed(managerHost):
+    logger.info("listDeployed()")
+    global gs_space_dictionary_obj
+    try:
+        logger.info("managerHost :"+str(managerHost))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
+        jsonArray = json.loads(response.text)
+        verboseHandle.printConsoleWarning("Resources on cluster:")
+        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                   Fore.YELLOW+"Name"+Fore.RESET,
+                   Fore.YELLOW+"Host"+Fore.RESET,
+                   Fore.YELLOW+"Zone"+Fore.RESET,
+                   Fore.YELLOW+"Query Status"+Fore.RESET,
+                   Fore.YELLOW+"Status"+Fore.RESET
+                   ]
+        gs_space_dictionary_obj = host_dictionary_obj()
+        logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
+        counter=0
+        dataTable=[]
+        for data in jsonArray:
+            hostId=''
+            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
+            jsonArray2 = json.loads(response2.text)
+            queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
+            for data2 in jsonArray2:
+                hostId=data2["hostId"]
+            if(len(str(hostId))==0):
+                hostId="N/A"
+            if(str(data["name"]).__contains__('db2')):
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+str(hostId)+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+str(queryStatus)+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
+        printTabular(None,headers,dataTable)
+        return gs_space_dictionary_obj
+    except Exception as e:
+        handleException(e)
 
 def inputParam():
     logger.info("inputParam()")
@@ -108,30 +163,37 @@ def inputParam():
         for i in range (1,elements+1):
             proceedToStartDB2Feeder(str(i))
 
-def sqlLiteGetHostAndPortByFileName(shFileName):
-    logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(shFileName))
+def sqlLiteGetHostAndPortByFileName(puName):
+    logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(puName))
     try:
         db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        mycursor = cnx.execute("SELECT host,port FROM db2_host_port where file like '%"+str(shFileName)+"%' ")
+        logger.info("SELECT host,port,file FROM db2_host_port where feeder_name like '%"+str(puName)+"%' ")
+        mycursor = cnx.execute("SELECT host,port,file FROM db2_host_port where feeder_name like '%"+str(puName)+"%' ")
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
             logger.info("host : "+str(row[0]))
             logger.info("port : "+str(row[1]))
-            return str(row[0])+','+str(row[1])
+            logger.info("file : "+str(row[2]))
+            return str(row[0])+','+str(row[1])+','+str(row[2])
     except Exception as e:
         handleException(e)
 
 def proceedToStartDB2Feeder(fileNumberToStart):
     logger.info("proceedToStartDB2Feeder()")
-    shFileName = fileNameDict.get(str(fileNumberToStart))
-    hostAndPort = str(sqlLiteGetHostAndPortByFileName(shFileName)).split(',')
+    #shFileName = fileNameDict.get(str(fileNumberToStart))
+    puName = gs_space_dictionary_obj.get(str(fileNumberToStart))
+    print(puName)
+    shFileName = fileNamePuNameDict.get(str(puName))
+    hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
+    shFileName = str(hostAndPort[2])
     cmd = str(sourceDB2FeederShFilePath)+'/'+shFileName+' '+host+" "+port
+    logger.info("cmd : "+str(cmd))
     print(cmd)
     os.system(cmd)
     #output = executeLocalCommandAndGetOutput(cmd)
@@ -140,9 +202,32 @@ def proceedToStartDB2Feeder(fileNumberToStart):
 if __name__ == '__main__':
     logger.info("odsx_dataengine_db2-feeder_start")
     verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> Start")
+    username = ""
+    password = ""
+    appId=""
+    safeId=""
+    objectId=""
     try:
-        displayDB2FeederShFiles()
-        inputParam()
+        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+        logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+        managerHost=''
+        managerNodes = config_get_manager_node()
+        managerHost = getManagerHost(managerNodes);
+        if(len(str(managerHost))>0):
+            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            displayDB2FeederShFiles()
+            gs_space_dictionary_obj = listDeployed(managerHost)
+            if(len(str(gs_space_dictionary_obj))>2):
+                inputParam()
+            else:
+                logger.info("No feeder found.")
+                verboseHandle.printConsoleInfo("No feeder found.")
+        else:
+            logger.info("No manager status ON.")
+            verboseHandle.printConsoleInfo("No manager status ON.")
     except Exception as e:
         verboseHandle.printConsoleError("Eror in odsx_db2-feeder_start : "+str(e))
         handleException(e)

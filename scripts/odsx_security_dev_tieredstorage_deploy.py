@@ -319,7 +319,7 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     host = space_dict_obj.get(str(i))
                     #usernameSpaceHost = getUsernameByHost(host)
                     #passwordSpaceHost = getPasswordByHost(host)
-                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
+                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+" | grep -v JAVA_HOME"
                     logger.info("cmd : "+str(cmd))
                     #print(str(cmd))
                     with Spinner():
@@ -553,9 +553,9 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         logger.info("nameOfPU :"+str(resourceName))
 
         global partition
-        partition = str(input(Fore.YELLOW+"Enter partition required [1] :"+Fore.RESET))
+        partition = str(input(Fore.YELLOW+"Enter partition required [50] :"+Fore.RESET))
         if(len(str(partition))==0):
-            partition='1'
+            partition='50'
         while( not partition.isdigit()):
             partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
         logger.info("Enter partition required :"+str(partition))

@@ -113,8 +113,8 @@ if __name__ == '__main__':
     username = ""
     password = ""
     try:
-        username = str(readValuefromAppConfig("app.manager.dev.security.username")).replace('"','')
-        password = str(readValuefromAppConfig("app.manager.dev.security.password")).replace('"','')
+        username =  str(readValuefromAppConfig("app.manager.dev.security.username")).replace('"','')
+        password =  str(readValuefromAppConfig("app.manager.dev.security.password")).replace('"','')
         logger.info("username : "+str(username)+" password : "+str(password))
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))

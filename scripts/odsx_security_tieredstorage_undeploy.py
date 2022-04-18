@@ -11,6 +11,7 @@ from utils.odsx_print_tabular_data import printTabular
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
 from scripts.spinner import Spinner
 from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -138,19 +139,31 @@ def getUserInput(managerHost):
     logger.info("getUserInput()")
     try:
         typeOfRemove = str(input(Fore.YELLOW+"[1] For individual undeployed PU\n[Enter] For all above undeployed PUs \n[99] For exist. :"+Fore.RESET))
-        print(typeOfRemove)
+        #print(typeOfRemove)
         logger.info("typeOfRemove : "+str(typeOfRemove))
         if(typeOfRemove=='1'):
             proceedForIndividualUndeployed(managerHost)
         elif(str(typeOfRemove)=='99'):
-            print("99")
             logger.info("99")
-            return
+            return "99"
         elif(len(str(typeOfRemove))==0):
             proceedForAllUndeployed(managerHost)
     except Exception as e:
         handleException(e)
 
+def getTieredStorageSpaces():
+    logger.info("getTieredStorageSpaces()")
+    #check for Tiered storage space
+    logger.info("URL: http://"+str(managerHost)+":8090/v2/internal/spaces/utilization")
+    responseTiered = requests.get("http://"+str(managerHost)+":8090/v2/internal/spaces/utilization",auth = HTTPBasicAuth(username,password))
+    logger.info("Response status of spaces/utilization : "+str(responseTiered.status_code)+" content : "+str(responseTiered.content))
+    jsonArrayTiered = json.loads(responseTiered.text)
+    tieredSpace = []
+    for data in jsonArrayTiered:
+        if(data["tiered"]==True):
+            tieredSpace.append(str(data["serviceName"]))
+    logger.info("tieresSpace : "+str(tieredSpace))
+    return tieredSpace
 
 def listDeployed(managerHost):
     global gs_space_dictionary_obj
@@ -170,18 +183,20 @@ def listDeployed(managerHost):
         gs_space_dictionary_obj = host_dictionary_obj()
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
         counter=0
+        tieredSpaces = getTieredStorageSpaces()
         dataTable=[]
         for data in jsonArray:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["name"]+Fore.RESET,
-                         Fore.GREEN+data["resource"]+Fore.RESET,
-                         Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                         Fore.GREEN+data["processingUnitType"]+Fore.RESET,
-                         Fore.GREEN+data["status"]+Fore.RESET
-                        ]
-            gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-            counter=counter+1
-            dataTable.append(dataArray)
+            if(tieredSpaces.__contains__(str(data["name"]))):
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+data["resource"]+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+data["processingUnitType"]+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                            ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:
@@ -248,20 +263,16 @@ def proceedToUndeployPU(managerHost):
                 if(response.status_code==202):
                     undeployResponseCode = str(response.content.decode('utf-8'))
                     logger.info("backUPResponseCode : "+str(undeployResponseCode))
-                    if(undeployResponseCode.isdigit()):
-                        status = validateResponse(undeployResponseCode)
-                        with Spinner():
-                            while(status.casefold() != 'successful'):
-                                time.sleep(2)
-                                status = validateResponse(undeployResponseCode)
-                                logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
-                                #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                                verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                        verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                    else:
-                        logger.info("Undeploy  :"+str(spaceTobeUndeploy)+"   status :"+str(undeployResponseCode))
-                        verboseHandle.printConsoleInfo("Undeploy  :"+str(spaceTobeUndeploy)+"   Status : "+str(undeployResponseCode))
 
+                    status = validateResponse(undeployResponseCode)
+                    with Spinner():
+                        while(status.casefold() != 'successful'):
+                            time.sleep(2)
+                            status = validateResponse(undeployResponseCode)
+                            logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
+                            #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                            verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                    verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
             else:
                     logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
                     verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
@@ -320,7 +331,7 @@ def removeGSC(managerHost):
     if(len(str(confirmRemoveGSC))==0):
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
-        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill --zones "+str(zoneToDeleteGSC)
+        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill --zones "+str(zoneToDeleteGSC)+" | grep -v JAVA_HOME"
         logger.info("security undeploy cmd : "+str(cmd))
         #print(str(cmd))
         with Spinner():
@@ -340,24 +351,6 @@ def removeGSC(managerHost):
         printProgressBar(i,sizeJsonArray,"Completed.")
         i=i+1
     '''
-
-def getUsernameByHost(managerHost):
-    logger.info("getUsernameByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Username : "+output)
-    return output
-
-def getPasswordByHost(managerHost):
-    logger.info("getPasswordByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Password : "+output)
-    return  output
 
 if __name__ == '__main__':
     logger.info("odsx_tieredstorage_undeploy")
@@ -381,10 +374,10 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
-                username = str(getUsernameByHost(managerHost))
-                password = str(getPasswordByHost(managerHost))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 gs_space_dictionary_obj = listDeployed(managerHost)
-                if(len(gs_space_dictionary_obj)>0):
+                if(len(str(gs_space_dictionary_obj))>0):
                     proceedToUndeployPU(managerHost)
                 else:
                     logger.info("No space/pu found.")
@@ -393,16 +386,17 @@ if __name__ == '__main__':
                 #    time.sleep(30)
                 gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost)
                 if(len(gs_pu_dictionary_obj)>0):
-                    getUserInput(managerHost)
+                    userInput = getUserInput(managerHost)
+                    if(userInput!="99"):
+                        gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+                        if(len(str(gscRemove))==0):
+                            gscRemove='y'
+                        if(gscRemove=='y'):
+                            managerHost = getManagerHost(managerNodes)
+                            removeGSC(managerHost)
                 else:
                     logger.info("No space/pu undeployed found.")
                     verboseHandle.printConsoleInfo("No space/pu undeployed found.")
-                gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
-                if(len(str(gscRemove))==0):
-                    gscRemove='y'
-                if(gscRemove=='y'):
-                    managerHost = getManagerHost(managerNodes)
-                    removeGSC(managerHost)
                 #confirmParamAndRestartGSC()
             else:
                 logger.info("Please check manager server status.")

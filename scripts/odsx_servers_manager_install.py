@@ -429,7 +429,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)
                 except Exception as e:
                     serverHost=host
-                managerList = config_add_manager_node(host,host,"admin","true")
+                managerList = config_add_manager_node(host,host,"admin")
                 logger.info("Installation of manager server "+str(host)+" has been done!")
                 verboseHandle.printConsoleInfo("Installation of manager server "+host+" has been done!")
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):

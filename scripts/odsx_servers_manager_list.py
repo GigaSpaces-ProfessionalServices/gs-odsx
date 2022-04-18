@@ -94,7 +94,6 @@ def listFileFromDirectory():
         headers = [Fore.YELLOW+"Manager Name"+Fore.RESET,
                    Fore.YELLOW+"IP"+Fore.RESET,
                    Fore.YELLOW+"Role"+Fore.RESET,
-                   Fore.YELLOW+"Resume Mode"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET]
         data=[]
         managerNodes = config_get_manager_node()
@@ -104,13 +103,11 @@ def listFileFromDirectory():
                 dataArray=[Fore.GREEN+node.name+Fore.RESET,
                            Fore.GREEN+node.ip+Fore.RESET,
                            Fore.GREEN+node.role+Fore.RESET,
-                           Fore.GREEN+node.resumeMode+Fore.RESET,
                            Fore.GREEN+status+Fore.RESET]
             else:
                 dataArray=[Fore.GREEN+node.name+Fore.RESET,
                            Fore.GREEN+node.ip+Fore.RESET,
                            Fore.GREEN+node.role+Fore.RESET,
-                           Fore.GREEN+node.resumeMode+Fore.RESET,
                            Fore.RED+status+Fore.RESET]
             data.append(dataArray)
 
@@ -123,5 +120,8 @@ def get_my_key(obj):
 
 if __name__=="__main__" :
     verboseHandle.printConsoleWarning('Servers -> Manager -> List')
-    myCheckArg()
-    listFileFromDirectory()
+    try:
+        myCheckArg()
+        listFileFromDirectory()
+    except Exception as e:
+        handleException(e)

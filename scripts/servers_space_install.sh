@@ -345,8 +345,8 @@ function loadEnv {
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*  /dbagigadata
-  #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
+  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
+  find /dbagigalogs -maxdepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"

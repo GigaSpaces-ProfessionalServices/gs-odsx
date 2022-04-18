@@ -68,7 +68,7 @@ def executeCommandForInstall():
         logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
         with Spinner():
             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
-            config_add_influxdb_node(host,host,'influxdb','true')
+            config_add_influxdb_node(host,host,'influxdb')
             set_value_in_property_file('app.influxdb.hosts',host)
             verboseHandle.printConsoleInfo("Node has been added :"+str(host))
     except Exception as e:
