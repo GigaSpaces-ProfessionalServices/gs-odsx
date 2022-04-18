@@ -13,6 +13,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShComma
 from utils.ods_app_config import readValuefromAppConfig
 import requests, json
 from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -209,24 +210,6 @@ def getManagerHost(managerNodes):
         return managerHost
     except Exception as e:
         handleException(e)
-
-def getUsernameByHost(managerHost):
-    logger.info("getUsernameByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Username : "+output)
-    return output
-
-def getPasswordByHost(managerHost):
-    logger.info("getPasswordByHost()")
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Password : "+output)
-    return  output
 
 if __name__ == '__main__':
     args = []
