@@ -89,7 +89,6 @@ def listDVServers():
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
                Fore.YELLOW + "Host Ip" + Fore.RESET,
                Fore.YELLOW + "Type" + Fore.RESET,
-               Fore.YELLOW + "Resume Mode" + Fore.RESET,
                Fore.YELLOW + "Role" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
@@ -101,14 +100,12 @@ def listDVServers():
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
                          Fore.GREEN + node.ip + Fore.RESET,
                          Fore.GREEN + node.type + Fore.RESET,
-                         Fore.GREEN + node.resumeMode + Fore.RESET,
                          Fore.GREEN + node.role + Fore.RESET,
                          Fore.GREEN + "ON" + Fore.RESET]
         else:
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
                          Fore.GREEN + node.ip + Fore.RESET,
                          Fore.GREEN + node.type + Fore.RESET,
-                         Fore.GREEN + node.resumeMode + Fore.RESET,
                          Fore.GREEN + node.role + Fore.RESET,
                          Fore.RED + "OFF" + Fore.RESET]
         data.append(dataArray)

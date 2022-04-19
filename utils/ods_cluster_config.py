@@ -915,7 +915,7 @@ def config_add_dataValidation_node(hostIp, hostName, role,  type, filePath='conf
         return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
 
 def config_remove_dataValidation_byNameIP(dataValidationName,dataValidationIP,filePath='config/cluster.config', verbose=False):
-    print("config_remove_dataValidation_byNameIP () : dataValidationName :"+str(dataValidationName)+" nbIp:"+str(dataValidationIP))
+    #print("config_remove_dataValidation_byNameIP () : dataValidationName :"+str(dataValidationName)+" nbIp:"+str(dataValidationIP))
     if verbose:
         verboseHandle.setVerboseFlag()
     config_data = get_cluster_obj(filePath)

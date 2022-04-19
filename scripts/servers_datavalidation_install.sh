@@ -27,7 +27,7 @@ data_validation_service_file="odsxdatavalidation.service"
 
 # start data validation service
 source setenv.sh
-cmd="nohup java -jar $home_dir/install/data-validation/data-validator-0.0.1-SNAPSHOT.jar &"
+cmd="nohup java -jar $home_dir/install/data-validation/data-validator-server-0.0.1-SNAPSHOT.jar &"
 echo "$cmd">>$start_data_validation_file
 # stop data validation service
 cmd="nohup pkill -9 -f data-validator-0.0.1-SNAPSHOT.jar  &"
