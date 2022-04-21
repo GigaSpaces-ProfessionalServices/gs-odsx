@@ -164,15 +164,25 @@ def uploadDashbordJsonFile(host):
     localIP = executeLocalCommandAndGetOutput("curl --silent ifconfig.me")
     localIP = str(localIP)
     localIP = localIP[1:]
-    catalogue_url = 'http://'+str(localIP)+':3211/'
-    
+    catalogue_service_url = 'http://'+str(localIP)+':3211/services'
+    catalogue_table_url = 'http://'+str(localIP)+':3211/metadata'
+
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))
-            scp_upload(host, "root", 'systemServices/catalogue/grafana/catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
 
-            executeRemoteCommandAndGetOutput(host, "root","sudo sed -i 's,catalogue_service_url,'"+catalogue_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/catalogue.json")
-            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/catalogue.json")
+            ### Setting up Service Catalogue dashboard
+            scp_upload(host, "root", 'systemServices/catalogue/grafana/service-catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
+
+            executeRemoteCommandAndGetOutput(host, "root","sudo sed -i 's,catalogue_service_url,'"+catalogue_service_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/service-catalogue.json")
+            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/service-catalogue.json")
+    
+            ### Setting up Table Catalogue dashboard
+            scp_upload(host, "root", 'systemServices/catalogue/grafana/table-catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
+
+            executeRemoteCommandAndGetOutput(host, "root","sudo sed -i 's,catalogue_table_url,'"+catalogue_table_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/table-catalogue.json")
+            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/table-catalogue.json")
+    
     except Exception as e:
         handleException(e)
     logger.info("uploadDashbordJsonFile(): end")
