@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=root
 Type=simple
-ExecStart=/usr/bin/java -jar $serviceJar --consul.host=$consul_host
+ExecStart=/usr/bin/java -jar $serviceJar --consul.host=$consul_host --log.location=$log_location
 SuccessExitStatus=143
 Restart=always
 RestartSec=30
