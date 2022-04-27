@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import hashlib
-import json
-import os
+import json, yaml
+import os, configparser
 from collections import namedtuple
 from datetime import datetime
 from json import JSONEncoder
@@ -9,13 +9,34 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36,executeRemoteCommandAndGetOutput
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
 
 class Clusters:
     def __init__(self, cluster):
@@ -33,7 +54,7 @@ class Cluster:
 
 
 class Streams:
-    def __init__(self, id, name, description, creationDate, serverName, serverip, serverPathOfConfig,status):
+    def __init__(self, id, name, description, creationDate, serverName, serverip, serverPathOfConfig):
         self.id = id
         self.name = name
         self.description = description
@@ -41,7 +62,6 @@ class Streams:
         self.serverName = serverName
         self.serverip = serverip
         self.serverPathOfConfig = serverPathOfConfig
-        self.status = status
 
 
 class Replications:
@@ -145,18 +165,9 @@ class Node:
         self.ip = ip
         self.role = role
 
-
 class Spaces:
-    def __init__(self, partitions, servers):
-        self.partitions = partitions
+    def __init__(self,servers):
         self.servers = servers
-
-
-class Partitions:
-    def __init__(self, primary, backup):
-        self.primary = primary
-        self.backup = backup
-
 
 class Servers:
     def __init__(self, host):
@@ -168,7 +179,6 @@ class Host:
         self.name = name
         self.ip = ip
         self.gsc = gsc
-
 
 class ClusterEncoder(JSONEncoder):
     def default(self, o):
@@ -201,11 +211,12 @@ def create_sample_config_file():
     hostDetailList.append(hostDetail1)
     hostDetailList.append(hostDetail2)
     server = Servers(hostDetailList)
-    partitions = Partitions("1", "true")
-    spaces = Spaces(partitions, server)
+
+    spaces = Spaces(server)
 
     node1 = Node("127.0.0.1", "jay-desktop-1", "admin")
     node2 = Node("127.0.0.1", "jay-desktop-2", "admin")
+
     nodeList = [node1, node2]
 
     nb = NB( nodeList)
@@ -240,6 +251,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     logger.debug("getting cluster object from " + filePath)
     config_data = parse_config_json(filePath)
     nodes = []
+
     for node1 in list(config_data.cluster.servers.managers.node):
         nodes.append(Node(node1.ip, node1.name, node1.role))
     managers = Managers(nodes)
@@ -282,13 +294,13 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
             nodes.append(Nodes1(node1.ip, node1.name, node1.engine, node1.role, node1.type))
         dataEngine = DataEngine(nodes)
 
-    partition = Partitions(config_data.cluster.servers.spaces.partitions.primary,
-                           config_data.cluster.servers.spaces.partitions.backup)
+    #partition = Partitions(config_data.cluster.servers.spaces.partitions.primary,
+    #                       config_data.cluster.servers.spaces.partitions.backup)
     hosts = []
     for host in list(config_data.cluster.servers.spaces.servers.host):
-        hosts.append(Host(host.ip, host.name, host.gsc,))
+        hosts.append(Host(host.ip, host.name, host.gsc))
 
-    spaces = Spaces(partition, Servers(hosts))
+    spaces = Spaces(Servers(hosts))
     allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation)
 
     # print(config_data.cluster.timestamp)
@@ -326,7 +338,7 @@ def isMangerExist(existingNodes,hostIp):
             return 'true'
     return "false"
 
-def config_add_manager_node(hostIp, hostName, role, filePath='config/cluster.config'):
+def config_add_manager_node(hostIp, hostName, role,filePath='config/cluster.config'):
     newNode = Node(hostIp, hostName, role)
     config_data = get_cluster_obj(filePath)
     existingNodes = config_data.cluster.servers.managers.node
@@ -336,7 +348,7 @@ def config_add_manager_node(hostIp, hostName, role, filePath='config/cluster.con
     if(sizeOfNodes>0) :
         logger.info("isMangerExist(existingNodes,hostIp) "+isMangerExist(existingNodes,hostIp))
         if(isMangerExist(existingNodes,hostIp)=='true'):
-            verboseHandle.printConsoleInfo("Host is already exist."+str(hostIp))
+            #verboseHandle.printConsoleInfo("Host is already exist."+str(hostIp))
             confirmAnswer='y'
             #confirmAnswer = str(input(Fore.YELLOW+"Host :"+hostIp+" is already exist.Do you want to override the host ? [yes (y) / no (n)]: "+Fore.RESET))
             logger.info("Host is already exist."+str(confirmAnswer))
@@ -459,16 +471,17 @@ def config_get_space_list_with_status(user,filePath='config/cluster.config'):
     host_nic_dict_obj = host_nic_dictionary()
     spaceServers = config_get_space_hosts()
     for server in spaceServers:
+        spaceHost = str(os.getenv(server.ip))
         cmd = 'ps -ef | grep GSA'
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(server.ip, 'root', cmd)
+            output = executeRemoteCommandAndGetOutput(spaceHost, 'root', cmd)
             #output = executeRemoteShCommandAndGetOutput(server.ip,user,cmd)
             if(str(output).__contains__('services=GSA')):
                 logger.info("services=GSA")
-                host_nic_dict_obj.add(server.ip,"ON")
+                host_nic_dict_obj.add(spaceHost,"ON")
             else:
                 logger.info("services!=GSA")
-                host_nic_dict_obj.add(server.ip,"OFF")
+                host_nic_dict_obj.add(spaceHost,"OFF")
 
     spaceNodes = config_get_space_node()
     verboseHandle.printConsoleWarning("Please choose an option from below :")
@@ -477,58 +490,73 @@ def config_get_space_list_with_status(user,filePath='config/cluster.config'):
     headers = [Fore.YELLOW+"SrNo."+Fore.RESET,
                Fore.YELLOW+"IP"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,
+               Fore.YELLOW+"Install"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET
                ]
     data=[]
     for server in spaceNodes:
-        status = getSpaceServerStatus(server.ip)
+        spaceHost = str(os.getenv(server.ip))
+        status = getSpaceServerStatus(spaceHost)
         counter = counter + 1
         spaceDict.update({counter: server})
-        #verboseHandle.printConsoleInfo(str(counter) + ". "+spaceNode.name + " (" + spaceNode.ip + ")")
-        status = host_nic_dict_obj.get(server.ip)
-        if(status=="ON"):
-            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.GREEN+server.name+Fore.RESET,
-                       Fore.GREEN+str(status)+Fore.RESET]
-        else:
-            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.GREEN+server.name+Fore.RESET,
-                       Fore.RED+str(status)+Fore.RESET]
+        installStatus='No'
+        install = isInstalledAndGetVersion(spaceHost)
+        logger.info("install : "+str(install))
+        if(len(str(install))>0):
+            installStatus='Yes'
+        status = host_nic_dict_obj.get(spaceHost)
+        dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                   Fore.GREEN+spaceHost+Fore.RESET,
+                   Fore.GREEN+spaceHost+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
         data.append(dataArray)
     printTabular(None,headers,data)
     verboseHandle.printConsoleInfo(
         str(99) + ". ESC" " (Escape from menu.)")
     return  spaceDict
 
+def isInstalledAndGetVersion(host):
+    logger.info("isInstalledAndGetVersion")
+    commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','').replace('/dbagiga/','')
+    logger.info("outputShFile :"+str(outputShFile))
+    return str(outputShFile)
+
 def config_get_manager_listWithStatus(filePath='config/cluster.config'):
-    headers = [Fore.YELLOW+"SrNo."+Fore.RESET,
-               Fore.YELLOW+"Manager Name"+Fore.RESET,
-               Fore.YELLOW+"IP"+Fore.RESET,
-               Fore.YELLOW+"Status"+Fore.RESET]
-    data=[]
-    managerDict = {}
-    counter = 0
-    managerNodes = config_get_manager_node()
-    for node in managerNodes:
-        status = getSpaceServerStatus(node.ip)
-        counter = counter + 1
-        managerDict.update({counter: node})
-        if(status=="ON"):
-            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
-                       Fore.GREEN+node.ip+Fore.RESET,
-                       Fore.GREEN+status+Fore.RESET]
-        else:
-            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
-                       Fore.GREEN+node.ip+Fore.RESET,
-                       Fore.RED+status+Fore.RESET]
-        data.append(dataArray)
-    printTabular(None,headers,data)
-    verboseHandle.printConsoleInfo(str(99) + ". ESC" " (Escape from menu.)")
-    return  managerDict
+    with Spinner():
+        try:
+            headers = [Fore.YELLOW+"SrNo."+Fore.RESET,
+                       Fore.YELLOW+"Manager Name"+Fore.RESET,
+                       Fore.YELLOW+"IP"+Fore.RESET,
+                       Fore.YELLOW+"Install"+Fore.RESET,
+                       Fore.YELLOW+"Status"+Fore.RESET]
+            data=[]
+            managerDict = {}
+            counter = 0
+            managerNodes = config_get_manager_node()
+            for node in managerNodes:
+                installStatus='No'
+                status = getSpaceServerStatus(os.getenv(str(node.ip)))
+                counter = counter + 1
+                managerDict.update({counter: node})
+                install = isInstalledAndGetVersion(os.getenv(str(node.ip)))
+                logger.info("install : "+str(install))
+                if(len(str(install))>0):
+                    installStatus='Yes'
+                dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                           Fore.GREEN+os.getenv(node.name)+Fore.RESET,
+                           Fore.GREEN+os.getenv(node.ip)+Fore.RESET,
+                           Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                           Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
+                data.append(dataArray)
+            printTabular(None,headers,data)
+            verboseHandle.printConsoleInfo(str(99) + ". ESC" " (Escape from menu.)")
+            return  managerDict
+        except Exception as e:
+            handleException(e)
 
 def config_get_space_listWithoutDisplay(filePath='config/cluster.config'):
     spaceNodes = config_get_space_node()
@@ -570,7 +598,7 @@ def config_remove_space_nodeByIP(spaceIP,filePath='config/cluster.config',verbos
 
 
 
-def config_add_space_node(hostIp, hostName, gsc,  filePath='config/cluster.config'):
+def config_add_space_node(hostIp, hostName, gsc,filePath='config/cluster.config'):
     newHost = Host(hostIp, hostName, gsc)
     filePath='config/cluster.config'
     config_data = get_cluster_obj(filePath)
@@ -581,7 +609,8 @@ def config_add_space_node(hostIp, hostName, gsc,  filePath='config/cluster.confi
     if(sizeOfNodes>0) :
         logger.info("isMangerExist(existingNodes,hostIp) "+isMangerExist(existingNodes,hostIp))
         if(isMangerExist(existingNodes,hostIp)=='true'):
-            logger.info("Host is already exist.")
+            logger.info("Host is already exist."+str(hostIp))
+            #verboseHandle.printConsoleInfo("Host is already exist."+str(hostIp))
             confirmAnswer='y'
             #confirmAnswer = str(input(Fore.YELLOW+"Host :"+hostIp+" is already exist.Do you want to override the host ? [yes (y) / no (n)]: "+Fore.RESET))
             logger.info("Host is already exist."+str(confirmAnswer))
@@ -648,6 +677,7 @@ def config_add_nb_node(hostIp, hostName, role, filePath):
         logger.info("isMangerExist(existingNodes,hostIp) "+isNbNodeExist(existingNodes,hostIp))
         if(isNbNodeExist(existingNodes,hostIp)=='true'):
             logger.info("Host is already exist.")
+            #verboseHandle.printConsoleInfo("Host is already exist. "+str(hostIp))
             #Removed confirmation because no question stop required in between installation - uninstallation process if found then override
             #confirmAnswer = str(input(Fore.YELLOW+"Host :"+hostIp+" is already exist.Do you want to override the host ? [yes (y) / no (n)]: "+Fore.RESET))
             #logger.info("Host is already exist."+str(confirmAnswer))
@@ -717,6 +747,7 @@ def config_add_grafana_node(hostIp, hostName, role,  filePath='config/cluster.co
         logger.info("isGrafanaNodeExist(existingNodes,hostIp) "+isGrafanaNodeExist(existingNodes,hostIp))
         if(isGrafanaNodeExist(existingNodes,hostIp)=='true'):
             logger.info("Host is already exist. Node overrides"+str(hostIp))
+            #verboseHandle.printConsoleInfo("Host is already exist."+str(hostIp))
             for node in existingNodes:
                 if(str(node.ip)==str(hostIp)):
                     logger.info("OVERRIDING IP : "+str(node.ip))
@@ -804,6 +835,7 @@ def config_add_influxdb_node(hostIp, hostName, role,  filePath='config/cluster.c
         logger.info("isInfluxdbNodeExist(existingNodes,hostIp) "+isInfluxdbNodeExist(existingNodes,hostIp))
         if(isInfluxdbNodeExist(existingNodes,hostIp)=='true'):
             logger.info("Host is already exist. Node overrides"+str(hostIp))
+            #verboseHandle.printConsoleInfo("Host is already exist. "+str(hostIp))
             for node in existingNodes:
                 if(str(node.ip)==str(hostIp)):
                     logger.info("OVERRIDING IP : "+str(node.ip))
@@ -850,6 +882,7 @@ def config_add_dataIntegration_node(hostIp, hostName, role, type, filePath='conf
         logger.info("isdataIntegrationNodeExist(existingNodes,hostIp) "+isDataIntegrationNodeExist(existingNodes,hostIp))
         if(isDataIntegrationNodeExist(existingNodes,hostIp)=='true'):
             logger.info("Host is already exist. Node overrides"+str(hostIp))
+            #verboseHandle.printConsoleInfo("Host is already exist."+str(hostIp))
             for node in existingNodes:
                 if(str(node.ip)==str(hostIp)):
                     logger.info("OVERRIDING IP : "+str(node.ip))
@@ -1172,12 +1205,212 @@ def getCDCIPAndName():
         str(99) + ". ESC" " (Escape from menu.)")
     return  streamDict
 
+def getGrafanaServerHostList():
+    nodeList = config_get_grafana_list()
+    nodes=""
+    for node in nodeList:
+        #if(str(node.role).casefold() == 'server'):
+        if(len(nodes)==0):
+            nodes = os.getenv(node.ip)
+        else:
+            nodes = nodes+','+os.getenv(node.ip)
+    return nodes
 
-# add,remove, update,get
-# for spaceservers in get_spaces_servers().host:
-#    print(spaceservers)
+def getInfluxdbServerHostList():
+    nodeList = config_get_influxdb_node()
+    nodes=""
+    for node in nodeList:
+        #if(str(node.role).casefold() == 'server'):
+        if(len(nodes)==0):
+            nodes = os.getenv(node.ip)
+        else:
+            nodes = nodes+','+os.getenv(node.ip)
+    return nodes
 
-# updateTimestamp()
+def getSpaceHostFromEnv():
+    logger.info("getSpaceHostFromEnv()")
+    hosts = ''
+    spaceNodes = config_get_space_hosts()
+    for node in spaceNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
+def getManagerHostFromEnv():
+    logger.info("getManagerHostFromEnv()")
+    hosts = ''
+    managerNodes = config_get_manager_node()
+    for node in managerNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
+def discoverHostConfig():
+    try:
+        #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/filename.yaml'
+        file = 'config/host.yaml'
+        with open(file) as f:
+            content = yaml.safe_load(f)
+
+        managerHostCount=1
+        if 'manager' in content['servers']:
+            for k,v in content['servers']['manager'].items():
+                host = 'mgr'+str(managerHostCount)+""
+                os.environ[host] = str(v)
+                config_add_manager_node(host, host, 'admin', filePath='config/cluster.config')
+                managerHostCount+=1
+        #status = os.system('bash')
+        spaceHostCount=1
+        if 'space' in content['servers']:
+            for k,v in content['servers']['space'].items():
+                host = 'space'+str(spaceHostCount)+""
+                os.environ[host] = str(v)
+                config_add_space_node(host, host, 'gsc', filePath='config/cluster.config')
+                spaceHostCount+=1
+
+        dataIntegrationHostCount=1
+        if 'dataIntegration' in content['servers']:
+            for host,v in content['servers']['dataIntegration'].items():
+                host = 'di'+str(dataIntegrationHostCount)
+                os.environ[host] = str(v)
+                type=''
+                if(dataIntegrationHostCount==1):
+                    type='Master'
+                if(dataIntegrationHostCount==2):
+                    type='Standby'
+                if(dataIntegrationHostCount==3):
+                    type='Witness'
+                config_add_dataIntegration_node(host, host, 'dataIntegration', type, filePath='config/cluster.config')
+                dataIntegrationHostCount+=1
+
+        if 'grafana' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['grafana'].items():
+                host = 'grafana'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_grafana_node(host,host,'Grafana', "config/cluster.config")
+                nbHostCount+=1
+
+        if 'influxdb' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['influxdb'].items():
+                host = 'influxdb'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_influxdb_node(host,host,'Influxdb', "config/cluster.config")
+                nbHostCount+=1
+
+        if 'nb_applicative' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['nb_applicative'].items():
+                host = 'nb_app'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_nb_node(host,host,'applicative server', "config/cluster.config")
+                nbHostCount+=1
+
+        if 'nb_management' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['nb_management'].items():
+                host = 'nb_mgt'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_nb_node(host,host,'management server', "config/cluster.config")
+                nbHostCount+=1
+
+        if 'space' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['space'].items():
+                host = 'nb_agent'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_nb_node(host,host,'agent server', "config/cluster.config")
+                nbHostCount+=1
+        '''
+        #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/host.config'
+        file = '/home/ec2-user/host.config'
+        config = configparser.RawConfigParser()
+        config.read(file)
+
+        if config.has_section('manager'):
+            manager_host_dict = dict(config.items('manager'))
+            managerHostCount=1
+            for host,v in manager_host_dict.items():
+                host = 'mgr'+str(managerHostCount)
+                os.environ[host] = str(v)
+                config_add_manager_node(host, host, 'admin', filePath='config/cluster.config')
+                managerHostCount+=1
+
+        if config.has_section('space'):
+            space_host_dict = dict(config.items('space'))
+            spaceHostCount=1
+            for host,v in space_host_dict.items():
+                host = 'space'+str(spaceHostCount)
+                os.environ[host] = str(v)
+                config_add_space_node(host, host, 'gsc', filePath='config/cluster.config')
+                spaceHostCount+=1
+
+        if config.has_section('dataIntegration'):
+            dataIntegration_host_dict = dict(config.items('dataIntegration'))
+            dataIntegrationHostCount=1
+            for host,v in dataIntegration_host_dict.items():
+                host = 'di'+str(dataIntegrationHostCount)
+                os.environ[host] = str(v)
+                type=''
+                if(dataIntegrationHostCount==1):
+                    type='Master'
+                if(dataIntegrationHostCount==2):
+                    type='Standby'
+                if(dataIntegrationHostCount==3):
+                    type='Witness'
+                config_add_dataIntegration_node(host, host, 'dataIntegration', type, filePath='config/cluster.config')
+                dataIntegrationHostCount+=1
+
+        if config.has_section('grafana'):
+            grafana_host_dict = dict(config.items('grafana'))
+            grafanHostCount=1
+            for host,v in grafana_host_dict.items():
+                host = 'grafana'+str(grafanHostCount)
+                os.environ[host] = str(v)
+                config_add_grafana_node(host, host, 'Grafana',  filePath='config/cluster.config')
+                grafanHostCount+=1
+
+        if config.has_section('influxdb'):
+            influxdb_host_dict = dict(config.items('influxdb'))
+            influxdbHostCount=1
+            for host,v in influxdb_host_dict.items():
+                host = 'influxdb'+str(influxdbHostCount)
+                os.environ[host] = str(v)
+                config_add_influxdb_node(host,host,'Influxdb')
+                influxdbHostCount+=1
+
+        if config.has_section('nb_applicative'):
+            nb_host_dict = dict(config.items('nb_applicative'))
+            nbHostCount=1
+            for host,v in nb_host_dict.items():
+                host = 'nb_app'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_nb_node(host,host,'applicative server', "config/cluster.config")
+                nbHostCount+=1
+
+        if config.has_section('space'):
+            nb_host_dict = dict(config.items('space'))
+            nbHostCount=1
+            for host,v in nb_host_dict.items():
+                host = 'nb_agent'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_nb_node(host,host,'agent server', "config/cluster.config")
+                nbHostCount+=1
+
+        if config.has_section('nb_management'):
+            influxdb_host_dict = dict(config.items('nb_management'))
+            nbHostCount=1
+            for host,v in influxdb_host_dict.items():
+                host = 'nb_mgt'+str(nbHostCount)
+                os.environ[host] = str(v)
+                config_add_nb_node(host,host,'management server', "config/cluster.config")
+                nbHostCount+=1
+        '''
+        #status = os.system('bash')
+    except Exception as e:
+        handleException(e)
+
 if __name__ == "__main__":
     logger.debug("init")
     #config_data = get_cluster_obj("../config/cluster.config")
