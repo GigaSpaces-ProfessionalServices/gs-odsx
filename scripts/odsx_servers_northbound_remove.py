@@ -17,6 +17,28 @@ class bcolors:
     FAIL = '\033[91m' #RED
     RESET = '\033[0m' #RESET COLOR
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def getNBAgentHostList():
     logger.info("getNBAgentHostList()")
     nodeList = config_get_nb_list()
@@ -24,9 +46,9 @@ def getNBAgentHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('agent')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getNBMAnagementtHostList():
@@ -36,9 +58,9 @@ def getNBMAnagementtHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('management')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getNBServerHostList():
@@ -48,9 +70,9 @@ def getNBServerHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('applicative')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def removeAgent(nodes):
@@ -62,7 +84,7 @@ def removeAgent(nodes):
         logger.info("Current host :"+str(node))
         verboseHandle.printConsoleInfo("NB Agent going to remove :"+str(node))
         connectExecuteSSH(str(node), "root", "scripts/servers_northbound_remove.sh", remotePath+"/nb-infra" + " --uninstall")
-        config_remove_nb_streamByNameIP(str(node),str(node))
+        #config_remove_nb_streamByNameIP(str(node),str(node))
         logger.info("Host removed.:"+str(node))
         print("Host removed.:"+str(node))
 
@@ -75,12 +97,12 @@ def removeManagement(managementNodes):
         logger.info("Current host :"+str(node))
         verboseHandle.printConsoleInfo("NB management server going to remove :"+str(node))
         connectExecuteSSH(str(node), "root", "scripts/servers_northbound_remove.sh", remotePath+"/nb-infra" + " --uninstall")
-        config_remove_nb_streamByNameIP(str(node),str(node))
+        #config_remove_nb_streamByNameIP(str(node),str(node))
         logger.info("Host removed.:"+str(node))
         print("Host removed.:"+str(node))
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Servers -> Northbound -> Remove')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Northbound -> Remove')
     logger.info("Servers -> Northbound -> Remove")
     args = []
     menuDrivenFlag = 'm'# To differentiate between CLI and Menudriven Argument handling help section
@@ -148,5 +170,4 @@ if __name__ == '__main__':
         if(confirmManagementRemove=='y'):
             removeManagement(managementNodes)
     except Exception as e:
-        logger.error("Exception in northbound remove."+str(e))
-        print("Exception in northbound remove."+str(e))
+        handleException(e)

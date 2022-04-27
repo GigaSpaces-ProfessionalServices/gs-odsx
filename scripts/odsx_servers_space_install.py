@@ -7,10 +7,11 @@ from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_f
 from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
-from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
+from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion
 from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
 from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload,scp_upload_specific_extension
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -67,12 +68,22 @@ def handleException(e):
         'trace': trace
     })))
 
+def getSpaceHostFromEnv():
+    logger.info("getSpaceHostFromEnv()")
+    hosts = ''
+    spaceNodes = config_get_space_hosts()
+    for node in spaceNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
 def getHostConfiguration():
     logger.info("getHostConfiguration()")
     try:
         hostsConfig=''
-        hostsConfig = readValuefromAppConfig("app.manager.hosts")
-
+        #hostsConfig = readValuefromAppConfig("app.manager.hosts")
+        hostsConfig =getManagerHostFromEnv()
+        logger.info("Manager hostConfig : "+str(hostsConfig))
         applicativeUserFile = readValuefromAppConfig("app.server.user")
         applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
         if(len(str(applicativeUser))==0):
@@ -201,14 +212,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
-        noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
-        while (len(str(noOfHost))==0):
-            noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
+        #noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
+        #while (len(str(noOfHost))==0):
+        #    noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
+        noOfHost=len(getSpaceHostFromEnv().split(','))
         logger.debug("No of space host :"+str(noOfHost))
         host_nic_dict_obj = host_nic_dictionary()
-        noOfHost=int(noOfHost)
-        spaceHostConfig=""
-        for x in range(1,noOfHost+1):
+        spaceHostConfig=getSpaceHostFromEnv()
+        for host in getSpaceHostFromEnv().split(','):
+            '''
             host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
             while(len(str(host))==0):
                 host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
@@ -216,9 +228,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 spaceHostConfig = spaceHostConfig+','+host
             else:
                 spaceHostConfig = host
+            '''
             host_nic_dict_obj.add(host,'')
-        set_value_in_property_file('app.space.hosts',spaceHostConfig)
-        #print("hostnic without"+str(host_nic_dict_obj))
+        #set_value_in_property_file('app.space.hosts',spaceHostConfig)
         wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantNicAddress))==0):
             wantNicAddress='n'
@@ -244,7 +256,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
         print(Fore.GREEN+"1. "+
-              Fore.GREEN+"Current configuration = "+
+              Fore.GREEN+"Current manager configuration = "+
               Fore.GREEN+hostsConfig+Fore.RESET)
         print(Fore.GREEN+"2. "+
               Fore.GREEN+"Target Directory = "+
@@ -303,6 +315,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"20. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"21. "+
+              Fore.GREEN+"Space server installation : "+Fore.RESET,
+              Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -311,51 +326,60 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
             for host in host_nic_dict_obj:
-                gsNicAddress = host_nic_dict_obj[host]
-                #print(host+"  "+gsNicAddress)
-                additionalParam=additionalParam+' '+gsNicAddress
-                logger.info("additionalParam - Installation :")
-                logger.info("Building .tar file : tar -cvf install/install.tar install")
-                cmd = 'tar -cvf install/install.tar install'
-                with Spinner():
-                    status = os.system(cmd)
-                    logger.info("Creating tar file status : "+str(status))
-                with Spinner():
-                    scp_upload(host, user, 'install/install.tar', '')
-                    #scp_upload(host, user, 'install/gs.service', '')
-                cmd = 'tar -xvf install.tar'
-                verboseHandle.printConsoleInfo("Extracting..")
-                logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
-                output = executeRemoteCommandAndGetOutput(host, user, cmd)
-                logger.debug("Execute RemoteCommand output:"+str(output))
-                verboseHandle.printConsoleInfo(output)
+                installStatus='No'
+                install = isInstalledAndGetVersion(host)
+                logger.info("install : "+str(install))
+                if(len(str(install))>0):
+                    installStatus='Yes'
+                if installStatus == 'No':
+                    gsNicAddress = host_nic_dict_obj[host]
+                    #print(host+"  "+gsNicAddress)
+                    additionalParam=additionalParam+' '+gsNicAddress
+                    logger.info("additionalParam - Installation :")
+                    logger.info("Building .tar file : tar -cvf install/install.tar install")
+                    cmd = 'tar -cvf install/install.tar install'
+                    with Spinner():
+                        status = os.system(cmd)
+                        logger.info("Creating tar file status : "+str(status))
+                    with Spinner():
+                        scp_upload(host, user, 'install/install.tar', '')
+                        #scp_upload(host, user, 'install/gs.service', '')
+                    cmd = 'tar -xvf install.tar'
+                    verboseHandle.printConsoleInfo("Extracting..")
+                    logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
+                    output = executeRemoteCommandAndGetOutput(host, user, cmd)
+                    logger.debug("Execute RemoteCommand output:"+str(output))
+                    verboseHandle.printConsoleInfo(output)
 
-                commandToExecute="scripts/servers_space_install.sh"
-                logger.info("additionalParam : "+str(additionalParam))
-                logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                with Spinner():
-                    outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-                    logger.debug("script output"+str(outputShFile))
-                    #print(outputShFile)
-                    #Upload CEF logging jar
-                    scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-                    #UPLOAD DB2FEEDER JAR
-                    #if(confirmDb2FeederJar=='y'):
-                    #print("source :"+db2jccJarInput)
-                    scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
-                    #print("source2 :"+db2jccJarLicenseInput)
-                    scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                    scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-                    scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
-                serverHost=''
-                try:
-                    serverHost = socket.gethostbyaddr(host).__getitem__(0)
-                except Exception as e:
-                    serverHost=host
-                managerList = config_add_space_node(host, host, "N/A", "true")
-                logger.info("Installation of space server "+str(host)+" has been done!")
-                verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
+                    commandToExecute="scripts/servers_space_install.sh"
+                    logger.info("additionalParam : "+str(additionalParam))
+                    logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+                    with Spinner():
+                        outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+                        #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+                        logger.debug("script output"+str(outputShFile))
+                        #print(outputShFile)
+                        #Upload CEF logging jar
+                        scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                        #UPLOAD DB2FEEDER JAR
+                        #if(confirmDb2FeederJar=='y'):
+                        #print("source :"+db2jccJarInput)
+                        scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                        #print("source2 :"+db2jccJarLicenseInput)
+                        scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
+                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                    serverHost=''
+                    try:
+                        serverHost = socket.gethostbyaddr(host).__getitem__(0)
+                    except Exception as e:
+                        serverHost=host
+                    #managerList = config_add_space_node(host, host, "N/A", "true")
+                    logger.info("Installation of space server "+str(host)+" has been done!")
+                    verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
+                else:
+                    verboseHandle.printConsoleInfo("Found installation. skipping installation for host "+host)
+                    logger.info("Found installation. skipping installation for host "+host)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -364,7 +388,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
 if __name__ == '__main__':
     logger.info("odsx_servers_space_install")
-    verboseHandle.printConsoleWarning('Servers -> Space -> Install')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Install')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     #print('Len : ',len(sys.argv))
@@ -399,9 +423,9 @@ if __name__ == '__main__':
                 #args.append('--host')
                 #args.append(host)
                 #user = readValuefromAppConfig("app.server.user")
-                user = str(input("Enter your user [root]: "))
-                if(len(str(user))==0):
-                    user="root"
+                #user = str(input("Enter your user [root]: "))
+                #if(len(str(user))==0):
+                user="root"
                 args.append('-u')
                 args.append(user)
             hostsConfig = readValuefromAppConfig("app.manager.hosts")

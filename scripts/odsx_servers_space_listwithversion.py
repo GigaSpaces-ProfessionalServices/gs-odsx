@@ -124,11 +124,6 @@ def listSpaceServer():
                    Fore.YELLOW+"Version"+Fore.RESET
                    ]
         data=[]
-        userConfig = readValuefromAppConfig("app.server.user")
-        # changed : 25-Aug hence systemctl always with root no need to ask
-        #user = str(input("Enter your user ["+userConfig+"]: "))
-        #if(len(str(user))==0):
-        #    user=userConfig
         user='root'
         logger.info("app.server.user: "+str(user))
 
@@ -137,35 +132,30 @@ def listSpaceServer():
 
         for server in spaceServers:
             cmd = 'systemctl is-active gs.service'
-            logger.info("server.ip : "+str(server.ip)+" cmd :"+str(cmd))
-            output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
+            host = str(os.getenv(server.ip))
+            logger.info("server.ip : "+host+" cmd :"+str(cmd))
+            output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
             logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
-            host_nic_dict_obj.add(server.ip,str(output))
+            host_nic_dict_obj.add(host,str(output))
 
         logger.info("host_nic_dict_obj : "+str(host_nic_dict_obj))
         for server in spaceServers:
-            logger.info("server.ip : "+str(server.ip))
+            host = str(os.getenv(server.ip))
+            logger.info("server.ip : "+host)
             #status = getStatusOfHost(host_nic_dict_obj,server)
-            status = getStatusOfSpaceHost(str(server.ip))
+            status = getStatusOfSpaceHost(str(host))
             logger.info("status : "+str(status))
-            logger.info("Host:"+str(server.name))
-            gsc = host_gsc_dict_obj.get(str(server.name))
+            logger.info("Host:"+str(host))
+            gsc = host_gsc_dict_obj.get(str(host))
             logger.info("GSC : "+str(gsc))
-            version = getVersion(server.ip)
-            if(status=="ON"):
-                dataArray=[Fore.GREEN+server.ip+Fore.RESET,
-                           Fore.GREEN+server.name+Fore.RESET,
-                           Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.GREEN+str(status)+Fore.RESET,
-                           Fore.GREEN+str(version)+Fore.RESET
-                           ]
-            else:
-                dataArray=[Fore.GREEN+server.ip+Fore.RESET,
-                           Fore.GREEN+server.name+Fore.RESET,
-                           Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.RED+str(status)+Fore.RESET,
-                           Fore.GREEN+str(version)+Fore.RESET
-                           ]
+            version = getVersion(host)
+            dataArray=[Fore.GREEN+host+Fore.RESET,
+                       Fore.GREEN+host+Fore.RESET,
+                       Fore.GREEN+str(gsc)+Fore.RESET,
+                       Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
+                       Fore.GREEN+str(version)+Fore.RESET
+                       ]
+
             data.append(dataArray)
 
         printTabular(None,headers,data)

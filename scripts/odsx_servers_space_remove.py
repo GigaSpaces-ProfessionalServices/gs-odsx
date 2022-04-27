@@ -63,7 +63,7 @@ def execute_scriptBuilder(host):
         outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
         print(outputShFile)
         logger.info("Output : scripts/servers_manager_remove.sh :"+str(outputShFile))
-        config_remove_space_nodeByIP(host)
+        #config_remove_space_nodeByIP(host)
         logger.debug(str(host)+" has been removed.")
         verboseHandle.printConsoleInfo(str(host)+" has been removed.")
 
@@ -81,7 +81,7 @@ def exitAndDisplay(isMenuDriven):
 
 if __name__ == '__main__':
     logger.info("odsx_servers_manager_remove")
-    verboseHandle.printConsoleWarning('Servers -> Space -> Remove')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Remove')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
@@ -168,12 +168,12 @@ if __name__ == '__main__':
                         elif(sys.argv[1]==menuDrivenFlag):
                             args.append(menuDrivenFlag)
                             args.append('--host')
-                            args.append(managerRemove.ip)
+                            args.append(os.getenv(managerRemove.ip))
                             #user = readValuefromAppConfig("app.server.user")
                             args.append('-u')
                             args.append(user)
                             args.append('--id')
-                            args.append(managerRemove.ip)
+                            args.append(os.getenv(managerRemove.ip))
                         args = str(args)
                         #print('args',args)
                         #logger.info('Menu driven flag :'+menuDrivenFlag)
@@ -183,7 +183,7 @@ if __name__ == '__main__':
                         #print(args)
                         #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
                         #os.system('python3 scripts/remote_script_exec.py '+args)
-                        execute_scriptBuilder(managerRemove.ip)
+                        execute_scriptBuilder(os.getenv(managerRemove.ip))
                 else:
                     verboseHandle.printConsoleError("please select valid option")
                     optionMainMenu=''
@@ -200,9 +200,9 @@ if __name__ == '__main__':
             removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
             if(len(str(removeUnzip))==0):
                 removeUnzip='n'
-            confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+            confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()
@@ -215,14 +215,14 @@ if __name__ == '__main__':
                     args.append('-u')
                     args.append(user)
                     args.append('--id')
-                    args.append(host)
+                    args.append(str(os.getenv(host)))
                     argsString = str(args)
                     logger.info(argsString)
                     logger.debug('Arguments :'+argsString)
                     argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
                     #print(argsString)
                     #os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
-                    execute_scriptBuilder(host)
+                    execute_scriptBuilder(os.getenv(host))
                     logger.info("AFTER")
                     args.remove(menuDrivenFlag)
                     args.remove("--host")
@@ -230,7 +230,7 @@ if __name__ == '__main__':
                     args.remove('-u')
                     args.remove(user)
                     args.remove('--id')
-                    args.remove(host)
+                    args.remove(os.getenv(host))
                     logger.info(args)
             elif(confirm =='no' or confirm=='n'):
                 if(isMenuDriven=='m'):

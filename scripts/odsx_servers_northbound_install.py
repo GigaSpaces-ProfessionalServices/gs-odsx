@@ -7,7 +7,7 @@ from utils.ods_app_config import set_value_in_property_file, readValuefromAppCon
 from colorama import Fore
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_add_nb_node, config_get_nb_list, config_get_grafana_list, config_get_influxdb_node
+from utils.ods_cluster_config import config_add_nb_node, config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
@@ -125,6 +125,7 @@ applicationServerFlag = ""
 def getConsulServers(consul_replica_number):
     logger.info("getConsulServers(consul_replica_number) : "+str(consul_replica_number))
     consul_servers = ""
+    '''
     for x in range(1,int(consul_replica_number)+1):
         server = str(input(Fore.YELLOW+"Enter CONSUL_SERVER"+str(x)+" :"+Fore.RESET))
         while(len(server)==0):
@@ -134,29 +135,29 @@ def getConsulServers(consul_replica_number):
             consul_servers = consul_servers+','+server
         else:
             consul_servers = server
+    '''
+    consul_servers = getNBApplicativeHostFromEnv()
     logger.info("consul_servers : "+str(consul_servers))
     return consul_servers
 
 def proceedForApplicationServiceAgentInstallation():
     logger.info("proceedForApplicationServiceAgentInstallation()")
-    spaceHostsConfig = str(readValuefromAppConfig("app.space.hosts")).replace('"','')
+    spaceHostsConfig = str(getNBAgentHostFromEnv()).replace('"','')
     logger.info("spaceHostsConfig : "+str(spaceHostsConfig))
     existingAgentHostConfirm=""
     if(len(str(spaceHostsConfig))>0):
-        existingAgentHostConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed with existing NB agent configuration ["+str(spaceHostsConfig)+"] (y/n) [y]:"+Fore.RESET))
-        if(len(str(existingAgentHostConfirm))==0):
-            existingAgentHostConfirm='y'
-        logger.info("existingAgentHostConfirm : "+str(existingAgentHostConfirm))
-        if(existingAgentHostConfirm=='y'):
-            spaceHostsConfigArray = spaceHostsConfig.split(',')
-            logger.info("Total number of space hosts :"+str(len(spaceHostsConfigArray)))
-            for host in spaceHostsConfigArray:
-                logger.info("entered Host"+str(host))
-                host_dict_obj.add(host, '')
-        elif(existingAgentHostConfirm=='n'):
-            proceedWithFreshAgentInstallation()
+        print(Fore.YELLOW+"Proceeding with NB agent configuration ["+str(spaceHostsConfig)+"] "+Fore.RESET)
+        spaceHostsConfigArray = spaceHostsConfig.split(',')
+        logger.info("Total number of space hosts :"+str(len(spaceHostsConfigArray)))
+        for host in spaceHostsConfigArray:
+            logger.info("entered Host"+str(host))
+            host_dict_obj.add(host, '')
+        #elif(existingAgentHostConfirm=='n'):
+        #    proceedWithFreshAgentInstallation()
     else:
-        proceedWithFreshAgentInstallation()
+        logger.info("No NB Agent /space host configuration found.")
+        verboseHandle.printConsoleInfo("No NB Agent /space host configuration found.")
+        #proceedWithFreshAgentInstallation()
 
 def proceedWithFreshAgentInstallation():
     logger.info("proceedWithFreshAgentInstallation()")
@@ -177,7 +178,7 @@ def proceedWithFreshAgentInstallation():
             agentHostConfig = agentHostConfig+','+host
         else:
             agentHostConfig = host
-    set_value_in_property_file('app.space.hosts',agentHostConfig)
+    #set_value_in_property_file('app.space.hosts',agentHostConfig)
 
 def proceedForManagementServiceInstallation():
     logger.info("proceedForManagementServiceInstallation()")
@@ -187,25 +188,23 @@ def proceedForManagementServiceInstallation():
         managementConfirm='y'
     logger.info("managementConfirm : "+str(managementConfirm))
     if(managementConfirm=='y'):
-        managementHostsConfig = str(readValuefromAppConfig("app.northbound.management.hosts")).replace('"','')
+        managementHostsConfig = str(getNBManagementHostFromEnv()).replace('"','')
         logger.info("managementHostsConfig : "+str(managementHostsConfig))
         existingManagementHostConfirm=""
         if(len(str(managementHostsConfig))>0):
-            existingManagementHostConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed with existing NB management configuration ["+str(managementHostsConfig)+"] (y/n) [y]:"+Fore.RESET))
-            if(len(str(existingManagementHostConfirm))==0):
-                existingManagementHostConfirm='y'
-            logger.info("existingManagementHostConfirm : "+str(existingManagementHostConfirm))
-            if(existingManagementHostConfirm=='y'):
-                managementHostsConfigArray = managementHostsConfig.split(',')
-                logger.info("Total number of NB management hosts :"+str(len(managementHostsConfigArray)))
-                for host in managementHostsConfigArray:
-                    logger.info("entered Host"+str(host))
-                    host_dict_management_obj.add(host, '')
-                logger.info("host_dict_management_obj : "+str(host_dict_management_obj))
-            elif(existingManagementHostConfirm=='n'):
-                proceedWithFreshManagementInstallation()
+            print(input(Fore.YELLOW+"Proceeding with existing NB management configuration ["+str(managementHostsConfig)+"] "+Fore.RESET))
+            managementHostsConfigArray = managementHostsConfig.split(',')
+            logger.info("Total number of NB management hosts :"+str(len(managementHostsConfigArray)))
+            for host in managementHostsConfigArray:
+                logger.info("entered Host"+str(host))
+                host_dict_management_obj.add(host, '')
+            logger.info("host_dict_management_obj : "+str(host_dict_management_obj))
+            #elif(existingManagementHostConfirm=='n'):
+            #    proceedWithFreshManagementInstallation()
         else:
-            proceedWithFreshManagementInstallation()
+            logger.info("No NB management host configuration found.")
+            verboseHandle.printConsoleInfo("No NB management host configuration found.")
+            #proceedWithFreshManagementInstallation()
     else:
         logger.info("Skipping NB management server installation.")
         verboseHandle.printConsoleInfo("Skipping NB management server installation.")
@@ -237,13 +236,52 @@ def validateAndConfigureGrafana():
     logger.info("validateAndConfigureGrafana()")
     grafanaServers = config_get_grafana_list()
     for server in grafanaServers:
-            return str(server.ip)
+            return str(os.getenv(server.ip))
 
 def validateAndConfigureInfluxdb():
     logger.info("validateAndConfigureInfluxdb()")
     influxdbServers = config_get_influxdb_node()
     for server in influxdbServers:
-        return str(server.ip)
+        return str(os.getenv(server.ip))
+
+def getNBApplicativeHostFromEnv():
+    logger.info("getNBApplicativeHostFromEnv()")
+    hosts = ''
+    managerNodes = config_get_nb_list()
+    for node in managerNodes:
+        if(str(node.role).casefold().__contains__('applicative')):
+            hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
+def getNBOPSManagerHostFromEnv():
+    logger.info("getNBOPSManagerHostFromEnv")
+    hosts = ''
+    managerNodes = config_get_manager_node()
+    for node in managerNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
+def getNBManagementHostFromEnv():
+    logger.info("getNBManagementHostFromEnv()")
+    hosts = ''
+    managerNodes = config_get_nb_list()
+    for node in managerNodes:
+        if(str(node.role).casefold().__contains__('management')):
+            hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
+def getNBAgentHostFromEnv():
+    logger.info("getNBAgentHostFromEnv()")
+    hosts = ''
+    managerNodes = config_get_nb_list()
+    for node in managerNodes:
+        if(str(node.role).casefold().__contains__('agent')):
+            hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
 
 def setConfProperties():
     logger.info("setConfProperties()")
@@ -251,30 +289,21 @@ def setConfProperties():
 
     existingConsul_server=""
     nbConfig = createPropertiesMapFromFile("config/nb.conf")
-    existingConsul_server = str(nbConfig.get("CONSUL_SERVERS")).replace('"','')
-    existingConsul_server = str(readValuefromAppConfig("app.northbound.applicative.hosts")).replace('"','')
+    existingConsul_server = str(getNBApplicativeHostFromEnv()).replace('"','')
     logger.info("existingConsul_server : "+str(existingConsul_server))
     consul_replica_number=""
     consul_servers=""
     existingServerConfirm=""
     if(len(str(existingConsul_server))>0):
-        existingServerConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed with existing configuration Applicative Servers  ["+str(existingConsul_server)+"] (y/n) [y]:"+Fore.RESET))
-        if(len(str(existingServerConfirm))==0):
-            existingServerConfirm='y'
-    if(existingServerConfirm=='y'):
+        print(Fore.YELLOW+"Proceeding with existing configuration Applicative Servers  ["+str(existingConsul_server)+"] "+Fore.RESET)
         consul_replica_number = str(len(existingConsul_server.split(",")))
         consul_servers=str(existingConsul_server).replace('"','')
     else:
-        consul_replica_number = str(input(Fore.YELLOW+"Enter CONSUL_REPLICA_NUMBER [3]:"+Fore.RESET))
-        if(len(str(consul_replica_number))==0):
-            consul_replica_number="3"
+        consul_replica_number = len(str(getNBApplicativeHostFromEnv()).split(','))
         logger.info("CONSUL_REPLICA_NUMBER :"+str(consul_replica_number))
         consul_servers = getConsulServers(consul_replica_number)
-        set_value_in_property_file("app.northbound.applicative.hosts",consul_servers)
+
     logger.info("consul_servers : getConsulServers()"+str(consul_servers))
-    #if validateHost(consul_servers) == False:
-    #    verboseHandle.printConsoleError("consul_servers is not valid please try again ..")
-    #    return False
 
     nb_domain = str(nbConfig.get("NB_DOMAIN")).replace('"','')
     if(len(str(nb_domain).replace('"',''))==0):
@@ -341,7 +370,6 @@ def setConfProperties():
         logger.info("influxdb_servers :"+str(influxdb_servers))
         if(len(str(influxdb_servers))>0):
             proceedForApplicationServiceAgentInstallation()
-
         else:
             logger.error("No infuxdb server details found please install them before applicative server installation.")
             verboseHandle.printConsoleInfo("No infuxdb server details found please install them before applicative server installation.")
@@ -362,22 +390,14 @@ def setConfProperties():
 
         if(len(str(grafana_servers))>0 and len(str(influxdb_servers))>0):
             gridui_servers_config = str(nbConfig.get("GRIDUI_SERVERS")).replace('"','')
-            gridui_servers = str(input(Fore.YELLOW +"Enter GRIDUI_SERVERS ["+gridui_servers_config+"] :"+Fore.RESET))
-            if(len(str(gridui_servers))==0):
-                gridui_servers = gridui_servers_config
-            while(len(str(gridui_servers))==0):
-                gridui_servers = str(input(Fore.YELLOW +"Enter GRIDUI_SERVERS :"+Fore.RESET))
+            gridui_servers = getNBOPSManagerHostFromEnv()
+            print(Fore.YELLOW +"GRIDUI_SERVERS ["+str(gridui_servers)+"]"+Fore.RESET)
             logger.info("gridui_servers :"+str(gridui_servers))
             if validateHost(gridui_servers) == False:
                 verboseHandle.printConsoleError("gridui_servers is not valid please try again ..")
                 return False
-
-            opsmanager_servers_config = str(nbConfig.get("OPSMANAGER_SERVERS")).replace('"','')
-            opsmanager_servers = str(input(Fore.YELLOW +"Enter OPSMANAGER_SERVERS ["+opsmanager_servers_config+"] :"+Fore.RESET))
-            if(len(opsmanager_servers)==0):
-                opsmanager_servers = opsmanager_servers_config
-            while(len(str(opsmanager_servers))==0):
-                opsmanager_servers = str(input(Fore.YELLOW +"Enter OPSMANAGER_SERVERS :"+Fore.RESET))
+            opsmanager_servers_config = gridui_servers
+            print(Fore.YELLOW +"OPSMANAGER_SERVERS ["+opsmanager_servers_config+"]"+Fore.RESET)
             logger.info("opsmanager_servers :"+str(opsmanager_servers))
             if validateHost(opsmanager_servers) == False:
                 verboseHandle.printConsoleError("opsmanager_servers is not valid please try again ..")
@@ -397,7 +417,7 @@ def setConfProperties():
     lines = update_app_config_file("gridui_servers=".upper(), gridui_servers, lines)
     lines = update_app_config_file("grafana_servers=".upper(), grafana_servers, lines)
     lines = update_app_config_file("influxdb_servers=".upper(), influxdb_servers, lines)
-    update_app_config_file("opsmanager_servers=".upper(), opsmanager_servers, lines)
+    update_app_config_file("opsmanager_servers=".upper(), gridui_servers, lines)
 
 
 # validate connections for each NB server & agents
@@ -449,9 +469,9 @@ def upload_packages_to_nb_servers(confirmServerInstall,confirmAgentInstall,confi
     logger.info("upload_packages_to_nb_servers() : confirmServerInstall:"+str(confirmServerInstall)+" :: confirmAgentInstall:"+str(confirmAgentInstall)+" confirmManagementInstall:"+str(confirmManagementInstall))
     nbConfig = createPropertiesMapFromFile("config/nb.conf")
     #print(nbConfig.get("CONSUL_SERVERS"))
-    nb_user = str(input(Fore.YELLOW+"Enter user name to connect to nb servers [root]:"+Fore.RESET))
-    if nb_user == "":
-        nb_user = "root"
+    #nb_user = str(input(Fore.YELLOW+"Enter user name to connect to nb servers [root]:"+Fore.RESET))
+    #if nb_user == "":
+    nb_user = "root"
     logger.info("nb_user :"+str(nb_user))
     remotePath = str(input(Fore.YELLOW+"Enter remote path to copy nb installation package [/dbagiga]:"+Fore.RESET))
     logger.info("input remotePath :"+str(remotePath))
@@ -536,7 +556,7 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
                 logger.info("connectExecuteSSH : hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
                 connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " ")
             logger.info("Adding server-node :"+str(hostip))
-            config_add_nb_node(hostip, hostip, "applicative server",  "config/cluster.config")
+            #config_add_nb_node(hostip, hostip, "applicative server",  "config/cluster.config")
 
             cmd =  "sed -i '/export CONSUL_HTTP_ADDR=/d' .bash_profile;  echo export CONSUL_HTTP_ADDR="+str(hostip)+":8500 >>.bash_profile;"
             logger.info("agent : cmd :"+str(cmd))
@@ -562,7 +582,7 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
                 logger.info("connectExecuteSSH Agent: hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
                 connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --agent")
             logger.info("Adding agent-node :"+str(hostip))
-            config_add_nb_node(hostip, hostip, "agent server", "config/cluster.config")
+            #config_add_nb_node(hostip, hostip, "agent server", "config/cluster.config")
             logger.info("Completed Installation for agent server:"+str(hostip))
             verboseHandle.printConsoleInfo("Completed Installation for agent server:"+str(hostip))
         logger.info("Completed installation for all agent server")
@@ -579,7 +599,7 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
                 logger.info("connectExecuteSSH Agent: hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
                 connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --management")
             logger.info("Adding agent-node :"+str(hostip))
-            config_add_nb_node(hostip, hostip, "management server", "config/cluster.config")
+            #config_add_nb_node(hostip, hostip, "management server", "config/cluster.config")
             logger.info("Completed Installation for management server:"+str(hostip))
             verboseHandle.printConsoleInfo("Completed Installation for management server:"+str(hostip))
         logger.info("Completed installation for all management server")
@@ -605,7 +625,7 @@ def validate_nb_install():
     #Get servers configured as Consul_servers and space_host for validating instead of getting related hosts
     for host in nbConfig.get("CONSUL_SERVERS").replace(" ", "").replace('"','').split(","):
         servers.append(host)
-    for host in readValuefromAppConfig("app.space.hosts").replace(" ", "").replace('"','').split(","):
+    for host in str(getNBAgentHostFromEnv()).replace(" ", "").replace('"','').split(","):
         servers.append(host)
 
     logger.info("Agent and consul servers : : "+str(servers))
@@ -664,7 +684,7 @@ if __name__ == '__main__':
                 confirmServerInstall='y'
             nbConfig = createPropertiesMapFromFile("config/nb.conf")
             opsmanager_servers = str(nbConfig.get("OPSMANAGER_SERVERS")).replace('"','')
-            if(len(str(opsmanager_servers))==0):
+            if(applicationServerFlag=='y'):
                 confirmAgentInstall = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative agent installation ? (y/n) [y]:"+Fore.RESET))
                 if(len(str(confirmAgentInstall))==0):
                     confirmAgentInstall='y'
