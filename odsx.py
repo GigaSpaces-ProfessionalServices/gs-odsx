@@ -7,7 +7,7 @@ import os.path
 from os import path
 import  pyfiglet
 from scripts.logManager import LogManager
-
+from utils.ods_cluster_config import discoverHostConfig
 ###############################
 # For autocomplete
 import argparse as ap
@@ -167,6 +167,8 @@ def findArgumentInFile(currentArg,initialFileName):
         ""
 
 def main(**args):
+    # Discover hosts to be install for stateless cluster config
+    discoverHostConfig()
     #check if command line arguments passed to check execution of CLI or Menu driven
     if len(sys.argv) > 1 :
         cmd=''
