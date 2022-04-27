@@ -8,6 +8,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
 from utils.ods_cluster_config import config_get_manager_listWithStatus,config_remove_manager_nodeByIP
 from scripts.spinner import Spinner
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -57,7 +58,7 @@ def handleException(e):
 
 
 def execute_scriptBuilder(host):
-    logger.info("execute_scriptBuilder(args)")
+    logger.info("execute_scriptBuilder(args) :"+str(host))
     commandToExecute="scripts/servers_manager_remove.sh"
 
     additionalParam = removeJava+' '+removeUnzip
@@ -67,7 +68,7 @@ def execute_scriptBuilder(host):
         outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
         print(outputShFile)
         logger.info("Output : scripts/servers_manager_remove.sh :"+str(outputShFile))
-        config_remove_manager_nodeByIP(host)
+        #config_remove_manager_nodeByIP(host)
         logger.debug(str(host)+" has been removed.")
         verboseHandle.printConsoleInfo(str(host)+" has been removed.")
 
@@ -80,7 +81,7 @@ def exitAndDisplay(isMenuDriven):
 
 if __name__ == '__main__':
     logger.info("servers - manager - Remove ")
-    verboseHandle.printConsoleWarning('Servers -> Manager -> Remove')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Remove')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
@@ -88,7 +89,8 @@ if __name__ == '__main__':
     managerDict = config_get_manager_listWithStatus()
 
     hostsConfig=''
-    hostsConfig = readValuefromAppConfig("app.manager.hosts")
+    #hostsConfig = readValuefromAppConfig("app.manager.hosts")
+    hostsConfig = getManagerHostFromEnv()
     logger.info("hostConfig:"+str(hostsConfig))
     hostsConfig=hostsConfig.replace('"','')
     if(len(str(hostsConfig))>0):
@@ -161,9 +163,9 @@ if __name__ == '__main__':
                     args.append('--host')
                     args.append(str(managerStart.ip))
                     #userConfig = readValuefromAppConfig("app.server.user")
-                    user = str(input("Enter your user [root]: "))
-                    if(len(str(user))==0):
-                        user="root"
+                    #user = str(input("Enter your user [root]: "))
+                    #if(len(str(user))==0):
+                    user="root"
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"
@@ -173,7 +175,7 @@ if __name__ == '__main__':
                     args.append(str(managerStart.ip))
                     args.append(removeJava)
                     args.append(removeUnzip)
-                    execute_scriptBuilder(str(managerStart.ip))
+                    execute_scriptBuilder(os.getenv(str(managerStart.ip)))
                 elif(confirm =='no' or confirm=='n'):
                     if(menuDrivenFlag=='m'):
                         logger.info("menudriven")
@@ -188,16 +190,16 @@ if __name__ == '__main__':
                 if(len(str(removeUnzip))==0):
                     removeUnzip='n'
 
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                    confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     logger.info("Removing Cluster")
                     #userConfig = readValuefromAppConfig("app.server.user")
-                    user = str(input("Enter your user [root]: "))
-                    if(len(str(user))==0):
-                        user='root'
+                    #user = str(input("Enter your user [root]: "))
+                    #if(len(str(user))==0):
+                    user='root'
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"
@@ -211,7 +213,7 @@ if __name__ == '__main__':
                         args.append(user)
                         args.append('--id')
                         args.append(host)
-                        execute_scriptBuilder(host)
+                        execute_scriptBuilder(str(host))
                         args.remove("--host")
                         args.remove(host)
                         args.remove('-u')

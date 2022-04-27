@@ -9,6 +9,7 @@ from utils.ods_cluster_config import config_get_influxdb_node,config_get_grafana
 from colorama import Fore
 from utils.ods_validation import getTelnetStatus
 from utils.ods_list import getGrafanaServerDetails, getInfluxdbServerDetails
+from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -57,6 +58,7 @@ def listInfluxdb():
     headers = [Fore.YELLOW+"IP"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
+               Fore.YELLOW+"Install"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET]
     data=[]
     dataArray = getInfluxdbServerDetails(influxdbServers)
@@ -73,6 +75,7 @@ if __name__ == '__main__':
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
         args.append(sys.argv[0])
         myCheckArg()
-        listInfluxdb()
+        with Spinner():
+            listInfluxdb()
     except Exception as e:
         handleException(e)

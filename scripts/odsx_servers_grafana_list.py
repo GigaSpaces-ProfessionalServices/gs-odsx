@@ -11,6 +11,7 @@ from utils.ods_cluster_config import config_get_grafana_list,config_get_influxdb
 from colorama import Fore
 from utils.ods_validation import getTelnetStatus
 from utils.ods_list import getGrafanaServerDetails, getInfluxdbServerDetails
+from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -59,6 +60,7 @@ def listGrafana():
     headers = [Fore.YELLOW+"IP"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
+               Fore.YELLOW+"Install"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET]
     data=[]
     dataArray = getGrafanaServerDetails(grafanaServers)
@@ -76,6 +78,7 @@ if __name__ == '__main__':
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
         args.append(sys.argv[0])
         myCheckArg()
-        listGrafana()
+        with Spinner():
+            listGrafana()
     except Exception as e:
         handleException(e)

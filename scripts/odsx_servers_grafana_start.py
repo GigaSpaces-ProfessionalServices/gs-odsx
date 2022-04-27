@@ -19,15 +19,37 @@ class bcolors:
     FAIL = '\033[91m' #RED
     RESET = '\033[0m' #RESET COLOR
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def getGrafanaServerHostList():
     nodeList = config_get_grafana_list()
     nodes=""
     for node in nodeList:
         #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes+','+node.ip
+            nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def startInputUserAndHost():
@@ -35,14 +57,13 @@ def startInputUserAndHost():
     try:
         global user
         global host
-        user = str(input(Fore.YELLOW+"Enter user to connect to Grafana [root]:"+Fore.RESET))
-        if(len(str(user))==0):
-            user="root"
+        #user = str(input(Fore.YELLOW+"Enter user to connect to Grafana [root]:"+Fore.RESET))
+        #if(len(str(user))==0):
+        user="root"
         logger.info(" user: "+str(user))
 
     except Exception as e:
-        logger.error("Exception in Grafana -> Start : startInputUserAndHost() : "+str(e))
-        verboseHandle.printConsoleError("Exception in Grafana -> Start : startInputUserAndHost() : "+str(e))
+        handleException(e)
     logger.info("startInputUserAndHost(): end")
 
 def executeCommandForStart():
@@ -65,8 +86,7 @@ def executeCommandForStart():
             logger.info("No server details found.")
             verboseHandle.printConsoleInfo("No server details found.")
     except Exception as e:
-        logger.error("Exception in Grafana -> Start : executeCommandForStart() : "+str(e))
-        verboseHandle.printConsoleError("Exception in Grafana -> Start : executeCommandForStart() : "+str(e))
+        handleException(e)
     logger.info("executeCommandForStart(): end")
 
 if __name__ == '__main__':
@@ -75,5 +95,4 @@ if __name__ == '__main__':
         startInputUserAndHost()
         executeCommandForStart()
     except Exception as e:
-        logger.error("Exception in Grafana -> Start : "+str(e))
-        verboseHandle.printConsoleError("Exception in Grafana -> Start : "+str(e))
+        handleException(e)

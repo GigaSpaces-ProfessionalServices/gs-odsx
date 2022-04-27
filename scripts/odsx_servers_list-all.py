@@ -7,9 +7,12 @@ from colorama import Fore
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts,config_get_nb_list,config_get_grafana_list,config_get_influxdb_node, config_get_dataIntegration_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getTelnetStatus
 from scripts.spinner import Spinner
+from scripts.odsx_servers_northbound_list import isInstalledAndGetVersion
+from utils.ods_list import isInstalledAndGetVersionGrafana
+from utils.ods_list import isInstalledAndGetVersionInflux
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -90,7 +93,7 @@ def getStatusOfNBHost(server):
     logger.info("Getting status.. :"+str(cmd))
     user = 'root'
     with Spinner():
-        output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
+        output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
     logger.info(cmd+" :"+str(output))
     if(output ==0):
         return "ON"
@@ -114,29 +117,38 @@ def getConsolidatedStatus(node):
                 return output
     return output
 
+def isInstalledAndGetVersionManagerSpace(host):
+    logger.info("isInstalledAndGetVersion")
+    commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','').replace('/dbagiga/','')
+    logger.info("outputShFile :"+str(outputShFile))
+    return str(outputShFile)
+
 def listAllServers():
     logger.info("Manager server list :")
     headers = [Fore.YELLOW+"Sr No"+Fore.RESET,
                Fore.YELLOW+"Type of host"+Fore.RESET,
                Fore.YELLOW+"IP"+Fore.RESET,
+               Fore.YELLOW+"Install"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET]
     data=[]
     managerNodes = config_get_manager_node()
     count = 0
     for node in managerNodes:
         count = count+1
-        status = getSpaceServerStatus(node.ip)
-        if(status=="ON"):
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Manager"+Fore.RESET,
-                       Fore.GREEN+node.ip+Fore.RESET,
-                       Fore.GREEN+status+Fore.RESET,
-                       ]
-        else:
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Manager"+Fore.RESET,
-                       Fore.GREEN+node.ip+Fore.RESET,
-                       Fore.RED+status+Fore.RESET]
+        status = getSpaceServerStatus(os.getenv(node.ip))
+        installStatus='No'
+        install = isInstalledAndGetVersionManagerSpace(os.getenv(str(node.ip)))
+        logger.info("install : "+str(install))
+        if(len(str(install))>0):
+            installStatus='Yes'
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"Manager"+Fore.RESET,
+                   Fore.GREEN+os.getenv(node.ip)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
         data.append(dataArray)
     logger.info("Space server list.")
     spaceServers = config_get_space_hosts()
@@ -144,80 +156,85 @@ def listAllServers():
     for server in spaceServers:
         cmd = 'systemctl is-active gs.service'
         user='root'
-        output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
+        output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
         logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
-        host_dict_obj.add(server.ip,str(output))
+        host_dict_obj.add(os.getenv(server.ip),str(output))
     logger.info("host_dict_obj :"+str(host_dict_obj))
 
     for server in spaceServers:
         count = count+1
-        logger.info(server.ip)
+        logger.info(os.getenv(server.ip))
         #status = getStatusOfHost(host_dict_obj,server)
-        status = getStatusOfSpaceHost(server.ip)
-        logger.info(status)
-        if(status=="ON"):
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Space"+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.GREEN+str(status)+Fore.RESET,
-                       ]
-        else:
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Space"+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.RED+str(status)+Fore.RESET
-                       ]
+        status = getStatusOfSpaceHost(os.getenv(server.ip))
+        logger.info("status"+str(status))
+        installStatus='No'
+        install = isInstalledAndGetVersionManagerSpace(os.getenv(str(server.ip)))
+        logger.info("install : "+str(install))
+        logger.info("install : "+str(install))
+        if(len(str(install))>0):
+            installStatus='Yes'
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"Space"+Fore.RESET,
+                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET
+                   ]
         data.append(dataArray)
     #cdcServers = config_cdc_list()
     logger.info("NB servers list")
     nbServers = config_get_nb_list()
     for server in nbServers:
+        host = str(os.getenv(server.ip))
         count = count+1
         status = getStatusOfNBHost(server)
-        if(status=='ON'):
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Northbound "+server.role+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET]
-        else:
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Northbound "+server.role+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET]
+        installStatus='No'
+        install = isInstalledAndGetVersion(str(host))
+        logger.info("install : "+str(install))
+        if(len(str(install))>0):
+            installStatus='Yes'
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"Northbound "+server.role+Fore.RESET,
+                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
+
         data.append(dataArray)
 
     logger.info("Grafana server list.")
     grafanaServers = config_get_grafana_list()
     for server in grafanaServers:
         count = count+1
-        status = getTelnetStatus(server.ip,3000)
-        if(status=='ON'):
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Grafana"+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.GREEN+status+Fore.RESET]
-        else:
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Grafana"+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.RED+status+Fore.RESET]
+        status = getTelnetStatus(os.getenv(server.ip),3000)
+        installStatus='No'
+        host = str(os.getenv(server.ip))
+        install = isInstalledAndGetVersionGrafana(str(host))
+        logger.info("install : "+str(install))
+        if(len(str(install))>0):
+            installStatus='Yes'
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"Grafana"+Fore.RESET,
+                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
+
         data.append(dataArray)
 
     logger.info("Influxdb servers list")
     influxdbServers = config_get_influxdb_node()
     for server in influxdbServers:
         count=count+1
-        status = getTelnetStatus(server.ip,8086)
-        if(status=='ON'):
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Influxdb"+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.GREEN+status+Fore.RESET]
-        else:
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+"Influxdb"+Fore.RESET,
-                       Fore.GREEN+server.ip+Fore.RESET,
-                       Fore.RED+status+Fore.RESET]
+        status = getTelnetStatus(os.getenv(server.ip),8086)
+        host = str(os.getenv(server.ip))
+        installStatus='No'
+        install = isInstalledAndGetVersionInflux(str(host))
+        logger.info("install : "+str(install))
+        if(len(str(install))>0):
+            installStatus='Yes'
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"Influxdb"+Fore.RESET,
+                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
         data.append(dataArray)
 
     logger.info("DI servers list")
@@ -227,16 +244,13 @@ def listAllServers():
         count=count+1
         host_dict_obj.add(str(counter),str(node.ip))
         output = getConsolidatedStatus(node)
-        if(output==0):
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET]
-        else:
-            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                       Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
-                       Fore.RED+"OFF"+Fore.RESET]
+
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
+                   Fore.GREEN+os.getenv(node.name)+Fore.RESET,
+                   Fore.GREEN+"N/A",
+                   Fore.GREEN+status+Fore.RESET if(output==0) else Fore.RED+status+Fore.RESET]
+
         data.append(dataArray)
         counter=counter+1
     printTabular(None,headers,data)

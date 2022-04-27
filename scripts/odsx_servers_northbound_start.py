@@ -35,15 +35,37 @@ def myCheckArg(args=None):
                         default='false', action='store_true')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def getNBServerHostList():
     nodeList = config_get_nb_list()
     nodes=""
     for node in nodeList:
         if(str(node.role).casefold().__contains__('applicative')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getManagementHostList():
@@ -53,9 +75,9 @@ def getManagementHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('management')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getAgentHostList():
@@ -65,9 +87,9 @@ def getAgentHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('agent')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def startInputUserAndHost():
@@ -85,8 +107,7 @@ def startInputUserAndHost():
         logger.info(" user: "+str(user))
 
     except Exception as e:
-        logger.error("Exception in NB -> Start : startInputUserAndHost() : "+str(e))
-        verboseHandle.printConsoleError("Exception in NB -> Start : startInputUserAndHost() : "+str(e))
+        handleException(e)
     logger.info("startInputUserAndHost(): end")
 
 def executeCommandForStart():
@@ -126,6 +147,7 @@ def executeCommandForStart():
                     additionalParam=""
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
                     with Spinner():
+                        print(host,user,commandToExecute,additionalParam)
                         outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                         logger.info("outputShFile"+str(outputShFile))
                         verboseHandle.printConsoleInfo("Node "+str(host)+" start command executed.")
@@ -153,12 +175,12 @@ def executeCommandForStart():
             logger.info("No NB management server details found.")
             verboseHandle.printConsoleInfo("No NB management server details found.")
     except Exception as e:
-        logger.error("Exception in Northbound -> Start : executeCommandForStart() : "+str(e))
-        verboseHandle.printConsoleError("Exception in Northbound -> Start : executeCommandForStart() : "+str(e))
+        handleException(e)
     logger.info("executeCommandForStart(): end")
 
 if __name__ == '__main__':
     logger.info("servers -> Northbound -> Start ")
+    verboseHandle.printConsoleInfo("Menu -> servers -> Northbound -> Start ")
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
@@ -169,6 +191,4 @@ if __name__ == '__main__':
         startInputUserAndHost()
         executeCommandForStart()
     except Exception as e:
-        logger.error("Exception in Nb -> Start : "+str(e))
-        verboseHandle.printConsoleError("Exception in Nb -> Start : "+str(e))
-    verboseHandle.printConsoleInfo("servers -> Northbound -> Start ")
+        handleException(e)

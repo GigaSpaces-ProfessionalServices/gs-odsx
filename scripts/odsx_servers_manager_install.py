@@ -9,6 +9,7 @@ from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_manager_node
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -82,9 +83,9 @@ def getDIServerHostList():
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
         if (len(nodes) == 0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 def getBootstrapAddress(hostConfig):
@@ -96,6 +97,15 @@ def getBootstrapAddress(hostConfig):
     logger.info("getBootstrapAddress : "+str(bootstrapAddress))
     return bootstrapAddress
 
+def getManagerHostFromEnv():
+    logger.info("getManagerHostFromEnv()")
+    hosts = ''
+    managerNodes = config_get_manager_node()
+    for node in managerNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
 def getHostConfiguration():
     logger.info("getHostConfiguration()")
     try:
@@ -103,7 +113,8 @@ def getHostConfiguration():
         hostConfigArray=[]
         hostConfiguration=""
         wantNicAddress=""
-        hostsConfig = readValuefromAppConfig("app.manager.hosts")
+        #hostsConfig = readValuefromAppConfig("app.manager.hosts")
+        hostsConfig = getManagerHostFromEnv()
         logger.info("hostsConfig : "+str(hostsConfig))
         hostConfigArray=hostsConfig.replace('"','').split(",")
 
@@ -123,7 +134,8 @@ def getHostConfiguration():
         if(len(str(hostsConfig))>0):
             logger.info("hostsConfig>0 : "+str(hostsConfig))
             verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
-            hostConfiguration = str(input("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
+            #hostConfiguration = str(input("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
+            hostConfiguration = ''
             logger.info("hostConfiguration : "+str(hostConfiguration))
             wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
             while(len(str(wantNicAddress))==0):
@@ -237,13 +249,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             targetDir='/dbagiga'
         else:
             targetDir=additionalParam
+
         if(gsOptionExtFromConfig.__contains__('<DI servers>')):
             kafkaConfirm = str(input(Fore.YELLOW+"Do you want to configure kafka servers? (y/n) [y] : "+Fore.RESET))
+            kafkaHost=''
             if(len(str(kafkaConfirm))==0):
                 kafkaConfirm='y'
             if(kafkaConfirm=='y'):
                 dIHosts = getDIServerHostList()
-                kafkaHost=''
+                logger.info("dIHosts :"+str(dIHosts))
                 if(len(str(dIHosts))>0):
                     kafkaHosts = getBootstrapAddress(dIHosts)
                     logger.info("kafkaHosts :"+str(kafkaHost))
@@ -394,25 +408,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.info("Extracting .tar file :"+str(output))
                 verboseHandle.printConsoleInfo(str(output))
 
-                #Checking Applicative User exist or not
-                '''
-                cmd = 'id -u '+applicativeUser
-                logger.info("cmd : "+cmd)
-                verboseHandle.printConsoleInfo("Validating applicative user")
-                with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
-                #print(output)
-                
-                if(str(output) == '0'):
-                    print("exist")
-                else:
-                    print("Not exist")
-                logger.info("Validating applicative user :"+str(output))
-                verboseHandle.printConsoleInfo(str(output))
-        
-                quit()
-                '''
-
                 commandToExecute="scripts/servers_manager_install.sh"
                 #print(additionalParam)
                 logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
@@ -429,9 +424,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)
                 except Exception as e:
                     serverHost=host
-                managerList = config_add_manager_node(host,host,"admin")
-                logger.info("Installation of manager server "+str(host)+" has been done!")
-                verboseHandle.printConsoleInfo("Installation of manager server "+host+" has been done!")
+                #managerList = config_add_manager_node(host,host,"admin")
+                logger.info("Installation of manager server "+str(os.getenv(host))+" has been done!")
+                verboseHandle.printConsoleInfo("Installation of manager server "+str(os.getenv(host))+" has been done!")
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -480,7 +475,7 @@ def validateRPMS():
 
 if __name__ == '__main__':
     logger.info("odsx_servers_manager_install")
-    verboseHandle.printConsoleWarning('Servers -> Manager -> Install')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Install')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     #print('Len : ',len(sys.argv))
@@ -515,7 +510,8 @@ if __name__ == '__main__':
                 #args.append('--host')
                 #args.append(host)
                 #user = readValuefromAppConfig("app.server.user")
-                user = str(input("Enter your user [root]: "))
+                #user = str(input("Enter your user [root]: "))
+                user='root'
                 if(len(str(user))==0):
                     user="root"
                 args.append('-u')

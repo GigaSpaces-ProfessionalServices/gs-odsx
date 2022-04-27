@@ -20,6 +20,28 @@ class bcolors:
     FAIL = '\033[91m' #RED
     RESET = '\033[0m' #RESET COLOR
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 def getNBServerHostList():
     logger.info("getNBServerHostList()")
     nodeList = config_get_nb_list()
@@ -27,9 +49,9 @@ def getNBServerHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('applicative')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getManagementHostList():
@@ -39,9 +61,9 @@ def getManagementHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('management')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getAgentHostList():
@@ -51,9 +73,9 @@ def getAgentHostList():
     for node in nodeList:
         if(str(node.role).casefold().__contains__('agent')):
             if(len(nodes)==0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes+','+node.ip
+                nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def stopInputUserAndHost():
@@ -68,8 +90,7 @@ def stopInputUserAndHost():
         logger.info(" user: "+str(user))
 
     except Exception as e:
-        logger.error("Exception in NB -> Stop : stoptInputUserAndHost() : "+str(e))
-        verboseHandle.printConsoleError("Exception in NB -> Stop : stoptInputUserAndHost(): "+str(e))
+        handleException(e)
     logger.info("stoptInputUserAndHost(): end")
 
 def executeCommandForStop():
@@ -136,16 +157,14 @@ def executeCommandForStop():
             logger.info("No NB management server details found.")
             verboseHandle.printConsoleInfo("No NB management server details found.")
     except Exception as e:
-        logger.error("Exception in Northbound -> Stop : executeCommandForStop() : "+str(e))
-        verboseHandle.printConsoleError("Exception in Northbound -> Stop : executeCommandForStop() : "+str(e))
+        handleException(e)
     logger.info("executeCommandForStop(): end")
 
 if __name__ == '__main__':
     logger.info("servers -> Northbound -> Stop ")
+    verboseHandle.printConsoleInfo("Menu -> servers -> Northbound -> Stop ")
     try:
         stopInputUserAndHost()
         executeCommandForStop()
     except Exception as e:
-        logger.error("Exception in Nb -> Stop : "+str(e))
-        verboseHandle.printConsoleError("Exception in Nb -> Stop : "+str(e))
-    verboseHandle.printConsoleInfo("servers -> Northbound -> Stop ")
+        handleException(e)
