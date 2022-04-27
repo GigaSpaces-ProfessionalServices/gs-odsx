@@ -5,6 +5,10 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_ssh import connectExecuteSSH
 from scripts.spinner import Spinner
 from colorama import Fore
+from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
+from scripts.odsx_servers_influxdb_stop import getInfluxdbServerHostList
+from utils.ods_cluster_config import getManagerHostFromEnv
+from scripts.odsx_servers_space_install import getSpaceHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -28,11 +32,11 @@ def configureHoststoMetricsxml(grafanaHosts, influxdbHosts, host):
 
 def validateGrafanaInfluxdb():
     logger.info("validateGrafanaInfluxdb()")
-    grafanaHosts = str(readValuefromAppConfig("app.grafana.hosts")).replace('"','')
-    influxdbHosts = str(readValuefromAppConfig("app.influxdb.hosts")).replace('"','')
-    managerHostConfig = str(readValuefromAppConfig("app.manager.hosts")).replace('"','')
+    grafanaHosts = str(getGrafanaServerHostList()).replace('"','')
+    influxdbHosts = str(getInfluxdbServerHostList()).replace('"','')
+    managerHostConfig = str(getManagerHostFromEnv()).replace('"','')
     managerHosts = managerHostConfig.split(',')
-    spaceHostConfig = str(readValuefromAppConfig("app.space.hosts")).replace('"','')
+    spaceHostConfig = str(getSpaceHostFromEnv()).replace('"','')
     spaceHosts = spaceHostConfig.split(',')
     if(len(grafanaHosts)==0):
         verboseHandle.printConsoleInfo("Grafana host not found.")
