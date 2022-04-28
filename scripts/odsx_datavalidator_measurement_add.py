@@ -103,12 +103,15 @@ def doValidate():
         while (len(str(tableName1)) == 0):
             print(Fore.YELLOW +"Table Name is invalid (Empty)"+Fore.RESET)
             tableName1 = str(input("Table Name : "))
-        
-        fieldName1 = str(input("Field Name : "))
-        while (len(str(fieldName1)) == 0):
-            print(Fore.YELLOW +"Field Name is invalid (Empty)"+Fore.RESET)
+
+        if test != 'count':
             fieldName1 = str(input("Field Name : "))
-         
+            while (len(str(fieldName1)) == 0):
+                print(Fore.YELLOW +"Field Name is invalid (Empty)"+Fore.RESET)
+                fieldName1 = str(input("Field Name : "))
+        else:
+            fieldName1 = '*'
+
         if test != 'lastvalue':
             whereCondition = str(input("Where Condition [''] : "))
             if (len(str(whereCondition)) == 0):

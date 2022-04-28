@@ -79,16 +79,16 @@ def installSingle():
             user="root"
         logger.info(" user: "+str(user))
 
-        dbPath= str(input(Fore.YELLOW+"Enter db path[datavalidator.db]: "+Fore.RESET))
+        dbPath= str(input(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
         if(len(str(dbPath))==0):
-            dbPath='datavalidator.db'
-        logFilepath= str(input(Fore.YELLOW+"Enter log file path[datavalidator.log] : "+Fore.RESET))
+            dbPath='/home/gsods/datavalidator.db'
+        logFilepath= str(input(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
         if(len(str(logFilepath))==0):
-            logFilepath='datavalidator.log'
+            logFilepath='/home/gsods/datavalidator.log'
 
         #open and add properties as per user inputs
         with open('install/data-validation/application.properties', 'w') as f:
-         f.write('server.port=7890')
+         f.write('server.port=7891')
          f.write('\n')
          f.write('logging.file.name='+logFilepath)
          f.write('\n')
@@ -147,6 +147,10 @@ def buildUploadInstallTarToServer(host):
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
             scp_upload(host, user, 'install/install.tar', '/home/gsods')
+            scp_upload(host, user, '/dbagiga/gs_config/SQLJDBCDriver.conf', '/home/gsods')
+            scp_upload(host, user, '/dbagiga/gs_config/UTKA02E.keytab', '/home/gsods')
+            #scp_upload(host, user, 'install/gs_config/SQLJDBCDriver.conf', '/home/gsods')
+            #scp_upload(host, user, 'install/gs_config/UTKA02E.keytab', '/home/gsods')
     except Exception as e:
         handleException(e)
 

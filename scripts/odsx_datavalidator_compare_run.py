@@ -83,7 +83,7 @@ def doValidate():
 
         # http://localhost:7890/compare/avg?dataSource1Type=gigaspaces&dataSource1HostIp=localhost&dataSource1Port=414&schemaName1=demo&dataSource2Type=gigaspaces&dataSource2HostIp=localhost&dataSource2Port=4174&schemaName2=demo2&tableName=com.mycompany.app.Person&fieldName=salary
         response = requests.get(
-            "http://" + dataValidatorServiceHost + ":7890/compare/" + measurementIdA + "/" + measurementIdB
+            "http://" + dataValidatorServiceHost + ":7890/measurement/compare/" + measurementIdA + "/" + measurementIdB
             + "?executionTime=" + executionTime)
 
         if response.status_code == 200:

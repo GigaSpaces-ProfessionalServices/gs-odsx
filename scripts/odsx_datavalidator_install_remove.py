@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os
-import platform
+import requests
 from os import path
 from colorama import Fore
 
@@ -13,6 +13,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_re
     config_get_dataValidation_nodes, config_remove_dataValidation_byNameIP
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from scripts.odsx_servers_di_list import listDIServers
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -93,6 +94,10 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
 def executeCommandForUnInstall():
     logger.info("executeCommandForUnInstall(): start")
     try:
+        dataValidationNodes = config_get_dataValidation_nodes()
+        dataValidationHost = getDataValidationHost(dataValidationNodes)
+        logger.info("dataValidationHost : " + str(dataValidationHost))
+
         host_dict_obj = listDVServers()
         logger.info("host_dict_obj :"+str(host_dict_obj))
         nodes = getDVServerHostList()
@@ -113,11 +118,15 @@ def executeCommandForUnInstall():
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
                         for host in nodes.split(','):
-                            print(host)
+                            if(dataValidationHost != ''):
+                                response = requests.delete(
+                                    "http://" + dataValidationHost + ":7890/agent/remove/" + host)
+                                logger.info(str(response.status_code))
+
                             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
-                            print(outputShFile)
                             config_remove_dataValidation_byNameIP(host,host)
                             set_value_in_property_file('app.di.hosts','')
+                            verboseHandle.printConsoleWarning('');
                             verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
             if(removeType=='1'):
                 proceedForIndividualRemove(host_dict_obj,nodes)

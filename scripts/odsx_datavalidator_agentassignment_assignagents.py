@@ -77,11 +77,13 @@ def doValidate():
         verboseHandle.printConsoleWarning("No agents available. Please add one")
         return
 
-    agentId = str(input("Select Agent Id from list:"))
+    agentId = str(input("Select Agent Id from list \n OR [99] ESC:"))
     while(len(agentId) == 0):
-        print(Fore.YELLOW +"Agent Id are invalid (Empty)"+Fore.RESET)
-        agentId = str(input("Select Agent Id from list:"))
+        print(Fore.YELLOW +"Agent Id is invalid or Empty"+Fore.RESET)
+        agentId = str(input("Select Agent Id from list \n OR [99] ESC:"))
 
+    if(agentId=='99'):
+        return
 
     verboseHandle.printConsoleWarning('');
     verboseHandle.printConsoleWarning('Available Unassigned DataSource:');
@@ -94,14 +96,15 @@ def doValidate():
     verboseHandle.printConsoleWarning('');
     #verboseHandle.printConsoleWarning('Select Data Source:');
 
-    dataSourceIds = str(input("Select data source id from list.You can specify multiple Ids with comma separated:"))
+    dataSourceIds = str(input("Select data source id from list.You can specify multiple Ids with comma separated \n OR [99] ESC:"))
     while(len(dataSourceIds) == 0):
         print(Fore.YELLOW +"DataSource Id is invalid (Empty)"+Fore.RESET)
-        dataSourceIds = str(input("Select data source id from list.You can specify multiple Ids with comma separated:"))
+        dataSourceIds = str(input("Select data source id from list.You can specify multiple Ids with comma separated \n OR [99] ESC:"))
         #while(dataSourceName in dataSourceNames):
         #     print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
         #     dataSourceName = str(input("DataSource Name:"))
-
+    if(dataSourceIds=='99'):
+        return
 
     verboseHandle.printConsoleWarning('');
     data = {

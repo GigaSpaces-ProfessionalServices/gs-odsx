@@ -67,12 +67,12 @@ def installSingle():
             user="root"
         logger.info(" user: "+str(user))
 
-        dbPath= str(input(Fore.YELLOW+"Enter db path[datavalidator.db]: "+Fore.RESET))
+        dbPath= str(input(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
         if(len(str(dbPath))==0):
-            dbPath='datavalidator.db'
-        logFilepath= str(input(Fore.YELLOW+"Enter log file path[datavalidator.log] : "+Fore.RESET))
+            dbPath='/home/gsods/datavalidator.db'
+        logFilepath= str(input(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
         if(len(str(logFilepath))==0):
-            logFilepath='datavalidator.log'
+            logFilepath='/home/gsods/datavalidator.log'
 
         #open and add properties as per user inputs
         with open('install/data-validation/application.properties', 'w') as f:

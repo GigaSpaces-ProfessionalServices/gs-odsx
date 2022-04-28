@@ -73,12 +73,13 @@ def doValidate():
 
     verboseHandle.printConsoleWarning('');
     measurementId = str(input("Select measurement by id to run [1] : "))
+    if (len(str(measurementId)) == 0):
+        measurementId = '1'
     while(measurementId not in measurementids):
       print(Fore.YELLOW +"Please select measurement Id from above list"+Fore.RESET)
       measurementId = str(input("Select measurement by id to run [1]:"))
 
-    if (len(str(measurementId)) == 0):
-        measurementId = '1'
+
 
     executionTime = str(input("Execution time delay (in minutes) [0]: "))
     if (len(str(executionTime)) == 0):

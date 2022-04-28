@@ -98,16 +98,14 @@ def doValidate():
         dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
-        username1 = str(input("User name []: "))
-        if (len(str(username1)) == 0):
-            username1 = ''
-        password1 = str(input("Password []: "))
-        if (len(str(password1)) == 0):
-            password1 = ''
+
 
         IntegratedSecurity = ''
         AuthenticationScheme=''
         Properties=''
+
+        username1=''
+        password1=''
         if (dataSource1Type == 'ms-sql'):
          print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
 
@@ -122,6 +120,14 @@ def doValidate():
           AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
 
          Properties = str(input("Connection properties( ex.Key=value;):"))
+
+        else:
+            username1 = str(input("User name []: "))
+            if (len(str(username1)) == 0):
+                username1 = ''
+            password1 = str(input("Password []: "))
+            if (len(str(password1)) == 0):
+                password1 = ''
 
         verboseHandle.printConsoleWarning('');
         data = {
