@@ -48,9 +48,9 @@ def getDIServerHostList():
     for node in nodeList:
         #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes+','+node.ip
+            nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def removeInputUserAndHost():
@@ -113,7 +113,7 @@ def executeCommandForUnInstall():
                             print(host)
                             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                             print(outputShFile)
-                            config_remove_dataIntegration_byNameIP(host,host)
+                            #config_remove_dataIntegration_byNameIP(host,host)
                             set_value_in_property_file('app.di.hosts','')
                             verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
             if(removeType=='1'):
