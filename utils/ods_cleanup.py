@@ -27,7 +27,7 @@ def clenupManagerNode(filePath='config/cluster.config', verbose=False):
     config_data.cluster.servers.managers.node=managerNode
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
-    set_value_in_property_file('app.manager.hosts','')
+    #set_value_in_property_file('app.manager.hosts','')
     verboseHandle.printConsoleInfo("Servers-Manager-Nodes removed.")
 
 def clenupCDCNode(filePath='config/cluster.config', verbose=False):
@@ -84,7 +84,7 @@ def cleanupInfluxServerDetails(filePath='config/cluster.config', verbose=False):
     config_data.cluster.servers.influxdb.node=influxDbNode
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
-    set_value_in_property_file('app.influxdb.hosts','')
+    #set_value_in_property_file('app.influxdb.hosts','')
     verboseHandle.printConsoleInfo("Influxdb server details cleaned up.")
 
 def cleanupGrafanaServerDetails(filePath='config/cluster.config', verbose=False):
@@ -97,7 +97,7 @@ def cleanupGrafanaServerDetails(filePath='config/cluster.config', verbose=False)
     config_data.cluster.servers.grafana.node=grafanaNode
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
-    set_value_in_property_file('app.grafana.hosts','')
+    #set_value_in_property_file('app.grafana.hosts','')
     verboseHandle.printConsoleInfo("Grafana server details cleaned up.")
 
 def cleanUp():
