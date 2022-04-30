@@ -17,6 +17,7 @@ from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -93,36 +94,36 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     counter = 0
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        status = getSpaceServerStatus(node.ip)
+        status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})
         currentVersion = "NA"
         previousVersion = "NA"
         if node.ip in managerOldVersionDict:
-            previousVersion = managerOldVersionDict.get(node.ip)
+            previousVersion = managerOldVersionDict.get(os.getenv(node.ip))
         try:
-            managerInfoResponse = requests.get(('http://' + str(node.ip) + ':8090/v2/info'),
+            managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
                                                headers={'Accept': 'application/json'})
             output = managerInfoResponse.content.decode("utf-8")
             logger.info("Json Response container:" + str(output))
             managerInfo = json.loads(managerInfoResponse.text)
             currentVersion = str(managerInfo["revision"])
-            if node.ip not in managerOldVersionDict:
-                managerOldVersionDict.update({node.ip: currentVersion})
+            if os.getenv(node.ip) not in managerOldVersionDict:
+                managerOldVersionDict.update({os.getenv(node.ip): currentVersion})
         except Exception as e:
             currentVersion = "NA"
-            managerOldVersionDict.update({node.ip: currentVersion})
+            managerOldVersionDict.update({os.getenv(node.ip): currentVersion})
         if (status == "ON"):
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
-                         Fore.GREEN + node.ip + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.name) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
                          Fore.GREEN + currentVersion + Fore.RESET,
                          Fore.GREEN + previousVersion + Fore.RESET,
                          Fore.GREEN + status + Fore.RESET]
         else:
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
-                         Fore.GREEN + node.ip + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.name) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
                          Fore.GREEN + currentVersion + Fore.RESET,
                          Fore.GREEN + previousVersion + Fore.RESET,
                          Fore.RED + status + Fore.RESET]
@@ -142,8 +143,8 @@ def validateServer(host):
 
 
 if __name__ == '__main__':
-    logger.info("servers - manager - upgrade - manual ")
-    verboseHandle.printConsoleWarning('Servers -> Manager -> Upgrade -> Manual')
+    logger.info("servers - manager - upgrade - automatic ")
+    verboseHandle.printConsoleWarning('Servers -> Manager -> Upgrade -> Automatic')
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
@@ -151,7 +152,7 @@ if __name__ == '__main__':
     managerDict = config_get_manager_listWithStatus()
 
     hostsConfig = ''
-    hostsConfig = readValuefromAppConfig("app.manager.hosts")
+    hostsConfig = getManagerHostFromEnv()#readValuefromAppConfig("app.manager.hosts")
     logger.info("hostConfig:" + str(hostsConfig))
     hostsConfig = hostsConfig.replace('"', '')
     if (len(str(hostsConfig)) > 0):
@@ -185,18 +186,18 @@ if __name__ == '__main__':
                     managerStorageDict = {}
                     managerRunningStatusDict = {}
                     for node in config_get_manager_node():
-                        status = getSpaceServerStatus(node.ip)
-                        executeRemoteCommandAndGetOutputValuePython36(node.ip, user,
+                        status = getSpaceServerStatus(os.getenv(node.ip))
+                        executeRemoteCommandAndGetOutputValuePython36(os.getenv(node.ip), user,
                                                                       "mkdir -p install/gs/upgrade/")
-                        freeStoragePerc = executeRemoteCommandAndGetOutputValuePython36(node.ip, user,
+                        freeStoragePerc = executeRemoteCommandAndGetOutputValuePython36(os.getenv(node.ip), user,
                                                                                         cmd)
                         freeStoragePerc = str(freeStoragePerc).replace("\n", "")
-                        managerStorageDict.update({node.ip: freeStoragePerc})
+                        managerStorageDict.update({os.getenv(node.ip): freeStoragePerc})
                         if status == "ON":
-                            managerRunningStatusDict.update({node.ip: "ON"})
+                            managerRunningStatusDict.update({os.getenv(node.ip): "ON"})
                             managerCount = managerCount + 1
                         else:
-                            managerRunningStatusDict.update({node.ip: "OFF"})
+                            managerRunningStatusDict.update({os.getenv(node.ip): "OFF"})
 
                     # print("freeStoragePerc: " + str(freeStoragePerc) + ", managerCount: " + str(managerCount))
                     verboseHandle.printConsoleWarning("***Summary***")

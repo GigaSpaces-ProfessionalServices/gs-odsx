@@ -56,9 +56,9 @@ def getManagerServerHostList():
     for node in nodeList:
         #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes+','+node.ip
+            nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getSpaceServerHostList():
@@ -67,9 +67,9 @@ def getSpaceServerHostList():
     for node in nodeList:
         #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes+','+node.ip
+            nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def getOptions():
@@ -99,11 +99,11 @@ def cleanUpManagerServers():
             user = 'root'
             for node in managerNodes:
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                     #if(output>0):
                     #    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                     #if (output == 0):
-                    verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(node.ip))
+                    verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(os.getenv(node.ip)))
                     #else:
                     #    verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
     else:
@@ -123,11 +123,11 @@ def cleanUpSpaceServers():
             user = 'root'
             for node in spaceNodes:
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(node.ip,user,cmd)
+                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip),user,cmd)
                     #if(output>0):
                     #    output = executeRemoteCommandAndGetOutputPython36(node.ip,user,cmd)
                     #if (output == 0):
-                    verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(node.ip))
+                    verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(os.getenv(node.ip)))
                     #else:
                     #    verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
     else:

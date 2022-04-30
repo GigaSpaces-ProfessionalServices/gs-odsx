@@ -50,15 +50,15 @@ def proceedForSpecificNBServer(nodes,inputServer,ips):
     if inputServer == 1:
         for node in nodes:
             if (str(node.role).__contains__("applicative")):
-                ips.append(node.ip)
+                ips.append(os.getenv(node.ip))
     if inputServer == 2:
         for node in nodes:
             if (str(node.role).__contains__("agent")):
-                ips.append(node.ip)
+                ips.append(os.getenv(node.ip))
     if inputServer == 3:
         for node in nodes:
             if (str(node.role).__contains__("management")):
-                ips.append(node.ip)
+                ips.append(os.getenv(node.ip))
     return ips
 
 def getServerIps(optionSelected):
@@ -67,24 +67,24 @@ def getServerIps(optionSelected):
     if optionSelected == 1 or optionSelected == 2:
         nodes = config_get_manager_node()
         for node in nodes:
-            ips.append(node.ip)
+            ips.append(os.getenv(node.ip))
     if optionSelected == 1 or optionSelected == 3:
         nodes = config_get_space_node()
         for node in nodes:
-                ips.append(node.ip)
+                ips.append(os.getenv(node.ip))
     if optionSelected == 1 or optionSelected == 4:
         inputServer = str(input("[1] For applicative \n[2] For agent \n[3] For management \n[Enter] For all : "))
         logger.info("inputServer :"+str(inputServer))
         nodes = config_get_nb_list()
         if inputServer == "":
             for node in nodes:
-                ips.append(node.ip)
+                ips.append(os.getenv(node.ip))
         else:
             ips = proceedForSpecificNBServer(nodes,int(inputServer),ips)
     if optionSelected == 1 or optionSelected == 5:
         nodes = config_get_dataIntegration_nodes()
         for node in nodes:
-            ips.append(node.ip)
+            ips.append(os.getenv(node.ip))
     if optionSelected == 6:
         enteredIp = input("Enter host to copy : ")
         if enteredIp == "":
