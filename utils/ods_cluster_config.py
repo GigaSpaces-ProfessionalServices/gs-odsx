@@ -1275,11 +1275,13 @@ def discoverHostConfig():
                 os.environ[host] = str(v)
                 type=''
                 if(dataIntegrationHostCount==1):
-                    type='Master'
+                    type='kafka Broker 1a'
                 if(dataIntegrationHostCount==2):
-                    type='Standby'
+                    type='kafka Broker 1b'
                 if(dataIntegrationHostCount==3):
-                    type='Witness'
+                    type='kafka Broker 2'
+                if(dataIntegrationHostCount==4):
+                    type='Zookeeper Witness'
                 config_add_dataIntegration_node(host, host, 'dataIntegration', type, filePath='config/cluster.config')
                 dataIntegrationHostCount+=1
 
