@@ -82,7 +82,7 @@ def listNB():
     headers = [Fore.YELLOW+"IP"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
-               Fore.YELLOW+"Install"+Fore.RESET,
+               Fore.YELLOW+"Installed"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET,
                Fore.YELLOW+"Version"+Fore.RESET]
 
