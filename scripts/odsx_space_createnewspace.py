@@ -128,8 +128,8 @@ def displaySpaceHostWithNumber(managerHost, spaceNodes):
         space_dict_obj = host_dictionary_obj()
         logger.info("space_dict_obj : "+str(space_dict_obj))
         for node in spaceNodes:
-            if(gs_host_details_obj.__contains__(str(node.name)) or (str(node.name) in gs_host_details_obj.values())):
-                space_dict_obj.add(str(counter+1),node.name)
+            if(gs_host_details_obj.__contains__(str(os.getenv(node.name))) or (str(os.getenv(node.name)) in gs_host_details_obj.values())):
+                space_dict_obj.add(str(counter+1),os.getenv(node.name))
                 counter=counter+1
         logger.info("space_dict_obj : "+str(space_dict_obj))
         verboseHandle.printConsoleWarning("Space hosts lists")
@@ -363,9 +363,9 @@ def validateResponseGetDescription(responseCode):
 
 def getManagerHost(managerNodes):
     for node in managerNodes:
-        status = getSpaceServerStatus(node.ip)
+        status = getSpaceServerStatus(os.getenv(node.ip))
     if(status=="ON"):
-        managerHost = node.ip
+        managerHost = os.getenv(node.ip)
     return managerHost
 
 if __name__ == '__main__':

@@ -81,9 +81,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
         if(status=="ON"):
-            managerHost = node.ip
+            managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -510,7 +510,7 @@ def getSpaceNodeIps():
     ips = []
     spaceNodes = config_get_space_hosts()
     for node in spaceNodes:
-        ips.append(node.ip)
+        ips.append(os.getenv(node.ip))
     logger.info("ips : "+str(ips))
     return ips
 

@@ -56,9 +56,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -318,7 +318,7 @@ def proceedForCount(zoneToDeleteGSC):
     spaceNodes = config_get_space_hosts()
     for node in spaceNodes:
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(node.ip, 'root', cmd)
+            output = executeRemoteCommandAndGetOutput(os.getenv(node.ip), 'root', cmd)
             print(output)
             out = str(output).split("\n")
             for var in out:
