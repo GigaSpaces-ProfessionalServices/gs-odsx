@@ -122,7 +122,7 @@ def listSpaceServer():
         headers = [Fore.YELLOW+"IP"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
-                   Fore.YELLOW+"Install"+Fore.RESET,
+                   Fore.YELLOW+"Installed"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET,
                    Fore.YELLOW+"Version"+Fore.RESET
                    ]
@@ -161,8 +161,8 @@ def listSpaceServer():
                 status = getStatusOfSpaceHost(str(host))
                 logger.info("status : "+str(status))
                 logger.info("Host:"+str(host))
-                #gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
-                gsc = host_gsc_dict_obj.get(str(host))
+                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+                #gsc = host_gsc_dict_obj.get(str(host))
                 logger.info("GSC : "+str(gsc))
             else:
                 status="NOT REACHABLE"

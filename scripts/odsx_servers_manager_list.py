@@ -96,7 +96,7 @@ def listFileFromDirectory():
             headers = [Fore.YELLOW+"Manager Name"+Fore.RESET,
                        Fore.YELLOW+"IP"+Fore.RESET,
                        #Fore.YELLOW+"Role"+Fore.RESET,
-                       Fore.YELLOW+"Install"+Fore.RESET,
+                       Fore.YELLOW+"Installed"+Fore.RESET,
                        Fore.YELLOW+"Status"+Fore.RESET,
                        Fore.YELLOW+"Version"+Fore.RESET]
             data=[]

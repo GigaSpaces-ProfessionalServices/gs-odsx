@@ -13,6 +13,7 @@ from scripts.spinner import Spinner
 from scripts.odsx_servers_northbound_list import isInstalledAndGetVersion
 from utils.ods_list import isInstalledAndGetVersionGrafana
 from utils.ods_list import isInstalledAndGetVersionInflux
+from scripts.odsx_servers_di_list import isInstalledNot
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -131,7 +132,7 @@ def listAllServers():
     headers = [Fore.YELLOW+"Sr No"+Fore.RESET,
                Fore.YELLOW+"Type of host"+Fore.RESET,
                Fore.YELLOW+"IP"+Fore.RESET,
-               Fore.YELLOW+"Install"+Fore.RESET,
+               Fore.YELLOW+"Installed"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET]
     data=[]
     managerNodes = config_get_manager_node()
@@ -244,11 +245,11 @@ def listAllServers():
         count=count+1
         host_dict_obj.add(str(counter),str(node.ip))
         output = getConsolidatedStatus(node)
-
+        installStatus = isInstalledNot(os.getenv(node.ip),str(node.type))
         dataArray=[Fore.GREEN+str(count)+Fore.RESET,
                    Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
                    Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                   Fore.GREEN+"N/A",
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                    Fore.GREEN+status+Fore.RESET if(output==0) else Fore.RED+status+Fore.RESET]
 
         data.append(dataArray)
