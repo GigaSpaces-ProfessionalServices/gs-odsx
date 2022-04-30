@@ -53,9 +53,9 @@ def getDIServerHostList():
     for node in nodeList:
         #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes+','+node.ip
+            nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
 def startKafkaService(args):
@@ -71,9 +71,9 @@ def startKafkaService(args):
                 logger.info("Getting status.. :"+str(cmd))
                 user = 'root'
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                     if (output == 0):
-                        verboseHandle.printConsoleInfo("Service kafka stopped successfully on node "+str(node.ip))
+                        verboseHandle.printConsoleInfo("Service kafka stopped successfully on node "+str(os.getenv(node.ip)))
                     else:
                         verboseHandle.printConsoleError("Service kafka failed to stop.")
         for node in config_get_dataIntegration_nodes():
@@ -82,9 +82,9 @@ def startKafkaService(args):
                 logger.info("Getting status.. :"+str(cmd))
                 user = 'root'
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                     if (output == 0):
-                        verboseHandle.printConsoleInfo("Service zookeeper stopped successfully on node "+str(node.ip))
+                        verboseHandle.printConsoleInfo("Service zookeeper stopped successfully on node "+str(os.getenv(node.ip)))
                     else:
                         verboseHandle.printConsoleError("Service zookeeper failed to stop.")
         #for node in config_get_dataIntegration_nodes():
@@ -103,9 +103,9 @@ def startKafkaService(args):
             logger.info("Getting status.. telegraf :"+str(cmd))
             user = 'root'
             with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                 if (output == 0):
-                    verboseHandle.printConsoleInfo("Service telegraf stopped successfully on "+str(node.ip))
+                    verboseHandle.printConsoleInfo("Service telegraf stopped successfully on "+str(os.getenv(node.ip)))
                 else:
                     verboseHandle.printConsoleError("Service telegraf failed to stop")
     except Exception as e:

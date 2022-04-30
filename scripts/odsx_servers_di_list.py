@@ -7,7 +7,8 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from colorama import Fore
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutputValuePython36
+
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -57,10 +58,10 @@ def myCheckArg(args=None):
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
 def getKafkaStatus(node):
-    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
     cmdList = ["systemctl status odsxkafka"]
     for cmd in cmdList:
-        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
+        logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         logger.info("Getting status.. :"+str(cmd))
         user = 'root'
         if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
@@ -70,18 +71,18 @@ def getKafkaStatus(node):
             output=0
             return output
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
             if(output!=0):
                 #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+                logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
             return output
 
 def getZookeeperStatus(node):
-    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
     cmdList = ["systemctl status odsxzookeeper"]
     for cmd in cmdList:
-        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
+        logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         logger.info("Getting status.. :"+str(cmd))
         user = 'root'
         if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
@@ -91,20 +92,20 @@ def getZookeeperStatus(node):
             output=0
             return output
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
             if(output!=0):
                 #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+                logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
             return output
 
 
 def getConsolidatedStatus(node):
     output=''
-    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
     cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
     for cmd in cmdList:
-        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
+        logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         if(str(node.type)=='kafka Broker 1b' and cmd=='systemctl status odsxzookeeper'):
             output=0
         elif(str(node.type)=='Zookeeper Witness' and cmd=='systemctl status odsxkafka'):
@@ -113,11 +114,11 @@ def getConsolidatedStatus(node):
             logger.info("Getting status.. :"+str(cmd))
             user = 'root'
             with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                 logger.info("output1 : "+str(output))
                 if(output!=0):
                     #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                    logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+                    logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
                     return output
     return output
 
@@ -135,6 +136,36 @@ def roleOfCurrentNode(ip):
     else:
         return "None"
 
+def isInstalledNot(host,role):
+    logger.info("isInstalledNot"+str(host)+" : "+str(role))
+    isInstalled = "Yes"
+    if role != "kafka Broker 1b":
+        commandToExecute='ls /etc/systemd/system/odsxzookeeper.service'
+        logger.info("commandToExecute :"+str(commandToExecute))
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+        outputShFile=str(outputShFile).replace('\n','')
+        logger.info("outputShFile :"+str(outputShFile))
+        if len(str(outputShFile))==0:
+            return "No"
+    if role != "Zookeeper Witness":
+        commandToExecute='ls /etc/systemd/system/odsxkafka.service'
+        logger.info("commandToExecute :"+str(commandToExecute))
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+        outputShFile=str(outputShFile).replace('\n','')
+        logger.info("outputShFile :"+str(outputShFile))
+        if len(str(outputShFile))==0:
+            return "No"
+
+    commandToExecute='ls /usr/lib/systemd/system/telegraf.service'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    if len(str(outputShFile))==0:
+        return "No"
+
+    return isInstalled
+
 def listDIServers():
     logger.info("listDIServers()")
     host_dict_obj = obj_type_dictionary()
@@ -143,6 +174,7 @@ def listDIServers():
                Fore.YELLOW+"Name"+Fore.RESET,
                Fore.YELLOW+"Type"+Fore.RESET,
                Fore.YELLOW+"Role"+Fore.RESET,
+               Fore.YELLOW+"Installed"+Fore.RESET,
                Fore.YELLOW+"Status"+Fore.RESET,
                Fore.YELLOW+"Kafka Status"+Fore.RESET,
                Fore.YELLOW+"Zookeeper Status"+Fore.RESET,
@@ -150,11 +182,13 @@ def listDIServers():
     data=[]
     counter=1
     for node in dIServers:
-        host_dict_obj.add(str(counter),str(node.ip))
+        host_dict_obj.add(str(counter),str(os.getenv(node.ip)))
         output = getConsolidatedStatus(node)
         kafkaOutput = getKafkaStatus(node)
         zkOutput = getZookeeperStatus(node)
-        role = roleOfCurrentNode(node.ip)
+        role = roleOfCurrentNode(os.getenv(node.ip))
+        installStatus = isInstalledNot(os.getenv(node.ip),str(node.type))
+        logger.info("Install status : "+str(installStatus)+" : "+str(os.getenv(node.ip))+" : "+str(node.type))
         #print(node.ip)
         #print(kafkaOutput)
         #print(zkOutput)
@@ -162,45 +196,50 @@ def listDIServers():
         #print("======")
         if(kafkaOutput==0 and zkOutput==0 and output==0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+os.getenv(node.name)+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                        Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         elif(kafkaOutput==0 and zkOutput==0 and output!=0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+os.getenv(node.name)+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,
                        Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         elif(kafkaOutput!=0 and zkOutput==0 and output!=0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+os.getenv(node.name)+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,
                        Fore.GREEN+"OK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         elif(kafkaOutput==0 and zkOutput!=0 and output!=0):
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+os.getenv(node.name)+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,
                        Fore.GREEN+"OK"+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,
                        Fore.GREEN+str(role)+Fore.RESET]
         else:
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                       Fore.GREEN+node.name+Fore.RESET,
+                       Fore.GREEN+os.getenv(node.name)+Fore.RESET,
                        Fore.GREEN+node.type+Fore.RESET,
                        Fore.GREEN+node.role+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,
                        Fore.RED+"NOK"+Fore.RESET,

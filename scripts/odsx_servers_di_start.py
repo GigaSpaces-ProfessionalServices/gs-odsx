@@ -52,9 +52,9 @@ def getDIServerHostList():
     for node in nodeList:
         #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes+','+node.ip
+            nodes = nodes+','+str(os.getenv(node.ip))
     return nodes
 
 def startKafkaService(args):
@@ -70,22 +70,22 @@ def startKafkaService(args):
                 logger.info("Getting status.. odsxzookeeper:"+str(cmd))
                 user = 'root'
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                     if (output == 0):
-                        verboseHandle.printConsoleInfo("Service zookeeper started successfully on "+str(node.ip))
+                        verboseHandle.printConsoleInfo("Service zookeeper started successfully on "+str(os.getenv(node.ip)))
                     else:
-                        verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(node.ip))
+                        verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(os.getenv(node.ip)))
         for node in config_get_dataIntegration_nodes():
             if node.type != "Zookeeper Witness":
                 cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service"
                 logger.info("Getting status.. odsxkafka :"+str(cmd))
                 user = 'root'
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                     if (output == 0):
-                        verboseHandle.printConsoleInfo("Service kafka started successfully on "+str(node.ip))
+                        verboseHandle.printConsoleInfo("Service kafka started successfully on "+str(os.getenv(node.ip)))
                     else:
-                        verboseHandle.printConsoleError("Service kafka failed to start on "+str(node.ip))
+                        verboseHandle.printConsoleError("Service kafka failed to start on "+str(os.getenv(node.ip)))
         #odsxcr8.service
        # for node in config_get_dataIntegration_nodes():
        #     cmd = "sleep 5; systemctl start odsxcr8.service"
@@ -104,11 +104,11 @@ def startKafkaService(args):
             logger.info("Getting status.. telegraf :"+str(cmd))
             user = 'root'
             with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                 if (output == 0):
-                    verboseHandle.printConsoleInfo("Service telegraf started successfully on "+str(node.ip))
+                    verboseHandle.printConsoleInfo("Service telegraf started successfully on "+str(os.getenv(node.ip)))
                 else:
-                    verboseHandle.printConsoleError("Service telegraf failed to start on "+str(node.ip))
+                    verboseHandle.printConsoleError("Service telegraf failed to start on "+str(os.getenv(node.ip)))
     except Exception as e:
         handleException(e)
 
