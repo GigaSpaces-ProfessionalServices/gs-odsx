@@ -25,6 +25,9 @@ start_data_validation_file="start_data_validation.sh"
 stop_data_validation_file="stop_data_validation.sh"
 data_validation_service_file="odsxdatavalidation.service"
 
+#Replace keytab path according to agent machine
+sed -i '/keyTab/c\keyTab=\"/home/gsods/UTKA02E.keytab\"' $home_dir/SQLJDBCDriver.conf
+
 # start data validation service
 source setenv.sh
 cmd="java -Djava.security.auth.login.config=$home_dir/SQLJDBCDriver.conf -jar $home_dir/install/data-validation/data-validator-agent-0.0.1-SNAPSHOT.jar"

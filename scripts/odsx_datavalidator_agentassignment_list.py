@@ -95,6 +95,7 @@ def printAssignmentTable(dataValidatorServiceHost):
                    Fore.YELLOW + "Datasource Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
                    Fore.YELLOW + "Datasource Type" + Fore.RESET,
+                   Fore.YELLOW + "Datasource Host IP" + Fore.RESET,
                    ]
         data = []
         agentId =''
@@ -112,7 +113,8 @@ def printAssignmentTable(dataValidatorServiceHost):
                              Fore.GREEN + agentHostIp + Fore.RESET,
                              Fore.GREEN + str(agentDSrow["dataSourceId"]) + Fore.RESET,
                              Fore.GREEN + agentDSrow["dataSourceName"] + Fore.RESET,
-                             Fore.GREEN + agentDSrow["dataSourceType"] + Fore.RESET
+                             Fore.GREEN + agentDSrow["dataSourceType"] + Fore.RESET,
+                             Fore.GREEN + agentDSrow["dataSourceHostIp"] + Fore.RESET
                              ]
                 data.append(dataArray)
             printTabular(None, headers, data)

@@ -79,9 +79,9 @@ def doValidate():
         else:
          datasourceId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
 '''
-    agentId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
+    agentId = str(input(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
     while (len(str(agentId)) == 0):
-        agentId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
+        agentId = str(input(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
 
 
     response = requests.delete(

@@ -165,8 +165,8 @@ def printmeasurementtable(dataValidatorServiceHost):
         # print(isinstance(response, list))
 
         headers = [Fore.YELLOW + "Id" + Fore.RESET,
-                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
                    Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
+                   Fore.YELLOW + "Agent" + Fore.RESET,
                    Fore.YELLOW + "Measurement Query" + Fore.RESET
                    ]
         data = []
@@ -181,9 +181,9 @@ def printmeasurementtable(dataValidatorServiceHost):
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
                              Fore.GREEN +"( Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
                                  "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
+                             Fore.GREEN +  measurement["dataSource"]["agent"]["hostIp"] + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)

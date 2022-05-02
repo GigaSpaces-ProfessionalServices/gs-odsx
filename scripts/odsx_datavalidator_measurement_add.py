@@ -82,9 +82,12 @@ def doValidate():
             
         if (len(str(test)) == 0):
             test = 'count'
-            
-        
+
+
+        verboseHandle.printConsoleWarning('');
+        verboseHandle.printConsoleWarning('Available DataSource which are assigned to Agent:');
         datasourceRowCount = printDatasourcetable(dataValidatorServiceHost)
+
         if datasourceRowCount <= 0:
           verboseHandle.printConsoleWarning("No Datasource available. Please add atleast one datasources")
           return
@@ -155,8 +158,8 @@ def printmeasurementtable(dataValidatorServiceHost):
         # print(isinstance(response, list))
 
         headers = [Fore.YELLOW + "Id" + Fore.RESET,
-                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
                    Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
+                   Fore.YELLOW + "Agent" + Fore.RESET,
                    Fore.YELLOW + "Measurement Query" + Fore.RESET
                    ]
         data = []
@@ -169,9 +172,9 @@ def printmeasurementtable(dataValidatorServiceHost):
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
                              Fore.GREEN +"(Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
                                  "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
+                             Fore.GREEN +  measurement["dataSource"]["agent"]["hostIp"] + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)
@@ -198,16 +201,22 @@ def printDatasourcetable(dataValidatorServiceHost):
 
         headers = [Fore.YELLOW + " Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
-                   Fore.YELLOW + "Type" + Fore.RESET
+                   Fore.YELLOW + "Type" + Fore.RESET,
+                   Fore.YELLOW + "Datasource Host IP" + Fore.RESET,
+                   Fore.YELLOW + "Agent Host IP" + Fore.RESET
                    ]
         data = []
         if response:
             for datasource in response:
                 #print(datasource)
+                if datasource["agentHostIp"] == "-1":
+                    continue
                 dataSourceIds.append(str(datasource["id"]))              
                 dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
-                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET
+                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
+                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET,
+                             Fore.GREEN + datasource["agentHostIp"] + Fore.RESET
                              ]
                 data.append(dataArray)
 
