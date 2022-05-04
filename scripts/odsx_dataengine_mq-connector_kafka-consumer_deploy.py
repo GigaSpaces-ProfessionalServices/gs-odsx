@@ -67,9 +67,9 @@ def getDIServerHostList():
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
         if (len(nodes) == 0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 def getBootstrapAddress(hostConfig):
@@ -86,9 +86,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -134,10 +134,10 @@ def listSpacesOnServer(managerNodes):
         logger.info("listSpacesOnServer : managerNodes :"+str(managerNodes))
         managerHost=''
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
-            logger.info("Ip :"+str(node.ip)+"Status : "+str(status))
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            logger.info("Ip :"+str(os.getenv(node.ip))+"Status : "+str(status))
             if(status=="ON"):
-                managerHost = node.ip;
+                managerHost = os.getenv(node.ip);
         logger.info("managerHost :"+managerHost)
         response = requests.get("http://"+managerHost+":8090/v2/spaces")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code))
@@ -168,9 +168,9 @@ def get_gs_host_details(managerNodes):
     try:
         logger.info("get_gs_host_details() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHostConfig = node.ip;
+                managerHostConfig = os.getenv(node.ip);
         logger.info("managerHostConfig : "+str(managerHostConfig))
         response = requests.get('http://'+managerHostConfig+':8090/v2/hosts', headers={'Accept': 'application/json'})
         logger.info("response status of host :"+str(managerHostConfig)+" status :"+str(response.status_code))
@@ -192,8 +192,8 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         space_dict_obj = host_dictionary_obj()
         logger.info("space_dict_obj : "+str(space_dict_obj))
         for node in spaceNodes:
-            if(gs_host_details_obj.__contains__(str(node.name)) or (str(node.name) in gs_host_details_obj.values())):
-                space_dict_obj.add(str(counter+1),node.name)
+            if(gs_host_details_obj.__contains__(str(os.getenv(node.name))) or (str(os.getenv(node.name)) in gs_host_details_obj.values())):
+                space_dict_obj.add(str(counter+1),os.getenv(node.name))
                 counter=counter+1
         logger.info("space_dict_obj : "+str(space_dict_obj))
         #verboseHandle.printConsoleWarning("Space hosts lists")
@@ -215,9 +215,9 @@ def proceedToCreateGSC():
     #for host in managerNodes:
     #    scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
     for host in spaceNodes:
-        scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
-        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)+" | grep -v JAVA_HOME"
-        verboseHandle.printConsoleInfo("Creating container : count="+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" host="+str(host.ip))
+        scp_upload(str(os.getenv(host.ip)),'root',dPipelineLocationSource,dPipelineLocationTarget)
+        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
+        verboseHandle.printConsoleInfo("Creating container : count="+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" host="+str(os.getenv(host.ip)))
         logger.info(commandToExecute)
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)

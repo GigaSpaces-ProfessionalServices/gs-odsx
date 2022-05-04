@@ -58,9 +58,9 @@ def getDIServerHostList():
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
         if (len(nodes) == 0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 
@@ -190,7 +190,7 @@ def getInfluxdbHost():
     host=''
     nodeList = config_get_influxdb_node()
     for host in nodeList:
-        host = host.ip
+        host = os.getenv(host.ip)
     return host
 
 def proceedForInstallation(hostConfig):

@@ -51,9 +51,9 @@ def getDEServerHostList():
         # if(str(node.role).casefold() == 'server'):
         if node.role == "mq-connector":
             if (len(nodes) == 0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes + ',' + node.ip
+                nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 def removeInputUserAndHost():
@@ -99,18 +99,18 @@ class obj_type_dictionary(dict):
         self[key] = value
 
 def getAdabusServiceStatus(node):
-    logger.info("getConsolidatedStatus() : " + str(node.ip))
+    logger.info("getConsolidatedStatus() : " + str(os.getenv(node.ip)))
     cmdList = ["systemctl status odsxadabas"]
     for cmd in cmdList:
-        logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
+        logger.info("cmd :" + str(cmd) + " host :" + str(os.getenv(node.ip)))
         logger.info("Getting status.. :" + str(cmd))
         user = 'root'
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : " + str(output))
             if (output != 0):
                 # verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :" + str(cmd) + " not started." + str(node.ip))
+                logger.info(" Service :" + str(cmd) + " not started." + str(os.getenv(node.ip)))
             return output
 
 def listDIServers():
@@ -129,13 +129,13 @@ def listDIServers():
             status = getAdabusServiceStatus(node)
             if (status == 0):
                 dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
+                             Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                             Fore.GREEN + os.getenv(node.name) + Fore.RESET,
                              Fore.GREEN + "ON" + Fore.RESET]
             else:
                 dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
+                             Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                             Fore.GREEN + os.getenv(node.name) + Fore.RESET,
                              Fore.RED + "OFF" + Fore.RESET]
             data.append(dataArray)
             counter = counter + 1
