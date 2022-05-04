@@ -54,7 +54,7 @@ def validate(args):
             scriptUser = 'dbsh'
             cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/updateCMDB.sh /home/dbsh/cr8/latest_cr8/etc/" + configName + ".json'"
             with Spinner():
-                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+                output = executeRemoteCommandAndGetOutput(os.getenv(deNodes[0].ip), user, cmd)
                 print(str(output))
             # jsonout = json.loads(output)
             # logger.info("output" + str(jsonout))

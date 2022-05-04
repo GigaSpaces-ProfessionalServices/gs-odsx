@@ -52,7 +52,7 @@ def stopStream(args):
             user = 'root'
             scriptUser = 'dbsh'
             cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl stop " + configName + "'"
-            output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+            output = executeRemoteCommandAndGetOutput(os.getenv(deNodes[0].ip), user, cmd)
             print(str(output))
             # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl stop " + configName
             # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)

@@ -68,7 +68,7 @@ def getDIServerHostList():
         if (len(nodes) == 0):
             nodes = node.ip
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 
@@ -87,9 +87,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :" + str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if (status == "ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -137,10 +137,10 @@ def listSpacesOnServer(managerNodes):
         logger.info("listSpacesOnServer : managerNodes :" + str(managerNodes))
         managerHost = ''
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
-            logger.info("Ip :" + str(node.ip) + "Status : " + str(status))
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            logger.info("Ip :" + str(os.getenv(node.ip)) + "Status : " + str(status))
             if (status == "ON"):
-                managerHost = node.ip;
+                managerHost = os.getenv(node.ip);
         logger.info("managerHost :" + managerHost)
         response = requests.get("http://" + managerHost + ":8090/v2/spaces")
         logger.info("response status of host :" + str(managerHost) + " status :" + str(response.status_code))
@@ -191,9 +191,9 @@ def get_gs_host_details(managerNodes):
     try:
         logger.info("get_gs_host_details() : managerNodes :" + str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if (status == "ON"):
-                managerHostConfig = node.ip;
+                managerHostConfig = os.getenv(node.ip);
         logger.info("managerHostConfig : " + str(managerHostConfig))
         response = requests.get('http://' + managerHostConfig + ':8090/v2/hosts',
                                 headers={'Accept': 'application/json'})
@@ -218,8 +218,8 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         space_dict_obj = host_dictionary_obj()
         logger.info("space_dict_obj : " + str(space_dict_obj))
         for node in spaceNodes:
-            if (gs_host_details_obj.__contains__(str(node.name)) or (str(node.name) in gs_host_details_obj.values())):
-                space_dict_obj.add(str(counter + 1), node.name)
+            if (gs_host_details_obj.__contains__(str(os.getenv(node.name))) or (str(os.getenv(node.name)) in gs_host_details_obj.values())):
+                space_dict_obj.add(str(counter + 1), os.getenv(node.name))
                 counter = counter + 1
         logger.info("space_dict_obj : " + str(space_dict_obj))
         # verboseHandle.printConsoleWarning("Space hosts lists")

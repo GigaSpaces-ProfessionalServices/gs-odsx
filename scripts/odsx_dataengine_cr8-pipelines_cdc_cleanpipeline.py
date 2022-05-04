@@ -54,7 +54,7 @@ def validate(args):
             configName = pipelineDict.get(selectedOption)
             with Spinner():
                 response = requests.delete(
-                    'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/cleanConfigurationEnv/' + configName)
+                    'http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/CM/configurations/cleanConfigurationEnv/' + configName)
                 logger.info(str(response.status_code))
                 logger.info(str(response.text))
             if response.status_code == 200:

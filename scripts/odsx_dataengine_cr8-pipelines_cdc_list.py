@@ -60,9 +60,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :" + str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if (status == "ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -85,7 +85,7 @@ def display_stream_list(args):
     pipelineDict = {}
     global streams
     try:
-        response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getStatus',
+        response = requests.get('http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/CM/configurations/getStatus',
                                 headers={'Accept': 'application/json'})
         streams = json.loads(response.text)
     except Exception as e:
@@ -106,13 +106,13 @@ def display_stream_list(args):
             stream["configurationName"]) + "'"
 
         topicCountCmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$KAFKAPATH/bin/kafka-run-class.sh kafka.tools.GetOffsetShell --broker-list " + \
-                        diNodes[0].ip + ":9092 --topic " + str(
+                        os.getenv(diNodes[0].ip) + ":9092 --topic " + str(
             stream["configurationName"]) + " | awk -F  \":\" '{sum += $3} END {print sum}'"
         with Spinner():
-            streamStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
-            fullSyncStatus = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, fullSyncCmd)
+            streamStatus = executeRemoteCommandAndGetOutputValuePython36(os.getenv(deNodes[0].ip), user, cmd)
+            fullSyncStatus = executeRemoteCommandAndGetOutputValuePython36(os.getenv(deNodes[0].ip), user, fullSyncCmd)
             print(topicCountCmd)
-            topicCountResponse = executeRemoteCommandAndGetOutputValuePython36(diNodes[0].ip, user, topicCountCmd)
+            topicCountResponse = executeRemoteCommandAndGetOutputValuePython36(os.getenv(diNodes[0].ip), user, topicCountCmd)
             print(topicCountResponse)
 
             managerNode = getManagerHost(managerNodes)

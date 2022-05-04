@@ -56,14 +56,14 @@ def deletePipeline(args):
             getClustercmd = "sudo -u " + scriptUser + " -H sh -c 'cat /home/dbsh/cr8/latest_cr8/etc/CR8Cluster.cfg"
 
             with Spinner():
-                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, getClustercmd)
+                output = executeRemoteCommandAndGetOutput(os.getenv(deNodes[0].ip), user, getClustercmd)
                 clusterName = ""
                 for str in output.split("\n"):
                     if str.startswith("cr8ClusterName"):
                         clusterName = str.split("=")[1]
                         print("clusterName :" + clusterName)
                 cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_utils.sh  -deleteZkNode /dbsh/cr8/" + clusterName + "/configurations/" + configName
-                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+                output = executeRemoteCommandAndGetOutput(os.getenv(deNodes[0].ip), user, cmd)
                 print(str(output))
             # jsonout = json.loads(output)
             # logger.info("output" + str(jsonout))

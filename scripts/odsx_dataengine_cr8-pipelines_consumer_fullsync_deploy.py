@@ -66,9 +66,9 @@ def getDIServerHostList():
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
         if (len(nodes) == 0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 
@@ -87,9 +87,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :" + str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if (status == "ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -137,10 +137,10 @@ def listSpacesOnServer(managerNodes):
         logger.info("listSpacesOnServer : managerNodes :" + str(managerNodes))
         managerHost = ''
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
-            logger.info("Ip :" + str(node.ip) + "Status : " + str(status))
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            logger.info("Ip :" + str(os.getenv(node.ip)) + "Status : " + str(status))
             if (status == "ON"):
-                managerHost = node.ip;
+                managerHost = os.getenv(node.ip);
         logger.info("managerHost :" + managerHost)
         response = requests.get("http://" + managerHost + ":8090/v2/spaces")
         logger.info("response status of host :" + str(managerHost) + " status :" + str(response.status_code))
@@ -172,9 +172,9 @@ def get_gs_host_details(managerNodes):
     try:
         logger.info("get_gs_host_details() : managerNodes :" + str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if (status == "ON"):
-                managerHostConfig = node.ip;
+                managerHostConfig = os.getenv(node.ip);
         logger.info("managerHostConfig : " + str(managerHostConfig))
         response = requests.get('http://' + managerHostConfig + ':8090/v2/hosts',
                                 headers={'Accept': 'application/json'})
@@ -227,7 +227,7 @@ def proceedToCreateGSC():
         # commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)
         commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count=" + str(
             numberOfGSC) + " --zone=" + str(zoneGSC) + " --memory=" + str(
-            memoryGSC) + " " + str(host.ip)
+            memoryGSC) + " " + str(os.getenv(host.ip))
         print(commandToExecute)
         logger.info(commandToExecute)
         with Spinner():
@@ -383,7 +383,7 @@ def getDataPURESTConsumerConfiguration():
 def getDEServerHost():
     nodeList = config_get_dataEngine_nodes()
     for node in nodeList:
-        return node.ip
+        return os.getenv(node.ip)
 
 
 def getDIServerHostList():
@@ -392,9 +392,9 @@ def getDIServerHostList():
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
         if (len(nodes) == 0):
-            nodes = node.ip + ":9092"
+            nodes = os.getenv(node.ip) + ":9092"
         else:
-            nodes = nodes + ',' + node.ip + ":9092"
+            nodes = nodes + ',' + os.getenv(node.ip) + ":9092"
     return nodes
 
 
