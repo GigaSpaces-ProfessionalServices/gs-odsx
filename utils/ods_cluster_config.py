@@ -44,12 +44,9 @@ class Clusters:
 
 
 class Cluster:
-    def __init__(self, name, configVersion, timestamp, airGap, resumeModeAll, servers):
+    def __init__(self, name, configVersion, servers):
         self.name = name
         self.configVersion = configVersion
-        self.timestamp = timestamp
-        self.airGap = airGap
-        self.resumeModeAll = resumeModeAll
         self.servers = servers
 
 
@@ -305,8 +302,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
 
     # print(config_data.cluster.timestamp)
     cluster = Cluster(config_data.cluster.name, config_data.cluster.configVersion,
-                      config_data.cluster.timestamp, config_data.cluster.airGap,
-                      config_data.cluster.resumeModeAll, allservers)
+                      allservers)
     config_data = Clusters(cluster)
     return config_data
 
@@ -1324,92 +1320,27 @@ def discoverHostConfig():
                 os.environ[host] = str(v)
                 config_add_nb_node(host,host,'agent server', "config/cluster.config")
                 nbHostCount+=1
-        '''
-        #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/host.config'
-        file = '/home/ec2-user/host.config'
-        config = configparser.RawConfigParser()
-        config.read(file)
-
-        if config.has_section('manager'):
-            manager_host_dict = dict(config.items('manager'))
-            managerHostCount=1
-            for host,v in manager_host_dict.items():
-                host = 'mgr'+str(managerHostCount)
+        if 'dataEngine' in content['servers']:
+            hostCount=0
+            deHostCount=1
+            for host,v in content['servers']['dataEngine'].items():
+                hostCount+=1
+            if hostCount==1:
+                host = 'dataEngine'+str(hostCount)
                 os.environ[host] = str(v)
-                config_add_manager_node(host, host, 'admin', filePath='config/cluster.config')
-                managerHostCount+=1
+                config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'SingleNode')
+            else:
+                for host,v in content['servers']['dataEngine'].items():
+                    host = 'dataEngine'+str(deHostCount)
+                    os.environ[host] = str(v)
+                    if deHostCount == 1:
+                        config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'Master')
+                    elif deHostCount == 2:
+                        config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'Standby')
+                    elif deHostCount == 3:
+                        config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'Witness')
+                    deHostCount+=1
 
-        if config.has_section('space'):
-            space_host_dict = dict(config.items('space'))
-            spaceHostCount=1
-            for host,v in space_host_dict.items():
-                host = 'space'+str(spaceHostCount)
-                os.environ[host] = str(v)
-                config_add_space_node(host, host, 'gsc', filePath='config/cluster.config')
-                spaceHostCount+=1
-
-        if config.has_section('dataIntegration'):
-            dataIntegration_host_dict = dict(config.items('dataIntegration'))
-            dataIntegrationHostCount=1
-            for host,v in dataIntegration_host_dict.items():
-                host = 'di'+str(dataIntegrationHostCount)
-                os.environ[host] = str(v)
-                type=''
-                if(dataIntegrationHostCount==1):
-                    type='Master'
-                if(dataIntegrationHostCount==2):
-                    type='Standby'
-                if(dataIntegrationHostCount==3):
-                    type='Witness'
-                config_add_dataIntegration_node(host, host, 'dataIntegration', type, filePath='config/cluster.config')
-                dataIntegrationHostCount+=1
-
-        if config.has_section('grafana'):
-            grafana_host_dict = dict(config.items('grafana'))
-            grafanHostCount=1
-            for host,v in grafana_host_dict.items():
-                host = 'grafana'+str(grafanHostCount)
-                os.environ[host] = str(v)
-                config_add_grafana_node(host, host, 'Grafana',  filePath='config/cluster.config')
-                grafanHostCount+=1
-
-        if config.has_section('influxdb'):
-            influxdb_host_dict = dict(config.items('influxdb'))
-            influxdbHostCount=1
-            for host,v in influxdb_host_dict.items():
-                host = 'influxdb'+str(influxdbHostCount)
-                os.environ[host] = str(v)
-                config_add_influxdb_node(host,host,'Influxdb')
-                influxdbHostCount+=1
-
-        if config.has_section('nb_applicative'):
-            nb_host_dict = dict(config.items('nb_applicative'))
-            nbHostCount=1
-            for host,v in nb_host_dict.items():
-                host = 'nb_app'+str(nbHostCount)
-                os.environ[host] = str(v)
-                config_add_nb_node(host,host,'applicative server', "config/cluster.config")
-                nbHostCount+=1
-
-        if config.has_section('space'):
-            nb_host_dict = dict(config.items('space'))
-            nbHostCount=1
-            for host,v in nb_host_dict.items():
-                host = 'nb_agent'+str(nbHostCount)
-                os.environ[host] = str(v)
-                config_add_nb_node(host,host,'agent server', "config/cluster.config")
-                nbHostCount+=1
-
-        if config.has_section('nb_management'):
-            influxdb_host_dict = dict(config.items('nb_management'))
-            nbHostCount=1
-            for host,v in influxdb_host_dict.items():
-                host = 'nb_mgt'+str(nbHostCount)
-                os.environ[host] = str(v)
-                config_add_nb_node(host,host,'management server', "config/cluster.config")
-                nbHostCount+=1
-        '''
-        #status = os.system('bash')
     except Exception as e:
         handleException(e)
 
