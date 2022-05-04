@@ -101,17 +101,27 @@ def getStatusOfNBHost(server):
     else:
         return "OFF"
 
-def getConsolidatedStatus(node):
+def getConsolidatedStatus(node,role):
     output=''
-    logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper"]
-    for cmd in cmdList:
-        logger.info("cmd :"+str(cmd))
-        logger.info("Getting status.. :"+str(cmd))
-        user = 'root'
-        with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+    user='root'
+    cmdList=[]
+    logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
+    cmdKafka1b = [ "systemctl status odsxkafka", "systemctl status telegraf"]
+    cmdZookeeperWitness2 = [  "systemctl status odsxzookeeper", "systemctl status telegraf"]
+    cmdList3 = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
+    if role.__contains__("kafka Broker 1b"):
+        cmdList = cmdKafka1b
+    elif role.__contains__("Zookeeper Witness"):
+        cmdList = cmdZookeeperWitness2
+    else :
+        cmdList = cmdList3
+    logger.info(str(os.getenv(node.ip)+" : "+str(role)+" : "+str(cmdList)))
+    #print(os.getenv(node.ip),role,cmdList)
+    with Spinner():
+        for cmd in cmdList:
+            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
+            #print(output)
             if(output!=0):
                 #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
                 logger.info(" Service :"+str(cmd)+" not started.")
@@ -244,7 +254,7 @@ def listAllServers():
     for node in dIServers:
         count=count+1
         host_dict_obj.add(str(counter),str(node.ip))
-        output = getConsolidatedStatus(node)
+        output = getConsolidatedStatus(node,str(node.type))
         installStatus = isInstalledNot(os.getenv(node.ip),str(node.type))
         dataArray=[Fore.GREEN+str(count)+Fore.RESET,
                    Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
