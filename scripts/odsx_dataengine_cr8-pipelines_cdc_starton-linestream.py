@@ -62,7 +62,7 @@ def display_stream_list1(args):
     pipelineDict = {}
     global streams
     try:
-        response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getStatus',
+        response = requests.get('http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/CM/configurations/getStatus',
                                 headers={'Accept': 'application/json'})
         streams = json.loads(response.text)
     except Exception as e:
@@ -75,13 +75,13 @@ def display_stream_list1(args):
         cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8_Stream_ctl.sh status " + str(
             stream["configurationName"]) + "'"
         with Spinner():
-            response = executeRemoteCommandAndGetOutputValuePython36(deNodes[0].ip, user, cmd)
+            response = executeRemoteCommandAndGetOutputValuePython36(os.getenv(deNodes[0].ip), user, cmd)
         streamSyncData = json.loads(str(response))
         # print(str(streamSyncData))
         dateTime = ""
         if streamSyncData["streamStatus"]["stateTimeStamp"] != "":
             epochTimeresponse = requests.get(
-                'http://' + deNodes[0].ip + ':2050/CR8/utils/getDateTimeFromEpoch/' + streamSyncData["streamStatus"][
+                'http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/utils/getDateTimeFromEpoch/' + streamSyncData["streamStatus"][
                     "stateTimeStamp"])
             dateTime = str(epochTimeresponse.text)
         counter = counter + 1
@@ -105,7 +105,7 @@ def startStream(args):
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)
             response = requests.get(
-                'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/start/' + configName)
+                'http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/CM/configurations/start/' + configName)
             logger.info(str(response.status_code))
             print(str(response.status_code))
             logger.info(str(response.text))

@@ -63,18 +63,25 @@ def getDEServerHostList():
     nodes = ""
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
-        if (len(nodes) == 0):
-            nodes = node.ip
+        if (len(str(nodeList)) == 0):
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 
 def getDEServerTypeInstall():
     logger.info("getDEServerTypeInstall()")
-    serverType = str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
-    while (len(serverType) == 0):
-        serverType = str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
+
+    serverType = "1" #str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
+    #while (len(serverType) == 0):
+    #    serverType = str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
+    nodeList = config_get_dataEngine_nodes()
+    nodes = 0
+    for node in nodeList:
+        nodes = nodes+1
+    if nodes > 1 :
+        serverType = "2"
     return serverType
 
 
@@ -83,13 +90,13 @@ def installSingle():
     try:
         global user
 
-        host = str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
-        while (len(str(host)) == 0):
-            host = str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
+        host = os.getenv("dataEngine1")#str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
+        #while (len(str(host)) == 0):
+        #    host = str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
         logger.info("Enter host to install cr8: " + str(host))
-        user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
-        if (len(str(user)) == 0):
-            user = "root"
+        #user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
+        #if (len(str(user)) == 0):
+        user = "root"
         logger.info(" user: " + str(user))
 
         confirmInstall = str(input(Fore.YELLOW + "Are you sure want to install DE servers (y/n) [y]: " + Fore.RESET))
@@ -111,21 +118,21 @@ def installCluster():
     global standByHost
     global witnessHost
 
-    masterHost = str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
-    while (len(masterHost) == 0):
-        masterHost = str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
+    masterHost = os.getenv("dataEngine1")#str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
+    #while (len(masterHost) == 0):
+    #    masterHost = str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
     logger.info("masterHost : " + str(masterHost))
-    standByHost = str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
-    while (len(standByHost) == 0):
-        standByHost = str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
+    standByHost = os.getenv("dataEngine2")#str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
+    #while (len(standByHost) == 0):
+    #    standByHost = str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
     logger.info("standByHost : " + str(standByHost))
-    witnessHost = str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
-    while (len(witnessHost) == 0):
-        witnessHost = str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
+    witnessHost = os.getenv("dataEngine3")#str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
+    #while (len(witnessHost) == 0):
+    #    witnessHost = str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
     logger.info("witnessHost :" + str(witnessHost))
-    user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
-    if (len(str(user)) == 0):
-        user = "root"
+    #user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
+    #if (len(str(user)) == 0):
+    user = "root"
     logger.info(" user: " + str(user))
 
     clusterHosts.append(masterHost)
@@ -211,7 +218,7 @@ def executeCommandForInstall(host, type, count):
             logger.info("outputShFile kafka : " + str(outputShFile))
             print("Checking for Type ::::" + str(type))
 
-            config_add_dataEngine_node(host, host, "cr8", "dataEngine", type)
+            #config_add_dataEngine_node(host, host, "cr8", "dataEngine", type)
             set_value_in_property_file('app.dataengine.hosts', host)
             verboseHandle.printConsoleInfo("Node has been added :" + str(host))
 
@@ -249,7 +256,7 @@ def validateRPM():
         if (len(str(installer)) == 0):
             verboseHandle.printConsoleInfo(
                 "Pre-requisite installer " + str(home) + "/install  " + str(name) + " not found")
-            return False
+            return True
     return True
 
 

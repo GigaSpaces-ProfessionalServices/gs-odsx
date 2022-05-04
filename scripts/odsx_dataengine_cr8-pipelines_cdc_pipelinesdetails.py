@@ -55,7 +55,7 @@ def show_details(args):
             print(configName)
             try:
                 response = requests.get(
-                    'http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getConfigurations/' + configName,
+                    'http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/CM/configurations/getConfigurations/' + configName,
                     headers={'Accept': 'application/json'})
                 streamConfig = json.loads(response.text)
             except Exception as e:

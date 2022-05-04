@@ -63,7 +63,7 @@ def display_stream_list1(args):
     pipelineDict = {}
     global streams
     try:
-        response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getStatus',
+        response = requests.get('http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/CM/configurations/getStatus',
                                 headers={'Accept': 'application/json'})
         streams = json.loads(response.text)
     except Exception as e:
@@ -71,7 +71,7 @@ def display_stream_list1(args):
     counter = 0
     for stream in streams:
         # print(stream)
-        response = requests.get('http://' + deNodes[0].ip + ':2050/CR8/CM/configurations/getFullSyncProgress/' + str(
+        response = requests.get('http://' + os.getenv(deNodes[0].ip) + ':2050/CR8/CM/configurations/getFullSyncProgress/' + str(
             stream["configurationName"]))
         streamSyncData = json.loads(response.text)
         print(str(streamSyncData))
@@ -100,7 +100,7 @@ def startStream(args):
             scriptUser = 'dbsh'
             cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl start " + configName + "'"
             with Spinner():
-                output = executeRemoteCommandAndGetOutput(deNodes[0].ip, user, cmd)
+                output = executeRemoteCommandAndGetOutput(os.getenv(deNodes[0].ip), user, cmd)
             # cmd = "/home/dbsh/cr8/latest_cr8/utils/cr8CR8Sync.ctl start " + configName
             # output = executeRemoteCommandAndGetOutputPython36(deNodes[0].ip, user, cmd)
             # verboseHandle.printConsoleInfo(str(output))
