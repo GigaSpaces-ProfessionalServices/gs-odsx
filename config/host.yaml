@@ -10,6 +10,7 @@ servers :
     host1 : 10.0.0.1
     host2 : 10.0.0.2
     host3 : 10.0.0.3
+    host4 : 10.0.0.4
   grafana :
     host1 : 10.0.0.137
   influxdb :
@@ -20,3 +21,7 @@ servers :
     host3 : 10.0.0.114
   nb_management :
     host1 : 10.0.0.119
+  dataEngine :
+    host1 : 10.0.0.1
+    host2 : 10.0.0.2
+    host3 : 10.0.0.3
