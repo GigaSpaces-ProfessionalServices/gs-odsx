@@ -2,7 +2,7 @@
 echo "Starting DI Installation."
 #echo "Extracting install.tar to "$targetDir
 #echo " installtelegrafFlag "$1
-
+mkdir -p /home/dbsh
 echo " kafkaBrokerHost1 "$2" kafkaBrokerHost2 "$3" kafkaBrokerHost3 "$4" witnessHost "$5" counter ID "$6" installtelegrafFlag "$1" baseFolderLocation "$7
 installtelegrafFlag=$1
 kafkaBrokerHost1=$2
