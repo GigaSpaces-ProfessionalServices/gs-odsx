@@ -22,7 +22,7 @@ home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
 echo "">>setenv.sh
 if [[ ${#javaInstalled} -eq 0 ]]; then
-  installation_path=$home_dir/install/java
+  installation_path=$home_dir/dbagigashare/current/JDK
   installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
   echo "Installation File :"$installation_file
   echo $installation_path"/"$installation_file
@@ -39,7 +39,7 @@ fi
 # Step for KAFKA Unzip and Set KAFKAPATH
 if [[ $id != 4 ]]; then
     echo "Install AirGapKafka"
-    installation_path=$home_dir/install/kafka
+    installation_path=$home_dir/dbagigashare/current/KAFKA
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.tgz" -printf "%f\n")
     echo "InstallationFile:"$installation_file
@@ -60,12 +60,12 @@ if [[ $id != 4 ]]; then
     echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
     echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
 
-    cp $home_dir"/install/jolokia/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
+    cp $home_dir"/dbagigashare/current/JOLOKIA/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
 fi
 
 #zookeeper setup
 if [[ $id != 2 ]]; then
-    installation_path=$home_dir/install/zookeeper
+    installation_path=$home_dir/dbagigashare/current/ZOOKEEPER
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.gz" -printf "%f\n")
     echo "InstallationFile:"$installation_file
@@ -198,7 +198,7 @@ if [[ $id != 2 ]]; then
   source $home_dir_sh/setenv.sh
 
   mv $home_dir_sh/st*_zookeeper.sh /tmp
-  mv $home_dir_sh/install/$zookeeper_service_file /tmp
+  mv $home_dir_sh/dbagigashare/current/ODSX/$zookeeper_service_file /tmp
   mv /tmp/st*_zookeeper.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_zookeeper.sh
   mv /tmp/$zookeeper_service_file /etc/systemd/system/
@@ -218,10 +218,10 @@ if [[ $id != 4 ]]; then
   source $home_dir_sh/setenv.sh
   if [[ $id == 2 ]]; then
     echo "removing zookeeper service dependency $id"
-    sed -i '/^Requires=odsxzookeeper.service/d' $home_dir_sh/install/$kafka_service_file
+    sed -i '/^Requires=odsxzookeeper.service/d' $home_dir_sh/dbagigashare/current/ODSX/$kafka_service_file
   fi
   mv $home_dir_sh/st*_kafka.sh /tmp
-  mv $home_dir_sh/install/$kafka_service_file /tmp
+  mv $home_dir_sh/dbagigashare/current/ODSX/$kafka_service_file /tmp
   mv /tmp/st*_kafka.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_kafka.sh
   mv /tmp/$kafka_service_file /etc/systemd/system/
@@ -230,13 +230,13 @@ fi
 if [[ $installtelegrafFlag == "y" ]]; then
   # Install Telegraf
   echo "Installing Telegraf"
-  installation_path=$home_dir/install/telegraf
+  installation_path=$home_dir/dbagigashare/current/TELEGRAF
   echo "InstallationPath :"$installation_path
   installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
   echo "Installation File :"$installation_file
   echo $installation_path"/"$installation_file
   yum install -y $installation_path"/"$installation_file
-  cp $home_dir"/install/jolokia/kafka.conf" /etc/telegraf/telegraf.d/
+  cp $home_dir"/dbagigashare/current/JOLOKIA/kafka.conf" /etc/telegraf/telegraf.d/
   sed -i -e 's|"http://KAFKA_SERVER_IP_ADDRESS:8778/jolokia"|"http://'$kafkaBrokerHost1':8778/jolokia","http://'$kafkaBrokerHost2':8778/jolokia","http://'$kafkaBrokerHost3':8778/jolokia"|g' /etc/telegraf/telegraf.d/kafka.conf
   sed -i -e 's|":2181"|"'$kafkaBrokerHost1':2181","'$witnessHost':2181","'$kafkaBrokerHost3':2181"|g' /etc/telegraf/telegraf.d/kafka.conf
 

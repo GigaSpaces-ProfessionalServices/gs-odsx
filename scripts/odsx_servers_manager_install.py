@@ -6,7 +6,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
 from colorama import Fore
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
@@ -119,9 +119,9 @@ def getHostConfiguration():
         hostConfigArray=hostsConfig.replace('"','').split(",")
 
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
-        if(len(str(applicativeUser))==0):
-            applicativeUser = str(applicativeUserFile)
+        #applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
+        #if(len(str(applicativeUser))==0):
+        applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
         set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
         set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
@@ -137,9 +137,10 @@ def getHostConfiguration():
             #hostConfiguration = str(input("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
             hostConfiguration = ''
             logger.info("hostConfiguration : "+str(hostConfiguration))
-            wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
-            while(len(str(wantNicAddress))==0):
-                wantNicAddress = 'n'
+            wantNicAddress = str(readValuefromAppConfig("app.manager.gsNicAddress"))
+            print(Fore.YELLOW+"Configure GS_NIC_ADDRESS for host : "+str(wantNicAddress)+" "+Fore.RESET)
+            #while(len(str(wantNicAddress))==0):
+            #    wantNicAddress = 'n'
             logger.info("wantNicAddress  : "+str(wantNicAddress))
             if(hostConfiguration != '1'):
                 logger.info("hostConfiguration !=1 : "+str(hostConfiguration))
@@ -244,14 +245,16 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
-        if(len(additionalParam)==0):
-            targetDir='/dbagiga'
-        else:
-            targetDir=additionalParam
 
+        additionalParam = str(readValuefromAppConfig("app.manager.targetFolderInstall"))
+        print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
+        #if(len(additionalParam)==0):
+        #    targetDir='/dbagiga'
+        #else:
+        targetDir=additionalParam
         if(gsOptionExtFromConfig.__contains__('<DI servers>')):
-            kafkaConfirm = str(input(Fore.YELLOW+"Do you want to configure kafka servers? (y/n) [y] : "+Fore.RESET))
+            kafkaConfirm = str(readValuefromAppConfig("app.manager.wantKafkaServer"))
+            print(Fore.YELLOW+"Do you want to configure kafka servers : "+kafkaConfirm+Fore.RESET)
             kafkaHost=''
             if(len(str(kafkaConfirm))==0):
                 kafkaConfirm='y'
@@ -264,37 +267,40 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     verboseHandle.printConsoleWarning("DI servers will be confiured ["+str(kafkaHosts)+"] ")
                 else:
                     verboseHandle.printConsoleInfo("No DI server configuration found.")
-                set_value_in_property_file("app.manager.kafka.host",kafkaHost)
+                #set_value_in_property_file("app.manager.kafka.host",kafkaHost)
                 gsOptionExtFromConfig = gsOptionExtFromConfig.replace('<DI servers>:9092',kafkaHosts)
 
-        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsOptionExt))==0):
+        gsOptionExt = gsOptionExtFromConfig
+        print(Fore.YELLOW+' GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
+        #if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
-            gsOptionExt=gsOptionExtFromConfig
-        else:
-            set_value_in_property_file('app.manager.gsOptionExt',gsOptionExt)
+        #gsOptionExt=gsOptionExtFromConfig
+        #else:
+        #    set_value_in_property_file('app.manager.gsOptionExt',gsOptionExt)
         gsOptionExt='"\\"{}\\""'.format(gsOptionExt)
         #print("gsoptionext:"+gsOptionExt)
 
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+''+gsManagerOptionsFromConfig+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsManagerOptions))==0):
+        gsManagerOptions =gsManagerOptionsFromConfig
+        print(Fore.YELLOW+'GS_MANAGER_OPTIONS  ['+Fore.GREEN+''+gsManagerOptionsFromConfig+Fore.YELLOW+']: '+Fore.RESET)
+        #if(len(str(gsManagerOptions))==0):
             #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
-            gsManagerOptions=gsManagerOptionsFromConfig
-        else:
-            set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
+        gsManagerOptions=gsManagerOptionsFromConfig
+        #else:
+        #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
         gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsLogsConfigFile))==0):
+        gsLogsConfigFile = gsLogsConfigFileFromConfig
+        print(Fore.YELLOW+'GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
+        #if(len(str(gsLogsConfigFile))==0):
             #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
-            gsLogsConfigFile=gsLogsConfigFileFromConfig
-        else:
-            set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
+        gsLogsConfigFile=gsLogsConfigFileFromConfig
+        #else:
+        #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
         gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
 
@@ -311,25 +317,29 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+''+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
+        nofileLimitFile = nofileLimit
+        print(Fore.YELLOW+'User level open file limit : ['+Fore.GREEN+''+nofileLimit+Fore.YELLOW+']: '+Fore.RESET)
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
-        if(len(str(nofileLimitFile))==0):
-            nofileLimitFile = nofileLimit
+        #if(len(str(nofileLimitFile))==0):
+        nofileLimitFile = nofileLimit
         #else:
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
-        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "))
-        if(len(str(wantToInstallJava))==0):
-            wantToInstallJava='n'
+        wantToInstallJava = str(readValuefromAppConfig("app.manager.wantToInstallJava"))
+        #print(Fore.YELLOW+"Install Java :"+wantToInstallJava)
+        #if(len(str(wantToInstallJava))==0):
+        #    wantToInstallJava='n'
 
-        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "))
-        if(len(str(wantToInstallUnzip))==0):
-            wantToInstallUnzip='n'
+        wantToInstallUnzip = str(readValuefromAppConfig("app.manager.wantToInstallUnzip"))
+        #print(Fore.YELLOW+"Install unzip : "+wantToInstallUnzip)
+        #if(len(str(wantToInstallUnzip))==0):
+        #    wantToInstallUnzip='n'
 
-        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy files [/dbagiga] : "+Fore.RESET))
-        if(len(str(sourceDirectoryForJar))==0):
-            sourceDirectoryForJar='/dbagiga'
+        sourceDirectoryForJar = str(readValuefromAppConfig("app.manager.source.directory.jarfiles"))
+        print(Fore.YELLOW+"Source directory to copy files "+sourceDirectoryForJar+Fore.RESET)
+        #if(len(str(sourceDirectoryForJar))==0):
+        #    sourceDirectoryForJar='/dbagiga'
 
         cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
         cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
@@ -371,6 +381,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"11. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -378,10 +390,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
-            if(len(additionalParam)==0):
-                additionalParam= 'true'+' '+'/dbagiga'+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
-            else:
-                additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+            #if(len(additionalParam)==0):
+            additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+            #else:
+            #    additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             #print('additional param :'+additionalParam)
             logger.info('additional param :'+additionalParam)
             output=""
@@ -392,8 +404,17 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     gsNicAddress='x'     # put dummy param to maintain position of arguments
                 additionalParam=additionalParam+' '+gsNicAddress
                 #print(additionalParam)
-                logger.info("Building .tar file : tar -cvf install/install.tar install")
-                cmd = 'tar -cvf install/install.tar install'
+                sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+                userCMD = os.getlogin()
+                if userCMD == 'ec2-user':
+                    cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/GS/"
+                else:
+                    cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/GS/"
+                with Spinner():
+                    status = os.system(cmd)
+
+                logger.info("Building .tar file : tar -cvf install/install.tar "+sourceInstallerDirectory)
+                cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory
                 with Spinner():
                     status = os.system(cmd)
                     logger.info("Creating tar file status : "+str(status))

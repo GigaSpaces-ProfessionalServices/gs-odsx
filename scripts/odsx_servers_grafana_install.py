@@ -9,7 +9,7 @@ from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_node
-from utils.ods_app_config import set_value_in_property_file
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -76,7 +76,8 @@ def installUserAndTargetDirectory():
 def buildUploadInstallTarToServer():
     logger.info("buildUploadInstallTarToServer(): start")
     try:
-        cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
+        sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+        cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory # Creating .tar file on Pivot machine
         with Spinner():
             status = os.system(cmd)
             logger.info("Creating tar file status : "+str(status))
