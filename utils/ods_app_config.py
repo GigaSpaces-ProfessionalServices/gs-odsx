@@ -12,7 +12,8 @@ configProperties = {}
 
 
 def setConfigProperties():
-    file1 = open('config/app.config', 'r')
+    #file1 = open('config/app.config', 'r')
+    file1 = open('/dbagigashare/current/ODSX/app.config', 'r')
     Lines = file1.readlines()
     for line in Lines:
         if (line.startswith("#")) or len(line) < 2:
@@ -29,7 +30,8 @@ def readValuefromAppConfig(key, verbose=False):
 
 def writeToFile(key,value,verbose=False):
     verboseHandle.setVerboseFlag(verbose)
-    file="config/app.config"
+    #file="config/app.config"
+    file = "/dbagigashare/current/ODSX/app.config"
     logger.debug("writing to file "+file+" key="+key+" value="+value)
     file1 = open(file, 'a')
     file1.write('\n')
@@ -43,7 +45,8 @@ def writeToFile(key,value,verbose=False):
     x.close
 
 def set_value_in_property_file(key, value):
-    file='config/app.config'
+    #file='config/app.config'
+    file= '/dbagigashare/current/ODSX/app.config'
     config = ConfigObj(file)
     if(len(value)==0):
         value=''
@@ -83,5 +86,6 @@ def read_value_in_property_file_generic_section(key,file,section):
     return userinfo[key]
 
 def readValueByConfigObj(key,file='config/app.config'):
+    file='/dbagigashare/current/ODSX/app.config'
     config = ConfigObj(file)
     return  config.get(key)

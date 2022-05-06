@@ -1162,7 +1162,7 @@ def getStreamIdAndName():
     return  streamDict
 
 def config_get_cluster_airgap(filePath='config/cluster.config'):
-    return get_cluster_obj(filePath).cluster.airGap
+    return 'true'
 
 
 def config_get_space_hosts(filePath='config/cluster.config'):
@@ -1244,7 +1244,7 @@ def getManagerHostFromEnv():
 def discoverHostConfig():
     try:
         #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/filename.yaml'
-        file = 'config/host.yaml'
+        file = '/dbagigashare/current/ODSX/host.yaml'
         with open(file) as f:
             content = yaml.safe_load(f)
 
