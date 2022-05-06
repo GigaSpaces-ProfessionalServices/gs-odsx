@@ -26,7 +26,7 @@ source setenv.sh
 systemctl stop gsa.service
 sleep 5
 rm -rf $GS_HOME
-rm -rf setenv.sh gs install install.tar /dbagiga/giga* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+rm -rf setenv.sh gs dbagigashare install install.tar /dbagiga/giga* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
 find /dbagigalogs -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete
 cd /dbagiga
 rm -f gigaspaces-smart-ods

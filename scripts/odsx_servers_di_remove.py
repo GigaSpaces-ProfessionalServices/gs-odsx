@@ -83,7 +83,7 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
         logger.info("hostAppConfig :"+str(hostAppConfig))
         hostAppConfig = hostAppConfig.replace(host,'')
         logger.info("hostConfig after remove : "+str(hostAppConfig))
-        set_value_in_property_file('app.di.hosts',hostAppConfig)
+        #set_value_in_property_file('app.di.hosts',hostAppConfig)
         verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
 
 
@@ -114,7 +114,7 @@ def executeCommandForUnInstall():
                             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                             print(outputShFile)
                             #config_remove_dataIntegration_byNameIP(host,host)
-                            set_value_in_property_file('app.di.hosts','')
+                            #set_value_in_property_file('app.di.hosts','')
                             verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
             if(removeType=='1'):
                 proceedForIndividualRemove(host_dict_obj,nodes)

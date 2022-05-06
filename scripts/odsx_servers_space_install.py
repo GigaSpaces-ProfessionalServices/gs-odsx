@@ -85,9 +85,9 @@ def getHostConfiguration():
         hostsConfig =getManagerHostFromEnv()
         logger.info("Manager hostConfig : "+str(hostsConfig))
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
-        if(len(str(applicativeUser))==0):
-            applicativeUser = str(applicativeUserFile)
+        #applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
+        #if(len(str(applicativeUser))==0):
+        applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
         set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
         set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
@@ -117,45 +117,49 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         targetDirectory=''
         gsOptionExtFromConfig = str(readValueByConfigObj("app.space.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        additionalParam = str(readValuefromAppConfig("app.space.targetDirectory"))
+        print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
         targetDirectory=str(additionalParam)
-        if(len(additionalParam)==0):
-            targetDirectory='/dbagiga'
+        #if(len(additionalParam)==0):
+        targetDirectory=additionalParam
         logger.info("targetDirecory :"+str(targetDirectory))
-        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsOptionExt))==0):
+        gsOptionExt = ""
+        print(Fore.YELLOW+'GS_OPTIONS_EXT : '+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+' '+Fore.RESET)
+        #if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
-            gsOptionExt=gsOptionExtFromConfig
-        else:
-            set_value_in_property_file('app.space.gsOptionExt',gsOptionExt)
+        gsOptionExt=gsOptionExtFromConfig
+        #else:
+        #    set_value_in_property_file('app.space.gsOptionExt',gsOptionExt)
         gsOptionExt='"\\"{}\\""'.format(gsOptionExt)
         #print("gsoptionext:"+gsOptionExt)
 
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsManagerOptions))==0):
+        gsManagerOptions = ""
+        print(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
+        #if(len(str(gsManagerOptions))==0):
             #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
-            gsManagerOptions=gsManagerOptionsFromConfig
-        else:
-            set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
+        gsManagerOptions=gsManagerOptionsFromConfig
+        #else:
+        #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
         gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsLogsConfigFile))==0):
+        gsLogsConfigFile = ""
+        print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
+        #if(len(str(gsLogsConfigFile))==0):
             #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
-            gsLogsConfigFile=gsLogsConfigFileFromConfig
-        else:
-            set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
+        gsLogsConfigFile=gsLogsConfigFileFromConfig
+        #else:
+        #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
         gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = readValueByConfigObj("app.manager.license")
         #licenseConfig='"{}"'.format(licenseConfig)
-        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsLicenseFile = str(input(Fore.YELLOW+'GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLicenseFile))==0):
             gsLicenseFile = licenseConfig
         #else:
@@ -166,49 +170,56 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
+        nofileLimitFile = ""
+        print(Fore.YELLOW+'User level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET)
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
-        if(len(str(nofileLimitFile))==0):
-            nofileLimitFile = nofileLimit
+        #if(len(str(nofileLimitFile))==0):
+        nofileLimitFile = nofileLimit
         #else:
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
-        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "+Fore.RESET))
-        if(len(str(wantToInstallJava))==0):
-            wantToInstallJava='n'
+        wantToInstallJava = str(readValuefromAppConfig("app.space.wantInstallJava"))
+        print(Fore.YELLOW+"Install Java : "+wantToInstallJava+Fore.RESET)
+        #if(len(str(wantToInstallJava))==0):
+        #    wantToInstallJava='n'
 
-        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "+Fore.RESET))
-        if(len(str(wantToInstallUnzip))==0):
-            wantToInstallUnzip='n'
+        wantToInstallUnzip = str(readValuefromAppConfig("app.space.wantInstallUnzip"))
+        print(Fore.YELLOW+"Install unzip : "+wantToInstallUnzip+Fore.RESET)
+        #if(len(str(wantToInstallUnzip))==0):
+        #    wantToInstallUnzip='n'
         global gscCount
         global memoryGSC
         global zoneGSC
 
         gscCountConfig = str(readValuefromAppConfig("app.space.gsc.count"))
-        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create ["+str(gscCountConfig)+"]: "+Fore.RESET))
-        if(len(str(gscCount))==0):
-            gscCount = gscCountConfig
-        set_value_in_property_file("app.space.gsc.count",str(gscCount))
+        gscCount = ""
+        print(Fore.YELLOW+"Number of GSC to create : "+str(gscCountConfig)+Fore.RESET)
+        #if(len(str(gscCount))==0):
+        gscCount = gscCountConfig
+        #set_value_in_property_file("app.space.gsc.count",str(gscCount))
 
         memoryGSCConfig = str(readValuefromAppConfig("app.space.gsc.memory"))
-        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC ["+str(memoryGSCConfig)+"]: "+Fore.RESET))
-        if(len(str(memoryGSC))==0):
-            memoryGSC = memoryGSCConfig
-        set_value_in_property_file("app.space.gsc.memory",memoryGSC)
+        memoryGSC = ""
+        print(Fore.YELLOW+"Memory required to create GSC : "+str(memoryGSCConfig)+Fore.RESET)
+        #if(len(str(memoryGSC))==0):
+        memoryGSC = memoryGSCConfig
+        #set_value_in_property_file("app.space.gsc.memory",memoryGSC)
 
-        zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
-        if(len(str(zoneGSC))==0):
-            zoneGSC = 'bll'
+        zoneGSC = str(readValuefromAppConfig("app.space.gsc.zone"))
+        print(Fore.YELLOW+"Zone to create GSC : "+zoneGSC+Fore.RESET)
+        #if(len(str(zoneGSC))==0):
+        #    zoneGSC = 'bll'
 
-        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
-        if(len(str(sourceDirectoryForJar))==0):
-            sourceDirectoryForJar='/dbagiga'
+        sourceDirectoryForJar = str(readValuefromAppConfig("app.space.jar.sourceFolder"))
+        print(Fore.YELLOW+"Source directory to copy jars from : "+sourceDirectoryForJar+Fore.RESET)
+        #if(len(str(sourceDirectoryForJar))==0):
+        #    sourceDirectoryForJar='/dbagiga'
 
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
@@ -231,7 +242,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             '''
             host_nic_dict_obj.add(host,'')
         #set_value_in_property_file('app.space.hosts',spaceHostConfig)
-        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
+        wantNicAddress = str(readValuefromAppConfig("app.space.gsNicAddress"))
+        #str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantNicAddress))==0):
             wantNicAddress='n'
         if(wantNicAddress=="yes" or wantNicAddress=="y"):
@@ -335,9 +347,19 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
                     additionalParam=additionalParam+' '+gsNicAddress
+                    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     logger.info("additionalParam - Installation :")
-                    logger.info("Building .tar file : tar -cvf install/install.tar install")
-                    cmd = 'tar -cvf install/install.tar install'
+                    logger.info("Building .tar file : tar -cvf install/install.tar "+sourceInstallerDirectory)
+                    userCMD = os.getlogin()
+
+                    if userCMD == 'ec2-user':
+                        cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/GS/"
+                    else:
+                        cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/GS/"
+                    with Spinner():
+                        status = os.system(cmd)
+
+                    cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory
                     with Spinner():
                         status = os.system(cmd)
                         logger.info("Creating tar file status : "+str(status))

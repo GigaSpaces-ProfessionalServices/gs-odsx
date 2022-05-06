@@ -7,7 +7,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file
+from utils.ods_app_config import set_value_in_property_file,readValuefromAppConfig
 from utils.ods_cluster_config import config_add_dataIntegration_node, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -221,7 +221,16 @@ def installCluster():
 
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :" + str(host))
-    cmd = 'tar -cvf install/install.tar install'  # Creating .tar file on Pivot machine
+    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+    userCMD = os.getlogin()
+    if userCMD == 'ec2-user':
+        cmd = 'sudo cp install/odsxzookeeper.service install/odsxkafka.service '+sourceInstallerDirectory+"/ODSX/"
+    else:
+        cmd = 'cp install/odsxzookeeper.service install/odsxkafka.service '+sourceInstallerDirectory+"/ODSX/"
+    with Spinner():
+        status = os.system(cmd)
+    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+    cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory  # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : " + str(status))
@@ -290,13 +299,13 @@ def validateRPM():
     cmd = "pwd"
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home dir : " + str(home))
-    cmd = 'find ' + str(home) + '/install/java/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    cmd = 'find /dbagigashare/current/JDK/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     javaRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("javaRpm found :" + str(javaRpm))
-    cmd = 'find ' + str(home) + '/install/kafka/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
+    cmd = 'find /dbagigashare/current/KAFKA/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
     kafkaZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("kafkaZip found :" + str(kafkaZip))
-    cmd = 'find ' + str(home) + '/install/zookeeper/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    cmd = 'find /dbagigashare/current/ZOOKEEPER/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     zkZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("ZookeeperZip found :" + str(zkZip))
     #cmd = 'find ' + str(home) + '/install/cr8/ -name *.rpm -printf "%f\n"'  # Checking .tar file on Pivot machine
@@ -305,7 +314,7 @@ def validateRPM():
     #cmd = 'find ' + str(home) + '/install/cr8/ -name *.gz -printf "%f\n"'  # Checking .tar file on Pivot machine
     #localSetupZip = executeLocalCommandAndGetOutput(cmd)
     #logger.info("localSetupZip found :" + str(localSetupZip))
-    cmd = 'find ' + str(home) + '/install/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    cmd = 'find /dbagigashare/current/TELEGRAF/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     telegrafRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("telegrafRpm found :" + str(telegrafRpm))
 
@@ -320,41 +329,9 @@ def validateRPM():
     for name, installer in di_installer_dict.items():
         if (len(str(installer)) == 0):
             verboseHandle.printConsoleInfo(
-                "Pre-requisite installer " + str(home) + "/install  " + str(name) + " not found")
+                "Pre-requisite installer /dbagigashare/current/.. " + str(name) + " not found")
             return False
     return True
-
-
-def addNodeToCluster(nodes):
-    logger.info("addNodeToCluster()")
-    nodeList = config_get_dataIntegration_nodes()
-    global masterHost
-    global standByHost
-    global witnessHost
-
-    for node in nodeList:
-        if (str(node.type) == 'Master'):
-            masterHost = str(node.ip)
-        if (str(node.type) == 'Standby'):
-            standByHost = str(node.ip)
-        if (str(node.type) == 'Witness'):
-            witnessHost = str(node.ip)
-    if (len(str(masterHost)) == 0):
-        masterHost = str(input(Fore.YELLOW + "Enter Kafka broker 1a  :" + Fore.RESET))
-        while (len(masterHost) == 0):
-            masterHost = str(input(Fore.YELLOW + "Enter Kafka broker 1a  :" + Fore.RESET))
-    logger.info("Kafka broker 1a : " + str(masterHost))
-    if (len(str(standByHost)) == 0):
-        standByHost = str(input(Fore.YELLOW + "Enter Kafka broker 1b :" + Fore.RESET))
-        while (len(standByHost) == 0):
-            standByHost = str(input(Fore.YELLOW + "Enter Kafka broker 1b :" + Fore.RESET))
-    logger.info("Kafka broker 1b : " + str(standByHost))
-    if (len(str(witnessHost)) == 0):
-        witnessHost = str(input(Fore.YELLOW + "Enter Kafka broker 2 :" + Fore.RESET))
-        while (len(witnessHost) == 0):
-            witnessHost = str(input(Fore.YELLOW + "Enter Kafka broker 2 :" + Fore.RESET))
-        logger.info("Kafka broker 2 :" + str(witnessHost))
-    user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
 
 
 if __name__ == '__main__':

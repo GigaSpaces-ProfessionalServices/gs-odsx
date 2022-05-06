@@ -260,7 +260,7 @@ def listAllServers():
                    Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
                    Fore.GREEN+os.getenv(node.name)+Fore.RESET,
                    Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-                   Fore.GREEN+status+Fore.RESET if(output==0) else Fore.RED+status+Fore.RESET]
+                   Fore.GREEN+"ON"+Fore.RESET if(output==0) else Fore.RED+"OFF"+Fore.RESET]
 
         data.append(dataArray)
         counter=counter+1

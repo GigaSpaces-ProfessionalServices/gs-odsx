@@ -127,7 +127,7 @@ function setGSHome {
 function installAirGapJava {
     echo "Installation of AirGapJava"
     home_dir=$(pwd)
-    installation_path=$home_dir/install/java
+    installation_path=$home_dir/dbagigashare/current/JDK
     installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
     echo "Installation File :"$installation_file
     if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ]  || [[ "$osType" ==  *"Linux"*  ]]; then
@@ -155,7 +155,7 @@ function installAirGapJava {
 function installAirGapUnzip {
    echo "Install AirGapUnzip"
    home_dir=$(pwd)
-   installation_path=$home_dir/install/unzip
+   installation_path=$home_dir/dbagigashare/current/UNZIP
    installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
    if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [[ "$osType" ==  *"Linux"*  ]]; then
       rpm -ivh $installation_path"/"$installation_file
@@ -227,7 +227,7 @@ function installAirGapGS {
    echo "Installing Gigaspace InsightEdge at "$targetDir
    home_dir=$(pwd)
    echo "homedir: "$home_dir
-   installation_path=$home_dir/install/gs
+   installation_path=$home_dir/dbagigashare/current/GS
    installation_file=$(find $installation_path -name *.zip -printf "%f\n")
    echo $installation_path"/"$installation_file
    pwd
@@ -374,10 +374,10 @@ function gsCreateGSServeice {
   prefix2="${prefix1}2"
   cmd="ps -ef | grep GSC | grep java | awk '{print $prefix2}' | xargs kill -9"
   echo "$cmd">>$stop_gsc_file
-
+  gs_installation_path=$home_dir_sh/dbagigashare/current/GS
   mv $home_dir_sh/st*_gs*.sh /tmp
-  mv $home_dir_sh/install/gs/$gsa_service_file /tmp
-  mv $home_dir_sh/install/gs/$gsc_service_file /tmp
+  mv $gs_installation_path/$gsa_service_file /tmp
+  mv $gs_installation_path/$gsc_service_file /tmp
   mv /tmp/st*_gs*.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
