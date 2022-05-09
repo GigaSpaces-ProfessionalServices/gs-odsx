@@ -2,12 +2,13 @@
 import argparse
 import os
 import sys
+import sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from scripts.spinner import Spinner
-from scripts.odsx_datavalidator_list import listDVServers
+from scripts.odsx_datavalidator_install_list import listDVAgents, listDVServers, getConsolidatedStatus
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -50,6 +51,9 @@ def getDVServerHostList():
     nodeList = config_get_dataValidation_nodes()
     nodes=""
     for node in nodeList:
+        output = getConsolidatedStatus(node.ip)
+        if (output == 0):
+            continue
         #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
             nodes = node.ip
@@ -57,31 +61,34 @@ def getDVServerHostList():
             nodes = nodes+','+node.ip
     return nodes
 
-def stopDataValidationService(args):
+def startDataValidationService(args):
     try:
         listDVServers()
+        #listDVAgents()
         nodes = getDVServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to stop data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
+        choice = str(input(Fore.YELLOW+"Are you sure, you want to start data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataValidation_nodes():
-            cmd = "systemctl stop odsxdatavalidation.service"
+            output = getConsolidatedStatus(node.ip)
+            if (output == 0):
+                continue
+            cmd = "systemctl start odsxdatavalidation.service"
             logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
             user = 'root'
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                 if (output == 0):
-                    verboseHandle.printConsoleInfo("Service data validation stop successfully on "+str(node.ip))
+                    verboseHandle.printConsoleInfo("Service data validation started successfully on "+str(node.ip))
                 else:
-                    verboseHandle.printConsoleError("Service data validation failed to stop")
-
+                    verboseHandle.printConsoleError("Service data validation failed to start on "+str(node.ip))
 
     except Exception as e:
         handleException(e)
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> DataValidator -> Stop")
+    verboseHandle.printConsoleWarning("Menu -> DataValidator -> Install -> Start")
     args = []
     args = myCheckArg()
-    stopDataValidationService(args)
+    startDataValidationService(args)

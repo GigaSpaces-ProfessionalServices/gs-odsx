@@ -4,7 +4,7 @@ import os.path, argparse, sys
 from scripts.logManager import LogManager
 from colorama import Fore
 
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list  import getDataValidationHost
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_validation import getSpaceServerStatus
@@ -106,8 +106,8 @@ def printDatasourcetable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Datasource -> List")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Datasource -> List')
+    logger.info("MENU -> Data Validator -> Data Source Registration -> List")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Data Source Registration -> List')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

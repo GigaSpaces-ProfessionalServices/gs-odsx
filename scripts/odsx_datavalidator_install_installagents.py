@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import os,subprocess
+import sqlite3
 import platform
 from os import path
+import requests
+import json
 from colorama import Fore
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
@@ -10,6 +13,9 @@ from utils.ods_ssh import connectExecuteSSH,executeRemoteCommandAndGetOutputPyth
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_add_dataValidation_node, config_get_dataIntegration_nodes
 from utils.ods_app_config import set_value_in_property_file
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
+
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -53,38 +59,76 @@ class obj_type_dictionary(dict):
 def installSingle():
     logger.info("installSingle():")
     try:
-        global user
-        host = str(input(Fore.YELLOW+"Enter host to install Data Validation Service: "+Fore.RESET))
-        while(len(str(host))==0):
-            host = str(input(Fore.YELLOW+"Enter host to install Data Validation Service: "+Fore.RESET))
+        dataValidationNodes = config_get_dataValidation_nodes()
+        dataValidationHost = getDataValidationHost(dataValidationNodes)
+        logger.info("dataValidationHost : " + str(dataValidationHost))
 
-        user = str(input(Fore.YELLOW+"Enter user to connect Data Validation Service servers [root]:"+Fore.RESET))
+        if str(dataValidationHost) == "":
+            verboseHandle.printConsoleError("")
+            verboseHandle.printConsoleError(
+                "Failed to connect to the Data validation server. Please check that it is running.")
+            return
+
+        global user
+        agentHosts = str(input(Fore.YELLOW+"Enter hosts(comma separated) to install Data Validation Agents: "+Fore.RESET))
+        while(len(str(agentHosts))==0):
+            agentHosts = str(input(Fore.YELLOW+"Enter hosts(comma separated) to install Data Validation Agents: "+Fore.RESET))
+
+        user = str(input(Fore.YELLOW+"Enter user to connect Data Validation Agent servers [root]:"+Fore.RESET))
         if(len(str(user))==0):
             user="root"
         logger.info(" user: "+str(user))
-        #open and add properties as per user inputs
-        dbPath= str(input(Fore.YELLOW+"Enter db path[datavalidator.db]: "+Fore.RESET))
+
+        dbPath= str(input(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
         if(len(str(dbPath))==0):
-            dbPath='datavalidator.db'
-        logFilepath= str(input(Fore.YELLOW+"Enter  log file path[datavalidator.log] : "+Fore.RESET))
+            dbPath='/home/gsods/datavalidator.db'
+        logFilepath= str(input(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
         if(len(str(logFilepath))==0):
-            logFilepath='datavalidator.log'
-        
+            logFilepath='/home/gsods/datavalidator.log'
+
+        #open and add properties as per user inputs
         with open('install/data-validation/application.properties', 'w') as f:
-         f.write('server.port=7890')
+         f.write('server.port=7891')
          f.write('\n')
          f.write('logging.file.name='+logFilepath)
          f.write('\n')
          f.write('pathToDataBase='+dbPath)
-        
-    
-        confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Data Validation Service server (y/n) [y]: "+Fore.RESET))
+
+        verboseHandle.printConsoleInfo("------------------------------------------------------------")
+        verboseHandle.printConsoleInfo("***Summary***")
+        verboseHandle.printConsoleInfo("Agent Hosts: "+agentHosts)
+        verboseHandle.printConsoleInfo("Agent User:  "+user)
+        verboseHandle.printConsoleInfo("db Path: "+dbPath)
+        verboseHandle.printConsoleInfo("log File path: "+logFilepath)
+        verboseHandle.printConsoleInfo("------------------------------------------------------------")
+
+        confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Data Validation Service agents (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
             confirmInstall='y'
         if(confirmInstall=='y'):
-            buildTarFileToLocalMachine(host)
-            buildUploadInstallTarToServer(host)
-            executeCommandForInstall(host,'SingleNode',0)
+            agentHostArray = agentHosts.split(',')
+            for agentHost in agentHostArray:
+                buildTarFileToLocalMachine(agentHost)
+                buildUploadInstallTarToServer(agentHost)
+                executeCommandForInstall(agentHost,'DataValidation',0,'Agent')
+
+                verboseHandle.printConsoleWarning('');
+                data = {
+                    "agentHostIp": agentHost,
+                    "agentUser": 'gsods',
+                }
+                headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
+                response = requests.post("http://" + dataValidationHost + ":7890/agent/register"
+                                         , data=json.dumps(data)
+                                         , headers=headers)
+
+                logger.info(str(response.status_code))
+                jsonArray = json.loads(response.text)
+
+                verboseHandle.printConsoleWarning("")
+                verboseHandle.printConsoleWarning("------------------------------------------------------------")
+                verboseHandle.printConsoleInfo("  " + jsonArray["response"])
+                verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
     except Exception as e:
         handleException(e)
@@ -103,24 +147,28 @@ def buildUploadInstallTarToServer(host):
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
             scp_upload(host, user, 'install/install.tar', '/home/gsods')
+            scp_upload(host, user, '/dbagiga/gs_config/SQLJDBCDriver.conf', '/home/gsods')
+            scp_upload(host, user, '/dbagiga/gs_config/UTKA02E.keytab', '/home/gsods')
+            #scp_upload(host, user, 'install/gs_config/SQLJDBCDriver.conf', '/home/gsods')
+            #scp_upload(host, user, 'install/gs_config/UTKA02E.keytab', '/home/gsods')
     except Exception as e:
         handleException(e)
 
-def executeCommandForInstall(host,type,count):
+def executeCommandForInstall(host,type,count,role):
     logger.info("executeCommandForInstall(): start host : "+str(host) +" type : "+str(type))
 
     try:
         #cmd = "java -version"
         #outputVersion = executeRemoteCommandAndGetOutputPython36(host,user,cmd)
         #print("output java version :"+str(outputVersion))
-        commandToExecute="scripts/servers_datavalidation_install.sh"
+        commandToExecute="scripts/servers_datavalidation_agent_install.sh"
         additionalParam=""
         logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
         with Spinner():
             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
             logger.info("outputShFile : "+str(outputShFile))
 
-            config_add_dataValidation_node(host, host, "dataValidation", type)
+            config_add_dataValidation_node(host, host, role, type)
             set_value_in_property_file('app.dv.hosts',host)
             verboseHandle.printConsoleInfo("Node has been added :"+str(host))
 
@@ -174,6 +222,7 @@ def validateRPM():
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> DataValidator -> Install')
+    verboseHandle.printConsoleWarning('')
     try:
         if(validateRPM()):
             installSingle()

@@ -1,6 +1,7 @@
 import argparse, subprocess
 import os
 import sys
+import sqlite3
 
 from utils.ods_validation import getSpaceServerStatus, getDataValidationServerStatus
 from utils.odsx_print_tabular_data import printTabular
@@ -63,20 +64,20 @@ def myCheckArg(args=None):
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
 
-def getConsolidatedStatus(node):
+def getConsolidatedStatus(ip):
     output = ''
-    logger.info("getConsolidatedStatus() : " + str(node.ip))
+    logger.info("getConsolidatedStatus() : " + str(ip))
     cmdList = ["systemctl status odsxdatavalidation"]
     for cmd in cmdList:
-        logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
+        logger.info("cmd :" + str(cmd) + " host :" + str(ip))
         logger.info("Getting status.. :" + str(cmd))
         user = 'root'
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutputPython36(ip, user, cmd)
             logger.info("output1 : " + str(output))
             if (output != 0):
                 # verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :" + str(cmd) + " not started." + str(node.ip))
+                logger.info(" Service :" + str(cmd) + " not started." + str(ip))
                 return output
     return output
 
@@ -86,28 +87,25 @@ def listDVServers():
     host_dict_obj = obj_type_dictionary()
     dVServers = config_get_dataValidation_nodes()
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
-               Fore.YELLOW + "Name" + Fore.RESET,
+               Fore.YELLOW + "Host Ip" + Fore.RESET,
                Fore.YELLOW + "Type" + Fore.RESET,
-               Fore.YELLOW + "Resume Mode" + Fore.RESET,
                Fore.YELLOW + "Role" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     counter = 1
     for node in dVServers:
         host_dict_obj.add(str(counter), str(node.ip))
-        output = getConsolidatedStatus(node)
+        output = getConsolidatedStatus(node.ip)
         if (output == 0):
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
+                         Fore.GREEN + node.ip + Fore.RESET,
                          Fore.GREEN + node.type + Fore.RESET,
-                         Fore.GREEN + node.resumeMode + Fore.RESET,
                          Fore.GREEN + node.role + Fore.RESET,
                          Fore.GREEN + "ON" + Fore.RESET]
         else:
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
+                         Fore.GREEN + node.ip + Fore.RESET,
                          Fore.GREEN + node.type + Fore.RESET,
-                         Fore.GREEN + node.resumeMode + Fore.RESET,
                          Fore.GREEN + node.role + Fore.RESET,
                          Fore.RED + "OFF" + Fore.RESET]
         data.append(dataArray)
@@ -115,6 +113,37 @@ def listDVServers():
     printTabular(None, headers, data)
     return host_dict_obj
 
+def listDVAgents():
+    headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
+           Fore.YELLOW + "Name" + Fore.RESET,
+           Fore.YELLOW + "Type" + Fore.RESET,
+           Fore.YELLOW + "Role" + Fore.RESET,
+           Fore.YELLOW + "Status" + Fore.RESET]
+    data = []
+    counter = 1
+
+    dbPath = "datavalidator.db"
+    con = sqlite3.connect(dbPath)
+    cur = con.cursor()
+    cur.execute("SELECT * FROM agents")
+    rows = cur.fetchall()
+    for row in rows:
+        output = getConsolidatedStatus(row[1])
+        if (output == 0):
+            dataArray = [Fore.GREEN + str(row[0]) + Fore.RESET,
+                         Fore.GREEN + row[1] + Fore.RESET,
+                         Fore.GREEN + 'Data Validation' + Fore.RESET,
+                         Fore.GREEN + 'Agent' + Fore.RESET,
+                         Fore.GREEN + "ON" + Fore.RESET]
+        else:
+            dataArray = [Fore.GREEN + str(row[0]) + Fore.RESET,
+                         Fore.GREEN + row[1] + Fore.RESET,
+                         Fore.GREEN + 'Data Validation' + Fore.RESET,
+                         Fore.GREEN + 'Agent' + Fore.RESET,
+                         Fore.RED + "OFF" + Fore.RESET]
+        data.append(dataArray)
+        counter = counter + 1
+    printTabular(None, headers, data)
 
 def getDataValidationHost(dataValidationNodes):
     logger.info("getDataValidationHost()")
@@ -123,21 +152,23 @@ def getDataValidationHost(dataValidationNodes):
     try:
         logger.info("getDataValidationHost() : dataValidationNodes :" + str(dataValidationNodes))
         for node in dataValidationNodes:
-            status = getDataValidationServerStatus(node.ip,"7890")
-            if (status == "ON"):
-                dataValidationHost = node.ip
+            if(node.role == 'Server'):
+                status = getDataValidationServerStatus(node.ip,"7890")
+                if (status == "ON"):
+                    dataValidationHost = node.ip
         return dataValidationHost
     except Exception as e:
         handleException(e)
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> DataValidator -> List')
+    verboseHandle.printConsoleWarning('Menu -> DataValidator -> Install -> List')
     try:
         args = []
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
         args.append(sys.argv[0])
         myCheckArg()
         listDVServers()
+        #listDVAgents()
     except Exception as e:
         handleException(e)

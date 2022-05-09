@@ -6,7 +6,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
 
@@ -58,6 +58,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
+
     # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
@@ -97,16 +98,14 @@ def doValidate():
         dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
-        username1 = str(input("User name []: "))
-        if (len(str(username1)) == 0):
-            username1 = ''
-        password1 = str(input("Password []: "))
-        if (len(str(password1)) == 0):
-            password1 = ''
+
 
         IntegratedSecurity = ''
         AuthenticationScheme=''
         Properties=''
+
+        username1=''
+        password1=''
         if (dataSource1Type == 'ms-sql'):
          print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
 
@@ -121,6 +120,14 @@ def doValidate():
           AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
 
          Properties = str(input("Connection properties( ex.Key=value;):"))
+
+        else:
+            username1 = str(input("User name []: "))
+            if (len(str(username1)) == 0):
+                username1 = ''
+            password1 = str(input("Password []: "))
+            if (len(str(password1)) == 0):
+                password1 = ''
 
         verboseHandle.printConsoleWarning('');
         data = {
@@ -189,8 +196,8 @@ def printDatasourcetable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> DataSource -> Add")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> DataSource -> Add')
+    logger.info("MENU -> Data Validator -> Data Source Registration -> Add")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Data Source Registration -> Add')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

@@ -4,7 +4,8 @@ import os.path
 from scripts.logManager import LogManager
 from colorama import Fore
 
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_agentassignment_list import printAssignmentTable
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_validation import getSpaceServerStatus
@@ -62,26 +63,29 @@ def doValidate():
 
     dataValidatorServiceHost = dataValidationHost
 
-    verboseHandle.printConsoleWarning('Measurements List:');
-    resultCount = printDatasourcetable(dataValidatorServiceHost)
+    verboseHandle.printConsoleWarning('Assignment List:');
+    response = printAssignmentTable(dataValidatorServiceHost)
 
     registernew = 'yes'
-    if resultCount <= 0:
-        verboseHandle.printConsoleWarning("No Datasource available.")
+    if len(response) <= 0:
+        verboseHandle.printConsoleWarning("No Assignment available.")
         return
 
-    datasourceId = str(input(Fore.YELLOW + "Enter Datasource id to remove: " + Fore.RESET))
+    '''datasourceId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
     while (len(str(datasourceId)) == 0 or datasourceId not in datasourceIds):
         if(datasourceId not in datasourceIds):
-         print(Fore.YELLOW +"Please select DataSource Id from above list"+Fore.RESET)
-         datasourceId = str(input(Fore.YELLOW + "Enter Datasource id to remove: " + Fore.RESET))
+         print(Fore.YELLOW +"Please select Agent Id from above list"+Fore.RESET)
+         datasourceId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
         else:
-         datasourceId = str(input(Fore.YELLOW + "Enter Datasource id to remove: " + Fore.RESET))
-
+         datasourceId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
+'''
+    agentId = str(input(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
+    while (len(str(agentId)) == 0):
+        agentId = str(input(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
 
 
     response = requests.delete(
-        "http://" + dataValidatorServiceHost + ":7890/datasource/remove/" + datasourceId)
+        "http://" + dataValidatorServiceHost + ":7890/assignment/remove/" + agentId)
 
     logger.info(str(response.status_code))
     jsonArray = json.loads(response.text)
@@ -91,47 +95,10 @@ def doValidate():
     verboseHandle.printConsoleInfo(" " + jsonArray["response"])
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
-datasourceIds=[]
-def printDatasourcetable(dataValidatorServiceHost):
-    try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
-    except:
-        print("An exception occurred")
-
-    if response.status_code == 200:
-        # logger.info(str(response.status_code))
-        jsonArray = json.loads(response.text)
-        response = json.loads(jsonArray["response"])
-        # print("response2 "+response[0])
-        # print(isinstance(response, list))
-
-        headers = [Fore.YELLOW + "Datasource Id" + Fore.RESET,
-                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
-                   Fore.YELLOW + "Type" + Fore.RESET ,
-                   Fore.YELLOW + "Host Ip" + Fore.RESET
-                   ]
-        data = []
-        if response:
-            for datasource in response:
-                #print(datasource)
-                datasourceIds.append(str(datasource["id"]) )
-
-                dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
-                             Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
-                             Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
-                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET
-                             ]
-                data.append(dataArray)
-
-        printTabular(None, headers, data)
-        verboseHandle.printConsoleWarning('');
-        return len(response)
-    return 0
-
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Datasource -> Remove")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Datasource -> Remove')
+    logger.info("MENU -> Data Validator -> Agent Assignment -> Remove")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Agent Assignment -> Remove')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():

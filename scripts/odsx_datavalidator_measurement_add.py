@@ -6,7 +6,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_datavalidator_list import getDataValidationHost
+from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
 
@@ -82,9 +82,12 @@ def doValidate():
             
         if (len(str(test)) == 0):
             test = 'count'
-            
-        
+
+
+        verboseHandle.printConsoleWarning('');
+        verboseHandle.printConsoleWarning('Available DataSource which are assigned to Agent:');
         datasourceRowCount = printDatasourcetable(dataValidatorServiceHost)
+
         if datasourceRowCount <= 0:
           verboseHandle.printConsoleWarning("No Datasource available. Please add atleast one datasources")
           return
@@ -103,12 +106,15 @@ def doValidate():
         while (len(str(tableName1)) == 0):
             print(Fore.YELLOW +"Table Name is invalid (Empty)"+Fore.RESET)
             tableName1 = str(input("Table Name : "))
-        
-        fieldName1 = str(input("Field Name : "))
-        while (len(str(fieldName1)) == 0):
-            print(Fore.YELLOW +"Field Name is invalid (Empty)"+Fore.RESET)
+
+        if test != 'count':
             fieldName1 = str(input("Field Name : "))
-         
+            while (len(str(fieldName1)) == 0):
+                print(Fore.YELLOW +"Field Name is invalid (Empty)"+Fore.RESET)
+                fieldName1 = str(input("Field Name : "))
+        else:
+            fieldName1 = '*'
+
         if test != 'lastvalue':
             whereCondition = str(input("Where Condition [''] : "))
             if (len(str(whereCondition)) == 0):
@@ -152,8 +158,8 @@ def printmeasurementtable(dataValidatorServiceHost):
         # print(isinstance(response, list))
 
         headers = [Fore.YELLOW + "Id" + Fore.RESET,
-                   Fore.YELLOW + "Datasource Name" + Fore.RESET,
                    Fore.YELLOW + "Measurement Datasource" + Fore.RESET,
+                   Fore.YELLOW + "Agent" + Fore.RESET,
                    Fore.YELLOW + "Measurement Query" + Fore.RESET
                    ]
         data = []
@@ -166,9 +172,9 @@ def printmeasurementtable(dataValidatorServiceHost):
                     queryDetail += " WHERE " + measurement["whereCondition"]
 
                 dataArray = [Fore.GREEN + str(measurement["id"]) + Fore.RESET,
-                             Fore.GREEN +  measurement["dataSource"]["dataSourceName"] + Fore.RESET,
                              Fore.GREEN +"(Type:"+ measurement["dataSource"]["dataSourceType"] +",schema=" + measurement[
                                  "schemaName"] + ", host=" + measurement["dataSource"]["dataSourceHostIp"] + ")" + Fore.RESET,
+                             Fore.GREEN +  measurement["dataSource"]["agent"]["hostIp"] + Fore.RESET,
                              Fore.GREEN + queryDetail + Fore.RESET
                              ]
                 data.append(dataArray)
@@ -195,18 +201,22 @@ def printDatasourcetable(dataValidatorServiceHost):
 
         headers = [Fore.YELLOW + " Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
-                   Fore.YELLOW + "Type" + Fore.RESET , 
-                   Fore.YELLOW + "Host Ip" + Fore.RESET
+                   Fore.YELLOW + "Type" + Fore.RESET,
+                   Fore.YELLOW + "Datasource Host IP" + Fore.RESET,
+                   Fore.YELLOW + "Agent Host IP" + Fore.RESET
                    ]
         data = []
         if response:
             for datasource in response:
                 #print(datasource)
+                if datasource["agentHostIp"] == "-1":
+                    continue
                 dataSourceIds.append(str(datasource["id"]))              
                 dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
-                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET
+                             Fore.GREEN + datasource["dataSourceHostIp"] + Fore.RESET,
+                             Fore.GREEN + datasource["agentHostIp"] + Fore.RESET
                              ]
                 data.append(dataArray)
 
@@ -217,8 +227,8 @@ def printDatasourcetable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Measurement -> Add")
-    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Measurement -> Add')
+    logger.info("MENU -> Data Validator -> Measurement -> Add")
+    verboseHandle.printConsoleWarning('MENU -> Data Validator -> Measurement -> Add')
     verboseHandle.printConsoleWarning('');
     try:
         # with Spinner():
