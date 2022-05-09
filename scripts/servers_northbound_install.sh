@@ -1,9 +1,9 @@
 echo "Installation starting..."
 echo $1 "====" $2
 cd $1
-logDir="dbagigalogs"
+logDir="dbagigalogs/nginx"
 if [ ! -d "/$logDir" ]; then
-   mkdir /$logDir
+   mkdir -p /$logDir
    chmod 777 /$logDir
 fi
 pwd
