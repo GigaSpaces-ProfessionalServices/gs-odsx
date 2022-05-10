@@ -54,7 +54,8 @@ def getConsulHost():
     publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent ifconfig.me")
     logger.info("Consul Host : "+str(publicIP))
 
-    consulHost = str(publicIP)
+    if(len(str(publicIP))>0):
+        consulHost = str(publicIP)
     
     logger.info("getConsulHost() : end")
     return consulHost
@@ -164,6 +165,9 @@ def uploadDashbordJsonFile(host):
     localIP = executeLocalCommandAndGetOutput("curl --silent ifconfig.me")
     localIP = str(localIP)
     localIP = localIP[1:]
+    if(len(str(localIP))==0):
+        localIP = executeLocalCommandAndGetOutput("hostname")
+
     catalogue_service_url = 'http://'+str(localIP)+':3211/services'
     catalogue_table_url = 'http://'+str(localIP)+':3211/metadata'
 
