@@ -50,9 +50,14 @@ def getConsulHost():
     consulHost = consulHostList.split(",")[0]
     
     logger.info("Consul Host : "+consulHost)
-
-    publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent ifconfig.me")
+    publicIP = ""
+    try:
+        publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent http://169.254.169.254/latest/meta-data/public-ipv4")
+    except Exception as e:
+        logger.error("error in getting public ip of consul host")
+        
     logger.info("Consul Host : "+str(publicIP))
+    verboseHandle.printConsoleDebug(str(publicIP))
 
     if(len(str(publicIP))>0):
         consulHost = str(publicIP)
@@ -161,10 +166,14 @@ def restartGrafana():
 def uploadDashbordJsonFile(host):
     logger.info("uploadDashbordJsonFile(): start host :" + str(host))
     
-    
-    localIP = executeLocalCommandAndGetOutput("curl --silent ifconfig.me")
-    localIP = str(localIP)
-    localIP = localIP[1:]
+    localIP=""
+    try:
+        localIP = executeLocalCommandAndGetOutput("curl --silent http://169.254.169.254/latest/meta-data/public-ipv4")
+        localIP = str(localIP)
+        localIP = localIP[1:]
+    except Exception as e:
+        logger.error("error in getting public ip of pivot machine")
+
     if(len(str(localIP))==0):
         localIP = executeLocalCommandAndGetOutput("hostname")
 
