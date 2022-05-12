@@ -5,7 +5,7 @@ import sys
 from utils.ods_scp import scp_upload
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput,executeRemoteCommandWithTimeout
 from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_list,config_get_nb_list
@@ -52,8 +52,9 @@ def getConsulHost():
     logger.info("Consul Host : "+consulHost)
     publicIP = ""
     try:
-        publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent http://169.254.169.254/latest/meta-data/public-ipv4")
+        publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent --connect-timeout 5 http://169.254.169.254/latest/meta-data/public-ipv4")
     except Exception as e:
+        verboseHandle.printConsoleInfo("error in getting public ip of consul host")
         logger.error("error in getting public ip of consul host")
         
     logger.info("Consul Host : "+str(publicIP))
@@ -168,15 +169,16 @@ def uploadDashbordJsonFile(host):
     
     localIP=""
     try:
-        localIP = executeLocalCommandAndGetOutput("curl --silent http://169.254.169.254/latest/meta-data/public-ipv4")
+        localIP = executeLocalCommandAndGetOutput("curl --silent --connect-timeout 2 http://169.254.169.254/latest/meta-data/public-ipv4")
         localIP = str(localIP)
-        localIP = localIP[1:]
+        
     except Exception as e:
         logger.error("error in getting public ip of pivot machine")
 
-    if(len(str(localIP))==0):
+    if(str(localIP)=='b\'\''):
         localIP = executeLocalCommandAndGetOutput("hostname")
 
+    localIP = localIP[1:]
     catalogue_service_url = 'http://'+str(localIP)+':3211/services'
     catalogue_table_url = 'http://'+str(localIP)+':3211/metadata'
 
