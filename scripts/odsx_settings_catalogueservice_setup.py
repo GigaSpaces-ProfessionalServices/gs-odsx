@@ -5,7 +5,7 @@ import sys
 from utils.ods_scp import scp_upload
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput,executeRemoteCommandWithTimeout
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
 from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_list,config_get_nb_list
