@@ -50,9 +50,14 @@ def getConsulHost():
     consulHost = consulHostList.split(",")[0]
     
     logger.info("Consul Host : "+consulHost)
-
-    publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent ifconfig.me")
+    publicIP = ""
+    try:
+        publicIP = executeRemoteCommandAndGetOutput(consulHost,user,"curl --silent --connect-timeout 5 http://169.254.169.254/latest/meta-data/public-ipv4")
+    except Exception as e:
+        logger.error("error in getting public ip of consul host")
+        
     logger.info("Consul Host : "+str(publicIP))
+    verboseHandle.printConsoleDebug(str(publicIP))
 
     if(len(str(publicIP))>0):
         consulHost = str(publicIP)
@@ -90,16 +95,22 @@ def myCheckArg(args=None):
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
 def setupService():
-
+    global grafanaEndpoint
+    
     logger.info("setupService() : start")
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Catalogue service ? (Yes/No) [Yes]:" + Fore.RESET
-    
+    grafanaEndpointInput = Fore.YELLOW + "Enter endpoint for grafana server :" + Fore.RESET
+
     choice = str(input(confirmMsg))
-    
+    grafanaEndpoint = str(input(grafanaEndpointInput))
+
     while(len(choice) > 0 and choice.casefold()!='yes' and choice.casefold()!='no'):
         verboseHandle.printConsoleError("Invalid input")
         choice = str(input(confirmMsg))
+
+    while(len(grafanaEndpoint) == 0):
+        grafanaEndpoint=str(input(grafanaEndpointInput))
 
     if choice.casefold() == 'no':
         exit(0)
@@ -161,15 +172,20 @@ def restartGrafana():
 def uploadDashbordJsonFile(host):
     logger.info("uploadDashbordJsonFile(): start host :" + str(host))
     
-    
-    localIP = executeLocalCommandAndGetOutput("curl --silent ifconfig.me")
-    localIP = str(localIP)
-    localIP = localIP[1:]
-    if(len(str(localIP))==0):
+    localIP=""
+    try:
+        localIP = executeLocalCommandAndGetOutput("curl --silent --connect-timeout 2 http://169.254.169.254/latest/meta-data/public-ipv4")
+        localIP = str(localIP)
+       
+    except Exception as e:
+        logger.error("error in getting public ip of pivot machine")
+
+    if(str(localIP)=='b\'\''):
         localIP = executeLocalCommandAndGetOutput("hostname")
 
-    catalogue_service_url = 'http://'+str(localIP)+':3211/services'
-    catalogue_table_url = 'http://'+str(localIP)+':3211/metadata'
+    localIP = localIP[1:]
+    catalogue_service_url = 'https://'+str(grafanaEndpoint)+':3211/services'
+    catalogue_table_url = 'https://'+str(grafanaEndpoint)+':3211/metadata'
 
     try:
         with Spinner():
