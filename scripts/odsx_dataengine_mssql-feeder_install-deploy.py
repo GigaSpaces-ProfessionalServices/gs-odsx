@@ -90,9 +90,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -217,8 +217,8 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 def proceedToCreateGSC(zoneGSC):
     logger.info("proceedToCreateGSC()")
     for host in spaceNodes:
-        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(host.ip)+" | grep -v JAVA_HOME"
-        verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(host.ip))
+        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
+        verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
         logger.info(commandToExecute)
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
@@ -230,14 +230,16 @@ def createGSCInputParam():
     global numberOfGSC
     global memoryGSC
 
-    numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
-    while(len(str(numberOfGSC))==0):
-        numberOfGSC=1
+    numberOfGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.db2.gscperhost"))
+    #str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
+    #while(len(str(numberOfGSC))==0):
+    #    numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
-    memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
-    while(len(str(memoryGSC))==0):
-        memoryGSC='1g'
+    memoryGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.db2.gsc.memory"))
+    #str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
+    #while(len(str(memoryGSC))==0):
+    #    memoryGSC='1g'
 
 def updateAndCopyJarFileFromSourceToShFolder(puName):
     global filePrefix
@@ -417,7 +419,7 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
         verboseHandle.printConsoleInfo("Enter number of GSCs per host :"+str(numberOfGSC))
-        verboseHandle.printConsoleInfo("Enter memory of GSC [1g] :"+memoryGSC)
+        verboseHandle.printConsoleInfo("Enter memory of GSC :"+memoryGSC)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
     verboseHandle.printConsoleInfo("Enter mssql.server : "+str(mssqlServer))
@@ -431,23 +433,24 @@ def proceedToDeployPUInputParam(managerHost):
 
     global sourceMSSQLJarFilePath
     sourceMSSQLJarFileConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.jar"))
-    sourceMSSQLJarFilePath = str(input(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET))
-    if(len(str(sourceMSSQLJarFilePath))==0):
-        sourceMSSQLJarFilePath = sourceMSSQLJarFileConfig
-    set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceMSSQLJarFilePath)
+    #print(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET)
+    #if(len(str(sourceMSSQLJarFilePath))==0):
+    sourceMSSQLJarFilePath = sourceMSSQLJarFileConfig
+    #set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceMSSQLJarFilePath)
 
     global sourceMSSQLFeederShFilePath
     sourceMSSQLFeederShFilePathConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.filePath.shFile"))
-    sourceMSSQLFeederShFilePath = str(input(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceMSSQLFeederShFilePathConfig+"] : "+Fore.RESET))
-    if(len(str(sourceMSSQLFeederShFilePath))==0):
-        sourceMSSQLFeederShFilePath = sourceMSSQLFeederShFilePathConfig
+
+    #print(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceMSSQLFeederShFilePathConfig+"] : "+Fore.RESET)
+    #if(len(str(sourceMSSQLFeederShFilePath))==0):
+    sourceMSSQLFeederShFilePath = sourceMSSQLFeederShFilePathConfig
     lastChar = str(sourceMSSQLFeederShFilePath[-1])
     logger.info("last char:"+str(lastChar))
     if(lastChar!='/'):
         sourceMSSQLFeederShFilePath = sourceMSSQLFeederShFilePath+'/'
-    set_value_in_property_file("app.dataengine.mssql-feeder.filePath.shFile",sourceMSSQLFeederShFilePath)
+    #set_value_in_property_file("app.dataengine.mssql-feeder.filePath.shFile",sourceMSSQLFeederShFilePath)
 
-    uploadFileRest(managerHost)
+    #uploadFileRest(managerHost)
 
     global partition
     partition='1'
@@ -457,24 +460,27 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
     global spaceName
-    spaceName = str(input(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
-    if(len(str(spaceName))==0):
-        spaceName='bllspace'
+    spaceName = str(readValueByConfigObj("app.dataengine.mssql-feeder.space.name"))
+    #print(Fore.YELLOW+"Enter space.name ["+spaceName+"] : "+Fore.RESET)
+    #if(len(str(spaceName))==0):
+    #    spaceName='bllspace'
 
     global mssqlServer
     mssqlServerConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.mssql.server"))
-    mssqlServer = str(input(Fore.YELLOW+"Enter mssql.server ["+mssqlServerConfig+"]: "+Fore.RESET))
-    if(len(str(mssqlServer))==0):
-        mssqlServer = mssqlServerConfig
-    set_value_in_property_file("app.dataengine.mssql-feeder.mssql.server",mssqlServer)
+    #print(Fore.YELLOW+"Enter mssql.server ["+mssqlServerConfig+"]: "+Fore.RESET)
+    #if(len(str(mssqlServer))==0):
+    mssqlServer = mssqlServerConfig
+    # set_value_in_property_file("app.dataengine.mssql-feeder.mssql.server",mssqlServer)
 
     global feederWriteBatchSize
-    feederWriteBatchSize = str(input(Fore.YELLOW+"Enter feeder.writeBatchSize [10000] :"+Fore.RESET))
-    if(len(feederWriteBatchSize)==0):
-        feederWriteBatchSize='10000'
+    feederWriteBatchSize = str(readValueByConfigObj("app.dataengine.mssql-feeder.writeBatchSize"))
+    #print(Fore.YELLOW+"Enter feeder.writeBatchSize ["+feederWriteBatchSize+"] :"+Fore.RESET)
+    #if(len(feederWriteBatchSize)==0):
+    #    feederWriteBatchSize='10000'
 
     global feederSleepAfterWrite
-    feederSleepAfterWrite = str(input(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis [500] :"+Fore.RESET))
+    feederSleepAfterWrite = str(readValueByConfigObj("app.dataengine.mssql-feeder.sleepAfterWriteInMillis"))
+    #print(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis ["+feederSleepAfterWrite+"] :"+Fore.RESET)
     if(len(feederSleepAfterWrite)==0):
         feederSleepAfterWrite='500'
 
@@ -485,6 +491,7 @@ def proceedToDeployPUInputParam(managerHost):
         finalConfirm='y'
     if(finalConfirm=='y'):
         logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+        uploadFileRest(managerHost)
         proceedToDeployPU()
     else:
         return
@@ -509,7 +516,8 @@ if __name__ == '__main__':
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
-                        confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
+                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.db2.gsc.create"))
+                        #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
                             createGSCInputParam()

@@ -96,10 +96,10 @@ def getHostConfiguration():
 
         if(len(hostsConfig)==2):
             hostsConfig=hostsConfig.replace('"','')
-        if(len(str(hostsConfig))>0):
-            verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
-        else:
-            verboseHandle.printConsoleError("No manager configuration found:")
+        #if(len(str(hostsConfig))>0):
+        #    verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
+        #else:
+        #    verboseHandle.printConsoleError("No manager configuration found:")
         return hostsConfig
     except Exception as e:
         handleException(e)
@@ -118,13 +118,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsOptionExtFromConfig = str(readValueByConfigObj("app.space.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
         additionalParam = str(readValuefromAppConfig("app.space.targetDirectory"))
-        print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
+        #print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
         targetDirectory=str(additionalParam)
         #if(len(additionalParam)==0):
         targetDirectory=additionalParam
         logger.info("targetDirecory :"+str(targetDirectory))
         gsOptionExt = ""
-        print(Fore.YELLOW+'GS_OPTIONS_EXT : '+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+' '+Fore.RESET)
+        #print(Fore.YELLOW+'GS_OPTIONS_EXT : '+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+' '+Fore.RESET)
         #if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
         gsOptionExt=gsOptionExtFromConfig
@@ -136,7 +136,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
         gsManagerOptions = ""
-        print(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
+        #print(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsManagerOptions))==0):
             #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
         gsManagerOptions=gsManagerOptionsFromConfig
@@ -148,7 +148,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = ""
-        print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
+        #print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsLogsConfigFile))==0):
             #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
         gsLogsConfigFile=gsLogsConfigFileFromConfig
@@ -159,9 +159,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         licenseConfig = readValueByConfigObj("app.manager.license")
         #licenseConfig='"{}"'.format(licenseConfig)
-        gsLicenseFile = str(input(Fore.YELLOW+'GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsLicenseFile))==0):
-            gsLicenseFile = licenseConfig
+        #gsLicenseFile = str(input(Fore.YELLOW+'GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
+        #if(len(str(gsLicenseFile))==0):
+        gsLicenseFile = licenseConfig
         #else:
         #    gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
@@ -171,7 +171,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
         nofileLimitFile = ""
-        print(Fore.YELLOW+'User level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET)
+        #print(Fore.YELLOW+'User level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET)
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
         #if(len(str(nofileLimitFile))==0):
         nofileLimitFile = nofileLimit
@@ -180,12 +180,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
         wantToInstallJava = str(readValuefromAppConfig("app.space.wantInstallJava"))
-        print(Fore.YELLOW+"Install Java : "+wantToInstallJava+Fore.RESET)
+        #print(Fore.YELLOW+"Install Java : "+wantToInstallJava+Fore.RESET)
         #if(len(str(wantToInstallJava))==0):
         #    wantToInstallJava='n'
 
         wantToInstallUnzip = str(readValuefromAppConfig("app.space.wantInstallUnzip"))
-        print(Fore.YELLOW+"Install unzip : "+wantToInstallUnzip+Fore.RESET)
+        #print(Fore.YELLOW+"Install unzip : "+wantToInstallUnzip+Fore.RESET)
         #if(len(str(wantToInstallUnzip))==0):
         #    wantToInstallUnzip='n'
         global gscCount
@@ -194,25 +194,25 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gscCountConfig = str(readValuefromAppConfig("app.space.gsc.count"))
         gscCount = ""
-        print(Fore.YELLOW+"Number of GSC to create : "+str(gscCountConfig)+Fore.RESET)
+        #print(Fore.YELLOW+"Number of GSC to create : "+str(gscCountConfig)+Fore.RESET)
         #if(len(str(gscCount))==0):
         gscCount = gscCountConfig
         #set_value_in_property_file("app.space.gsc.count",str(gscCount))
 
         memoryGSCConfig = str(readValuefromAppConfig("app.space.gsc.memory"))
         memoryGSC = ""
-        print(Fore.YELLOW+"Memory required to create GSC : "+str(memoryGSCConfig)+Fore.RESET)
+        #print(Fore.YELLOW+"Memory required to create GSC : "+str(memoryGSCConfig)+Fore.RESET)
         #if(len(str(memoryGSC))==0):
         memoryGSC = memoryGSCConfig
         #set_value_in_property_file("app.space.gsc.memory",memoryGSC)
 
         zoneGSC = str(readValuefromAppConfig("app.space.gsc.zone"))
-        print(Fore.YELLOW+"Zone to create GSC : "+zoneGSC+Fore.RESET)
+        #print(Fore.YELLOW+"Zone to create GSC : "+zoneGSC+Fore.RESET)
         #if(len(str(zoneGSC))==0):
         #    zoneGSC = 'bll'
 
         sourceDirectoryForJar = str(readValuefromAppConfig("app.space.jar.sourceFolder"))
-        print(Fore.YELLOW+"Source directory to copy jars from : "+sourceDirectoryForJar+Fore.RESET)
+        #print(Fore.YELLOW+"Source directory to copy jars from : "+sourceDirectoryForJar+Fore.RESET)
         #if(len(str(sourceDirectoryForJar))==0):
         #    sourceDirectoryForJar='/dbagiga'
 

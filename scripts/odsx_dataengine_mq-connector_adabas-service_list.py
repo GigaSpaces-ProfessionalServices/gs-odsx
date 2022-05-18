@@ -4,10 +4,10 @@ import os
 import sys
 from utils.odsx_print_tabular_data import printTabular
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes, isInstalledAdabasService
 from colorama import Fore
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -127,23 +127,25 @@ def listAdabusServiceServers():
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
                Fore.YELLOW + "Ip" + Fore.RESET,
                Fore.YELLOW + "Host" + Fore.RESET,
+               Fore.YELLOW + "Installed" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     counter = 1
     for node in dEServers:
         if node.role == "mq-connector":
-            host_dict_obj.add(str(counter), str(node.ip))
+            host_dict_obj.add(str(counter), str(os.getenv(node.ip)))
             status = getAdabusServiceStatus(node)
-            if (status == 0):
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
-                             Fore.GREEN + "ON" + Fore.RESET]
-            else:
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
-                             Fore.RED + "OFF" + Fore.RESET]
+            installStatus='No'
+            install = isInstalledAdabasService(str(os.getenv(node.ip)))
+            logger.info("install : "+str(install))
+            if(len(str(install))>0):
+                installStatus='Yes'
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.name) + Fore.RESET,
+                         Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                         Fore.GREEN+"ON"+Fore.RESET if(status == 0) else Fore.RED+"OFF"+Fore.RESET
+                         ]
             data.append(dataArray)
             counter = counter + 1
     printTabular(None, headers, data)

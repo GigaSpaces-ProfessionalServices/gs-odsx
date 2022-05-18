@@ -230,14 +230,16 @@ def createGSCInputParam():
     global numberOfGSC
     global memoryGSC
 
-    numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
-    while(len(str(numberOfGSC))==0):
-        numberOfGSC=1
+    numberOfGSC = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.gscperhost"))
+    #str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
+    #while(len(str(numberOfGSC))==0):
+    #    numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
-    memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
-    while(len(str(memoryGSC))==0):
-        memoryGSC='1g'
+    memoryGSC = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.gsc.memory"))
+    #str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
+    #while(len(str(memoryGSC))==0):
+    #    memoryGSC='1g'
 
 def updateAndCopyJarFileFromSourceToShFolder(puName):
     global filePrefix
@@ -421,13 +423,14 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
         verboseHandle.printConsoleInfo("Enter number of GSCs per host :"+str(numberOfGSC))
-        verboseHandle.printConsoleInfo("Enter memory of GSC [1g] :"+memoryGSC)
+        verboseHandle.printConsoleInfo("Enter memory of GSC :"+memoryGSC)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
     verboseHandle.printConsoleInfo("Enter db2.host : "+str(db2Host))
     verboseHandle.printConsoleInfo("Enter db2.port : "+str(db2Port))
     verboseHandle.printConsoleInfo("Enter db2.database : "+str(db2Database))
     verboseHandle.printConsoleInfo("Enter db2.user : "+str(db2Username))
+    verboseHandle.printConsoleInfo("Enter db2.password : "+str(db2Password))
     verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
     verboseHandle.printConsoleInfo("Enter source file path of db2-feeder .jar file including file name : "+str(sourceDB2JarFilePath))
@@ -438,23 +441,23 @@ def proceedToDeployPUInputParam(managerHost):
 
     global sourceDB2JarFilePath
     sourceDb2JarFileConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.jar"))
-    sourceDB2JarFilePath = str(input(Fore.YELLOW+"Enter source file path of db2-feeder .jar file including file name ["+sourceDb2JarFileConfig+"] : "+Fore.RESET))
-    if(len(str(sourceDB2JarFilePath))==0):
-        sourceDB2JarFilePath = sourceDb2JarFileConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.jar",sourceDB2JarFilePath)
+    #print(Fore.YELLOW+" source file path of db2-feeder .jar file including file name ["+sourceDb2JarFileConfig+"] : "+Fore.RESET)
+    #if(len(str(sourceDB2JarFilePath))==0):
+    sourceDB2JarFilePath = sourceDb2JarFileConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.jar",sourceDB2JarFilePath)
 
     global sourceDB2FeederShFilePath
     sourceDB2FeederShFilePathConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.filePath.shFile"))
-    sourceDB2FeederShFilePath = str(input(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceDB2FeederShFilePathConfig+"] : "+Fore.RESET))
-    if(len(str(sourceDB2FeederShFilePath))==0):
-        sourceDB2FeederShFilePath = sourceDB2FeederShFilePathConfig
+    #print(Fore.YELLOW+" source file path (directory) of *.sh file ["+sourceDB2FeederShFilePathConfig+"] : "+Fore.RESET)
+    #if(len(str(sourceDB2FeederShFilePath))==0):
+    sourceDB2FeederShFilePath = sourceDB2FeederShFilePathConfig
     lastChar = str(sourceDB2FeederShFilePath[-1])
     logger.info("last char:"+str(lastChar))
     if(lastChar!='/'):
         sourceDB2FeederShFilePath = sourceDB2FeederShFilePath+'/'
-    set_value_in_property_file("app.dataengine.db2-feeder.filePath.shFile",sourceDB2FeederShFilePath)
+    #set_value_in_property_file("app.dataengine.db2-feeder.filePath.shFile",sourceDB2FeederShFilePath)
 
-    uploadFileRest(managerHost)
+    #uploadFileRest(managerHost)
 
     global partition
     partition='1'
@@ -464,50 +467,55 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
     global spaceName
-    spaceName = str(input(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
-    if(len(str(spaceName))==0):
-        spaceName='bllspace'
+
+    spaceName = str(readValuefromAppConfig("app.dataengine.db2-feeder.space.name"))
+    #print(Fore.YELLOW+" space.name ["+spaceName+"] : "+Fore.RESET)
+    #if(len(str(spaceName))==0):
+    #spaceName='bllspace'
 
     global db2Host
     db2HostConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.host"))
-    db2Host = str(input(Fore.YELLOW+"Enter db2.host ["+db2HostConfig+"]: "+Fore.RESET))
-    if(len(str(db2Host))==0):
-        db2Host = db2HostConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.host",db2Host)
+    #print(Fore.YELLOW+" db2.host ["+db2HostConfig+"]: "+Fore.RESET)
+    #if(len(str(db2Host))==0):
+    db2Host = db2HostConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.host",db2Host)
 
     global db2Port
     db2PortConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.port"))
-    db2Port = str(input(Fore.YELLOW+"Enter db2.port ["+db2PortConfig+"] : "+Fore.RESET))
-    if(len(str(db2Port))==0):
-        db2Port = db2PortConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.port",db2Port)
+    #print(Fore.YELLOW+" db2.port ["+db2PortConfig+"] : "+Fore.RESET)
+    #if(len(str(db2Port))==0):
+    db2Port = db2PortConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.port",db2Port)
 
     global db2Database
     db2DatabaseConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.database"))
-    db2Database = str(input(Fore.YELLOW+"Enter db2.database ["+db2DatabaseConfig+"] : "+Fore.RESET))
-    if(len(str(db2Database))==0):
-        db2Database = db2DatabaseConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.database",db2Database)
+    #print(Fore.YELLOW+" db2.database ["+db2DatabaseConfig+"] : "+Fore.RESET)
+    #if(len(str(db2Database))==0):
+    db2Database = db2DatabaseConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.database",db2Database)
 
     global db2Username
     db2UsernameConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.username"))
-    db2Username = str(input(Fore.YELLOW+"Enter db2.user ["+db2UsernameConfig+"]: "))
-    if(len(str(db2Username))==0):
-        db2Username = db2UsernameConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.username",db2Username)
+    #print(Fore.YELLOW+" db2.user ["+db2UsernameConfig+"]: ")
+    #if(len(str(db2Username))==0):
+    db2Username = db2UsernameConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.username",db2Username)
 
     global db2Password
-    db2Password = str(input(Fore.YELLOW+"Enter db2Password : "+Fore.RESET))
+    db2Password = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.password"))
+    #str(input(Fore.YELLOW+"Enter db2Password : "+Fore.RESET))
 
     global feederWriteBatchSize
-    feederWriteBatchSize = str(input(Fore.YELLOW+"Enter feeder.writeBatchSize [10000] :"+Fore.RESET))
-    if(len(feederWriteBatchSize)==0):
-        feederWriteBatchSize='10000'
+    feederWriteBatchSize = str(readValuefromAppConfig("app.dataengine.db2-feeder.writeBatchSize"))
+    #print(Fore.YELLOW+" feeder.writeBatchSize ["+feederWriteBatchSize+"] :"+Fore.RESET)
+    #if(len(feederWriteBatchSize)==0):
+    #    feederWriteBatchSize='10000'
 
     global feederSleepAfterWrite
-    feederSleepAfterWrite = str(input(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis [500] :"+Fore.RESET))
-    if(len(feederSleepAfterWrite)==0):
-        feederSleepAfterWrite='500'
+    feederSleepAfterWrite = str(readValuefromAppConfig("app.dataengine.db2-feeder.sleepAfterWriteInMillis"))
+    #print(Fore.YELLOW+" feeder.sleepAfterWriteInMillis ["+feederSleepAfterWrite+"] :"+Fore.RESET)
+    #if(len(feederSleepAfterWrite)==0):
+    #    feederSleepAfterWrite='500'
 
     displaySummaryOfInputParam()
 
@@ -516,6 +524,7 @@ def proceedToDeployPUInputParam(managerHost):
         finalConfirm='y'
     if(finalConfirm=='y'):
         logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+        uploadFileRest(managerHost)
         proceedToDeployPU()
     else:
         return
@@ -540,7 +549,8 @@ if __name__ == '__main__':
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
-                        confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
+                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.gsc.create"))
+                        #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
                             createGSCInputParam()
