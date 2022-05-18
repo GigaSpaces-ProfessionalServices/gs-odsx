@@ -77,7 +77,7 @@ def isInstalledAndGetVersion(host):
 def listNB():
     logger.debug("listing NB servers")
     nbServers = config_get_nb_list()
-    verboseHandle.printConsoleWarning("Menu -> Servers -> Northbound -> List\n")
+    verboseHandle.printConsoleWarning("Menu -> Servers -> Northbound -> All -> List\n")
     #verboseHandle.printConsoleWarning("IP\t\t\tHost\t\t\tgsc\t\tResume Mode")
     headers = [Fore.YELLOW+"IP"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,

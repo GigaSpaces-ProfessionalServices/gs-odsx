@@ -86,7 +86,7 @@ def removeAgent(nodes):
         connectExecuteSSH(str(node), "root", "scripts/servers_northbound_remove.sh", remotePath+"/nb-infra" + " --uninstall")
         #config_remove_nb_streamByNameIP(str(node),str(node))
         logger.info("Host removed.:"+str(node))
-        print("Host removed.:"+str(node))
+        print("Uninstall NB completed on host.:"+str(node))
 
 def removeManagement(managementNodes):
     logger.info("removeManagement()")
@@ -102,7 +102,7 @@ def removeManagement(managementNodes):
         print("Host removed.:"+str(node))
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> Northbound -> Remove')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Northbound -> Agent -> Remove')
     logger.info("Servers -> Northbound -> Remove")
     args = []
     menuDrivenFlag = 'm'# To differentiate between CLI and Menudriven Argument handling help section
@@ -123,6 +123,7 @@ if __name__ == '__main__':
         confirmAgentRemove=""
         confirmManagementRemove=""
         logger.info("serverNodes : "+str(serverNodes))
+        '''
         if(len(str(serverNodes))>0):
             verboseHandle.printConsoleInfo("Consul_servers going to remove ["+serverNodes+"]")
             confirmServerRemove = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative server un-installation ? (y/n) [y]:"+Fore.RESET))
@@ -130,7 +131,7 @@ if __name__ == '__main__':
                 confirmServerRemove='y'
         else:
             verboseHandle.printConsoleInfo("No entries for NB applicative server found")
-
+        '''
         nodes =""
         agentNodes = getNBAgentHostList()
         logger.info("agentNodes : "+str(agentNodes))
@@ -141,7 +142,7 @@ if __name__ == '__main__':
                 confirmAgentRemove='y'
         else:
             verboseHandle.printConsoleInfo("No consul_agents found.")
-
+        '''
         managementNodes = getNBMAnagementtHostList()
         logger.info("managementNodes :"+str(managementNodes))
         if(len(managementNodes)>0):
@@ -151,6 +152,7 @@ if __name__ == '__main__':
                 confirmManagementRemove='y'
         else:
             verboseHandle.printConsoleInfo("No management server found.")
+        
         if(confirmServerRemove == 'y'):
             logger.info("confirmServerRemove == y ")
             nodeList = serverNodes.split(',')
@@ -159,15 +161,14 @@ if __name__ == '__main__':
                 verboseHandle.printConsoleInfo("Removing NB applicative server :"+str(hostip))
                 logger.info("Current NB applicative host :"+str(hostip))
                 connectExecuteSSH(str(hostip), "root", "scripts/servers_northbound_remove.sh", remotePath+"/nb-infra" + " --uninstall")
-                config_remove_nb_streamByNameIP(str(hostip),str(hostip))
+                #config_remove_nb_streamByNameIP(str(hostip),str(hostip))
                 logger.info("Host removed.:"+str(hostip))
                 print("Host removed.:"+str(hostip))
-
+        '''
         if(confirmAgentRemove == 'y'):
             logger.info("confirmAgentRemove == y")
             #Remove from cluster json
             removeAgent(agentNodes)
-        if(confirmManagementRemove=='y'):
-            removeManagement(managementNodes)
+
     except Exception as e:
         handleException(e)

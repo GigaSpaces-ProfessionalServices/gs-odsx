@@ -12,6 +12,7 @@ from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from scripts.odsx_servers_northbound_applicative_install import proceedForEnvHostConfiguration
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -78,7 +79,7 @@ def check_prerequisite_NB():
 # Ask for required bn.conf properties
 def update_app_config_file(linePatternToReplace, value, lines1):
     if lines1 == None:
-        file_name = "csv/nb.conf.template"
+        file_name = "/dbagigashare/current/NB/APPLICATIVE/nb.conf.template"
         lines = open(file_name, 'r').readlines()
     else:
         lines = lines1
@@ -183,16 +184,16 @@ def proceedWithFreshAgentInstallation():
 def proceedForManagementServiceInstallation():
     logger.info("proceedForManagementServiceInstallation()")
     managementConfirm=''
-    managementConfirm = str(input("Do you wanto to proceed with NB management server installation (y/n) [y]?"))
-    if(len(str(managementConfirm))==0):
-        managementConfirm='y'
+    #managementConfirm = str(input("Do you wanto to proceed with NB management server installation (y/n) [y]?"))
+    #if(len(str(managementConfirm))==0):
+    managementConfirm='y'
     logger.info("managementConfirm : "+str(managementConfirm))
     if(managementConfirm=='y'):
         managementHostsConfig = str(getNBManagementHostFromEnv()).replace('"','')
         logger.info("managementHostsConfig : "+str(managementHostsConfig))
         existingManagementHostConfirm=""
         if(len(str(managementHostsConfig))>0):
-            print(input(Fore.YELLOW+"Proceeding with existing NB management configuration ["+str(managementHostsConfig)+"] "+Fore.RESET))
+            #print(Fore.YELLOW+"Proceeding with existing NB management configuration ["+str(managementHostsConfig)+"] "+Fore.RESET)
             managementHostsConfigArray = managementHostsConfig.split(',')
             logger.info("Total number of NB management hosts :"+str(len(managementHostsConfigArray)))
             for host in managementHostsConfigArray:
@@ -285,17 +286,19 @@ def getNBAgentHostFromEnv():
 
 def setConfProperties():
     logger.info("setConfProperties()")
-    nbConfig = createPropertiesMapFromFile("csv/nb.conf.template")
-
+    nbConfig = createPropertiesMapFromFile("/dbagigashare/current/NB/APPLICATIVE/nb.conf.template")
+    global sourceNbConfFile
     existingConsul_server=""
-    nbConfig = createPropertiesMapFromFile("config/nb.conf")
-    existingConsul_server = str(getNBApplicativeHostFromEnv()).replace('"','')
+    nbConfig = "/dbagigashare/current/NB/APPLICATIVE/nb.conf"
+    proceedForEnvHostConfiguration(nbConfig)
+    nbConfig = createPropertiesMapFromFile(nbConfig)
+    existingConsul_server = str(nbConfig.get("CONSUL_SERVERS")).replace('"','')
     logger.info("existingConsul_server : "+str(existingConsul_server))
     consul_replica_number=""
     consul_servers=""
     existingServerConfirm=""
     if(len(str(existingConsul_server))>0):
-        print(Fore.YELLOW+"Proceeding with existing configuration Applicative Servers  ["+str(existingConsul_server)+"] "+Fore.RESET)
+        #print(Fore.YELLOW+"Proceeding with existing configuration Applicative Servers  ["+str(getNBApplicativeHostFromEnv())+"] "+Fore.RESET)
         consul_replica_number = str(len(existingConsul_server.split(",")))
         consul_servers=str(existingConsul_server).replace('"','')
     else:
@@ -306,60 +309,65 @@ def setConfProperties():
     logger.info("consul_servers : getConsulServers()"+str(consul_servers))
 
     nb_domain = str(nbConfig.get("NB_DOMAIN")).replace('"','')
-    if(len(str(nb_domain).replace('"',''))==0):
-        nb_domain="example.gigaspaces.com"
-    nb_domain_input = str(input(Fore.YELLOW+"Enter NB_DOMAIN ["+nb_domain+"]:"+Fore.RESET))
-    if(len(str(nb_domain_input))>0):
-        nb_domain =nb_domain_input
+    #if(len(str(nb_domain).replace('"',''))==0):
+    #    nb_domain="example.gigaspaces.com"
+    #nb_domain_input = \
+    #print(Fore.YELLOW+"NB_DOMAIN :"+nb_domain+Fore.RESET)
+    #if(len(str(nb_domain_input))>0):
+    #    nb_domain =nb_domain_input
     logger.info("nb_domain :"+str(nb_domain) )
 
-    if consul_replica_number == "":
-        consul_replica_number = str(len(consul_servers.split(",")))
-    logger.info("consul_replica_number : "+str(consul_replica_number))
+    #if consul_replica_number == "":
+    consul_replica_number = str(nbConfig.get("CONSUL_REPLICA_NUMBER")).replace('"','')
+    #logger.info("consul_replica_number : "+str(consul_replica_number))
 
     ssl_certificate = str(nbConfig.get("SSL_CERTIFICATE")).replace('"','')
-    if(len(str(ssl_certificate).replace('"',''))==0):
-        ssl_certificate="server.crt"
-    ssl_certificate_input = str(input(Fore.YELLOW+"Enter SSL_CERTIFICATE ["+ssl_certificate+"]:"+Fore.RESET))
-    if(len(str(ssl_certificate_input))>0):
-        ssl_certificate =ssl_certificate_input
+    #if(len(str(ssl_certificate).replace('"',''))==0):
+    #    ssl_certificate="server.crt"
+    #ssl_certificate_input =
+    #print(Fore.YELLOW+"Enter SSL_CERTIFICATE :"+ssl_certificate+Fore.RESET)
+    #if(len(str(ssl_certificate_input))>0):
+    #    ssl_certificate =ssl_certificate_input
     logger.info("ssl_certificate :"+str(ssl_certificate))
 
     ssl_private_key = str(nbConfig.get("SSL_PRIVATE_KEY")).replace('"','')
-    if(len(str(ssl_private_key).replace('"',''))==0):
-        ssl_private_key="server.key"
-    ssl_private_key_input = str(input(Fore.YELLOW+"Enter SSL_PRIVATE_KEY ["+ssl_private_key+"]:"+Fore.RESET))
-    if(len(str(ssl_private_key_input))>0):
-        ssl_private_key =ssl_private_key_input
+    #if(len(str(ssl_private_key).replace('"',''))==0):
+    #    ssl_private_key="server.key"
+    #ssl_private_key_input = \
+    #print(Fore.YELLOW+"SSL_PRIVATE_KEY :"+ssl_private_key+Fore.RESET)
+    #if(len(str(ssl_private_key_input))>0):
+    #    ssl_private_key =ssl_private_key_input
     logger.info("ssl_private_key :"+str(ssl_private_key))
 
     ssl_ca_certificate = str(nbConfig.get("SSL_CA_CERTIFICATE")).replace('"','')
-    if(len(str(ssl_ca_certificate).replace('"',''))==0):
-        ssl_ca_certificate="cacert.crt"
-    ssl_ca_certificate_input = str(input(Fore.YELLOW+"Enter SSL_CA_CERTIFICATE ["+ssl_ca_certificate+"]:"+Fore.RESET))
-    if(len(str(ssl_ca_certificate_input))>0):
-        ssl_ca_certificate =ssl_ca_certificate_input
+    #if(len(str(ssl_ca_certificate).replace('"',''))==0):
+    #    ssl_ca_certificate="cacert.crt"
+    #ssl_ca_certificate_input =
+    #print(Fore.YELLOW+"SSL_CA_CERTIFICATE :"+ssl_ca_certificate+Fore.RESET)
+    #if(len(str(ssl_ca_certificate_input))>0):
+    #    ssl_ca_certificate =ssl_ca_certificate_input
     logger.info("ssl_ca_certificate : "+str(ssl_ca_certificate))
 
     max_upload_size = str(nbConfig.get("MAX_UPLOAD_SIZE")).replace('"','')
-    if(len(str(max_upload_size).replace('"',''))==0):
-        max_upload_size="20m"
-    maxUploadSize_input = str(input(Fore.YELLOW+"Enter MAX_UPLOAD_SIZE ["+max_upload_size+"]:"+Fore.RESET))
-    if(len(str(maxUploadSize_input))>0):
-        max_upload_size =maxUploadSize_input
+    #if(len(str(max_upload_size).replace('"',''))==0):
+    #    max_upload_size="20m"
+    #maxUploadSize_input = \
+    #print(Fore.YELLOW+"MAX_UPLOAD_SIZE :"+max_upload_size+Fore.RESET)
+    #if(len(str(maxUploadSize_input))>0):
+    #    max_upload_size =maxUploadSize_input
     logger.info("max_upload_size : "+str(max_upload_size))
 
     # Check if Application Service if yes then allow Agent else Ask for OPS Manager
     gridui_servers=""
     opsmanager_servers=""
     global applicationServerFlag
-    applicationServerFlag = str(input(Fore.YELLOW+"Do you want to install as application service (y/n) [y] :"+Fore.RESET))
-    logger.info("applicationServerFlag :"+str(applicationServerFlag))
-    if applicationServerFlag == "":
-        applicationServerFlag = "y"
-    elif applicationServerFlag.lower() != "y" and applicationServerFlag.lower() != "n":
-        verboseHandle.printConsoleError("please select valid option (y/n) "+applicationServerFlag.lower())
-        exit(0)
+    #applicationServerFlag = str(input(Fore.YELLOW+"Do you want to install as application service (y/n) [y] :"+Fore.RESET))
+    #logger.info("applicationServerFlag :"+str(applicationServerFlag))
+    #if applicationServerFlag == "":
+    applicationServerFlag = "y"
+    #elif applicationServerFlag.lower() != "y" and applicationServerFlag.lower() != "n":
+    #    verboseHandle.printConsoleError("please select valid option (y/n) "+applicationServerFlag.lower())
+    #    exit(0)
     influxdb_servers=""
     if applicationServerFlag == "y":
         logger.info("applicationServerFlag==y")
@@ -391,13 +399,13 @@ def setConfProperties():
         if(len(str(grafana_servers))>0 and len(str(influxdb_servers))>0):
             gridui_servers_config = str(nbConfig.get("GRIDUI_SERVERS")).replace('"','')
             gridui_servers = getNBOPSManagerHostFromEnv()
-            print(Fore.YELLOW +"GRIDUI_SERVERS ["+str(gridui_servers)+"]"+Fore.RESET)
+            #print(Fore.YELLOW +"GRIDUI_SERVERS ["+str(gridui_servers)+"]"+Fore.RESET)
             logger.info("gridui_servers :"+str(gridui_servers))
             if validateHost(gridui_servers) == False:
                 verboseHandle.printConsoleError("gridui_servers is not valid please try again ..")
                 return False
             opsmanager_servers_config = gridui_servers
-            print(Fore.YELLOW +"OPSMANAGER_SERVERS ["+opsmanager_servers_config+"]"+Fore.RESET)
+            #print(Fore.YELLOW +"OPSMANAGER_SERVERS ["+opsmanager_servers_config+"]"+Fore.RESET)
             logger.info("opsmanager_servers :"+str(opsmanager_servers))
             if validateHost(opsmanager_servers) == False:
                 verboseHandle.printConsoleError("opsmanager_servers is not valid please try again ..")
@@ -446,7 +454,11 @@ def proceedForUploadPackageToRemoteHost(remotePath,hostip,nb_user):
     logger.info("hostip :"+str(hostip))
 
     logger.info("Building .tar file : tar -cvf install/install.tar install")
-    cmd = 'cp config/nb.conf install/nb/;tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
+    userCMD = os.getlogin()
+    if userCMD == 'ec2-user':
+        cmd = 'sudo tar -cvf install/install.tar /dbagigashare/current/' # Creating .tar file on Pivot machine
+    else :
+        cmd = 'tar -cvf install/install.tar /dbagigashare/current/' # Creating .tar file on Pivot machine
     logger.info("cmd :"+str(cmd))
     with Spinner():
         status = os.system(cmd)
@@ -457,7 +469,7 @@ def proceedForUploadPackageToRemoteHost(remotePath,hostip,nb_user):
 
     #scp_upload(hostip, nb_user, "installationpackages/nb/nb-infra/", remotePath) # Removed hence required consolidated upload of install folder
 
-    commandToExecute="scripts/servers_northbound_preinstall.sh"
+    commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
     additionalParam=remotePath+' '
     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
     with Spinner():
@@ -467,13 +479,14 @@ def proceedForUploadPackageToRemoteHost(remotePath,hostip,nb_user):
 
 def upload_packages_to_nb_servers(confirmServerInstall,confirmAgentInstall,confirmManagementInstall):
     logger.info("upload_packages_to_nb_servers() : confirmServerInstall:"+str(confirmServerInstall)+" :: confirmAgentInstall:"+str(confirmAgentInstall)+" confirmManagementInstall:"+str(confirmManagementInstall))
-    nbConfig = createPropertiesMapFromFile("config/nb.conf")
+    nbConfig = createPropertiesMapFromFile("/dbagigashare/current/NB/APPLICATIVE/nb.conf")
     #print(nbConfig.get("CONSUL_SERVERS"))
     #nb_user = str(input(Fore.YELLOW+"Enter user name to connect to nb servers [root]:"+Fore.RESET))
     #if nb_user == "":
     nb_user = "root"
     logger.info("nb_user :"+str(nb_user))
-    remotePath = str(input(Fore.YELLOW+"Enter remote path to copy nb installation package [/dbagiga]:"+Fore.RESET))
+    remotePath = str(readValuefromAppConfig("app.nb.targetfolder"))
+    #print(Fore.YELLOW+"Remote path to copy nb installation package :"+remotePath+Fore.RESET)
     logger.info("input remotePath :"+str(remotePath))
     nbinfraPathAppend = False
     if remotePath == "":
@@ -500,7 +513,7 @@ def upload_packages_to_nb_servers(confirmServerInstall,confirmAgentInstall,confi
                 logger.info("hostip : "+str(hostip))
 
                 logger.info("Building .tar file : tar -cvf install/install.tar install")
-                cmd = 'cp config/nb.conf install/nb/;tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
+                cmd = 'tar -cvf install/install.tar /dbagigashare/current/' # Creating .tar file on Pivot machine
                 with Spinner():
                     status = os.system(cmd)
                     logger.info("Creating tar file status : "+str(status))
@@ -535,6 +548,7 @@ def upload_packages_to_nb_servers(confirmServerInstall,confirmAgentInstall,confi
         install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, confirmAgentInstall, confirmManagementInstall)
         return 'True'
     elif(confirmInstallation == 'n'):
+        cleanNbConfig()
         return 'False'
     else:
         return 'False'
@@ -544,7 +558,7 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
     logger.info("install_packages_to_nb_servers user: "+str(nb_user)+" remotepath: "+str(remotePath)+" confirmServerInstall: "+str(confirmServerInstall)+" confirmAgentInstall:"+str(confirmAgentInstall)+" confirmManagementInstall:"+str(confirmManagementInstall))
     if(confirmServerInstall=='y'):
         logger.info("install_packages_to_nb_servers "+str(nb_user+" : "+str(remotePath)))
-        nbConfig = createPropertiesMapFromFile("config/nb.conf")
+        nbConfig = createPropertiesMapFromFile("/dbagigashare/current/NB/APPLICATIVE/nb.conf")
         logger.info("len(host_dict_obj) :" +str(len(host_dict_obj)))
         #if len(host_dict_obj) == 0:        # Removed hence one shot installation required
         logger.info("Starting nb server installation")
@@ -602,8 +616,19 @@ def install_packages_to_nb_servers(nb_user, remotePath, confirmServerInstall, co
             #config_add_nb_node(hostip, hostip, "management server", "config/cluster.config")
             logger.info("Completed Installation for management server:"+str(hostip))
             verboseHandle.printConsoleInfo("Completed Installation for management server:"+str(hostip))
+        cleanNbConfig()
         logger.info("Completed installation for all management server")
         verboseHandle.printConsoleInfo("Completed installation for all management server")
+
+def cleanNbConfig():
+    userCMD = os.getlogin()
+    if userCMD == 'ec2-user':
+        cmd = 'sudo rm -f /dbagigashare/current/NB/APPLICATIVE/nb.conf'
+    else:
+        cmd = 'rm -f /dbagigashare/current/NB/APPLICATIVE/nb.conf'
+    with Spinner():
+        status = os.system(cmd)
+        logger.info("removed nb.conf status "+str(status))
 
 # validate
 class ConsulMember:
@@ -629,49 +654,12 @@ def validate_nb_install():
         servers.append(host)
 
     logger.info("Agent and consul servers : : "+str(servers))
-    '''
-    for hostip in nbConfig.get("CONSUL_SERVERS").replace(" ", "").split(","):
-        logger.info("Executing command : sleep 5; export CONSUL_HTTP_ADDR="+str(hostip)+":8500; consul members ")
-        hostip = str(hostip).replace('"', '')
-        with Spinner():
-            out = executeRemoteCommandAndGetOutput(hostip, "root",
-                                               "sleep 5; export CONSUL_HTTP_ADDR=" + hostip + ":8500; consul members")
-        linecount = 0
-        consulArr = []
-        for line1 in out.split("\n"):
-            linecount = linecount + 1
-            if linecount == 1 or line1 == "":
-                continue
-            word = []
-            # To display only current configured  consul and agent servers not related config/nb.conf and config/app.config below line was also printing related servers
-            #print(str(linecount) + " -->" + str(line1))
-            wordCount = 0
-            for word1 in line1.split(" "):
-                if word1 == "":
-                    continue
-                word.append(word1)
-                wordCount = wordCount + 1
-            # To display only current configured  consul and agent servers not related config/nb.conf and config/app.config
-            current_consul_server = word[1].split(':')
-            logger.info("current_consul_server : "+str(current_consul_server[0]))
-            if(servers.__contains__(str(current_consul_server[0]))):
-                logger.info("Putting servers :"+str(current_consul_server[0]))
-                consulArr.append(ConsulMember(word[0], word[1], word[2], word[3], word[4], word[5], word[6], word[7]))
-                logger.info("Printing consulservers and status :")
-                logger.info(str(linecount) + " -->" + str(line1))
-                print(str(linecount) + " -->" + str(line1))
 
-        for consul in consulArr:
-            if consul.status != "alive":
-                logger.info("Status of :"+str(consul.address)+" is not-alive :"+str(consul.status))
-                return False
-        break;
-    '''
     return True
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> NB -> Install')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> NB ->Agent -> Install')
     try:
         #check_prerequisite_NB()
         confirmAgentInstall=""
@@ -679,23 +667,20 @@ if __name__ == '__main__':
         confirmManagementInstall=""
         if setConfProperties() != False:
             print("All prerequisite are valid and continuing with installation")
-            confirmServerInstall = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative server installation ? (y/n) [y]:"+Fore.RESET))
-            if(len(str(confirmServerInstall))==0):
-                confirmServerInstall='y'
+            #confirmServerInstall = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative server installation ? (y/n) [y]:"+Fore.RESET))
+            #if(len(str(confirmServerInstall))==0):
+            confirmServerInstall='n'
             nbConfig = createPropertiesMapFromFile("config/nb.conf")
             opsmanager_servers = str(nbConfig.get("OPSMANAGER_SERVERS")).replace('"','')
-            if(applicationServerFlag=='y'):
-                confirmAgentInstall = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative agent installation ? (y/n) [y]:"+Fore.RESET))
-                if(len(str(confirmAgentInstall))==0):
-                    confirmAgentInstall='y'
+            #if(applicationServerFlag=='y'):
+            #    confirmAgentInstall = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative agent installation ? (y/n) [y]:"+Fore.RESET))
+            #    if(len(str(confirmAgentInstall))==0):
+            confirmAgentInstall='y'
             nodesManagement = getManagementHostList()
-            if(len(nodesManagement)==0):
-                nodesManagement = str(readValuefromAppConfig("app.northbound.management.hosts")).replace('"','')
-            #print(applicationServerFlag)
-            if(len(str(nodesManagement))>0 and applicationServerFlag=='n'):
-                confirmManagementInstall = str(input(Fore.YELLOW+"Are you sure want to proceed above NB management server installation ? (y/n) [y]:"+Fore.RESET))
-                if(len(str(confirmManagementInstall))==0):
-                    confirmManagementInstall='y'
+            #if(len(str(nodesManagement))>0 and applicationServerFlag=='n'):
+            #    confirmManagementInstall = str(input(Fore.YELLOW+"Are you sure want to proceed above NB management server installation ? (y/n) [y]:"+Fore.RESET))
+            #    if(len(str(confirmManagementInstall))==0):
+            #        confirmManagementInstall='y'
             flag = upload_packages_to_nb_servers(confirmServerInstall,confirmAgentInstall,confirmManagementInstall)
             if(flag == 'True'):
                 if validate_nb_install() == False:
