@@ -198,7 +198,7 @@ if [[ $id != 2 ]]; then
   source $home_dir_sh/setenv.sh
 
   mv $home_dir_sh/st*_zookeeper.sh /tmp
-  mv $home_dir_sh/dbagigashare/current/ODSX/$zookeeper_service_file /tmp
+  mv $home_dir_sh/dbagigashare/current/ZOOKEEPER/$zookeeper_service_file /tmp
   mv /tmp/st*_zookeeper.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_zookeeper.sh
   mv /tmp/$zookeeper_service_file /etc/systemd/system/
@@ -218,10 +218,10 @@ if [[ $id != 4 ]]; then
   source $home_dir_sh/setenv.sh
   if [[ $id == 2 ]]; then
     echo "removing zookeeper service dependency $id"
-    sed -i '/^Requires=odsxzookeeper.service/d' $home_dir_sh/dbagigashare/current/ODSX/$kafka_service_file
+    sed -i '/^Requires=odsxzookeeper.service/d' $home_dir_sh/dbagigashare/current/KAFKA/$kafka_service_file
   fi
   mv $home_dir_sh/st*_kafka.sh /tmp
-  mv $home_dir_sh/dbagigashare/current/ODSX/$kafka_service_file /tmp
+  mv $home_dir_sh/dbagigashare/current/KAFKA/$kafka_service_file /tmp
   mv /tmp/st*_kafka.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_kafka.sh
   mv /tmp/$kafka_service_file /etc/systemd/system/
