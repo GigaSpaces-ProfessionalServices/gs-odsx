@@ -988,6 +988,14 @@ def config_add_dataEngine_node(hostIp, hostName, engine, role, type, filePath='c
         logger.info("ADDING NODE..."+str(hostIp))
         return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
 
+def isInstalledAdabasService(host):
+    logger.info("isInstalledAndGetVersion")
+    commandToExecute='ls /etc/systemd/system/odsxadabas.*'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    return str(outputShFile)
+
 def config_remove_dataEngine_byNameIP(dataEngineName,dataEngineIP,filePath='config/cluster.config', verbose=False):
     logger.info("config_remove_dataEngine_byNameIP () : dataEngineName :"+str(dataEngineName)+" nbIp:"+str(dataEngineIP))
     if verbose:
@@ -1279,6 +1287,7 @@ def discoverHostConfig():
                 if(dataIntegrationHostCount==4):
                     type='Zookeeper Witness'
                 config_add_dataIntegration_node(host, host, 'dataIntegration', type, filePath='config/cluster.config')
+                config_add_dataEngine_node(host, host, "dataEngine", "mq-connector", "")
                 dataIntegrationHostCount+=1
 
         if 'grafana' in content['servers']:
