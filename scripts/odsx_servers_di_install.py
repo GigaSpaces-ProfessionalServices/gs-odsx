@@ -224,11 +224,14 @@ def buildTarFileToLocalMachine(host):
     sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
-        cmd = 'sudo cp install/odsxzookeeper.service install/odsxkafka.service '+sourceInstallerDirectory+"/ODSX/"
+        cmd = 'sudo cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/ZOOKEEPER/"
+        cmd2= 'sudo cp install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/KAFKA/"
     else:
-        cmd = 'cp install/odsxzookeeper.service install/odsxkafka.service '+sourceInstallerDirectory+"/ODSX/"
+        cmd = 'cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/ZOOKEEPER/"
+        cmd2= 'cp install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/KAFKA/"
     with Spinner():
         status = os.system(cmd)
+        status = os.system(cmd2)
     sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
     cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory  # Creating .tar file on Pivot machine
     with Spinner():

@@ -8,7 +8,7 @@ from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
-    config_get_dataEngine_nodes, config_remove_dataEngine_byNameIP
+    config_get_dataEngine_nodes, config_remove_dataEngine_byNameIP, isInstalledAdabasService
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from scripts.odsx_servers_di_list import listDIServers
 from utils.odsx_print_tabular_data import printTabular
@@ -120,23 +120,25 @@ def listDIServers():
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
                Fore.YELLOW + "Ip" + Fore.RESET,
                Fore.YELLOW + "Host" + Fore.RESET,
+               Fore.YELLOW + "Installed" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     counter = 1
     for node in dEServers:
         if node.role == "mq-connector":
+            installStatus='No'
             host_dict_obj.add(str(counter), str(node.ip))
             status = getAdabusServiceStatus(node)
-            if (status == 0):
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
-                             Fore.GREEN + os.getenv(node.name) + Fore.RESET,
-                             Fore.GREEN + "ON" + Fore.RESET]
-            else:
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
-                             Fore.GREEN + os.getenv(node.name) + Fore.RESET,
-                             Fore.RED + "OFF" + Fore.RESET]
+            install = isInstalledAdabasService(str(os.getenv(node.ip)))
+            logger.info("install : "+str(install))
+            if(len(str(install))>0):
+                installStatus='Yes'
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.name) + Fore.RESET,
+                         Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                         Fore.GREEN+"ON"+Fore.RESET if(status == 0) else Fore.RED+"OFF"+Fore.RESET
+                         ]
             data.append(dataArray)
             counter = counter + 1
     printTabular(None, headers, data)
@@ -168,7 +170,7 @@ def executeCommandForUnInstall():
                             print(host)
                             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                             print(outputShFile)
-                            config_remove_dataEngine_byNameIP(host,host)
+                            #config_remove_dataEngine_byNameIP(host,host)
                             #set_value_in_property_file('app.di.hosts','')
                             verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
             if(removeType=='1'):

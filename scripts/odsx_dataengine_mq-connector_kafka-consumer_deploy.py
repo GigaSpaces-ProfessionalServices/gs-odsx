@@ -233,28 +233,31 @@ def createGSCInputParam(managerHost,spaceNode):
     global dPipelineLocationTarget
     global dPipelineLocationSource
 
-    numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
-    while(len(str(numberOfGSC))==0):
-        numberOfGSC=1
+    numberOfGSC = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.gscperhost"))
+    #print(Fore.YELLOW+"Number of GSCs per host ["+numberOfGSC+"] : "+Fore.RESET)
+    #while(len(str(numberOfGSC))==0):
+    #    numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
-    zoneGSC = str(input(Fore.YELLOW+"Enter zone of GSC to create [adsCons] : "+Fore.RESET))
-    while(len(str(zoneGSC))==0):
-        zoneGSC='adsCons'
+    zoneGSC = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.gsc.zone"))
+    #print(Fore.YELLOW+"Zone of GSC to create ["+zoneGSC+"] : "+Fore.RESET)
+    #while(len(str(zoneGSC))==0):
+    #    zoneGSC='adsCons'
     logger.info("zoneGSC :"+str(zoneGSC))
 
-    memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
-    while(len(str(memoryGSC))==0):
-        memoryGSC='1g'
+    memoryGSC = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.gsc.memory"))
+    #print(Fore.YELLOW+"Memory of GSC ["+memoryGSC+"] : "+Fore.RESET)
+    #while(len(str(memoryGSC))==0):
+    #    memoryGSC='1g'
     dPipelineSourceConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.source")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    dPipelineLocationSourceInput = str(input(Fore.YELLOW+"Enter -Dpipeline.config.location source ["+str(dPipelineSourceConfig)+"] : "+Fore.RESET))
-    if(len(str(dPipelineLocationSourceInput))==0):
-        dPipelineLocationSource=str(dPipelineSourceConfig)
+    #print(Fore.YELLOW+"-Dpipeline.config.location source ["+str(dPipelineSourceConfig)+"] : "+Fore.RESET)
+    #if(len(str(dPipelineLocationSourceInput))==0):
+    dPipelineLocationSource=str(dPipelineSourceConfig)
 
     dPipelineTargetConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.target")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    dPipelineLocationTargetInput = str(input(Fore.YELLOW+"Enter -Dpipeline.config.location target ["+str(dPipelineTargetConfig)+"] : "+Fore.RESET))
-    if(len(str(dPipelineLocationTargetInput))==0):
-        dPipelineLocationTarget=str(dPipelineTargetConfig)
+    #print(Fore.YELLOW+"-Dpipeline.config.location target ["+str(dPipelineTargetConfig)+"] : "+Fore.RESET)
+    #if(len(str(dPipelineLocationTargetInput))==0):
+    dPipelineLocationTarget=str(dPipelineTargetConfig)
 
     #proceedToCreateGSC()
 
@@ -264,13 +267,13 @@ def uploadFileRest(managerHostConfig):
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         global pathOfSourcePU
         pathOfSourcePU = str(readValuefromAppConfig("app.dataengine.mq.kafkaconnector.jar")).replace('"','')
-        pathOfSourcePUInput = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
-        if(len(str(pathOfSourcePUInput))>0):
-            pathOfSourcePU = pathOfSourcePUInput
-        while(len(str(pathOfSourcePU))==0):
-            pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+        #print(Fore.YELLOW+"Path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET)
+        #if(len(str(pathOfSourcePUInput))>0):
+        #pathOfSourcePU = pathOfSourcePUInput
+        #while(len(str(pathOfSourcePU))==0):
+        #    pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
-        set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
+        #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
 
         logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
@@ -342,19 +345,19 @@ def proceedToDeployPU(data):
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
-    verboseHandle.printConsoleWarning("------------------------------------------------------------")
-    verboseHandle.printConsoleWarning("***Summary***")
+    verboseHandle.printConsoleInfo("------------------------------------------------------------")
+    verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
-        verboseHandle.printConsoleWarning("Enter number of GSCs per host :"+str(numberOfGSC))
-        verboseHandle.printConsoleWarning("Enter zone of GSC to create :"+zoneGSC)
-        verboseHandle.printConsoleWarning("Enter memory of GSC [1g] :"+memoryGSC)
-        verboseHandle.printConsoleWarning("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
-        verboseHandle.printConsoleWarning("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
-    verboseHandle.printConsoleWarning("Name of resource will be deploy : "+resource)
-    verboseHandle.printConsoleWarning("Enter name of PU to deploy :"+resourceName)
-    verboseHandle.printConsoleWarning("Enter zone of processing unit to deploy :"+zoneOfPU)
-    verboseHandle.printConsoleWarning("spring.kafka.bootstrap-servers : "+str(kafkaBootStrapServers))
-    verboseHandle.printConsoleWarning("Enter spring.kafka.consumer-group :"+consumerGroup)
+        verboseHandle.printConsoleInfo("Enter number of GSCs per host :"+str(numberOfGSC))
+        verboseHandle.printConsoleInfo("Enter zone of GSC to create :"+zoneGSC)
+        verboseHandle.printConsoleInfo("Enter memory of GSC :"+memoryGSC)
+        verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
+        verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
+    verboseHandle.printConsoleInfo("Name of resource will be deploy : "+resource)
+    verboseHandle.printConsoleInfo("Enter name of PU to deploy :"+resourceName)
+    verboseHandle.printConsoleInfo("Enter zone of processing unit to deploy :"+zoneOfPU)
+    verboseHandle.printConsoleInfo("spring.kafka.bootstrap-servers : "+str(kafkaBootStrapServers))
+    verboseHandle.printConsoleInfo("Enter spring.kafka.consumer-group :"+consumerGroup)
 
 
 def proceedToDeployPUInputParam(managerHost):
@@ -367,24 +370,26 @@ def proceedToDeployPUInputParam(managerHost):
     global resource
     resource = str(tail)
     print("\n")
-    print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
+    #print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
     #while(len(str(resource))==0):
     #    resource = tail
     logger.info("resource :"+str(resource))
 
     global resourceName
-    resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy [adabasConsumer] :"+Fore.RESET))
-    if(len(str(resourceName))==0):
-        resourceName = 'adabasConsumer'
+    resourceName = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.pu.name"))
+    #print(Fore.YELLOW+"Name of PU to deploy ["+resourceName+"] :"+Fore.RESET)
+    #if(len(str(resourceName))==0):
+    #    resourceName = 'adabasConsumer'
     logger.info("nameOfPU :"+str(resourceName))
 
     global partition
     partition='1'
 
     global zoneOfPU
-    zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy [adsCons] :"+Fore.RESET))
-    if(len(str(zoneOfPU))==0):
-        zoneOfPU = 'adsCons'
+    zoneOfPU = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.pu.zone"))
+    #print(Fore.YELLOW+"Zone of processing unit to deploy ["+zoneOfPU+"] :"+Fore.RESET)
+    #if(len(str(zoneOfPU))==0):
+    #    zoneOfPU = 'adsCons'
     logger.info("Zone Of PU :"+str(zoneOfPU))
 
     global maxInstancesPerMachine
@@ -394,17 +399,19 @@ def proceedToDeployPUInputParam(managerHost):
     global kafkaBootStrapServers
     hostConfig = getDIServerHostList()
     kafkaBootStrapServers = getBootstrapAddress(hostConfig)
-    verboseHandle.printConsoleWarning("spring.kafka.bootstrap-servers : ["+str(kafkaBootStrapServers)+"]")
+    #verboseHandle.printConsoleWarning("spring.kafka.bootstrap-servers : ["+str(kafkaBootStrapServers)+"]")
 
     global spaceName
-    spaceName = str(input(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
-    if(len(str(spaceName))==0):
-        spaceName='bllspace'
+    spaceName = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.space.name"))
+    #print(Fore.YELLOW+"space.name ["+spaceName+"] : "+Fore.RESET)
+    #if(len(str(spaceName))==0):
+    #    spaceName='bllspace'
 
     global consumerGroup
-    consumerGroup = str(input(Fore.YELLOW+"Enter spring.kafka.consumer-group [DIH] :"+Fore.RESET))
-    if(len(consumerGroup)==0):
-        consumerGroup='DIH'
+    consumerGroup = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.group"))
+    #print(Fore.YELLOW+"spring.kafka.consumer-group ["+consumerGroup+"] :"+Fore.RESET)
+    #if(len(consumerGroup)==0):
+    #    consumerGroup='DIH'
 
     data = getDataPUREST()
     #print(data)
@@ -440,7 +447,8 @@ if __name__ == '__main__':
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
-                        confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
+                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.mq.kafka.consumer.gsc.create"))
+                        #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
                             createGSCInputParam(managerHost,spaceNodes)
