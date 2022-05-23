@@ -95,7 +95,9 @@ def doValidate():
         dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
         if (len(str(dataSource1HostIp)) == 0):
             dataSource1HostIp = 'localhost'
-        dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
+
+        if (dataSource1Type != 'ms-sql'):
+            dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
 
