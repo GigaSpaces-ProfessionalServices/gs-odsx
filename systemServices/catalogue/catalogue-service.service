@@ -1,0 +1,15 @@
+[Unit]
+Description=Catalogue Service Application to get endpoint metadata
+After=network.target
+
+[Service]
+User=root
+Type=simple
+ExecStart=/usr/bin/java -jar $serviceJar --consul.host=$consul_host --log.location=$log_location
+SuccessExitStatus=143
+Restart=always
+RestartSec=30
+
+
+[Install] 
+WantedBy=multi-user.target
