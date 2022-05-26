@@ -1,0 +1,40 @@
+current:
+  gs:
+    config:
+      logs:
+        xap_logging : xap_logging.properties
+      ts:
+        criteria: TieredCriteria.tab
+        spaceproperty: scpaceproperty.properties
+        bck:
+          current:
+          previous:
+    jars:
+      ts:
+        tieredStorageBuild: bll-0.1.jar
+  mq-connector:
+    adabas:
+      config:
+        pipeline: data-pipeline.yml
+        keystore: keystore.jks
+      jars:
+        kafkaConnector: kafka-connector-1.0.0-SNAPSHOT-jar-with-dependencies.jar
+        jarFile: adabas-0.0.1-SNAPSHOT.jar
+  mssql:
+    config:
+    jars:
+      mssqlJarFile: MSSQL-snapshot-1.0.jar
+    scripts:
+    files:
+      sqljdbc: SQLJDBCDriver.conf
+      keytab: udkods2.keytab
+  db2:
+    config:
+    jars:
+      db2ccjar: db2jcc-4.26.14.jar
+      db2ccLicense: db2jcc_license_cu-4.16.53.jar
+      db2feederJar: db2feeder-1.0.0.jar
+    scripts:
+  security:
+    jars:
+      cef: CEFLogger-1.0-SNAPSHOT.jar
