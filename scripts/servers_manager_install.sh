@@ -126,7 +126,7 @@ function setGSHome {
 function installAirGapJava {
     echo "Installation of AirGapJava"
     home_dir=$(pwd)
-    installation_path=$home_dir/dbagigashare/current/JDK
+    installation_path=/dbagigashare/current/jdk
 
     installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
     echo "Installation File :"$installation_file
@@ -155,7 +155,7 @@ function installAirGapJava {
 function installAirGapUnzip {
    echo "Install AirGapUnzip"
    home_dir=$(pwd)
-   installation_path=$home_dir/dbagigashare/current/UNZIP
+   installation_path=/dbagigashare/current/unzip
    installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
    if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [[ "$osType" ==  *"Linux"*  ]]; then
       rpm -ivh $installation_path"/"$installation_file
@@ -218,7 +218,7 @@ function installAirGapGS {
    echo "Installing Gigaspace InsightEdge at "$targetDir
    home_dir=$(pwd)
    echo "homedir: "$home_dir
-   installation_path=$home_dir/dbagigashare/current/GS
+   installation_path=/dbagigashare/current/gs
    installation_file=$(find $installation_path -name *.zip -printf "%f\n")
    echo $installation_path"/"$installation_file
    pwd
@@ -367,7 +367,7 @@ function gsCreateGSServeice {
   echo "$cmd">>$stop_gsc_file
 
   #comment GSC requires param in Manager
-  gs_installation_path=$home_dir_sh/dbagigashare/current/GS
+  gs_installation_path=$home_dir_sh/install/gs
   sed -i -e 's|Requires = gsc.service|#Requires = gsc.service|g' $gs_installation_path/$gsa_service_file
 
   mv $home_dir_sh/st*_gs*.sh /tmp

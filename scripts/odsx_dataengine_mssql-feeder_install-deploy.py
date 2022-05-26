@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os,time,subprocess,requests, json, math, glob, sqlite3
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
+from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -250,7 +250,12 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     fileName= str(tail).replace('.jar','')
     filePrefix = fileName
     targetJarFile=sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
-    cmd = "cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
+    userCMD = os.getlogin()
+    if userCMD == 'ec2-user':
+        cmd = "sudo cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
+        print(cmd)
+    else:
+        cmd = "cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
     logger.info("cmd : "+str(cmd))
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home: "+str(home))
@@ -400,7 +405,11 @@ def proceedToDeployPU():
                             time.sleep(2)
                             createMSSQLEntryInSqlLite(puName,file,restPort)
                             verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
-                            cmd = "rm -f "+sourceMSSQLFeederShFilePath+resource
+                            userCMD = os.getlogin()
+                            if userCMD == 'ec2-user':
+                                cmd = "sudo rm -f "+sourceMSSQLFeederShFilePath+resource
+                            else:
+                                cmd = "rm -f "+sourceMSSQLFeederShFilePath+resource
                             logger.info("cmd : "+str(cmd))
                             home = executeLocalCommandAndGetOutput(cmd)
                             break
@@ -432,14 +441,14 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
 
     global sourceMSSQLJarFilePath
-    sourceMSSQLJarFileConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.jar"))
+    sourceMSSQLJarFileConfig = str(getYamlFilePathInsideFolder("current.mssql.jars.mssqlJarFile"))
     #print(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET)
     #if(len(str(sourceMSSQLJarFilePath))==0):
     sourceMSSQLJarFilePath = sourceMSSQLJarFileConfig
     #set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceMSSQLJarFilePath)
 
     global sourceMSSQLFeederShFilePath
-    sourceMSSQLFeederShFilePathConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.filePath.shFile"))
+    sourceMSSQLFeederShFilePathConfig = str("/dbagigashare/"+"current.mssql.scripts.").replace('.','/')
 
     #print(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceMSSQLFeederShFilePathConfig+"] : "+Fore.RESET)
     #if(len(str(sourceMSSQLFeederShFilePath))==0):

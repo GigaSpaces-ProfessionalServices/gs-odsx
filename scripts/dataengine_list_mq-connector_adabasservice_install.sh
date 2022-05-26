@@ -46,8 +46,8 @@ echo "File written!!"
 home_dir_sh=$(pwd)
 #echo "home dir : "$home_dir_sh
 
-mv $home_dir_sh/dbagigashare/current/MQ-CONNECTOR/*publisher.sh $targetDir
-mv $home_dir_sh/dbagigashare/current/MQ-CONNECTOR/config/*.yml $targetDir/config
+mv $home_dir_sh/install/mq-connector/*publisher.sh $targetDir
+mv $home_dir_sh/install/mq-connector/config/*.yml $targetDir/config
 mv $home_dir_sh/$sourceAdabasJarFile $targetDir
 mv $home_dir_sh/$keystoreFile $targetDir/$keystoreFile
 
@@ -82,7 +82,7 @@ sed -i -e 's|<influxhost>|'$influxhost'|g' $applicationYml
 
 mv $home_dir_sh/$start_adabas_feeder_file /tmp
 mv $home_dir_sh/$stop_adabas_feeder_file /tmp
-mv $home_dir_sh/dbagigashare/current/MQ-CONNECTOR/$service_file /tmp
+mv $home_dir_sh/install/mq-connector/$service_file /tmp
 #echo "Files moved to /tmp"
 
 mv /tmp/st*_adabasFeeder.sh /usr/local/bin/

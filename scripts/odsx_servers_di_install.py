@@ -224,16 +224,16 @@ def buildTarFileToLocalMachine(host):
     sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
-        cmd = 'sudo cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/ZOOKEEPER/"
-        cmd2= 'sudo cp install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/KAFKA/"
+        cmd = 'sudo cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/zookeeper/"
+        cmd2= 'sudo cp install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/kafka/"
     else:
-        cmd = 'cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/ZOOKEEPER/"
-        cmd2= 'cp install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/KAFKA/"
+        cmd = 'cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/zookeeper/"
+        cmd2= 'cp install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/kafka/"
     with Spinner():
         status = os.system(cmd)
         status = os.system(cmd2)
     sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
-    cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory  # Creating .tar file on Pivot machine
+    cmd = 'tar -cvf install/install.tar install'#+sourceInstallerDirectory  # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : " + str(status))
@@ -302,22 +302,22 @@ def validateRPM():
     cmd = "pwd"
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home dir : " + str(home))
-    cmd = 'find /dbagigashare/current/JDK/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    cmd = 'find /dbagigashare/current/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     javaRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("javaRpm found :" + str(javaRpm))
-    cmd = 'find /dbagigashare/current/KAFKA/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
+    cmd = 'find /dbagigashare/current/kafka/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
     kafkaZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("kafkaZip found :" + str(kafkaZip))
-    cmd = 'find /dbagigashare/current/ZOOKEEPER/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    cmd = 'find /dbagigashare/current/zookeeper/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     zkZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("ZookeeperZip found :" + str(zkZip))
-    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.rpm -printf "%f\n"'  # Checking .tar file on Pivot machine
-    #cr8Rpm = executeLocalCommandAndGetOutput(cmd)
+    cmd = 'find /dbagigashare/current/jolokia/ -name *.jar -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    jolokiaJar = executeLocalCommandAndGetOutput(cmd)
     #logger.info("cr8Rpm found :" + str(cr8Rpm))
     #cmd = 'find ' + str(home) + '/install/cr8/ -name *.gz -printf "%f\n"'  # Checking .tar file on Pivot machine
     #localSetupZip = executeLocalCommandAndGetOutput(cmd)
     #logger.info("localSetupZip found :" + str(localSetupZip))
-    cmd = 'find /dbagigashare/current/TELEGRAF/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    cmd = 'find /dbagigashare/current/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     telegrafRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("telegrafRpm found :" + str(telegrafRpm))
 
@@ -325,7 +325,7 @@ def validateRPM():
     di_installer_dict.add('Java', javaRpm)
     di_installer_dict.add('KafkaZip', kafkaZip)
     di_installer_dict.add('zkZip', zkZip)
-    #di_installer_dict.add('CR8Rpm', cr8Rpm)
+    di_installer_dict.add('jolokiaJar', jolokiaJar)
     #di_installer_dict.add('CR8-LocalSetupZip', localSetupZip)
     di_installer_dict.add('Telegraf', telegrafRpm)
 
@@ -345,10 +345,10 @@ if __name__ == '__main__':
             logger.info("diServerInstallType : " + str(diServerType))
             if (diServerType != '99'):
                 if (diServerType == '1'):
-                    print("single Host")
+                    verboseHandle.printConsoleWarning("Single Host")
                     installSingle()
                 if (diServerType == '2'):
-                    print("cluster Host")
+                    verboseHandle.printConsoleWarning("Cluster Hosts")
                     nodes = getDIServerHostList()
                     # nodesCount = nodes.split(',')
                     # logger.info("node Count :"+str(nodesCount))
