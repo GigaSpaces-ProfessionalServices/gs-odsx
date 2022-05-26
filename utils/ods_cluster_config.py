@@ -1252,7 +1252,7 @@ def getManagerHostFromEnv():
 def discoverHostConfig():
     try:
         #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/filename.yaml'
-        file = '/dbagigashare/current/ODSX/host.yaml'
+        file = '/dbagigashare/current/odsx/host.yaml'
         with open(file) as f:
             content = yaml.safe_load(f)
 
