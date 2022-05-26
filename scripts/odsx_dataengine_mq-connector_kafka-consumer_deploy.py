@@ -4,7 +4,7 @@ import os,time,subprocess,requests, json, math
 from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
+from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -249,7 +249,7 @@ def createGSCInputParam(managerHost,spaceNode):
     #print(Fore.YELLOW+"Memory of GSC ["+memoryGSC+"] : "+Fore.RESET)
     #while(len(str(memoryGSC))==0):
     #    memoryGSC='1g'
-    dPipelineSourceConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.source")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    dPipelineSourceConfig = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.config.pipeline")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     #print(Fore.YELLOW+"-Dpipeline.config.location source ["+str(dPipelineSourceConfig)+"] : "+Fore.RESET)
     #if(len(str(dPipelineLocationSourceInput))==0):
     dPipelineLocationSource=str(dPipelineSourceConfig)
@@ -266,7 +266,7 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         global pathOfSourcePU
-        pathOfSourcePU = str(readValuefromAppConfig("app.dataengine.mq.kafkaconnector.jar")).replace('"','')
+        pathOfSourcePU = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.jars.kafkaConnector")).replace('"','')
         #print(Fore.YELLOW+"Path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET)
         #if(len(str(pathOfSourcePUInput))>0):
         #pathOfSourcePU = pathOfSourcePUInput

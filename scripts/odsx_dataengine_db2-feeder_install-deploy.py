@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os,time,subprocess,requests, json, math, glob, sqlite3
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
+from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -250,7 +250,11 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     fileName= str(tail).replace('.jar','')
     filePrefix = fileName
     targetJarFile=sourceDB2FeederShFilePath+fileName+puName+'.jar'
-    cmd = "cp "+sourceDB2JarFilePath+' '+sourceDB2FeederShFilePath+fileName+puName+'.jar'
+    userCMD = os.getlogin()
+    if userCMD == 'ec2-user':
+        cmd = "sudo cp "+sourceDB2JarFilePath+' '+sourceDB2FeederShFilePath+fileName+puName+'.jar'
+    else:
+        cmd = "cp "+sourceDB2JarFilePath+' '+sourceDB2FeederShFilePath+fileName+puName+'.jar'
     logger.info("cmd : "+str(cmd))
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home: "+str(home))
@@ -404,7 +408,11 @@ def proceedToDeployPU():
                             time.sleep(2)
                             createDB2EntryInSqlLite(puName,file,restPort)
                             verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
-                            cmd = "rm -f "+sourceDB2FeederShFilePath+resource
+                            userCMD = os.getlogin()
+                            if userCMD == 'ec2-user':
+                                cmd = "sudo rm -f "+sourceDB2FeederShFilePath+resource
+                            else:
+                                cmd = "rm -f "+sourceDB2FeederShFilePath+resource
                             logger.info("cmd : "+str(cmd))
                             home = executeLocalCommandAndGetOutput(cmd)
                             break
@@ -440,14 +448,14 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
 
     global sourceDB2JarFilePath
-    sourceDb2JarFileConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.jar"))
+    sourceDb2JarFileConfig = str(getYamlFilePathInsideFolder("current.db2.jars.db2feederJar"))
     #print(Fore.YELLOW+" source file path of db2-feeder .jar file including file name ["+sourceDb2JarFileConfig+"] : "+Fore.RESET)
     #if(len(str(sourceDB2JarFilePath))==0):
     sourceDB2JarFilePath = sourceDb2JarFileConfig
     #set_value_in_property_file("app.dataengine.db2-feeder.jar",sourceDB2JarFilePath)
 
     global sourceDB2FeederShFilePath
-    sourceDB2FeederShFilePathConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.filePath.shFile"))
+    sourceDB2FeederShFilePathConfig = str("/dbagigashare/"+"current.db2.scripts.").replace('.','/')
     #print(Fore.YELLOW+" source file path (directory) of *.sh file ["+sourceDB2FeederShFilePathConfig+"] : "+Fore.RESET)
     #if(len(str(sourceDB2FeederShFilePath))==0):
     sourceDB2FeederShFilePath = sourceDB2FeederShFilePathConfig

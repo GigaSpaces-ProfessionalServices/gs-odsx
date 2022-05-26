@@ -3,7 +3,9 @@
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform,socket
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
+    getYamlJarFilePath
 from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput,connectExecuteSSH
@@ -341,9 +343,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print(Fore.YELLOW+"Source directory to copy files "+sourceDirectoryForJar+Fore.RESET)
         #if(len(str(sourceDirectoryForJar))==0):
         #    sourceDirectoryForJar='/dbagiga'
-
-        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
-        cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
+        cefloogerJarPath="current.security.jars.cef"
+        cefLoggingJarInput = str(readValueFromYaml(cefloogerJarPath)).replace('[','').replace(']','')
+        cefLoggingJarInput=getYamlJarFilePath(cefloogerJarPath,cefLoggingJarInput)
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
@@ -398,6 +400,22 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             #print('additional param :'+additionalParam)
             logger.info('additional param :'+additionalParam)
             output=""
+            '''
+            sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+            userCMD = os.getlogin()
+            if userCMD == 'ec2-user':
+                cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+            else:
+                cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+            with Spinner():
+                status = os.system(cmd)
+            '''
+            logger.info("Building .tar file : tar -cvf install/install.tar install")
+            cmd = 'tar -cvf install/install.tar install'
+            with Spinner():
+                status = os.system(cmd)
+                logger.info("Creating tar file status : "+str(status))
+
             for host in hostManager:
                 gsNicAddress = host_nic_dict_obj[host]
                 logger.info("NIC address:"+gsNicAddress+" for host "+host)
@@ -405,20 +423,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     gsNicAddress='x'     # put dummy param to maintain position of arguments
                 additionalParam=additionalParam+' '+gsNicAddress
                 #print(additionalParam)
-                sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
-                userCMD = os.getlogin()
-                if userCMD == 'ec2-user':
-                    cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/GS/"
-                else:
-                    cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/GS/"
-                with Spinner():
-                    status = os.system(cmd)
-
-                logger.info("Building .tar file : tar -cvf install/install.tar "+sourceInstallerDirectory)
-                cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory
-                with Spinner():
-                    status = os.system(cmd)
-                    logger.info("Creating tar file status : "+str(status))
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')
                     ##scp_upload(host, user, 'install/gs.service', '')
@@ -467,18 +471,18 @@ def validateRPMS():
     home = executeLocalCommandAndGetOutput(cmd)
     home = getPlainOutput(home)
     logger.info("home dir : " + str(home))
-
-    cmd = 'find ' + str(home) + '/install/java/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+    cmd = 'find ' + str(sourceInstallerDirectory) + '/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     javaRpm = executeLocalCommandAndGetOutput(cmd)
     javaRpm = getPlainOutput(javaRpm)
     logger.info("javaRpm found :" + str(javaRpm))
 
-    cmd = 'find ' + str(home) + '/install/unzip/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    cmd = 'find ' + str(sourceInstallerDirectory)  + '/unzip/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     unZip = executeLocalCommandAndGetOutput(cmd)
     unZip = getPlainOutput(unZip)
     logger.info("unZip found :" + str(unZip))
 
-    cmd = 'find ' + str(home) + '/install/gs/ -name *.zip -printf "%f\n"'  # Checking .zip file on Pivot machine
+    cmd = 'find ' + str(sourceInstallerDirectory) + '/gs/ -name *.zip -printf "%f\n"'  # Checking .zip file on Pivot machine
     gsZip = executeLocalCommandAndGetOutput(cmd)
     gsZip = getPlainOutput(gsZip)
     logger.info("Gigaspace Zip found :" + str(gsZip))

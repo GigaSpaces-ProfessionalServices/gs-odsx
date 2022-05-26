@@ -5,7 +5,8 @@ import subprocess
 from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj,readValuefromAppConfig
+from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, readValuefromAppConfig, \
+    getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node, config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -106,7 +107,7 @@ def getInputParam(kafkaHosts):
     #if(len(str(targetDirConfirm))==0):
     targetDirConfirm=targetDir
 
-    sourceConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.jar")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    sourceConfig = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.jars.jarFile")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     #print(Fore.YELLOW+"Enter source adabas .jar file path including file name ["+str(sourceConfig)+"] : "+Fore.RESET)
     #if(len(str(sourceAdabasJarFile))==0):
     sourceAdabasJarFile=sourceConfig
@@ -149,13 +150,14 @@ def getInputParam(kafkaHosts):
     mqPort = mqPortConfig
     #set_value_in_property_file("app.dataengine.mq.adabas.port",mqPort)
 
-    sourceKeyStoreFile = str(readValueByConfigObj("app.dataengine.mq.keystore.file.source")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    sourceKeyStoreFile = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.config.keystore")).replace('[','').replace(']','').replace("'","").replace(', ',',')
 
     displaySummary()
     return kafkaHosts
 
 def buildTarFileToLocalMachine():
     logger.info("buildTarFileToLocalMachine :")
+    '''
     sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
@@ -164,8 +166,8 @@ def buildTarFileToLocalMachine():
         cmd = 'cp -R install/mq-connector/* '+sourceInstallerDirectory+"/MQ-CONNECTOR/"
     with Spinner():
         status = os.system(cmd)
-
-    cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory # Creating .tar file on Pivot machine
+    '''
+    cmd = 'tar -cvf install/install.tar install'#+sourceInstallerDirectory # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : " + str(status))

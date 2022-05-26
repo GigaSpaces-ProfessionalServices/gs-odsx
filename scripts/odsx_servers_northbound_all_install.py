@@ -129,9 +129,9 @@ def proceedForEnvHostConfiguration(sourceNbConfFile,flag):
     logger.info("proceedForEnvHostConfiguration()")
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
-        cmd = 'sudo cp /dbagigashare/current/NB/'+flag+'/nb.conf.template '+sourceNbConfFile+';sudo chown ec2-user:ec2-user '+sourceNbConfFile # Creating .tar file on Pivot machine
+        cmd = 'sudo cp /dbagigashare/current/nb/'+flag+'/nb.conf.template '+sourceNbConfFile+';sudo chown ec2-user:ec2-user '+sourceNbConfFile # Creating .tar file on Pivot machine
     else :
-        cmd = 'cp /dbagigashare/current/NB/'+flag+'/nb.conf.template '+sourceNbConfFile # Creating .tar file on Pivot machine
+        cmd = 'cp /dbagigashare/current/nb/'+flag+'/nb.conf.template '+sourceNbConfFile # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
     nbConfig = createPropertiesMapFromFile(sourceNbConfFile)
@@ -139,7 +139,7 @@ def proceedForEnvHostConfiguration(sourceNbConfFile,flag):
     #update_app_config_file_shared(linePatternToReplace, value, lines1,fileName)
     lines = update_app_config_file_shared("consul_servers=".upper(), getNBApplicativeHostFromEnv(), None,sourceNbConfFile,flag)
     lines = update_app_config_file_shared("influxdb_servers=".upper(), validateAndConfigureInfluxdb(), lines,sourceNbConfFile,flag)
-    if flag=='MANAGEMENT':
+    if flag=='management':
         lines = update_app_config_file_shared("grafana_servers=".upper(), validateAndConfigureGrafana(), lines,sourceNbConfFile,flag)
         lines = update_app_config_file_shared("gridui_servers=".upper(), getNBOPSManagerHostFromEnv(), lines,sourceNbConfFile,flag)
         lines = update_app_config_file_shared("opsmanager_servers=".upper(), getNBOPSManagerHostFromEnv(), lines,sourceNbConfFile,flag)
@@ -159,21 +159,21 @@ def displayInputParam(nbConfig):
     print(str("GRAFANA_SERVERS= "+nbConfig.get("GRAFANA_SERVERS")).replace('"',''))
 
 def summaryForApplicativeInstallation():
-    nbConfig = "/dbagigashare/current/NB/APPLICATIVE/nb.conf"
-    proceedForEnvHostConfiguration(nbConfig,'APPLICATIVE')
+    nbConfig = "/dbagigashare/current/nb/applicative/nb.conf"
+    proceedForEnvHostConfiguration(nbConfig,'applicative')
     nbConfig = createPropertiesMapFromFile(nbConfig)
     verboseHandle.printConsoleInfo("nb.conf params for applicative servers.")
     displayInputParam(nbConfig)
     pass
 
 def summaryForAgentInstallation():
-    nbConfig = "/dbagigashare/current/NB/APPLICATIVE/nb.conf"
-    proceedForEnvHostConfiguration(nbConfig,'APPLICATIVE')
+    nbConfig = "/dbagigashare/current/nb/applicative/nb.conf"
+    proceedForEnvHostConfiguration(nbConfig,'applicative')
     pass
 
 def summaryForManagementInstallation():
-    nbConfig = "/dbagigashare/current/NB/MANAGEMENT/nb.conf"
-    proceedForEnvHostConfiguration(nbConfig,'MANAGEMENT')
+    nbConfig = "/dbagigashare/current/nb/management/nb.conf"
+    proceedForEnvHostConfiguration(nbConfig,'management')
     verboseHandle.printConsoleInfo("nb.conf params for management servers.")
     nbConfig = createPropertiesMapFromFile(nbConfig)
     displayInputParam(nbConfig)
@@ -182,13 +182,13 @@ def summaryForManagementInstallation():
 def cleanNbConfig():
     logger.info("cleanNbConfig()")
     userCMD = os.getlogin()
-    direcrotyArray = ['MANAGEMENT','APPLICATIVE']
+    direcrotyArray = ['management','applicative']
     for dir in direcrotyArray:
         if userCMD == 'ec2-user':
-            cmd = 'sudo rm -f /dbagigashare/current/NB/'+dir+'/nb.conf'
+            cmd = 'sudo rm -f /dbagigashare/current/nb/'+dir+'/nb.conf'
             logger.info(cmd)
         else:
-            cmd = 'rm -f /dbagigashare/current/NB/'+dir+'/nb.conf'
+            cmd = 'rm -f /dbagigashare/current/nb/'+dir+'/nb.conf'
         with Spinner():
             status = os.system(cmd)
             logger.info("removed nb.conf status "+str(status))
@@ -197,12 +197,7 @@ def proceedForPreInstallation(nbServers, param):
     logger.info("proceedForPreInstallation : "+param)
     nb_user='root'
     remotePath='/dbagiga'
-    userCMD = os.getlogin()
-
-    if userCMD == 'ec2-user':
-        cmd = 'sudo tar -cvf install/install.tar /dbagigashare/current/' # Creating .tar file on Pivot machine
-    else :
-        cmd = 'tar -cvf install/install.tar /dbagigashare/current/' # Creating .tar file on Pivot machine
+    cmd = 'sudo tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : "+str(status))

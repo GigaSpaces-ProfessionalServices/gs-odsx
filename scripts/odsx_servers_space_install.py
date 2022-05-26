@@ -3,7 +3,9 @@
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform,socket
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
+    getYamlJarFilePath
 from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
@@ -126,7 +128,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsOptionExt = ""
         #print(Fore.YELLOW+'GS_OPTIONS_EXT : '+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+' '+Fore.RESET)
         #if(len(str(gsOptionExt))==0):
-            #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
+        #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
         gsOptionExt=gsOptionExtFromConfig
         #else:
         #    set_value_in_property_file('app.space.gsOptionExt',gsOptionExt)
@@ -138,7 +140,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsManagerOptions = ""
         #print(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsManagerOptions))==0):
-            #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
+        #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
         gsManagerOptions=gsManagerOptionsFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
@@ -150,7 +152,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsLogsConfigFile = ""
         #print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsLogsConfigFile))==0):
-            #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
+        #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
         gsLogsConfigFile=gsLogsConfigFileFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
@@ -253,15 +255,19 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
 
-        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
-        cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
+        cefloogerJarPath="current.security.jars.cef"
+        cefLoggingJarInput = str(readValueFromYaml(cefloogerJarPath)).replace('[','').replace(']','')
+        cefLoggingJarInput=getYamlJarFilePath(cefloogerJarPath,cefLoggingJarInput)
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
-        db2jccJarInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc-4.26.14.jar")).replace('[','').replace(']','')
-        db2jccJarInput = sourceDirectoryForJar+'/'+db2jccJarInput
-        db2jccJarLicenseInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
-        db2jccJarLicenseInput=sourceDirectoryForJar+'/'+db2jccJarLicenseInput
+        db2ccJarPath = "current.db2.jars.db2ccjar"
+        db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
+        db2jccJarInput =getYamlJarFilePath("current.db2.jars",db2jccJarInput)
+        db2ccJarLicensePath="current.db2.jars.db2ccLicense"
+        db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
+        db2jccJarLicenseInput=getYamlJarFilePath("current.db2.jars",db2jccJarLicenseInput)
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
-        msSqlFeederFileSource = str(readValuefromAppConfig("app.space.mssqlfeeder.files.source")).replace('[','').replace(']','')
+        msSqlFeederFilePath="current.mssql.files"
+        msSqlFeederFileSource = "/dbagigashare/"+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
@@ -349,17 +355,17 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     additionalParam=additionalParam+' '+gsNicAddress
                     sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     logger.info("additionalParam - Installation :")
-                    logger.info("Building .tar file : tar -cvf install/install.tar "+sourceInstallerDirectory)
+                    logger.info("Building .tar file : tar -cvf install/install.tar install")
+                    '''
                     userCMD = os.getlogin()
-
                     if userCMD == 'ec2-user':
-                        cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/GS/"
+                        cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
                     else:
-                        cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/GS/"
+                        cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
                     with Spinner():
                         status = os.system(cmd)
-
-                    cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory
+                    '''
+                    cmd = 'tar -cvf install/install.tar install'
                     with Spinner():
                         status = os.system(cmd)
                         logger.info("Creating tar file status : "+str(status))

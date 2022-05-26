@@ -10,7 +10,7 @@ from utils.ods_cluster_config import config_get_space_hosts,config_get_nb_list,c
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getTelnetStatus
 from scripts.spinner import Spinner
-from scripts.odsx_servers_northbound_list import isInstalledAndGetVersion
+from scripts.odsx_servers_northbound_all_list import isInstalledAndGetVersion
 from utils.ods_list import isInstalledAndGetVersionGrafana
 from utils.ods_list import isInstalledAndGetVersionInflux
 from scripts.odsx_servers_di_list import isInstalledNot
