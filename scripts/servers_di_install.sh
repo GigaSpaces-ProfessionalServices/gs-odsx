@@ -16,7 +16,7 @@ dataFolderZK=$9
 logsFolderKafka=${10}
 logsFolderZK=${11}
 echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK
-cd /home/dbsh/
+cd /dbagiga/
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
@@ -105,7 +105,7 @@ cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
-sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/config/log4j.properties
+sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/conf/log4j.properties
 
 if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # removing all existing properties
@@ -252,10 +252,10 @@ chmod 777 -R $logsFolderKafka
 chmod 777 -R $dataFolderKafka
 chmod 777 -R $dataFolderZK
 
-sudo service mongod stop
-sudo yum erase $(rpm -qa | grep mongodb-enterprise)
-sudo rm -r /var/log/mongodb
-sudo rm -r /var/lib/mongo
+#sudo service mongod stop
+#sudo yum erase $(rpm -qa | grep mongodb-enterprise)
+#sudo rm -r /var/log/mongodb
+#sudo rm -r /var/lib/mongo
 
 systemctl daemon-reload
 

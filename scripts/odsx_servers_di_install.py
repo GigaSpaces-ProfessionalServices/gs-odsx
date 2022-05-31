@@ -156,24 +156,24 @@ def installCluster():
     if (len(str(user)) == 0):
         user = "root"
     logger.info(" user: " + str(user))
-    baseFolderLocation = str(input(Fore.YELLOW + "Enter installation base folder for Kafka and Zookeeper [/opt/Kafka/]:" + Fore.RESET))
+    baseFolderLocation = str(input(Fore.YELLOW + "Enter installation base folder for Kafka and Zookeeper [/dbagigasoft/]:" + Fore.RESET))
     if (len(str(baseFolderLocation)) == 0):
         baseFolderLocation = "/opt/Kafka/"
-    dataFolderKafka = str(input(Fore.YELLOW + "Enter data folder for Kafka [/data/kafka-data/]:" + Fore.RESET))
+    dataFolderKafka = str(input(Fore.YELLOW + "Enter data folder for Kafka [/dbagigadata/kafka/]:" + Fore.RESET))
     if (len(str(dataFolderKafka)) == 0):
-        dataFolderKafka = "/data/kafka-data/"
+        dataFolderKafka = "/dbagigadata/kafka/"
     logger.info(" dataFolderKafka: " + str(dataFolderKafka))
-    dataFolderZK = str(input(Fore.YELLOW + "Enter data folder for Zookeeper [/data/zookeeper/]:" + Fore.RESET))
+    dataFolderZK = str(input(Fore.YELLOW + "Enter data folder for Zookeeper [/dbagigadata/zookeeper/]:" + Fore.RESET))
     if (len(str(dataFolderZK)) == 0):
-        dataFolderZK = "/data/zookeeper/"
+        dataFolderZK = "/dbagigadata/zookeeper/"
     logger.info(" dataFolderZK: " + str(dataFolderZK))
-    logsFolderKafka = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/data/kafka-logs/]:" + Fore.RESET))
+    logsFolderKafka = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/dbagigalogs/kafka/]:" + Fore.RESET))
     if (len(str(logsFolderKafka)) == 0):
-        logsFolderKafka = "/data/kafka-logs/"
+        logsFolderKafka = "/dbagigalogs/kafka/"
     logger.info(" logsFolderKafka: " + str(logsFolderKafka))
-    logsFolderZK = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/data/zookeeper-logs/]:" + Fore.RESET))
+    logsFolderZK = str(input(Fore.YELLOW + "Enter base logs folder for Zookeeper [/dbagigalogs/zookeeper/]:" + Fore.RESET))
     if (len(str(logsFolderZK)) == 0):
-        logsFolderZK = "/data/zookeeper-logs/"
+        logsFolderZK = "/dbagigalogs/zookeeper/"
     logger.info(" logsFolderZK: " + str(logsFolderZK))
 
     #  telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
@@ -231,7 +231,7 @@ def buildUploadInstallTarToServer(host):
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))
-            scp_upload(host, user, 'install/install.tar', '/home/dbsh')
+            scp_upload(host, user, 'install/install.tar', '/dbagiga')
     except Exception as e:
         handleException(e)
 
