@@ -2,7 +2,7 @@
 echo "Starting DI Installation."
 #echo "Extracting install.tar to "$targetDir
 #echo " installtelegrafFlag "$1
-mkdir /dbagigasoft
+#mkdir /dbagigasoft
 
 function installAirGapJava {
   installation_path=/dbagigashare/current/jdk

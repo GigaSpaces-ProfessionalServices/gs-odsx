@@ -25,7 +25,7 @@ current:
   mssql:
     config:
     jars:
-      mssqlJarFile: MSSQL-snapshot-1.0.jar
+      mssqlJarFile: mssqlFeeder-1.0.jar
     scripts:
     files:
       sqljdbc: SQLJDBCDriver.conf

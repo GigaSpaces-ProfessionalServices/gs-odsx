@@ -75,7 +75,7 @@ def displayMSSQLFeederShFiles():
     global fileNameDict
     global sourceMSSQLFeederShFilePath
     global fileNamePuNameDict
-    sourceMSSQLFeederShFilePath = str(readValueByConfigObj("app.dataengine.mssql-feeder.filePath.shFile"))
+    sourceMSSQLFeederShFilePath = str(str(".dbagigashare.current.mssql.scripts.").replace('.','/'))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceMSSQLFeederShFilePath)

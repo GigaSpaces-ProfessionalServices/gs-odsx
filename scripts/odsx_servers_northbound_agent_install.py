@@ -198,7 +198,7 @@ def proceedForPreInstallation(nbServers, param):
             scp_upload(hostip, nb_user, 'install/install.tar', '')
 
         if param.casefold()=='agent':
-            remotePath='/dbagiga/nb-infra'
+            remotePath='/dbagiga'
             commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
         additionalParam=remotePath+' '
