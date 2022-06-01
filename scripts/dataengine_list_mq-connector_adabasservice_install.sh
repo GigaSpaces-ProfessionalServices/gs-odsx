@@ -13,7 +13,7 @@ sslChipherSuite=${10}
 mqPort=${11}
 influxhost=${12}
 
-rootDir='/dbagigasoft'
+rootDir='/dbagiga'
 #targetDir='/dbagigasoft/Adabas'
 echo "targetDir:"$targetDir
 logDir='/dbagigalogs/Adabas'
@@ -37,9 +37,9 @@ chmod 777 $rootDir
 chmod 777 $targetDir
 chmod 777 $logDir
 echo "Dir created.."
-cmd="/dbagigasoft/Adabas/run-publisher.sh -name adabasPublisher"
+cmd="/dbagiga/Adabas/run-publisher.sh -name adabasPublisher"
 echo "$cmd">>$start_adabas_feeder_file
-cmd="/dbagigasoft/Adabas/stop-publisher.sh"
+cmd="/dbagiga/Adabas/stop-publisher.sh"
 echo "$cmd">>$stop_adabas_feeder_file
 
 echo "File written!!"

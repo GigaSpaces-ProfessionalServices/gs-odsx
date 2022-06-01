@@ -12,6 +12,7 @@ sleep 2
 
 yum -y remove java
 yum -y remove jdk*
+rpm -qa | grep openjdk | xargs  yum -y remove
 
 rm -rf $KAFKA_LOGS_PATH
 rm -rf $KAFKA_DATA_PATH

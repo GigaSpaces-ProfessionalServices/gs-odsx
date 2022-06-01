@@ -7,7 +7,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file,readValuefromAppConfig
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_add_dataIntegration_node, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -135,62 +135,44 @@ def installCluster():
     global dataFolderZK
     global logsFolderKafka
     global logsFolderZK
+    global wantJava
 
-    kafkaBrokerHost1 = str(os.getenv("di1"))#str(input(Fore.YELLOW + "Enter kafka broker 1a host  :" + Fore.RESET))
-    #while (len(kafkaBrokerHost1) == 0):
-    #    kafkaBrokerHost1 = str(input(Fore.YELLOW + "Enter kafka broker 1a host  :" + Fore.RESET))
+    kafkaBrokerHost1 = str(os.getenv("di1"))
     logger.info("kafkaBrokerHost1 : " + str(kafkaBrokerHost1))
-    kafkaBrokerHost3 = str(os.getenv("di3"))#str(input(Fore.YELLOW + "Enter kafka broker 2 host :" + Fore.RESET))
-    #while (len(kafkaBrokerHost3) == 0):
-    #    kafkaBrokerHost3 = str(input(Fore.YELLOW + "Enter kafka broker 2 host :" + Fore.RESET))
+    kafkaBrokerHost3 = str(os.getenv("di3"))
     logger.info("kafkaBrokerHost3 : " + str(kafkaBrokerHost3))
-    zkWitnessHost = str(os.getenv("di4"))#str(input(Fore.YELLOW + "Enter Zookeeper WitnessHost :" + Fore.RESET))
-    #while (len(zkWitnessHost) == 0):
-    #    zkWitnessHost = str(input(Fore.YELLOW + "Enter Zookeeper WitnessHost :" + Fore.RESET))
+    zkWitnessHost = str(os.getenv("di4"))
     logger.info("zkWitnessHost :" + str(zkWitnessHost))
-    kafkaBrokerHost2 = str(os.getenv("di2"))#str(input(Fore.YELLOW + "Enter kafka broker 1b host :" + Fore.RESET))
-    #while (len(kafkaBrokerHost2) == 0):
-    #    kafkaBrokerHost2 = str(input(Fore.YELLOW + "Enter kafka broker 1b host :" + Fore.RESET))
+    kafkaBrokerHost2 = str(os.getenv("di2"))
     logger.info("kafkaBrokerHost2 : " + str(kafkaBrokerHost2))
-    verboseHandle.printConsoleWarning("1. kafka broker 1a host :"+kafkaBrokerHost1+"\n2. kafka broker 1b host :"+kafkaBrokerHost2+"\n3. kafka broker 2 host :"+kafkaBrokerHost3+"\n4. Zookeeper WitnessHost :"+zkWitnessHost)
-    #user = str(input(Fore.YELLOW + "Enter user to connect DI servers [root]:" + Fore.RESET))
-    #if (len(str(user)) == 0):
+    verboseHandle.printConsoleInfo("1. kafka broker 1a host  [kafka,zk,telegraf]:"+kafkaBrokerHost1+"\n"
+                                      "2. kafka broker 1b host  [kafka,telegraf]:"+kafkaBrokerHost2+"\n"
+                                      "3. kafka broker 2 host   [kafka,zk,telegraf]:"+kafkaBrokerHost3+"\n"
+                                      "4. Zookeeper WitnessHost [zk,telegraf]:"+zkWitnessHost)
     user = "root"
     logger.info(" user: " + str(user))
-    baseFolderLocation = str(input(Fore.YELLOW + "Enter installation base folder for Kafka and Zookeeper [/opt/Kafka/]:" + Fore.RESET))
-    if (len(str(baseFolderLocation)) == 0):
-        baseFolderLocation = "/opt/Kafka/"
-    dataFolderKafka = str(input(Fore.YELLOW + "Enter data folder for Kafka [/data/kafka-data/]:" + Fore.RESET))
-    if (len(str(dataFolderKafka)) == 0):
-        dataFolderKafka = "/data/kafka-data/"
+    baseFolderLocation = str(readValuefromAppConfig("app.di.base.kafka.zk"))
+    print(Fore.GREEN + "5. Installation base folder for Kafka and Zookeeper ["+baseFolderLocation+"]:" + Fore.RESET)
+    logger.info(" base folder: " + str(baseFolderLocation))
+    dataFolderKafka = str(readValuefromAppConfig("app.di.base.kafka.data"))
+    print(Fore.GREEN + "6. Data folder for Kafka ["+dataFolderKafka+"]:" + Fore.RESET)
     logger.info(" dataFolderKafka: " + str(dataFolderKafka))
-    dataFolderZK = str(input(Fore.YELLOW + "Enter data folder for Zookeeper [/data/zookeeper/]:" + Fore.RESET))
-    if (len(str(dataFolderZK)) == 0):
-        dataFolderZK = "/data/zookeeper/"
+    dataFolderZK = str(readValuefromAppConfig("app.di.base.zk.data"))
+    print(Fore.GREEN + "7. Data folder for Zookeeper ["+dataFolderZK+"]:" + Fore.RESET)
     logger.info(" dataFolderZK: " + str(dataFolderZK))
-    logsFolderKafka = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/data/kafka-logs/]:" + Fore.RESET))
-    if (len(str(logsFolderKafka)) == 0):
-        logsFolderKafka = "/data/kafka-logs/"
+    logsFolderKafka = str(readValuefromAppConfig("app.di.base.kafka.logs"))
+    print(Fore.GREEN + "8. Base logs folder for kafka ["+logsFolderKafka+"]:" + Fore.RESET)
     logger.info(" logsFolderKafka: " + str(logsFolderKafka))
-    logsFolderZK = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/data/zookeeper-logs/]:" + Fore.RESET))
-    if (len(str(logsFolderZK)) == 0):
-        logsFolderZK = "/data/zookeeper-logs/"
+    logsFolderZK = str(readValuefromAppConfig("app.di.base.zk.logs"))
+    print(Fore.GREEN + "9. Base logs folder for Zookeeper ["+logsFolderZK+"]:" + Fore.RESET)
     logger.info(" logsFolderZK: " + str(logsFolderZK))
+    wantJava = str(getYamlFilePathInsideFolder("current.kafka.jolokiaJar"))
+    print(Fore.GREEN + "10. Jolokia jar file path source : ["+wantJava+"]:" + Fore.RESET)
+    logger.info(" wantJava: " + str(wantJava))
+    wantJava = str(readValuefromAppConfig("app.di.base.java.want"))
+    print(Fore.GREEN + "11. Want to install Java ["+wantJava+"]:" + Fore.RESET)
+    logger.info(" wantJava: " + str(wantJava))
 
-    #  telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
-    #  logger.info("Selected answer telegraf:" + str(telegrafInstallFlag))
-    #  if (telegrafInstallFlag.lower() == "y"):
-    #      telegrafInstallFlag = "y"
-    #  else:
-    #     telegrafInstallFlag = "n"
-
-    #  print(telegrafInstallFlag)
-    #    cr8InstallFlag = input("Do you want to install cr8? yes(y)/no(n) [n]: ")
-    #    logger.info("Selected answer cr8:" + str(cr8InstallFlag))
-    #    if (cr8InstallFlag.lower() == "y"):
-    #        cr8InstallFlag = True
-    #    else:
-    #        cr8InstallFlag = False
 
     clusterHosts.append(kafkaBrokerHost1)
     clusterHosts.append(kafkaBrokerHost2)
@@ -244,7 +226,7 @@ def buildUploadInstallTarToServer(host):
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))
-            scp_upload(host, user, 'install/install.tar', '/home/dbsh')
+            scp_upload(host, user, 'install/install.tar', '/dbagiga')
     except Exception as e:
         handleException(e)
 
@@ -260,7 +242,7 @@ def executeCommandForInstall(host, type, count):
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
         if (len(clusterHosts) == 4):
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)
 
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
@@ -269,22 +251,9 @@ def executeCommandForInstall(host, type, count):
             outputShFile = connectExecuteSSH(host, user, commandToExecute, additionalParam)
             logger.info("outputShFile kafka : " + str(outputShFile))
             print("Checking for Type ::::" + str(type))
-
-            #if (cr8InstallFlag == "y" and (type== 'Master' or type == 'Standby' or type == 'SingleNode')):
-            #   verboseHandle.printConsoleInfo("Starting CR8 installation for "+str(type))
-            #   logger.info("Installing cr8 for "+str(type))
-            #    commandToExecute="scripts/servers_di_install_cr8.sh"
-            #    outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
-            #    logger.info("outputShFile CR8 :"+str(outputShFile))
-            #    logger.info("Done installation of cr8 for "+str(type))
-
-            #config_add_dataIntegration_node(host, host, "dataIntegration", type)
-            #set_value_in_property_file('app.di.hosts', host)
             verboseHandle.printConsoleInfo("Node has been added :" + str(host))
-
     except Exception as e:
         handleException(e)
-
 
 def executeLocalCommandAndGetOutput(commandToExecute):
     logger.info("executeLocalCommandAndGetOutput() cmd :" + str(commandToExecute))
@@ -308,15 +277,11 @@ def validateRPM():
     cmd = 'find /dbagigashare/current/kafka/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
     kafkaZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("kafkaZip found :" + str(kafkaZip))
-    cmd = 'find /dbagigashare/current/zookeeper/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    cmd = 'find /dbagigashare/current/zk/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     zkZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("ZookeeperZip found :" + str(zkZip))
-    cmd = 'find /dbagigashare/current/jolokia/ -name *.jar -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    cmd = 'find /dbagigashare/current/kafka/ -name *.jar -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     jolokiaJar = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("cr8Rpm found :" + str(cr8Rpm))
-    #cmd = 'find ' + str(home) + '/install/cr8/ -name *.gz -printf "%f\n"'  # Checking .tar file on Pivot machine
-    #localSetupZip = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("localSetupZip found :" + str(localSetupZip))
     cmd = 'find /dbagigashare/current/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     telegrafRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("telegrafRpm found :" + str(telegrafRpm))
@@ -341,6 +306,7 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> DI -> Install')
     try:
         if (validateRPM()):
+            '''
             diServerType = getDIServerTypeInstall()
             logger.info("diServerInstallType : " + str(diServerType))
             if (diServerType != '99'):
@@ -350,13 +316,8 @@ if __name__ == '__main__':
                 if (diServerType == '2'):
                     verboseHandle.printConsoleWarning("Cluster Hosts")
                     nodes = getDIServerHostList()
-                    # nodesCount = nodes.split(',')
-                    # logger.info("node Count :"+str(nodesCount))
-                    # if(len(nodesCount)<3):
-                    #    addNodeToCluster(nodes)
-                    # else:
-                    #    installCluster()
-                    installCluster()
+            '''
+            installCluster()
         else:
             logger.info("No valid rpm found")
 

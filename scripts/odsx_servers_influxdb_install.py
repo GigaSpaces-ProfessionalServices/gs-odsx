@@ -81,7 +81,7 @@ def buildUploadInstallTarToServer():
     logger.info("buildUploadInstallTarToServer(): start")
     try:
         sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
-        cmd = 'tar -cvf install/install.tar '+sourceInstallerDirectory # Creating .tar file on Pivot machine
+        cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
         with Spinner():
             status = os.system(cmd)
             logger.info("Creating tar file status : "+str(status))
