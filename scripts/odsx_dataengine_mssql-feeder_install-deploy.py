@@ -230,13 +230,13 @@ def createGSCInputParam():
     global numberOfGSC
     global memoryGSC
 
-    numberOfGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.db2.gscperhost"))
+    numberOfGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.gscperhost"))
     #str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
     #while(len(str(numberOfGSC))==0):
     #    numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
-    memoryGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.db2.gsc.memory"))
+    memoryGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.gsc.memory"))
     #str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
     #while(len(str(memoryGSC))==0):
     #    memoryGSC='1g'
@@ -525,7 +525,7 @@ if __name__ == '__main__':
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
-                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.db2.gsc.create"))
+                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.gsc.create"))
                         #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'

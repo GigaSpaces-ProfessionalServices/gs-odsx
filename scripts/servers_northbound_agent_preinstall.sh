@@ -17,7 +17,7 @@ tar -xzf $installation_path/*.tar.gz -C /dbagiga
 dbagigashareApplicativePath='/dbagigashare/current/nb/applicative'
 
 echo "Moving file from $installation_path/nb.conf To $targetDir/nb-infra/"
-cp $dbagigashareApplicativePath/nb.conf $targetDir/
+cp $dbagigashareApplicativePath/nb.conf $targetDir/nb-infra/
 
 echo "copying ssl files to $targetDir/nb-infra/ssl"
 pfxFiles=$(ls $$dbagigashareApplicativePath/ssl/*.pfx 2> /dev/null | wc -l)
