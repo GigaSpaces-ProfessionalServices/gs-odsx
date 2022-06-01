@@ -1,1 +1,0 @@
-keep jolokia rpm file in jolokia
