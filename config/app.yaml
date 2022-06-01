@@ -1,11 +1,13 @@
 current:
   gs:
     config:
-      logs:
+      services:
+        gsa.service
+      log:
         xap_logging : xap_logging.properties
       ts:
         criteria: TieredCriteria.tab
-        spaceproperty: scpaceproperty.properties
+        spaceproperty: spaceproperty.properties
         bck:
           current:
           previous:
@@ -38,3 +40,5 @@ current:
   security:
     jars:
       cef: CEFLogger-1.0-SNAPSHOT.jar
+  kafka:
+    jolokiaJar: jolokia-agent.jar
