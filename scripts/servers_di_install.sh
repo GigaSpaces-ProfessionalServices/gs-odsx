@@ -2,7 +2,22 @@
 echo "Starting DI Installation."
 #echo "Extracting install.tar to "$targetDir
 #echo " installtelegrafFlag "$1
-mkdir -p /home/dbsh
+mkdir /dbagigasoft
+
+function installAirGapJava {
+  installation_path=/dbagigashare/current/jdk
+  installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
+  echo "Installation File :"$installation_file
+  echo $installation_path"/"$installation_file
+  rpm -ivh $installation_path"/"$installation_file
+  sed -i '/export JAVA_HOME=/d' setenv.sh
+  java_home_path="export JAVA_HOME='$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")'"
+
+  echo "$java_home_path">>setenv.sh
+  echo "installAirGapJava -Done!"
+}
+
+
 echo " kafkaBrokerHost1 "$2" kafkaBrokerHost2 "$3" kafkaBrokerHost3 "$4" witnessHost "$5" counter ID "$6" installtelegrafFlag "$1" baseFolderLocation "$7
 installtelegrafFlag=$1
 kafkaBrokerHost1=$2
@@ -15,26 +30,18 @@ dataFolderKafka=$8
 dataFolderZK=$9
 logsFolderKafka=${10}
 logsFolderZK=${11}
+wantInstallJava=${12}
+
+if [ "$wantInstallJava" == "y" ]; then
+    echo "Setup AirGapJava"
+    installAirGapJava
+  fi
 echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK
-cd /home/dbsh/
+cd /dbagiga/
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
 echo "">>setenv.sh
-if [[ ${#javaInstalled} -eq 0 ]]; then
-  installation_path=/dbagigashare/current/jdk
-  installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
-  echo "Installation File :"$installation_file
-  echo $installation_path"/"$installation_file
-  rpm -ivh $installation_path"/"$installation_file
-  sed -i '/export JAVA_HOME=/d' setenv.sh
-  java_home_path="export JAVA_HOME='$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")'"
-
-  echo "$java_home_path">>setenv.sh
-  echo "installAirGapJava -Done!"
-else
-  echo "Java already installed.!!!"
-fi
 
 # Step for KAFKA Unzip and Set KAFKAPATH
 if [[ $id != 4 ]]; then
@@ -60,12 +67,12 @@ if [[ $id != 4 ]]; then
     echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
     echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
 
-    cp "/dbagigashare/current/jolokia/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
+    cp "/dbagigashare/current/kafka/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
 fi
 
 #zookeeper setup
 if [[ $id != 2 ]]; then
-    installation_path=/dbagigashare/current/zookeeper
+    installation_path=/dbagigashare/current/zk
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.gz" -printf "%f\n")
     echo "InstallationFile:"$installation_file
@@ -105,7 +112,7 @@ cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
-sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/config/log4j.properties
+sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/conf/log4j.properties
 
 if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # removing all existing properties
@@ -236,7 +243,7 @@ if [[ $installtelegrafFlag == "y" ]]; then
   echo "Installation File :"$installation_file
   echo $installation_path"/"$installation_file
   yum install -y $installation_path"/"$installation_file
-  cp $home_dir"/install/jolokia/kafka.conf" /etc/telegraf/telegraf.d/
+  cp $home_dir"/install/kafka/kafka.conf" /etc/telegraf/telegraf.d/
   sed -i -e 's|"http://KAFKA_SERVER_IP_ADDRESS:8778/jolokia"|"http://'$kafkaBrokerHost1':8778/jolokia","http://'$kafkaBrokerHost2':8778/jolokia","http://'$kafkaBrokerHost3':8778/jolokia"|g' /etc/telegraf/telegraf.d/kafka.conf
   sed -i -e 's|":2181"|"'$kafkaBrokerHost1':2181","'$witnessHost':2181","'$kafkaBrokerHost3':2181"|g' /etc/telegraf/telegraf.d/kafka.conf
 
@@ -252,10 +259,10 @@ chmod 777 -R $logsFolderKafka
 chmod 777 -R $dataFolderKafka
 chmod 777 -R $dataFolderZK
 
-sudo service mongod stop
-sudo yum erase $(rpm -qa | grep mongodb-enterprise)
-sudo rm -r /var/log/mongodb
-sudo rm -r /var/lib/mongo
+#sudo service mongod stop
+#sudo yum erase $(rpm -qa | grep mongodb-enterprise)
+#sudo rm -r /var/log/mongodb
+#sudo rm -r /var/lib/mongo
 
 systemctl daemon-reload
 

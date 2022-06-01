@@ -4,6 +4,7 @@ import os, time
 from colorama import Fore
 import requests, json, math
 from scripts.logManager import LogManager
+from utils.ods_validation import port_check_config
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
@@ -99,13 +100,16 @@ def cleanUpManagerServers():
             user = 'root'
             for node in managerNodes:
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
-                    #if(output>0):
-                    #    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-                    #if (output == 0):
-                    verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(os.getenv(node.ip)))
-                    #else:
-                    #    verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
+                    if (port_check_config(os.getenv(node.ip),22)):
+                        output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
+                        #if(output>0):
+                        #    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                        #if (output == 0):
+                        verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(os.getenv(node.ip)))
+                        #else:
+                        #    verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
+                    else:
+                        verboseHandle.printConsoleError("Unable to clean directories on host not reachable :"+str(os.getenv(node.ip)))
     else:
         logger.info("No Manager configuration found please check.")
         verboseHandle.printConsoleInfo("No Manager configuration found please check.")
@@ -123,13 +127,16 @@ def cleanUpSpaceServers():
             user = 'root'
             for node in spaceNodes:
                 with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip),user,cmd)
-                    #if(output>0):
-                    #    output = executeRemoteCommandAndGetOutputPython36(node.ip,user,cmd)
-                    #if (output == 0):
-                    verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(os.getenv(node.ip)))
-                    #else:
-                    #    verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
+                    if (port_check_config(os.getenv(node.ip),22)):
+                        output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip),user,cmd)
+                        #if(output>0):
+                        #    output = executeRemoteCommandAndGetOutputPython36(node.ip,user,cmd)
+                        #if (output == 0):
+                        verboseHandle.printConsoleInfo("Directories cleaned up on host :"+str(os.getenv(node.ip)))
+                        #else:
+                        #    verboseHandle.printConsoleError("Unable to clean directories on host :"+str(node.ip))
+                    else:
+                        verboseHandle.printConsoleError("Unable to clean directories on host not reachable :"+str(os.getenv(node.ip)))
     else:
         logger.info("No Manager configuration found please check.")
         verboseHandle.printConsoleInfo("No Manager configuration found please check.")
