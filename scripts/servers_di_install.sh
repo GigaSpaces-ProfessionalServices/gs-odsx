@@ -36,6 +36,9 @@ else
   echo "Java already installed.!!!"
 fi
 
+sed -i '/^kafka_/d' setenv.sh
+sed -i '/^kafka-/d' setenv.sh
+
 # Step for KAFKA Unzip and Set KAFKAPATH
 if [[ $id != 4 ]]; then
     echo "Install AirGapKafka"
@@ -78,6 +81,10 @@ if [[ $id != 2 ]]; then
     replace=""
     extracted_folder=${var//'.tar.gz'/$replace}
     zk_home_path="export ZOOKEEPERPATH="$baseFolderLocation$extracted_folder
+    sed -i '/export ZOOKEEPERPATH/d' setenv.sh
+    sed -i '/export ZOOKEEPER_DATA_PATH/d' setenv.sh
+    sed -i '/export ZOOKEEPER_LOGS_PATH/d' setenv.sh
+
     echo "$zk_home_path">>setenv.sh
     echo "export ZOOKEEPER_DATA_PATH="$dataFolderZK >> setenv.sh
     echo "export ZOOKEEPER_LOGS_PATH="$logsFolderZK >> setenv.sh
@@ -87,6 +94,7 @@ fi
 # Configuration of log dir
 source setenv.sh
 echo "kafkaPath :"$KAFKAPATH
+echo "zookeeperPath :"$ZOOKEEPERPATH
 #mkdir -p $KAFKAPATH/log
 #mkdir -p $KAFKAPATH/log/kafka
 #mkdir -p $KAFKAPATH/log/zookeeper
@@ -105,7 +113,7 @@ cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
-sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/conf/log4j.properties
+sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/config/log4j.properties
 
 if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # removing all existing properties

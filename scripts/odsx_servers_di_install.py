@@ -156,24 +156,40 @@ def installCluster():
     if (len(str(user)) == 0):
         user = "root"
     logger.info(" user: " + str(user))
-    baseFolderLocation = str(input(Fore.YELLOW + "Enter installation base folder for Kafka and Zookeeper [/dbagigasoft/]:" + Fore.RESET))
+    baseFolderLocation = str(input(Fore.YELLOW + "Enter installation base folder for Kafka and Zookeeper [/dbagiga/]:" + Fore.RESET))
     if (len(str(baseFolderLocation)) == 0):
-        baseFolderLocation = "/opt/Kafka/"
+        baseFolderLocation = "/dbagiga/"
+    else:
+        if not baseFolderLocation.endswith("/"):
+            baseFolderLocation = baseFolderLocation + "/"
+        logger.info(" baseFolderLocation: " + str(baseFolderLocation))
     dataFolderKafka = str(input(Fore.YELLOW + "Enter data folder for Kafka [/dbagigadata/kafka/]:" + Fore.RESET))
     if (len(str(dataFolderKafka)) == 0):
         dataFolderKafka = "/dbagigadata/kafka/"
+    else:
+        if not dataFolderKafka.endswith("/"):
+            dataFolderKafka = dataFolderKafka + "/"
     logger.info(" dataFolderKafka: " + str(dataFolderKafka))
     dataFolderZK = str(input(Fore.YELLOW + "Enter data folder for Zookeeper [/dbagigadata/zookeeper/]:" + Fore.RESET))
     if (len(str(dataFolderZK)) == 0):
         dataFolderZK = "/dbagigadata/zookeeper/"
+    else:
+        if not dataFolderZK.endswith("/"):
+            dataFolderZK = dataFolderZK + "/"
     logger.info(" dataFolderZK: " + str(dataFolderZK))
     logsFolderKafka = str(input(Fore.YELLOW + "Enter base logs folder for kafka [/dbagigalogs/kafka/]:" + Fore.RESET))
     if (len(str(logsFolderKafka)) == 0):
         logsFolderKafka = "/dbagigalogs/kafka/"
+    else:
+        if not logsFolderKafka.endswith("/"):
+            logsFolderKafka = logsFolderKafka + "/"
     logger.info(" logsFolderKafka: " + str(logsFolderKafka))
     logsFolderZK = str(input(Fore.YELLOW + "Enter base logs folder for Zookeeper [/dbagigalogs/zookeeper/]:" + Fore.RESET))
     if (len(str(logsFolderZK)) == 0):
         logsFolderZK = "/dbagigalogs/zookeeper/"
+    else:
+        if not logsFolderZK.endswith("/"):
+            logsFolderZK = logsFolderZK + "/"
     logger.info(" logsFolderZK: " + str(logsFolderZK))
 
     #  telegrafInstallFlag = input("Do you want to install telegraf? yes(y)/no(n) [n]: ")
