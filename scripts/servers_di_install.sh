@@ -108,25 +108,23 @@ mkdir -p $dataFolderZK
 mkdir -p $logsFolderKafka
 mkdir -p $dataFolderKafka
 
-cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
-
-sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
-sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
-sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
-sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/config/log4j.properties
-
 if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # removing all existing properties
   if [[ $id != 2 ]]; then
-  sed -i '/^server.1/d' $ZOOKEEPERPATH/conf/zoo.cfg
-  sed -i '/^server.2/d' $ZOOKEEPERPATH/conf/zoo.cfg
-  sed -i '/^server.3/d' $ZOOKEEPERPATH/conf/zoo.cfg
-  sed -i '/^initLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
-  sed -i '/^syncLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
+    cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i '/^server.1/d' $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i '/^server.2/d' $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i '/^server.3/d' $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i '/^initLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i '/^syncLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
+    sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/conf/log4j.properties
   fi
   if [[ $id != 4 ]]; then
-  sed -i '/^broker.id/d' $KAFKAPATH/config/server.properties
-  sed -i '/^zookeeper.connect/d' $KAFKAPATH/config/server.properties
+    sed -i '/^broker.id/d' $KAFKAPATH/config/server.properties
+    sed -i '/^zookeeper.connect/d' $KAFKAPATH/config/server.properties
+    sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
   fi
 
   # adding properties
