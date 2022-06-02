@@ -130,7 +130,7 @@ if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # adding properties
   if [[ $id != 2 ]]; then
     echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
-    echo "server.2="$kafkaBrokerHost3":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "server.3="$kafkaBrokerHost3":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "server.4="$witnessHost":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
