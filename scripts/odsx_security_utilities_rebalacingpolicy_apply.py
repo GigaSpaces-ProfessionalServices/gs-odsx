@@ -212,7 +212,7 @@ def getInputParam():
         logger.info("Rebalancing log end : ")
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Utilities -> Rebalancing -> Apply')
+    verboseHandle.printConsoleWarning('Menu -> Security -> Utilities -> Rebalancing -> Apply')
     try:
         nodeList = config_get_manager_node()
         if(len(str(nodeList))>0):
@@ -221,8 +221,8 @@ if __name__ == '__main__':
             objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
             logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
             managerHost = getManagerHost(nodeList)
-            username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
             getInputParam()
         else:
             logger.info("No manager host configuration found")
