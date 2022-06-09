@@ -40,6 +40,14 @@ def handleException(e):
         'trace': trace
     })))
 
+class obj_type_dictionary(dict):
+    # __init__ function
+    def __init__(self):
+        self = dict()
+
+    # Function to add key:value
+    def add(self, key, value):
+        self[key] = value
 
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
@@ -57,64 +65,108 @@ def getDIServerHostList():
             nodes = nodes+','+str(os.getenv(node.ip))
     return nodes
 
+def getDIhostTypeDict():
+    global host_type_dict_obj
+    host_type_dict_obj = obj_type_dictionary()
+    nodeList = config_get_dataIntegration_nodes()
+    nodes=""
+    for node in nodeList:
+        #if(str(node.role).casefold() == 'server'):
+        host_type_dict_obj.add(os.getenv(node.ip),node.type)
+
+    return host_type_dict_obj
+
+def startZookeeperServiceByHost(host):
+        cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxzookeeper.service"
+        logger.info("Getting status.. odsxzookeeper:"+str(cmd))
+        user = 'root'
+        with Spinner():
+            output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+            if (output == 0):
+                verboseHandle.printConsoleInfo("Service zookeeper started successfully on "+str(host))
+            else:
+                verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(host))
+
+
+def startKafkaServiceByHost(host):
+    logger.info("startKafkaServiceByHost()")
+    cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service"
+    logger.info("Getting status.. odsxkafka :"+str(cmd))
+    user = 'root'
+    with Spinner():
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        if (output == 0):
+            verboseHandle.printConsoleInfo("Service kafka started successfully on "+str(host))
+        else:
+            verboseHandle.printConsoleError("Service kafka failed to start on "+str(host))
+
+
+def startTelegrafServiceByHost(host):
+    logger.info("startTelegrafServiceByHost()")
+    cmd = "systemctl start telegraf"
+    logger.info("Getting status.. telegraf :"+str(cmd))
+    user = 'root'
+    with Spinner():
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        if (output == 0):
+            verboseHandle.printConsoleInfo("Service telegraf started successfully on "+str(host))
+        else:
+            verboseHandle.printConsoleError("Service telegraf failed to start on "+str(host))
+
 def startKafkaService(args):
     try:
-        listDIServers()
-        nodes = getDIServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to start kafka service for ["+str(nodes)+"] ? (y/n) [y]: "+Fore.RESET))
-        if choice.casefold() == 'n':
-            exit(0)
-        for node in config_get_dataIntegration_nodes():
-            if node.type != "kafka Broker 1b":
-                cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxzookeeper.service"
-                logger.info("Getting status.. odsxzookeeper:"+str(cmd))
-                user = 'root'
-                with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
-                    if (output == 0):
-                        verboseHandle.printConsoleInfo("Service zookeeper started successfully on "+str(os.getenv(node.ip)))
-                    else:
-                        verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(os.getenv(node.ip)))
-        for node in config_get_dataIntegration_nodes():
-            if node.type != "Zookeeper Witness":
-                cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service"
-                logger.info("Getting status.. odsxkafka :"+str(cmd))
-                user = 'root'
-                with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
-                    if (output == 0):
-                        verboseHandle.printConsoleInfo("Service kafka started successfully on "+str(os.getenv(node.ip)))
-                    else:
-                        verboseHandle.printConsoleError("Service kafka failed to start on "+str(os.getenv(node.ip)))
-        #odsxcr8.service
-       # for node in config_get_dataIntegration_nodes():
-       #     cmd = "sleep 5; systemctl start odsxcr8.service"
-       #     logger.info("Getting status.. odsxcr8 :"+str(cmd))
-       #     user = 'root'
-       #     if(str(node.type)!='Witness'):
-       #         with Spinner():
-       #             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-       #             if (output == 0):
-       #                 verboseHandle.printConsoleInfo("Service CR8 started successfully on "+str(node.ip))
-       #             else:
-       #                 verboseHandle.printConsoleError("Service CR8 failed to start on "+str(node.ip))
 
-        for node in config_get_dataIntegration_nodes():
-            cmd = "systemctl start telegraf"
-            logger.info("Getting status.. telegraf :"+str(cmd))
-            user = 'root'
-            with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
-                if (output == 0):
-                    verboseHandle.printConsoleInfo("Service telegraf started successfully on "+str(os.getenv(node.ip)))
-                else:
-                    verboseHandle.printConsoleError("Service telegraf failed to start on "+str(os.getenv(node.ip)))
+        if choiceOption == '1':
+            hostNumber = str(input(Fore.YELLOW+"Enter host number to start kafka service : "+Fore.RESET))
+            choice = str(input(Fore.YELLOW+"Are you sure want to start kafka service on "+str(host_dict_obj.get(hostNumber))+" ? (y/n) [y]: "+Fore.RESET))
+            if len(choice)==0:
+                choice='y'
+            if choice =='y':
+                getDIhostTypeDict()
+                nodeType = host_type_dict_obj.get(str(host_dict_obj.get(hostNumber)))
+                if nodeType != "kafka Broker 1b" and nodeListSize==4:
+                    startZookeeperServiceByHost(str(host_dict_obj.get(hostNumber)))
+                elif nodeListSize<4:
+                    startZookeeperServiceByHost(str(host_dict_obj.get(hostNumber)))
+                if nodeType != "Zookeeper Witness":
+                    startKafkaServiceByHost(str(host_dict_obj.get(hostNumber)))
+                elif nodeListSize<4:
+                    startKafkaService(str(host_dict_obj.get(hostNumber)))
+                startTelegrafServiceByHost(str(host_dict_obj.get(hostNumber)))
+            else:
+                exit(0)
+
+        if choiceOption == "":
+            choice = str(input(Fore.YELLOW+"Are you sure want to start kafka service on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
+            if choice.casefold() == 'n':
+                exit(0)
+            #print(nodeListSize)
+            for node in config_get_dataIntegration_nodes():
+                if node.type != "kafka Broker 1b" and nodeListSize==4:
+                    startZookeeperServiceByHost(os.getenv(node.ip))
+                elif nodeListSize<4:
+                    startZookeeperServiceByHost(os.getenv(node.ip))
+            for node in config_get_dataIntegration_nodes():
+                if node.type != "Zookeeper Witness":
+                    startKafkaServiceByHost(os.getenv(node.ip))
+                elif nodeListSize<4:
+                    startKafkaService(os.getenv(node.ip))
+            for node in config_get_dataIntegration_nodes():
+                startTelegrafServiceByHost(os.getenv(node.ip))
     except Exception as e:
         handleException(e)
-
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Servers -> DI -> Start")
     args = []
     args = myCheckArg()
+    global choiceOption
+    global host_dict_obj
+    nodeListSize = len(str((getDIServerHostList())).split(','))
+    host_dict_obj = listDIServers()
+    nodes = getDIServerHostList()
+    verboseHandle.printConsoleWarning("Current configurations ["+str(nodes)+"]")
+    choiceOption = str(input(Fore.YELLOW+"Press [1] Individual start\nPress [Enter] Start current configuration.\nPress [99] For exit.:"+Fore.RESET))
+    if choiceOption == "99":
+        exit(0)
     startKafkaService(args)

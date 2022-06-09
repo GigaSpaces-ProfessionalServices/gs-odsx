@@ -76,6 +76,7 @@ def displayDB2FeederShFiles():
     global sourceDB2FeederShFilePath
     global fileNamePuNameDict
     sourceDB2FeederShFilePath = str(str(".dbagigashare.current.db2.scripts.").replace('.','/'))
+    logger.info("sourceDB2FeederShFilePath: "+str(sourceDB2FeederShFilePath))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceDB2FeederShFilePath)
