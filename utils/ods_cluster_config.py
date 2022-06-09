@@ -1249,6 +1249,23 @@ def getManagerHostFromEnv():
     hosts=hosts[:-1]
     return hosts
 
+
+def cleanDIHostFronConfig():
+    logger.info("cleanDIHost")
+    nodeList = config_get_dataIntegration_nodes()
+    nodes = ""
+    for node in nodeList:
+        if (len(nodeList) == 1):
+            nodes = node.ip
+        else:
+            nodes = nodes + ',' + node.ip
+    logger.info("nodes :"+str(nodes))
+    with Spinner():
+        for host in nodes.split(','):
+            config_remove_dataIntegration_byNameIP(host,host)
+            config_remove_dataEngine_byNameIP(host,host)
+    logger.info("Clean DI host completed.")
+
 def discoverHostConfig():
     try:
         #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/filename.yaml'
@@ -1274,6 +1291,7 @@ def discoverHostConfig():
 
         dataIntegrationHostCount=1
         if 'dataIntegration' in content['servers']:
+            cleanDIHostFronConfig()
             for host,v in content['servers']['dataIntegration'].items():
                 host = 'di'+str(dataIntegrationHostCount)
                 os.environ[host] = str(v)
@@ -1329,6 +1347,7 @@ def discoverHostConfig():
                 os.environ[host] = str(v)
                 config_add_nb_node(host,host,'agent server', "config/cluster.config")
                 nbHostCount+=1
+        '''
         if 'dataEngine' in content['servers']:
             hostCount=0
             deHostCount=1
@@ -1349,7 +1368,7 @@ def discoverHostConfig():
                     elif deHostCount == 3:
                         config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'Witness')
                     deHostCount+=1
-
+        '''
     except Exception as e:
         handleException(e)
 

@@ -76,6 +76,7 @@ def displayMSSQLFeederShFiles():
     global sourceMSSQLFeederShFilePath
     global fileNamePuNameDict
     sourceMSSQLFeederShFilePath = str(str(".dbagigashare.current.mssql.scripts.").replace('.','/'))
+    logger.info("sourceDB2FeederShFilePath: "+str(sourceMSSQLFeederShFilePath))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceMSSQLFeederShFilePath)

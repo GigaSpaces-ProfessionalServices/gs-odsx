@@ -58,9 +58,9 @@ def removeInputUserAndHost():
     try:
         global user
         global host
-        user = str(input(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
-        if(len(str(user))==0):
-            user="root"
+        #user = str(input(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
+        #if(len(str(user))==0):
+        user="root"
         logger.info(" user: "+str(user))
 
     except Exception as e:
@@ -97,8 +97,8 @@ def executeCommandForUnInstall():
         logger.info("nodesCount :"+str(len(nodesCount)))
         if(len(nodes)>0):
             removeType=''
-            if(len(nodesCount)>1):
-                removeType = str(input(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
+            #if(len(nodesCount)>1):
+                #removeType = str(input(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
                 confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):

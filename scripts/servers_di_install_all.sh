@@ -17,24 +17,41 @@ function installAirGapJava {
 }
 
 
-echo " kafkaBrokerHost1 "$2" kafkaBrokerHost2 "$3" kafkaBrokerHost3 "$4" witnessHost "$5" counter ID "$6" installtelegrafFlag "$1" baseFolderLocation "$7
 installtelegrafFlag=$1
-kafkaBrokerHost1=$2
-kafkaBrokerHost2=$3
-kafkaBrokerHost3=$4
-witnessHost=$5
-id=$6
-baseFolderLocation=$7
-dataFolderKafka=$8
-dataFolderZK=$9
-logsFolderKafka=${10}
-logsFolderZK=${11}
-wantInstallJava=${12}
+kafkaBrokerCount=$2
+if [ "$kafkaBrokerCount" == 1 ]; then
+  echo "Processing for single node installation."
+  echo "nodeListSize" $2" kafkaBrokerHost1 "$3" counter ID "$4" installtelegrafFlag "$1" baseFolderLocation "$5
+  kafkaBrokerHost1=$3
+  id=$4
+  baseFolderLocation=$5
+  dataFolderKafka=$6
+  dataFolderZK=$7
+  logsFolderKafka=$8
+  logsFolderZK=$9
+  wantInstallJava=${10}
+  echo " dataFolderKafka "$6" dataFolderZK "$7" logsFolderKafka "$8" logsFolderZK "$9
+fi
+if [ "$kafkaBrokerCount" == 3 ]; then
+  echo "Processing for 3 node installation"
+  echo "nodeListSize" $2" kafkaBrokerHost1 "$3" kafkaBrokerHost2 "$4" kafkaBrokerHost3 "$5" counter ID "$6" installtelegrafFlag "$1" baseFolderLocation "$7
+  kafkaBrokerHost1=$3
+  kafkaBrokerHost2=$4
+  kafkaBrokerHost3=$5
+  id=$6
+  baseFolderLocation=$7
+  dataFolderKafka=$8
+  dataFolderZK=$9
+  logsFolderKafka=${10}
+  logsFolderZK=${11}
+  wantInstallJava=${12}
+  echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "${10}" logsFolderZK "${11}
+fi
 
 if [ "$wantInstallJava" == "y" ]; then
     echo "Setup AirGapJava"
     installAirGapJava
-  fi
+fi
 echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK
 cd /dbagiga/
 tar -xvf install.tar
@@ -70,7 +87,7 @@ if [[ $id != 4 ]]; then
 fi
 
 #zookeeper setup
-if [[ $id != 2 ]]; then
+#if [[ $id != 2 ]]; then
     installation_path=/dbagigashare/current/zk
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.gz" -printf "%f\n")
@@ -88,7 +105,7 @@ if [[ $id != 2 ]]; then
     echo "export ZOOKEEPER_DATA_PATH="$dataFolderZK >> setenv.sh
     echo "export ZOOKEEPER_LOGS_PATH="$logsFolderZK >> setenv.sh
 
-fi
+#fi
 
 # Configuration of log dir
 source setenv.sh
@@ -113,7 +130,7 @@ sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
 sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/conf/log4j.properties
 
-if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
+#if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # removing all existing properties
   if [[ $id != 2 ]]; then
   sed -i '/^server.1/d' $ZOOKEEPERPATH/conf/zoo.cfg
@@ -128,17 +145,24 @@ if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   fi
 
   # adding properties
-  if [[ $id != 2 ]]; then
-    echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
-    echo "server.2="$kafkaBrokerHost3":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
-    echo "server.4="$witnessHost":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+  #if [[ $id != 2 ]]; then
+  if [ "$kafkaBrokerCount" == 3 ]; then
+      echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "server.2="$kafkaBrokerHost2":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "server.3="$kafkaBrokerHost3":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "zookeeper.connect="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>$KAFKAPATH/config/server.properties
   fi
-
+  if [ "$kafkaBrokerCount" == 1 ]; then
+    echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "zookeeper.connect="$kafkaBrokerHost1":2181">>$KAFKAPATH/config/server.properties
+  fi
   if [[ $id != 4 ]]; then
     echo "broker.id="$id"">>$KAFKAPATH/config/server.properties
-    echo "zookeeper.connect="$kafkaBrokerHost1":2181,"$kafkaBrokerHost3":2181,"$witnessHost":2181">>$KAFKAPATH/config/server.properties
+
     source setenv.sh
     sed -i -e '/listeners=PLAINTEXT:\/\/:9092/s/^#//g' $KAFKAPATH/config/server.properties
     sed -i -e '/advertised.listeners=PLAINTEXT:/s/^#//g' $KAFKAPATH/config/server.properties
@@ -172,12 +196,12 @@ if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
  #   sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$witnessHost':9092|g' $KAFKAPATH/config/server.properties
  #   sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$witnessHost'' $KAFKAPATH/config/server.properties
   fi
-  if [[ $id != 2 ]]; then
+  #if [[ $id != 2 ]]; then
     echo "$dataFolderZK"myid
     echo "$id">"$dataFolderZK"myid
-  fi
+  #fi
   echo "added params"
-fi
+#fi
 
 #sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
 sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs='$dataFolderKafka'|g' $KAFKAPATH/config/server.properties
@@ -190,7 +214,7 @@ kafka_service_file="odsxkafka.service"
 zookeeper_service_file="odsxzookeeper.service"
 
 source setenv.sh
-if [[ $id != 2 ]]; then
+#if [[ $id != 2 ]]; then
   echo "line 149 === $id"
   cmd="$ZOOKEEPERPATH/bin/zkServer.sh --config $ZOOKEEPERPATH/conf start"
   echo "$cmd">>$start_zookeeper_file
@@ -208,7 +232,7 @@ if [[ $id != 2 ]]; then
   mv /tmp/st*_zookeeper.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_zookeeper.sh
   mv /tmp/$zookeeper_service_file /etc/systemd/system/
-fi
+#fi
 
 if [[ $id != 4 ]]; then
   echo "line 168 === $id"
@@ -244,7 +268,7 @@ if [[ $installtelegrafFlag == "y" ]]; then
   yum install -y $installation_path"/"$installation_file
   cp $home_dir"/install/kafka/kafka.conf" /etc/telegraf/telegraf.d/
   sed -i -e 's|"http://KAFKA_SERVER_IP_ADDRESS:8778/jolokia"|"http://'$kafkaBrokerHost1':8778/jolokia","http://'$kafkaBrokerHost2':8778/jolokia","http://'$kafkaBrokerHost3':8778/jolokia"|g' /etc/telegraf/telegraf.d/kafka.conf
-  sed -i -e 's|":2181"|"'$kafkaBrokerHost1':2181","'$witnessHost':2181","'$kafkaBrokerHost3':2181"|g' /etc/telegraf/telegraf.d/kafka.conf
+  sed -i -e 's|":2181"|"'$kafkaBrokerHost1':2181","'$kafkaBrokerHost2':2181","'$kafkaBrokerHost3':2181"|g' /etc/telegraf/telegraf.d/kafka.conf
 
 fi
 
