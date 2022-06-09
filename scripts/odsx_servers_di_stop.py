@@ -3,21 +3,24 @@ import argparse
 import os
 import sys
 
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from scripts.spinner import Spinner
 from colorama import Fore
+
+from scripts.logManager import LogManager
 from scripts.odsx_servers_di_list import listDIServers
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+
 
 class bcolors:
     OK = '\033[92m'  # GREEN
     WARNING = '\033[93m'  # YELLOW
     FAIL = '\033[91m'  # RED
     RESET = '\033[0m'  # RESET COLOR
+
 
 def handleException(e):
     logger.info("handleException()")
@@ -47,47 +50,66 @@ def myCheckArg(args=None):
     parser.add_argument('m', nargs='?')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+
 def getDIServerHostList():
     nodeList = config_get_dataIntegration_nodes()
-    nodes=""
+    nodes = ""
     for node in nodeList:
-        #if(str(node.role).casefold() == 'server'):
-        if(len(nodes)==0):
+        # if(str(node.role).casefold() == 'server'):
+        if (len(nodes) == 0):
             nodes = node.ip
         else:
-            nodes = nodes+','+node.ip
+            nodes = nodes + ',' + node.ip
     return nodes
 
-def startKafkaService(args):
+
+def stopKafkaService(args):
     try:
-        listDIServers()
+        host_dict_obj = listDIServers()
+        stopType = str(input(Fore.YELLOW + "[1] Single server stop \n[Enter] To stop on all servers \n[99] ESC : "))
         nodes = getDIServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to stop kafka service for ["+str(nodes)+"]? (y/n)"+Fore.RESET))
+        singleHostIp = ''
+        if (stopType == '99'):
+            exit(0)
+        if (stopType == '1'):
+            hostNumer = str(input(Fore.YELLOW + "Enter serial number to stop : " + Fore.RESET))
+            while (len(str(hostNumer)) == 0):
+                hostNumer = str(input(Fore.YELLOW + "Enter serial number to stop : " + Fore.RESET))
+            host = host_dict_obj.get(hostNumer)
+            nodes = host
+            singleHostIp = host
+        choice = str(input(
+            Fore.YELLOW + "Are you sure, you want to stop kafka services for [" + str(
+                nodes) + "]? (y/n) [y]" + Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataIntegration_nodes():
-            if node.type != "Zookeeper Witness":
+            if (stopType == '1' and singleHostIp == node.ip) or (
+                    singleHostIp == "" and len(host_dict_obj) <= 3) or (
+                    singleHostIp == "" and len(host_dict_obj) > 3 and node.type != "Zookeeper Witness"):
                 cmd = "systemctl stop odsxkafka.service; sleep 5;"
-                logger.info("Getting status.. :"+str(cmd))
+                logger.info("Getting status.. :" + str(cmd))
                 user = 'root'
                 with Spinner():
                     output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                     if (output == 0):
-                        verboseHandle.printConsoleInfo("Service kafka stopped successfully on node "+str(node.ip))
+                        verboseHandle.printConsoleInfo("Service kafka stopped successfully on node " + str(node.ip))
                     else:
                         verboseHandle.printConsoleError("Service kafka failed to stop.")
         for node in config_get_dataIntegration_nodes():
-            if node.type != "kafka Broker 1b":
+            if (stopType == '1' and singleHostIp == node.ip) or (
+                    singleHostIp == "" and len(host_dict_obj) <= 3) or (
+                    singleHostIp == "" and len(host_dict_obj) > 3 and node.type != "kafka Broker 1b"):
                 cmd = "systemctl stop odsxzookeeper.service; sleep 5;"
-                logger.info("Getting status.. :"+str(cmd))
+                logger.info("Getting status.. :" + str(cmd))
                 user = 'root'
                 with Spinner():
                     output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                     if (output == 0):
-                        verboseHandle.printConsoleInfo("Service zookeeper stopped successfully on node "+str(node.ip))
+                        verboseHandle.printConsoleInfo("Service zookeeper stopped successfully on node " + str(node.ip))
                     else:
                         verboseHandle.printConsoleError("Service zookeeper failed to stop.")
-        #for node in config_get_dataIntegration_nodes():
+        # for node in config_get_dataIntegration_nodes():
         #    cmd = "systemctl stop odsxcr8.service; sleep 5;"
         #    logger.info("Getting status odsxcr8.. :"+str(cmd))
         #    user = 'root'
@@ -99,15 +121,17 @@ def startKafkaService(args):
         #            else:
         #                verboseHandle.printConsoleError("Service CR8 failed to stop.")
         for node in config_get_dataIntegration_nodes():
-            cmd = "systemctl stop telegraf"
-            logger.info("Getting status.. telegraf :"+str(cmd))
-            user = 'root'
-            with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
-                if (output == 0):
-                    verboseHandle.printConsoleInfo("Service telegraf stopped successfully on "+str(node.ip))
-                else:
-                    verboseHandle.printConsoleError("Service telegraf failed to stop")
+            if (stopType == '1' and singleHostIp == node.ip) or (
+                    singleHostIp == ""):
+                cmd = "systemctl stop telegraf"
+                logger.info("Getting status.. telegraf :" + str(cmd))
+                user = 'root'
+                with Spinner():
+                    output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                    if (output == 0):
+                        verboseHandle.printConsoleInfo("Service telegraf stopped successfully on " + str(node.ip))
+                    else:
+                        verboseHandle.printConsoleError("Service telegraf failed to stop")
     except Exception as e:
         handleException(e)
 
@@ -116,4 +140,4 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Servers -> DI -> Stop")
     args = []
     args = myCheckArg()
-    startKafkaService(args)
+    stopKafkaService(args)
