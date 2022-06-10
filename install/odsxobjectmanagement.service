@@ -1,0 +1,15 @@
+[Unit]
+Description="GigaSpaces Object Management Service"
+After=network.target
+
+[Service]
+Type=simple
+User=gsods
+Group=gsods
+SuccessExitStatus=143
+ExecStart=/usr/bin/java -jar $healthCheckJar
+ExecStop=/bin/kill -15 $MAINPID
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target
