@@ -1,44 +1,50 @@
 current:
+  db2:
+    config: null
+    jars:
+      db2ccLicense: db2jcc_license_cu-4.16.53.jar
+      db2ccjar: db2jcc-4.26.14.jar
+      db2feederJar: db2feeder-1.0.0.jar
+    scripts: null
   gs:
     config:
-      services:
-        gsa.service
       log:
-        xap_logging : xap_logging.properties
+        xap_logging: xap_logging.properties
+      services: gsa.service
       ts:
+        bck:
+          currentTs: null
+          previousTs: null
         criteria: TieredCriteria.tab
         spaceproperty: spaceproperty.properties
-        bck:
-          current:
-          previous:
     jars:
       ts:
         tieredStorageBuild: bll-0.1.jar
+  kafka:
+    jolokiaJar: jolokia-agent.jar
   mq-connector:
     adabas:
       config:
-        pipeline: data-pipeline.yml
         keystore: keystore.jks
+        pipeline: data-pipeline.yml
       jars:
-        kafkaConnector: kafka-connector-1.0.0-SNAPSHOT-jar-with-dependencies.jar
         jarFile: adabas-0.0.1-SNAPSHOT.jar
+        kafkaConnector: kafka-connector-1.0.0-SNAPSHOT-jar-with-dependencies.jar
   mssql:
-    config:
-    jars:
-      mssqlJarFile: mssqlFeeder-1.0.jar
-    scripts:
+    config: null
     files:
-      sqljdbc: SQLJDBCDriver.conf
       keytab: udkods2.keytab
-  db2:
-    config:
+      sqljdbc: SQLJDBCDriver.conf
     jars:
-      db2ccjar: db2jcc-4.26.14.jar
-      db2ccLicense: db2jcc_license_cu-4.16.53.jar
-      db2feederJar: db2feeder-1.0.0.jar
-    scripts:
+      mssqlJarFile: mssqlFeeder-1.0.0.jar
+    scripts: null
   security:
+    config:
+      ldapsourcefile: ldap-security-config.xml
     jars:
-      cef: CEFLogger-1.0-SNAPSHOT.jar
-  kafka:
-    jolokiaJar: jolokia-agent.jar
+      cef:
+        cefjar: CEFLogger-1.0-SNAPSHOT.jar
+      javapassword: JavaPasswordSDK.jar
+      springldapcore: spring-ldap-core-2.3.3.RELEASE.jar
+      springldapjar: spring-security-ldap-5.1.7.RELEASE.jar
+      vaultsupportjar: VaultSupport-1.0-SNAPSHOT.jar
