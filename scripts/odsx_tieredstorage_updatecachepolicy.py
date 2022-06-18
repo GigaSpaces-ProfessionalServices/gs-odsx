@@ -607,7 +607,7 @@ def copyFilesFromODSXToSpaceServer():
         #set_value_in_property_file('app.tieredstorage.criteria.filepathbackup.prev',str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup")))
         #set_value_in_property_file('app.tieredstorage.criteria.filepathbackup',str(tieredCriteriaConfigFilePathBckupFile))
         set_value_yaml_config('currentTs',str(bkpFileName))
-        set_value_yaml_config('previousTs',str(readValueFromYaml("current.gs.config.ts.bck.currentTs")))
+        set_value_yaml_config('previousTs',str(readValueFromYaml(".gs.config.ts.bck.currentTs")))
         status = os.system(cmd)
         logger.info("cp status :"+str(status))
     if(copyFile(ips,spacePropertyConfigFilePath,spacePropertyConfigFilePathTarget)):

@@ -150,7 +150,7 @@ def getInputParam(kafkaHosts):
     mqPort = mqPortConfig
     #set_value_in_property_file("app.dataengine.mq.adabas.port",mqPort)
 
-    sourceKeyStoreFile = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.config.keystore")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    sourceKeyStoreFile = str(getYamlFilePathInsideFolder(".mq-connector.adabas.config.keystore")).replace('[','').replace(']','').replace("'","").replace(', ',',')
 
     displaySummary()
     return kafkaHosts

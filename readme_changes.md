@@ -10,8 +10,11 @@
  3. logging.config
     - Changed logging for odsx to -> /dbagigalogs/odsx.log
  4. app.config
-    - Added: 
-        - app.setup.profile=security
+    - Added:
+        For security menu items keep 
+            - app.setup.profile=security
+        For Non security
+            - app.setup.profile=
         - app.manager.cefXapLogging.target.file
     - changed:
         - app.di.base.kafka.zk=/dbagigasoft/
