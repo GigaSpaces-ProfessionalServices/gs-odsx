@@ -1269,7 +1269,9 @@ def cleanDIHostFronConfig():
 def discoverHostConfig():
     try:
         #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/filename.yaml'
-        file = '/dbagigashare/current/odsx/host.yaml'
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+        file = sourceInstallerDirectory+'/odsx/host.yaml'
         with open(file) as f:
             content = yaml.safe_load(f)
 
