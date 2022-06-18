@@ -6,7 +6,7 @@ from scripts.logManager import LogManager
 import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueFromYaml, \
-    getYamlFilePathInsideFolder
+    getYamlFilePathInsideFolder, set_value_yaml_config
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
@@ -314,7 +314,7 @@ def uploadFileRest(managerHostConfig):
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         global pathOfSourcePU
         pathOfSourcePU = "current.gs.jars.ts.tieredStorageBuild"
-        pathOfSourcePU = str((getYamlFilePathInsideFolder(pathOfSourcePU))).replace('"','')
+        pathOfSourcePU = str(getYamlFilePathInsideFolder(pathOfSourcePU)).replace('"','')
         #print(Fore.YELLOW+"Path filename of processing unit to deploy :"+str(pathOfSourcePU)+Fore.RESET)
         #if(len(str(pathOfSourcePUInput))>0):
         #    pathOfSourcePU = pathOfSourcePUInput
@@ -322,7 +322,7 @@ def uploadFileRest(managerHostConfig):
         #    pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
         #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
-
+        #set_value_yaml_config("current.gs.jars.ts.currentTs",str(pathOfSourcePU))
         logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         logger.info("status : "+str(status))

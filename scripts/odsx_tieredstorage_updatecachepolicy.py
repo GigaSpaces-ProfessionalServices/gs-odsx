@@ -5,7 +5,8 @@ from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, set_value_yaml_config, \
+    readValueFromYaml, getYamlFilePathInsideFolder
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
@@ -571,11 +572,11 @@ def copyFilesFromODSXToSpaceServer():
     logger.info("copyFilesFromODSXToSpaceServer()")
     ips = getSpaceNodeIps()
     logger.info("ips: "+str(ips))
-    tieredCriteriaConfigFilePath = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath")).replace('"','')
+    tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder("current.gs.config.ts.criteria")).replace('"','')
     logger.info("tieredCriteriaConfigFilePath : "+str(tieredCriteriaConfigFilePath))
     tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','')
     logger.info("tieredCriteriaConfigFilePathTarget : "+str(tieredCriteriaConfigFilePathTarget))
-    spacePropertyConfigFilePath = str(readValuefromAppConfig("app.space.property.filePath")).replace('"','')
+    spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder("current.gs.config.ts.spaceproperty")).replace('"','')
     logger.info("spacePropertyConfigFilePath : "+str(spacePropertyConfigFilePath))
     spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.space.property.filePath.target")).replace('"','')
     logger.info("spacePropertyConfigFilePathTarget : "+str(spacePropertyConfigFilePathTarget))
@@ -588,11 +589,25 @@ def copyFilesFromODSXToSpaceServer():
         timeStamp = now.strftime("%Y%m%d%H%M%S")
         logger.info("timeStamp : "+str(timeStamp))
         tieredCriteriaConfigFilePathBckupFile = str(tieredCriteriaConfigFilePath)+".bck."+str(timeStamp)
+        head , tail = os.path.split(tieredCriteriaConfigFilePathBckupFile)
+        logger.info("tail :"+str(tail))
+        bkpFileName=str(tail)
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+        tieredCriteriaConfigFilePathBckupFile = str(sourceInstallerDirectory+".gs.config.ts.bck.").replace('.','/')+str(bkpFileName)
+        #print("tieredCriteriaConfigFilePathBckupFile"+str(tieredCriteriaConfigFilePathBckupFile))
         logger.info("tieredCriteriaConfigFilePathBckupFile : "+str(tieredCriteriaConfigFilePathBckupFile))
-        cmd = "cp "+str(tieredCriteriaConfigFilePath)+" "+str(tieredCriteriaConfigFilePathBckupFile)
+        userCMD = os.getlogin()
+        if userCMD == 'ec2-user':
+            cmd = "sudo cp "+str(tieredCriteriaConfigFilePath)+" "+str(tieredCriteriaConfigFilePathBckupFile)
+        else:
+            cmd = "cp "+str(tieredCriteriaConfigFilePath)+" "+str(tieredCriteriaConfigFilePathBckupFile)
+        #print(cmd)
         logger.info("cmd : "+str(cmd))
-        set_value_in_property_file('app.tieredstorage.criteria.filepathbackup.prev',str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup")))
-        set_value_in_property_file('app.tieredstorage.criteria.filepathbackup',str(tieredCriteriaConfigFilePathBckupFile))
+        #set_value_in_property_file('app.tieredstorage.criteria.filepathbackup.prev',str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup")))
+        #set_value_in_property_file('app.tieredstorage.criteria.filepathbackup',str(tieredCriteriaConfigFilePathBckupFile))
+        set_value_yaml_config('currentTs',str(bkpFileName))
+        set_value_yaml_config('previousTs',str(readValueFromYaml("current.gs.config.ts.bck.currentTs")))
         status = os.system(cmd)
         logger.info("cp status :"+str(status))
     if(copyFile(ips,spacePropertyConfigFilePath,spacePropertyConfigFilePathTarget)):
@@ -601,11 +616,11 @@ def copyFilesFromODSXToSpaceServer():
         logger.info("now : "+str(now))
         timeStamp = now.strftime("%Y%m%d%H%M%S")
         logger.info("timeStamp : "+str(timeStamp))
-        spacePropertyConfigFilePathBckupFile = str(spacePropertyConfigFilePath)+".bck."+str(timeStamp)
-        logger.info("spacePropertyConfigFilePathBckupFile : "+str(spacePropertyConfigFilePathBckupFile))
-        cmd = "cp "+str(spacePropertyConfigFilePath)+" "+str(spacePropertyConfigFilePathBckupFile)
-        logger.info("cmd : "+str(cmd))
-        set_value_in_property_file('app.space.property.filepathbackup',str(spacePropertyConfigFilePathBckupFile))
+        #spacePropertyConfigFilePathBckupFile = str(spacePropertyConfigFilePath)+".bck."+str(timeStamp)
+        #logger.info("spacePropertyConfigFilePathBckupFile : "+str(spacePropertyConfigFilePathBckupFile))
+        #cmd = "cp "+str(spacePropertyConfigFilePath)+" "+str(spacePropertyConfigFilePathBckupFile)
+        #logger.info("cmd : "+str(cmd))
+        #set_value_in_property_file('app.space.property.filepathbackup',str(spacePropertyConfigFilePathBckupFile))
         status = os.system(cmd)
         logger.info("cp status :"+str(status))
 
