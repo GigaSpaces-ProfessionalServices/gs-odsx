@@ -7,6 +7,7 @@ import os.path
 from os import path
 import  pyfiglet
 from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import discoverHostConfig
 ###############################
 # For autocomplete
@@ -47,7 +48,10 @@ def displayMainMenu(menu,currentMenu):
     #print('defMenu1',defaultMenu)
     if(menu == '' or menu == 'menu'):
         #print('a')
-        defaultMenu ="menu"
+        if profile=='security':
+            defaultMenu ="menu_security"
+        else:
+            defaultMenu="menu"
     elif(menu.count(findExit)):
 
         #print('b')
@@ -59,7 +63,10 @@ def displayMainMenu(menu,currentMenu):
         #print('c')
         defaultMenu=defaultMenu+'_'+menu
     else:
-        defaultMenu='menu'
+        if profile=='security':
+            defaultMenu ="menu_security"
+        else:
+            defaultMenu="menu"
     #Dsisplay Tree stucture
     print(defaultMenu.upper().replace('_',' -> '))
     print('\n')
@@ -108,6 +115,8 @@ def displayMainMenu(menu,currentMenu):
 
                         if(defaultMenu =='menu' and selectedOption.lower().strip() == findExit):
                             quit()
+                        if(defaultMenu =='menu_security' and selectedOption.lower().strip() == findExit and profile=='security'):
+                            quit()
                         elif(menu != 'menu'):
                             displayMainMenu(selectedOption.lower().strip(),defaultMenu)
                         else:
@@ -143,7 +152,11 @@ def displayMainMenu(menu,currentMenu):
             #print('currMennn',currentMenu)
             #print('scriptMenuuu',scriptMenu)
             logger.error("Invalid Option or file does not exist. : "+scriptsFolder+'/'+scriptMenu+'.py')
-            displayMainMenu('','menu')
+            if profile=='security':
+                displayMainMenu('','menu_security')
+            else:
+                displayMainMenu('','menu')
+
 #To find command in file
 def findArgumentInFile(currentArg,initialFileName):
     #logger.info("findArgumentInFile-currentArg : "+currentArg+ " initialFileName :"+initialFileName)
@@ -228,11 +241,17 @@ def main(**args):
             except Exception as e:
                 print(e)
     else:
-        displayMainMenu('menu','')
+        if profile=='security':
+            displayMainMenu('','menu_security')
+        else:
+            displayMainMenu('','menu')
 
 if __name__== "__main__":
   parser = ap.ArgumentParser()
   subparser = parser.add_subparsers()
+  profile=str(readValuefromAppConfig("app.setup.profile"))
+  #print("profile="+profile)
+  logger.info("Profile :"+str(profile))
 
 ##############
 # Main Menu
