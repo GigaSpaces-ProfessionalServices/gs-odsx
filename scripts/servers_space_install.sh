@@ -127,7 +127,7 @@ function setGSHome {
 function installAirGapJava {
     echo "Installation of AirGapJava"
     home_dir=$(pwd)
-    installation_path=/dbagigashare/current/jdk
+    installation_path=$sourceInstallerDirectory/jdk
     installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
     echo "Installation File :"$installation_file
     if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ]  || [[ "$osType" ==  *"Linux"*  ]]; then
@@ -155,7 +155,7 @@ function installAirGapJava {
 function installAirGapUnzip {
    echo "Install AirGapUnzip"
    home_dir=$(pwd)
-   installation_path=/dbagigashare/current/unzip
+   installation_path=$sourceInstallerDirectory/unzip
    installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
    if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [[ "$osType" ==  *"Linux"*  ]]; then
       rpm -ivh $installation_path"/"$installation_file
@@ -227,7 +227,7 @@ function installAirGapGS {
    echo "Installing Gigaspace InsightEdge at "$targetDir
    home_dir=$(pwd)
    echo "homedir: "$home_dir
-   installation_path=/dbagigashare/current/gs
+   installation_path=$sourceInstallerDirectory/gs
    installation_file=$(find $installation_path -name *.zip -printf "%f\n")
    echo $installation_path"/"$installation_file
    pwd
@@ -427,7 +427,8 @@ wantInstallUnzip=${11}
 gscCount=${12}
 memoryGSC=${13}
 zoneGSC=${14}
-gsNicAddress=${15}
+sourceInstallerDirectory=${15}
+gsNicAddress=${16}
 
 echo "param1"$1
 echo "param2"$targetDir
@@ -443,7 +444,9 @@ echo "param11"$wantInstallUnzip
 echo "param12"$gscCount
 echo "param13"$memoryGSC
 echo "param14"$zoneGSC
-echo "param15"$gsNicAddress
+echo "param15"$sourceInstallerDirectory
+echo "param16"$gsNicAddress
+
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else

@@ -56,9 +56,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -78,7 +78,10 @@ def displayMSSQLFeederShFiles():
     global fileNameDict
     global sourceMSSQLFeederShFilePath
     global fileNamePuNameDict
-    sourceMSSQLFeederShFilePath = str(readValueByConfigObj("app.dataengine.mssql-feeder.filePath.shFile"))
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    sourceMSSQLFeederShFilePath = str(str(sourceInstallerDirectory+".mssql.scripts.").replace('.','/'))
+    logger.info("sourceMSSQLFeederShFilePath :"+str(sourceMSSQLFeederShFilePath))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceMSSQLFeederShFilePath)
@@ -213,8 +216,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes);
         if(len(str(managerHost))>0):
-            username =  str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password =  str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
             displayMSSQLFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):

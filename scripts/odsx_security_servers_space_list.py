@@ -2,9 +2,11 @@
 import argparse
 import os
 import sys
+
+from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
 from utils.odsx_print_tabular_data import printTabular
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node, config_get_grafana_list, config_get_influxdb_node
 from colorama import Fore
 import socket, platform
 from utils.ods_validation import getSpaceServerStatus,port_check_config
@@ -14,6 +16,8 @@ from utils.ods_app_config import readValuefromAppConfig
 import requests, json
 from requests.auth import HTTPBasicAuth
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from scripts.odsx_servers_manager_list import isInstalledAndGetVersion
+from utils.ods_cluster_config import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -65,7 +69,7 @@ def myCheckArg(args=None):
 
 def getGSCForHost():
     logger.info("getGSCForHost")
-    managerServerConfig = readValuefromAppConfig("app.manager.hosts")
+    managerServerConfig = getManagerHostFromEnv()
     host_gsc_dict_obj =  host_nic_dictionary()
     host_gsc_mul_host_dict_obj =  host_nic_dictionary()
     managerServerConfigArr=[]
@@ -82,8 +86,8 @@ def getGSCForHost():
 def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
     logger.info("getGSCByManagerServerConfig() : managerServerConfig :"+str(managerServerConfig)+" host_gsc_dict_obj :"+str(host_gsc_dict_obj))
     try:
-        #print("Getting response for :"+managerServerConfig)
-        response = requests.get(('http://'+managerServerConfig+':8090/v2/containers'), headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
+        logger.info("Getting response for :"+str(managerServerConfig))
+        response = requests.get(('http://'+managerServerConfig+':8090/v2/containers'), headers={'Accept': 'application/json'})
         output = response.content.decode("utf-8")
         logger.info("Json Response container:"+str(output))
         data = json.loads(output)
@@ -142,11 +146,13 @@ def listSpaceServer():
         logger.info("listSpaceServer()")
         spaceServers = config_get_space_hosts()
         verboseHandle.printConsoleWarning("Menu -> Security -> Space -> List\n")
-        headers = [Fore.YELLOW+"IP"+Fore.RESET,
-                   Fore.YELLOW+"Host"+Fore.RESET,
+        headers = [Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
-                   #Fore.YELLOW+"Version"+Fore.RESET
+                   Fore.YELLOW+"Installed"+Fore.RESET,
+                   Fore.YELLOW+"Status"+Fore.RESET,
+                   Fore.YELLOW+"Version"+Fore.RESET,
+                   Fore.YELLOW+"Influxdb"+Fore.RESET,
+                   Fore.YELLOW+"Grafana"+Fore.RESET
                    ]
         data=[]
         userConfig = readValuefromAppConfig("app.server.user")
@@ -161,48 +167,45 @@ def listSpaceServer():
         host_nic_dict_obj = host_nic_dictionary()
 
         for server in spaceServers:
-            if (port_check_config(server.ip,22)):
+            if (port_check_config(os.getenv(server.ip),22)):
                 cmd = 'systemctl is-active gs.service'
-                logger.info("server.ip : "+str(server.ip)+" cmd :"+str(cmd))
-                output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
+                logger.info("server.ip : "+str(os.getenv(server.ip))+" cmd :"+str(cmd))
+                output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
                 logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
-                host_nic_dict_obj.add(server.ip,str(output))
+                host_nic_dict_obj.add(os.getenv(server.ip),str(output))
             else:
-                logger.info(" Host GSC :"+str(server.ip)+" is not reachable")
+                logger.info(" Host :"+str(os.getenv(server.ip))+" is not reachable")
 
         logger.info("host_nic_dict_obj : "+str(host_nic_dict_obj))
         for server in spaceServers:
+            host = os.getenv(server.ip)
             logger.info("server.ip : "+str(server.ip))
-            #status = getStatusOfHost(host_nic_dict_obj,server)
-            status=''
-            gsc=''
-            if (port_check_config(server.ip,22)):
-                status = getStatusOfSpaceHost(str(server.ip))
-                logger.info("status GSC : "+str(status))
-                logger.info("Host GSC :"+str(server.name))
-                #gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(server.name).__getitem__(0)))
-                gsc = host_gsc_dict_obj.get(str(server.name))
+            installStatus='No'
+            install = isInstalledAndGetVersion(os.getenv(str(server.ip)))
+            logger.info("install : "+str(install))
+            if(len(str(install))>0):
+                installStatus='Yes'
+            if (port_check_config(host,22)):
+                status = getStatusOfSpaceHost(str(host))
+                logger.info("status : "+str(status))
+                logger.info("Host:"+str(host))
+                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+                #gsc = host_gsc_dict_obj.get(str(host))
                 logger.info("GSC : "+str(gsc))
             else:
                 status="NOT REACHABLE"
-                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(server.name).__getitem__(0)))
-                #gsc = host_gsc_dict_obj.get(str(server.name))
+                gsc = host_gsc_dict_obj.get(str(host))
                 logger.info(" Host :"+str(server.ip)+" is not reachable")
             #version = getVersion(server.ip)
-            if(status=="ON"):
-                dataArray=[Fore.GREEN+server.ip+Fore.RESET,
-                           Fore.GREEN+server.name+Fore.RESET,
-                           Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.GREEN+str(status)+Fore.RESET
-                           #Fore.GREEN+str(version)+Fore.RESET
-                           ]
-            else:
-                dataArray=[Fore.GREEN+server.ip+Fore.RESET,
-                           Fore.GREEN+server.name+Fore.RESET,
-                           Fore.GREEN+str(gsc)+Fore.RESET,
-                           Fore.RED+str(status)+Fore.RESET
-                           #Fore.GREEN+str(version)+Fore.RESET
-                           ]
+            influx = validateMetricsXmlInflux(host)
+            grafana = validateMetricsXmlGrafana(host)
+            dataArray=[Fore.GREEN+host+Fore.RESET,
+                       Fore.GREEN+str(gsc)+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                       Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
+                       Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
+                       Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+                       Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
             data.append(dataArray)
 
         printTabular(None,headers,data)
@@ -241,8 +244,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes)
         logger.info("managerHost : main"+str(managerHost))
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+        password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
         with Spinner():
             listSpaceServer()
     except Exception as e:

@@ -58,13 +58,25 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
 
+def getTieredStorageSpaces():
+    logger.info("getTieredStorageSpaces()")
+    #check for Tiered storage space
+    responseTiered = requests.get("http://"+str(managerHost)+":8090/v2/internal/spaces/utilization")
+    logger.info("Response status of spaces/utilization : "+str(responseTiered.status_code)+" content : "+str(responseTiered.content))
+    jsonArrayTiered = json.loads(responseTiered.text)
+    tieredSpace = []
+    for data in jsonArrayTiered:
+        if(data["tiered"]==True):
+            tieredSpace.append(str(data["serviceName"]))
+    logger.info("tieresSpace : "+str(tieredSpace))
+    return tieredSpace
 
 def listUndeployedPUsOnServer(managerHost):
     logger.info("listUndeployedPUsOnServer()")
@@ -374,8 +386,8 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 gs_space_dictionary_obj = listDeployed(managerHost)
                 if(len(str(gs_space_dictionary_obj))>0):
                     proceedToUndeployPU(managerHost)

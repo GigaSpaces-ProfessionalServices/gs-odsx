@@ -10,6 +10,7 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
@@ -59,14 +60,14 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     global password
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        username = str(getUsernameByHost(str(node.ip),appId,safeId,objectId))
-        password = str(getPasswordByHost(str(node.ip),appId,safeId,objectId))
-        status = getSpaceServerStatus(node.ip)
+        username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})
         version = "NA"
         try:
-            managerInfoResponse = requests.get(('http://' + str(node.ip) + ':8090/v2/info'),
+            managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
                                                headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
             output = managerInfoResponse.content.decode("utf-8")
             logger.info("Json Response container:" + str(output))
@@ -76,14 +77,14 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
             version = "NA"
         if (status == "ON"):
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
-                         Fore.GREEN + node.ip + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
                          Fore.GREEN + version + Fore.RESET,
                          Fore.GREEN + status + Fore.RESET]
         else:
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + node.name + Fore.RESET,
-                         Fore.GREEN + node.ip + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
                          Fore.GREEN + version + Fore.RESET,
                          Fore.RED + status + Fore.RESET]
         data.append(dataArray)
@@ -134,7 +135,7 @@ if __name__ == '__main__':
     managerDict = config_get_manager_listWithStatus()
 
     hostsConfig = ''
-    hostsConfig = readValuefromAppConfig("app.manager.hosts")
+    hostsConfig = getManagerHostFromEnv()
     logger.info("hostConfig:" + str(hostsConfig))
     hostsConfig = hostsConfig.replace('"', '')
     if (len(str(hostsConfig)) > 0):
@@ -164,14 +165,14 @@ if __name__ == '__main__':
                         # cmd = "free | grep Mem | awk '{print $4/$2 * 100.0}'"
 
                         cmd = "df " + destPath + "|grep -v Avail|awk '{print $4/$2 * 100.0}'"
-                        freeStoragePerc = executeRemoteCommandAndGetOutputValuePython36(managerUpgrade.ip, user, cmd)
+                        freeStoragePerc = executeRemoteCommandAndGetOutputValuePython36(os.getenv(managerUpgrade.ip), user, cmd)
                         managerCount = 0
                         for node in config_get_manager_node():
-                            status = getSpaceServerStatus(node.ip)
+                            status = getSpaceServerStatus(os.getenv(node.ip))
                             if status == "ON":
                                 managerCount = managerCount + 1
 
-                        executeRemoteCommandAndGetOutputValuePython36(managerUpgrade.ip, user,
+                        executeRemoteCommandAndGetOutputValuePython36(os.getenv(managerUpgrade.ip), user,
                                                                       "mkdir -p install/gs/upgrade/")
                         freeStoragePerc = str(freeStoragePerc).replace("\n", "")
                         # print("freeStoragePerc: " + str(freeStoragePerc) + ", managerCount: " + str(managerCount))
@@ -189,7 +190,7 @@ if __name__ == '__main__':
                                     Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
                             logger.info("confirm :" + str(confirm))
                             if confirm == 'yes' or confirm == 'y':
-                                scp_upload(managerUpgrade.ip, user, sourcePath + "/" + packageName,
+                                scp_upload(os.getenv(managerUpgrade.ip), user, sourcePath + "/" + packageName,
                                            "install/gs/upgrade/")
                                 commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
                                 applicativeUserFile = readValuefromAppConfig("app.server.user")
@@ -199,9 +200,9 @@ if __name__ == '__main__':
                                 ssh = ""
                                 if isConnectUsingPem == 'True':
                                     ssh = ''.join(
-                                        ['ssh', ' -i ', pemFileName, ' ', user, '@', str(managerUpgrade.ip), ' '])
+                                        ['ssh', ' -i ', pemFileName, ' ', user, '@', str(os.getenv(managerUpgrade.ip)), ' '])
                                 else:
-                                    ssh = ''.join(['ssh', ' ', str(managerUpgrade.ip), ' '])
+                                    ssh = ''.join(['ssh', ' ', str(os.getenv(managerUpgrade.ip)), ' '])
                                 cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_manual.sh'
                                 os.system(cmd)
                                 config_get_manager_listWithStatus()

@@ -147,7 +147,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
-        gsLogsConfigFileFromConfig = str(getYamlFilePathInsideFolder("current.gs.config.log.xap_logging")).replace('[','').replace(']','')
+        gsLogsConfigFileFromConfig = str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = ""
         #print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
@@ -217,11 +217,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print(Fore.YELLOW+"Source directory to copy jars from : "+sourceDirectoryForJar+Fore.RESET)
         #if(len(str(sourceDirectoryForJar))==0):
         #    sourceDirectoryForJar='/dbagiga'
-
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        logger.info("sourceInstallerDirectory :"+str(sourceInstallerDirectory))
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
@@ -255,19 +256,17 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
 
-        cefloogerJarPath="current.security.jars.cef"
-        cefLoggingJarInput = str(readValueFromYaml(cefloogerJarPath)).replace('[','').replace(']','')
-        cefLoggingJarInput=getYamlJarFilePath(cefloogerJarPath,cefLoggingJarInput)
+        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
-        db2ccJarPath = "current.db2.jars.db2ccjar"
+        db2ccJarPath = ".db2.jars.db2ccjar"
         db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
-        db2jccJarInput =getYamlJarFilePath("current.db2.jars",db2jccJarInput)
-        db2ccJarLicensePath="current.db2.jars.db2ccLicense"
+        db2jccJarInput =getYamlJarFilePath(".db2.jars",db2jccJarInput)
+        db2ccJarLicensePath=".db2.jars.db2ccLicense"
         db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
-        db2jccJarLicenseInput=getYamlJarFilePath("current.db2.jars",db2jccJarLicenseInput)
+        db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
-        msSqlFeederFilePath="current.mssql.files"
-        msSqlFeederFileSource = "/dbagigashare/"+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
+        msSqlFeederFilePath=".mssql.files"
+        msSqlFeederFileSource = sourceInstallerDirectory+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
@@ -353,7 +352,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
                     additionalParam=additionalParam+' '+gsNicAddress
-                    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+                    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     logger.info("additionalParam - Installation :")
                     logger.info("Building .tar file : tar -cvf install/install.tar install")
                     '''

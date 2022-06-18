@@ -5,7 +5,8 @@ from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueFromYaml, \
+    getYamlFilePathInsideFolder, set_value_yaml_config
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
@@ -34,24 +35,6 @@ class host_dictionary_obj(dict):
         self[key] = value
 
 managerHostConfig=''
-# TieredStorage log file configuration  ---Starts
-'''
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(name)s - %(message)s')
-
-def setup_logger(name, log_file, level=logging.INFO):
-    """To setup as many loggers as you want"""
-
-    handler = logging.FileHandler(log_file)
-    handler.setFormatter(formatter)
-
-    logger = logging.getLogger(name)
-    logger.setLevel(level)
-    logger.addHandler(handler)
-
-    return logger
-
-loggerTiered = setup_logger(os.path.basename(__file__), 'logs/tieredstorage_deloy_trace.log')
-'''
 # TieredStorage log file configuration  ---Ends
 
 def handleException(e):
@@ -80,44 +63,41 @@ def listSpacesOnServer(managerNodes):
     try:
         logger.info("listSpacesOnServer : managerNodes :"+str(managerNodes))
         managerHost=''
-        with Spinner():
-            for node in managerNodes:
-                status = getSpaceServerStatus(node.ip)
-                logger.info("Ip :"+str(node.ip)+"Status : "+str(status))
-                if(status=="ON"):
-                    managerHost = node.ip;
-            logger.info("managerHost :"+managerHost)
-            ##print(username+" : "+password)
-            response = requests.get("http://"+managerHost+":8090/v2/spaces",auth = HTTPBasicAuth(username, password))
-            logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code))
-            jsonArray = json.loads(response.text)
-            verboseHandle.printConsoleWarning("Existing spaces on cluster:")
-            headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-                       Fore.YELLOW+"Name"+Fore.RESET,
-                       Fore.YELLOW+"PU Name"+Fore.RESET,
-                       Fore.YELLOW+"Partition"+Fore.RESET,
-                       Fore.YELLOW+"Backup Partition"+Fore.RESET
-                       ]
-            gs_space_host_dictionary_obj = host_dictionary_obj()
-            logger.info("gs_space_host_dictionary_obj : "+str(gs_space_host_dictionary_obj))
-            counter=0
-            dataTable=[]
-            with Spinner():
-                for data in jsonArray:
-                    if(str(data["topology"]["backupsPerPartition"])=="1"):
-                        isBackup="YES"
-                    if(str(data["topology"]["backupsPerPartition"])=="0"):
-                        isBackup="NO"
-                    dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                                 Fore.GREEN+data["name"]+Fore.RESET,
-                                 Fore.GREEN+data["processingUnitName"]+Fore.RESET,
-                                 Fore.GREEN+str(data["topology"]["partitions"])+Fore.RESET,
-                                 Fore.GREEN+isBackup+Fore.RESET
-                                 ]
-                    gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
-                    counter=counter+1
-                    dataTable.append(dataArray)
-                printTabular(None,headers,dataTable)
+        for node in managerNodes:
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            logger.info("Ip :"+str(node.ip)+"Status : "+str(status))
+            if(status=="ON"):
+                managerHost = os.getenv(node.ip);
+        logger.info("managerHost :"+managerHost)
+        response = requests.get("http://"+managerHost+":8090/v2/spaces",auth = HTTPBasicAuth(username, password))
+        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code))
+        jsonArray = json.loads(response.text)
+        verboseHandle.printConsoleWarning("Existing spaces on cluster:")
+        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                   Fore.YELLOW+"Name"+Fore.RESET,
+                   Fore.YELLOW+"PU Name"+Fore.RESET,
+                   Fore.YELLOW+"Partition"+Fore.RESET,
+                   Fore.YELLOW+"Backup Partition"+Fore.RESET
+                   ]
+        gs_space_host_dictionary_obj = host_dictionary_obj()
+        logger.info("gs_space_host_dictionary_obj : "+str(gs_space_host_dictionary_obj))
+        counter=0
+        dataTable=[]
+        for data in jsonArray:
+            if(str(data["topology"]["backupsPerPartition"])=="1"):
+                isBackup="YES"
+            if(str(data["topology"]["backupsPerPartition"])=="0"):
+                isBackup="NO"
+            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                         Fore.GREEN+data["name"]+Fore.RESET,
+                         Fore.GREEN+data["processingUnitName"]+Fore.RESET,
+                         Fore.GREEN+str(data["topology"]["partitions"])+Fore.RESET,
+                         Fore.GREEN+isBackup+Fore.RESET
+                         ]
+            gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
+            counter=counter+1
+            dataTable.append(dataArray)
+        printTabular(None,headers,dataTable)
         return gs_space_host_dictionary_obj
     except Exception as e:
         handleException(e)
@@ -126,9 +106,9 @@ def get_gs_host_details(managerNodes):
     try:
         logger.info("get_gs_host_details() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHostConfig = node.ip;
+                managerHostConfig = os.getenv(node.ip);
         logger.info("managerHostConfig : "+str(managerHostConfig))
         #print(username+" : "+password)
         response = requests.get('http://'+managerHostConfig+':8090/v2/hosts', headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
@@ -151,8 +131,8 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         space_dict_obj = host_dictionary_obj()
         logger.info("space_dict_obj : "+str(space_dict_obj))
         for node in spaceNodes:
-            if(gs_host_details_obj.__contains__(str(node.name)) or (str(node.name) in gs_host_details_obj.values())):
-                space_dict_obj.add(str(counter+1),node.name)
+            if(gs_host_details_obj.__contains__(str(os.getenv(node.name))) or (str(os.getenv(node.name)) in gs_host_details_obj.values())):
+                space_dict_obj.add(str(counter+1),os.getenv(node.name))
                 counter=counter+1
         logger.info("space_dict_obj : "+str(space_dict_obj))
         verboseHandle.printConsoleWarning("Space hosts lists")
@@ -173,9 +153,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -237,15 +217,16 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global specificHost
     global individualHostConfirm
     try:
-        confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+        confirmCreateGSC = str(readValuefromAppConfig("app.tieredstorage.gsc.create"))
+        #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [n] :"+Fore.RESET))
         if(len(confirmCreateGSC)==0):
-            confirmCreateGSC='y'
+            confirmCreateGSC='n'
         if(confirmCreateGSC=='y'):
             #global space_dict_obj
             #space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
-            individualHostConfirm = str(input(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
-            if(len(str(individualHostConfirm))==0):
-                individualHostConfirm = 'n'
+            #individualHostConfirm = str(input(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
+            #if(len(str(individualHostConfirm))==0):
+            individualHostConfirm = 'n'
             if(individualHostConfirm=='y'):
                 hostToCreateGSC = str(input("Enter space host serial number to create gsc [1] :"+Fore.RESET))
                 if(len(hostToCreateGSC)==0):
@@ -254,18 +235,21 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
                 verboseHandle.printConsoleInfo("GSC will be created on :"+str(specificHost))
             logger.info("individualHostConfirm : "+str(individualHostConfirm))
 
-            numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSC per host [2] :"+Fore.RESET))
-            if(len(str(numberOfGSC))==0):
-                numberOfGSC=2
+            numberOfGSC = str(readValuefromAppConfig("app.tieredstorage.gsc.perhost"))
+            #print(Fore.YELLOW+"Number of GSC per host:"+numberOfGSC+Fore.RESET)
+            #if(len(str(numberOfGSC))==0):
+            #    numberOfGSC=2
             logger.info("numberofGSC :"+str(numberOfGSC))
 
-            memoryGSC = str(input(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
-            if(len(memoryGSC)==0):
-                memoryGSC="12g"
+            memoryGSC = str(readValuefromAppConfig("app.tieredstorage.gsc.memory"))
+            #print(Fore.YELLOW+"Memory to create gsc :"+memoryGSC+Fore.RESET)
+            #if(len(memoryGSC)==0):
+            #    memoryGSC="12g"
 
-            zoneGSC = str(input(Fore.YELLOW+"Enter zone [bll] :"+Fore.RESET))
-            if(len(str(zoneGSC))==0):
-                zoneGSC = 'bll'
+            zoneGSC = str(readValuefromAppConfig("app.tieredstorage.gsc.zone"))
+            #print(Fore.YELLOW+"GSC zone :"+Fore.RESET)
+            #while(len(str(zoneGSC))==0):
+            #    zoneGSC = str(input("Enter zone :"+Fore.RESET))
 
             size = 1024
             type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
@@ -328,44 +312,6 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     logger.info("Extracting .tar file :"+str(output))
                     verboseHandle.printConsoleInfo(str(output))
 
-                    #REST Create GSCFlow
-                    '''
-                    data = dataContainerREST(host,zoneGSC,memoryGSC)
-                    logger.info("data:"+str(data))
-                    # creating 2 GSC by def
-                    for i in range(1,int(numberOfGSC)+1):
-                        counter=counter+1
-                        logger.info("numofGSC")
-                        logger.info("GSC "+str(i)+" url : http://"+str(managerHostConfig)+":8090/v2/containers")
-                        response = requests.post("http://"+managerHostConfig+":8090/v2/containers",data=json.dumps(data),headers=headers)
-                        logger.info("GSC "+str(i)+" response_status_code:"+str(response.status_code))
-                        responseCode = str(response.content.decode('utf-8'))
-                        logger.info("GSC "+str(i)+" response_code_request ::"+str(responseCode))
-                        if(response.status_code==202):
-                            logger.info("GSC "+str(i)+" created on host :"+str(host))
-                        if(responseCode.isdigit()):
-                            status = validateResponseGetDescription(responseCode)
-                            logger.info("response.content :"+str(response.content) )
-                            logger.info("Response :"+str(status))
-                            retryCount=5
-                            while(retryCount>0 or (not str(status).casefold().__contains__('successful'))):
-                                status = validateResponseGetDescription(responseCode)
-                                #verboseHandle.printConsoleInfo("Response create gsc:"+str(status))
-                                logger.info("Response create gsc:"+str(status))
-                                retryCount = retryCount-1
-                                #time.sleep(1)
-                                if(str(status).casefold().__contains__('successful')):
-                                        retryCount=0
-                            logger.info("Response create gsc:"+str(status))
-                            #verboseHandle.printConsoleInfo("Response create gsc:"+str(status))
-                        else:
-                            logger.info("Unable to create container :"+str(status))
-                            verboseHandle.printConsoleInfo("Unable to create container : "+str(status))
-
-
-                        verboseHandle.printConsoleInfo("GSC "+str(i)+" created on host :"+str(host))
-                    '''
-
     except Exception as e:
         handleException(e)
 
@@ -374,14 +320,15 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         global pathOfSourcePU
-        pathOfSourcePU = str(readValuefromAppConfig("app.tieredstorage.pu.filepath")).replace('"','')
-        pathOfSourcePUInput = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
-        if(len(str(pathOfSourcePUInput))>0):
-            pathOfSourcePU = pathOfSourcePUInput
-        while(len(str(pathOfSourcePU))==0):
-            pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+        pathOfSourcePU = "current.gs.jars.ts.tieredStorageBuild"
+        pathOfSourcePU = str(getYamlFilePathInsideFolder(pathOfSourcePU)).replace('"','')
+        #print(Fore.YELLOW+"Path filename of processing unit to deploy :"+str(pathOfSourcePU)+Fore.RESET)
+        #if(len(str(pathOfSourcePUInput))>0):
+        #    pathOfSourcePU = pathOfSourcePUInput
+        #while(len(str(pathOfSourcePU))==0):
+        #    pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
-        set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
+        #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
 
         logger.info("Upload url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
@@ -393,57 +340,63 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
     logger.info("dataPuREST()")
     try:
         global slaProperties
-        slaProperties = str(input(Fore.YELLOW+"Enter pu.autogenerated-instance-sla value [true] :"+Fore.RESET))
-        if(len(str(slaProperties))==0):
-            slaProperties="true"
+        slaProperties = str(readValuefromAppConfig("app.tieredstorage.pu.autogenerated-instance-sla"))
+        #print(Fore.YELLOW+"pu.autogenerated-instance-sla value :"+slaProperties+Fore.RESET)
+        #if(len(str(slaProperties))==0):
+        #    slaProperties="true"
         logger.info("slaProperties :"+str(slaProperties))
 
         global tieredCriteriaConfigFilePath
-        tieredCriteriaConfigFilePath = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath")).replace('"','')
-        tieredCriteriaConfigFilePathInput = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath ["+str(tieredCriteriaConfigFilePath)+"]: "+Fore.RESET))
-        if(len(str(tieredCriteriaConfigFilePathInput))>0):
-            tieredCriteriaConfigFilePath = tieredCriteriaConfigFilePathInput
-        while(len(str(tieredCriteriaConfigFilePath))==0):
-            tieredCriteriaConfigFilePath = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath : "+Fore.RESET))
+        tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder("current.gs.config.ts.criteria")).replace('"','')
+        #tieredCriteriaConfigFilePathInput = \
+        #print(Fore.YELLOW+"tieredCriteriaConfig.filePath : "+str(tieredCriteriaConfigFilePath)+Fore.RESET)
+        #if(len(str(tieredCriteriaConfigFilePathInput))>0):
+        #    tieredCriteriaConfigFilePath = tieredCriteriaConfigFilePathInput
+        #while(len(str(tieredCriteriaConfigFilePath))==0):
+        #    tieredCriteriaConfigFilePath = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath : "+Fore.RESET))
         logger.info("filePath :"+str(tieredCriteriaConfigFilePath))
-        set_value_in_property_file('app.tieredstorage.criteria.filepath',str(tieredCriteriaConfigFilePath))
+        #set_value_in_property_file('app.tieredstorage.criteria.filepath',str(tieredCriteriaConfigFilePath))
 
         global tieredCriteriaConfigFilePathTarget
         tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','')
-        tieredCriteriaConfigFilePathTargetInput = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath.target ["+str(tieredCriteriaConfigFilePathTarget)+"]: "+Fore.RESET))
-        if(len(str(tieredCriteriaConfigFilePathTargetInput))>0):
-            tieredCriteriaConfigFilePathTarget = tieredCriteriaConfigFilePathTargetInput
-        while(len(str(tieredCriteriaConfigFilePathTarget))==0):
-            tieredCriteriaConfigFilePathTarget = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath.target : "+Fore.RESET))
+        #tieredCriteriaConfigFilePathTargetInput = \
+        #print(Fore.YELLOW+" tieredCriteriaConfig.filePath.target : "+str(tieredCriteriaConfigFilePathTarget)+Fore.RESET)
+        #if(len(str(tieredCriteriaConfigFilePathTargetInput))>0):
+        #    tieredCriteriaConfigFilePathTarget = tieredCriteriaConfigFilePathTargetInput
+        #while(len(str(tieredCriteriaConfigFilePathTarget))==0):
+        #    tieredCriteriaConfigFilePathTarget = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath.target : "+Fore.RESET))
         logger.info("filePath.target :"+str(tieredCriteriaConfigFilePathTarget))
-        set_value_in_property_file('app.tieredstorage.criteria.filepath.target',str(tieredCriteriaConfigFilePathTarget))
+        #set_value_in_property_file('app.tieredstorage.criteria.filepath.target',str(tieredCriteriaConfigFilePathTarget))
 
         global spacePropertyConfigFilePath
-        spacePropertyConfigFilePath = str(readValuefromAppConfig("app.space.property.filePath")).replace('"','')
+        spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder("current.gs.config.ts.spaceproperty")).replace('"','')
         logger.info("app.space.property.filePath :"+str(spacePropertyConfigFilePath))
-        spacePropertyConfigFilePathInput = str(input(Fore.YELLOW+"Enter space.property.filePath ["+str(spacePropertyConfigFilePath)+"]: "+Fore.RESET))
-        if(len(str(spacePropertyConfigFilePathInput))>0):
-            spacePropertyConfigFilePath = spacePropertyConfigFilePathInput
-        while(len(str(spacePropertyConfigFilePath))==0):
-            spacePropertyConfigFilePath = str(input(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
+        #spacePropertyConfigFilePathInput =
+        #print(Fore.YELLOW+" space.property.filePath : "+str(spacePropertyConfigFilePath)+Fore.RESET)
+        #if(len(str(spacePropertyConfigFilePathInput))>0):
+        #    spacePropertyConfigFilePath = spacePropertyConfigFilePathInput
+        #while(len(str(spacePropertyConfigFilePath))==0):
+        #    spacePropertyConfigFilePath = str(input(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
         logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
-        set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
+        #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
 
         global spacePropertyConfigFilePathTarget
         spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.space.property.filePath.target")).replace('"','')
         logger.info("app.space.property.filePath.target :"+str(spacePropertyConfigFilePathTarget))
-        spacePropertyConfigFilePathTargetInput = str(input(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
-        if(len(str(spacePropertyConfigFilePathTargetInput))>0):
-            spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
-        while(len(str(spacePropertyConfigFilePathTarget))==0):
-            spacePropertyConfigFilePathTarget = str(input(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
+        #spacePropertyConfigFilePathTargetInput =
+        #print(Fore.YELLOW+"space.property.filePath.target : "+str(spacePropertyConfigFilePathTarget)+Fore.RESET)
+        #if(len(str(spacePropertyConfigFilePathTargetInput))>0):
+        #    spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
+        #while(len(str(spacePropertyConfigFilePathTarget))==0):
+        #    spacePropertyConfigFilePathTarget = str(input(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
         logger.info("spacePropertyConfigFilePathTarget :"+str(spacePropertyConfigFilePathTarget))
-        set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
+        #set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
 
         global spaceNameCfg
-        spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name [bllspace] : "+Fore.RESET))
-        if(len(str(spaceNameCfg))==0):
-            spaceNameCfg = 'bllspace'
+        spaceNameCfg = str(readValuefromAppConfig("app.tieredstorage.pu.spacename"))
+        #print(Fore.YELLOW+"Space name to set space.name : "+str(spaceNameCfg)+Fore.RESET)
+        #if(len(str(spaceNameCfg))==0):
+        #    spaceNameCfg = 'bllspace'
         logger.info("space.name :"+str(spaceNameCfg))
 
         data={
@@ -522,7 +475,7 @@ def getSpaceNodeIps():
     ips = []
     spaceNodes = config_get_space_hosts()
     for node in spaceNodes:
-        ips.append(node.ip)
+        ips.append(os.getenv(node.ip))
     logger.info("ips : "+str(ips))
     return ips
 
@@ -542,41 +495,46 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         logger.info("tail :"+str(tail))
         global resource
         resource = str(tail)
-        print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
+        #print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
         #while(len(str(resource))==0):
         #    resource = tail
         logger.info("resource :"+str(resource))
 
         global resourceName
-        resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy [bllservice] :"+Fore.RESET))
-        if(len(str(resourceName))==0):
-          resourceName='bllservice'
+        resourceName = str(readValuefromAppConfig("app.tieredstorage.pu.name"))
+        #print(Fore.YELLOW+"Name of PU to deploy : "+resourceName+Fore.RESET)
+        #if(len(str(resourceName))==0):
+        #    resourceName = 'bllservice'
         logger.info("nameOfPU :"+str(resourceName))
 
         global partition
-        partition = str(input(Fore.YELLOW+"Enter partition required [50] :"+Fore.RESET))
-        if(len(str(partition))==0):
-            partition='50'
-        while( not partition.isdigit()):
-            partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
+        partition = str(readValuefromAppConfig("app.tieredstorage.gsc.partitions"))
+        #print(Fore.YELLOW+"Partition required :"+partition+Fore.RESET)
+        #if(len(str(partition))==0):
+        #    partition='50'
+        #while( not partition.isdigit()):
+        #    partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
         logger.info("Enter partition required :"+str(partition))
 
         global zoneOfPU
-        zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy [bll] :"+Fore.RESET))
-        if(len(str(zoneOfPU))==0):
-            zoneOfPU = 'bll'
+        zoneOfPU = str(readValuefromAppConfig("app.tieredstorage.pu.zone"))
+        #print(Fore.YELLOW+"Zone of processing unit to deploy :"+zoneOfPU+Fore.RESET)
+        #while(len(str(zoneOfPU))==0):
+        #    zoneOfPU = 'bll'
         logger.info("Zone Of PU :"+str(zoneOfPU))
 
         global maxInstancesPerMachine
-        maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1] :"+Fore.RESET))
-        if(len(str(maxInstancesPerMachine))==0):
-            maxInstancesPerMachine = '1'
-        while(not maxInstancesPerMachine.isdigit()):
-            maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
+        maxInstancesPerMachine = str(readValuefromAppConfig("app.tieredstorage.pu.maxInstancesPerMachine"))
+        #print(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy :"+maxInstancesPerMachine+Fore.RESET)
+        #if(len(str(maxInstancesPerMachine))==0):
+        #    maxInstancesPerMachine = '1'
+        #while(not maxInstancesPerMachine.isdigit()):
+        #    maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
         logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
         global backUpRequired
-        backUpRequired = str(input(Fore.YELLOW+"SLA [HA] ? (y/n) [y] :"+Fore.RESET))
+        backUpRequired = str(readValuefromAppConfig("app.tieredstorage.pu.backuprequired"))
+        #print(Fore.YELLOW+"SLA [HA] :"+backUpRequired+Fore.RESET)
         if(len(str(backUpRequired))==0 or backUpRequired=='y'):
             backUpRequired=1
         if(str(backUpRequired)=='n'):
@@ -596,31 +554,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
 
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             logger.info("url : "+"http://"+managerHostConfig+":8090/v2/pus")
-            '''
-            data = ("curl -X POST --header 'Content-Type: application/json' --header 'Accept: text/plain' -d '{ "
-                    #' "resource": "/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar", '
-                    #' "resource": "/home/ec2-user/space-1.0-SNAPSHOT.jar", '
-                    http://10.0.0.70:8090/v2/resources/space-1.0-SNAPSHOT.jar
-                    ' "resource": "'+resource+'", '
-                    ' "topology": {  '
-                    '    "schema": "partitioned", '
-                    '    "partitions": '+partition+', '
-                    '    "backupsPerPartition": 0 '
-                    '},'
-                    ' "name": "'+resourceName+'", '
-                    ' "sla": { '
-                    '    "maxInstancesPerMachine": 0, '
-                    '    "zones": [ '
-                    '        "'+zoneOfPU+'" '
-                    '    ], '
-                    '    "maxInstancesPerVM": '+maxInstancePerVM+' '
-                    ' }, '
-                    ' "contextProperties": {"pu.autogenerated-instance-sla" :"true"} '
-                    " }' 'http://"+managerHostConfig+":8090/v2/pus'")
-            status = os.system(data)
-            print(status)
-            '''
-            #print(username+" : "+password)
+            logger.info("dJson Paylod : "+str(data))
             response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
             deployResponseCode = str(response.content.decode('utf-8'))
             verboseHandle.printConsoleInfo("deployResponseCode : "+str(deployResponseCode))
@@ -687,8 +621,8 @@ if __name__ == '__main__':
             logger.info("managerHost : main"+str(managerHost))
 
             if(len(str(managerHost))>0):
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 managerHostConfig = managerHost
                 logger.info("managerHostConfig : "+str(managerHost))
                 listSpacesOnServer(managerNodes)

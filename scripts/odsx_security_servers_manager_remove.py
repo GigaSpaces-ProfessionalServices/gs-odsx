@@ -3,6 +3,7 @@
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform
 from scripts.logManager import LogManager
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,connectExecuteSSH
 from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
@@ -88,7 +89,7 @@ if __name__ == '__main__':
     managerDict = config_get_manager_listWithStatus()
 
     hostsConfig=''
-    hostsConfig = readValuefromAppConfig("app.manager.hosts")
+    hostsConfig = getManagerHostFromEnv()
     logger.info("hostConfig:"+str(hostsConfig))
     hostsConfig=hostsConfig.replace('"','')
     if(len(str(hostsConfig))>0):
@@ -161,9 +162,9 @@ if __name__ == '__main__':
                     args.append('--host')
                     args.append(str(managerStart.ip))
                     #userConfig = readValuefromAppConfig("app.server.user")
-                    user = str(input("Enter your user [root]: "))
-                    if(len(str(user))==0):
-                        user="root"
+                    #user = str(input("Enter your user [root]: "))
+                    #if(len(str(user))==0):
+                    user="root"
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"
@@ -188,16 +189,16 @@ if __name__ == '__main__':
                 if(len(str(removeUnzip))==0):
                     removeUnzip='n'
 
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? (y/n) : "+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                    confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? (y/n) : "+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     logger.info("Removing Cluster")
                     #userConfig = readValuefromAppConfig("app.server.user")
-                    user = str(input("Enter your user [root]: "))
-                    if(len(str(user))==0):
-                        user='root'
+                    #user = str(input("Enter your user [root]: "))
+                    #if(len(str(user))==0):
+                    user='root'
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"

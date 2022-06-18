@@ -56,9 +56,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -77,7 +77,10 @@ def displayDB2FeederShFiles():
     global fileNameDict
     global sourceDB2FeederShFilePath
     global fileNamePuNameDict
-    sourceDB2FeederShFilePath = str(readValueByConfigObj("app.dataengine.db2-feeder.filePath.shFile"))
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    sourceDB2FeederShFilePath = str(str(sourceInstallerDirectory+".db2.scripts.").replace('.','/'))
+    logger.info("sourceDB2FeederShFilePath: "+str(sourceDB2FeederShFilePath))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceDB2FeederShFilePath)
@@ -186,7 +189,7 @@ def proceedToStopDB2Feeder(fileNumberToStop):
     print(puName)
     shFileName = fileNamePuNameDict.get(str(puName))
     hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
-    print("hostAndPort"+str(hostAndPort))
+    logger.info("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
     cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
@@ -211,8 +214,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes);
         if(len(str(managerHost))>0):
-            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
             displayDB2FeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):

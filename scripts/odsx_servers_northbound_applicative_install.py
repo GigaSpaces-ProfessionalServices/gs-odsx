@@ -129,9 +129,9 @@ def proceedForEnvHostConfiguration(sourceNbConfFile,flag):
     logger.info("proceedForEnvHostConfiguration()")
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
-        cmd = 'sudo cp /dbagigashare/current/nb/'+flag+'/nb.conf.template '+sourceNbConfFile+';sudo chown ec2-user:ec2-user '+sourceNbConfFile # Creating .tar file on Pivot machine
+        cmd = 'sudo cp '+sourceInstallerDirectory+'/nb/'+flag+'/nb.conf.template '+sourceNbConfFile+';sudo chown ec2-user:ec2-user '+sourceNbConfFile # Creating .tar file on Pivot machine
     else :
-        cmd = 'cp /dbagigashare/current/nb/'+flag+'/nb.conf.template '+sourceNbConfFile # Creating .tar file on Pivot machine
+        cmd = 'cp '+sourceInstallerDirectory+'/nb/'+flag+'/nb.conf.template '+sourceNbConfFile # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
     nbConfig = createPropertiesMapFromFile(sourceNbConfFile)
@@ -155,7 +155,7 @@ def displayInputParam(nbConfig):
     print(str("GRAFANA_SERVERS= "+nbConfig.get("GRAFANA_SERVERS")).replace('"',''))
 
 def summaryForApplicativeInstallation():
-    nbConfig = "/dbagigashare/current/nb/applicative/nb.conf"
+    nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf"
     proceedForEnvHostConfiguration(nbConfig,'applicative')
     nbConfig = createPropertiesMapFromFile(nbConfig)
     verboseHandle.printConsoleInfo("nb.conf params for applicative servers.")
@@ -168,10 +168,10 @@ def cleanNbConfig():
     direcrotyArray = ['management','applicative']
     for dir in direcrotyArray:
         if userCMD == 'ec2-user':
-            cmd = 'sudo rm -f /dbagigashare/current/nb/'+dir+'/nb.conf'
+            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
             logger.info(cmd)
         else:
-            cmd = 'rm -f /dbagigashare/current/nb/'+dir+'/nb.conf'
+            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
         with Spinner():
             status = os.system(cmd)
             logger.info("removed nb.conf status "+str(status))
@@ -202,7 +202,7 @@ def proceedForPreInstallation(nbServers, param):
         if param.casefold()=='applicative':
             commandToExecute="scripts/servers_northbound_applicative_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
-        additionalParam=remotePath+' '
+        additionalParam=remotePath+' '+sourceInstallerDirectory
         logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
 
         with Spinner():
@@ -241,7 +241,9 @@ def proceedForApplicativeInstallation():
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> NB -> Applicative -> Install')
+    sourceInstallerDirectory=""
     try:
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         summaryForApplicativeInstallation()
         confirmInstall = str(input(Fore.YELLOW+"Are you sure want to proceed for NB applicavive servers ["+getNBApplicativeHostFromEnv()+"] installation ? (y/n) [y] :"+Fore.RESET))
         if confirmInstall.casefold()=='':

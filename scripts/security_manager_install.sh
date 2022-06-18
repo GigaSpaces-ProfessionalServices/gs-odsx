@@ -126,7 +126,7 @@ function setGSHome {
 function installAirGapJava {
     echo "Installation of AirGapJava"
     home_dir=$(pwd)
-    installation_path=$home_dir/install/java
+    installation_path=$sourceInstallerDirectory/jdk
 
     installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
     echo "Installation File :"$installation_file
@@ -155,7 +155,7 @@ function installAirGapJava {
 function installAirGapUnzip {
    echo "Install AirGapUnzip"
    home_dir=$(pwd)
-   installation_path=$home_dir/install/unzip
+   installation_path=$sourceInstallerDirectory/unzip
    installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
    if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [[ "$osType" ==  *"Linux"*  ]]; then
       rpm -ivh $installation_path"/"$installation_file
@@ -218,7 +218,7 @@ function installAirGapGS {
    echo "Installing Gigaspace InsightEdge at "$targetDir
    home_dir=$(pwd)
    echo "homedir: "$home_dir
-   installation_path=$home_dir/install/gs
+   installation_path=$sourceInstallerDirectory/gs
    installation_file=$(find $installation_path -name *.zip -printf "%f\n")
    echo $installation_path"/"$installation_file
    pwd
@@ -338,7 +338,8 @@ function loadEnv {
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*
+  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
+  find /dbagigalogs -maxdepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
   start_gsa_file="start_gsa.sh"
@@ -346,7 +347,7 @@ function gsCreateGSServeice {
   stop_gsa_file="stop_gsa.sh"
   stop_gsc_file="stop_gsc.sh"
   gsa_service_file="gsa.service"
-  gsc_service_file="gsc.service"
+  #gsc_service_file="gsc.service"
 
   home_dir_sh=$(pwd)
   echo "homedir: "$home_dir_sh
@@ -356,8 +357,8 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m '`hostname`'"
-  echo "$cmd">>$start_gsc_file
+  #cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m '`hostname`'"
+  #echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
@@ -367,11 +368,12 @@ function gsCreateGSServeice {
   echo "$cmd">>$stop_gsc_file
 
   #comment GSC requires param in Manager
-  sed -i -e 's|Requires = gsc.service|#Requires = gsc.service|g' $home_dir_sh/install/gs/$gsa_service_file
+  gs_installation_path=$home_dir_sh/install/gs
+  sed -i -e 's|Requires = gsc.service|#Requires = gsc.service|g' $gs_installation_path/$gsa_service_file
 
   mv $home_dir_sh/st*_gs*.sh /tmp
-  mv $home_dir_sh/install/gs/$gsa_service_file /tmp
-  mv $home_dir_sh/install/gs/$gsc_service_file /tmp
+  mv $gs_installation_path/$gsa_service_file /tmp
+  #mv $home_dir_sh/install/gs/$gsc_service_file /tmp
   mv /tmp/st*_gs*.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
@@ -389,7 +391,7 @@ function gsCreateGSServeice {
 
   systemctl daemon-reload
   systemctl enable $gsa_service_file
-  systemctl enable $gsc_service_file
+  #systemctl enable $gsc_service_file
 
 
   : '
@@ -418,7 +420,8 @@ applicativeUser=$8
 nofileLimitFile=$9
 wantInstallJava=${10}
 wantInstallUnzip=${11}
-gsNicAddress=${12}
+sourceInstallerDirectory=${12}
+gsNicAddress=${13}
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts
@@ -430,7 +433,8 @@ echo "param8"$applicativeUser
 echo "param9"$nofileLimitFile
 echo "param10"$wantInstallJava
 echo "param11"$wantInstallUnzip
-echo "param12"$gsNicAddress
+echo "param12"$sourceInstallerDirectory
+echo "param13"$gsNicAddress
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else

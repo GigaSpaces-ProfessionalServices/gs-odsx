@@ -55,9 +55,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -140,8 +140,8 @@ if __name__ == '__main__':
         logger.info("managerNodes: main"+str(managerNodes))
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
-            username = str(getUsernameByHost(managerHost))
-            password = str(getPasswordByHost(managerHost))
+            username = "gs-admin"#str(getUsernameByHost(managerHost))
+            password = "gs-admin"#str(getPasswordByHost(managerHost))
             listDeployed(managerHost)
     except Exception as e:
         verboseHandle.printConsoleError("Eror in odsx_tieredstorage_undeployed : "+str(e))

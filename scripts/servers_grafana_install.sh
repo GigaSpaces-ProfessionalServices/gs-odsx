@@ -1,8 +1,10 @@
 echo "Starting Grafana Installation."
 #echo "Extracting install.tar to "$targetDir
+sourceInstallerDirectory=$1
+echo "sourceInstallerDirectory: "$sourceInstallerDirectory
 tar -xvf install.tar
 home_dir=$(pwd)
-installation_path=/dbagigashare/current/grafana
+installation_path=$sourceInstallerDirectory/grafana
 echo "InstallationPath="$installation_path
 installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
 echo "InstallationFile:"$installation_file

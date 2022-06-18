@@ -294,7 +294,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
-        gsLogsConfigFileFromConfig = str(getYamlFilePathInsideFolder("current.gs.config.log.xap_logging")).replace('[','').replace(']','')
+        gsLogsConfigFileFromConfig = str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = gsLogsConfigFileFromConfig
         #print(Fore.YELLOW+'GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
@@ -339,13 +339,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #if(len(str(wantToInstallUnzip))==0):
         #    wantToInstallUnzip='n'
 
-        sourceDirectoryForJar = str(readValuefromAppConfig("app.manager.source.directory.jarfiles"))
+        #sourceDirectoryForJar = str(readValuefromAppConfig("app.manager.source.directory.jarfiles"))
         #print(Fore.YELLOW+"Source directory to copy files "+sourceDirectoryForJar+Fore.RESET)
         #if(len(str(sourceDirectoryForJar))==0):
         #    sourceDirectoryForJar='/dbagiga'
-        cefloogerJarPath="current.security.jars.cef"
-        cefLoggingJarInput = str(readValueFromYaml(cefloogerJarPath)).replace('[','').replace(']','')
-        cefLoggingJarInput=getYamlJarFilePath(cefloogerJarPath,cefLoggingJarInput)
+        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
@@ -394,22 +392,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
             #if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+            sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+            additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+sourceInstallerDirectory
             #else:
             #    additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             #print('additional param :'+additionalParam)
             logger.info('additional param :'+additionalParam)
             output=""
-            '''
-            sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
-            userCMD = os.getlogin()
-            if userCMD == 'ec2-user':
-                cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
-            else:
-                cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
-            with Spinner():
-                status = os.system(cmd)
-            '''
             logger.info("Building .tar file : tar -cvf install/install.tar install")
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
@@ -471,7 +460,7 @@ def validateRPMS():
     home = executeLocalCommandAndGetOutput(cmd)
     home = getPlainOutput(home)
     logger.info("home dir : " + str(home))
-    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
     cmd = 'find ' + str(sourceInstallerDirectory) + '/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     javaRpm = executeLocalCommandAndGetOutput(cmd)
     javaRpm = getPlainOutput(javaRpm)

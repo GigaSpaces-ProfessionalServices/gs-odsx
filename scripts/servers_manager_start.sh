@@ -1,4 +1,4 @@
-echo "Starting InsightEdge.."
+echo "Starting manager servers.."
 source setenv.sh
 #echo $GS_HOME
 gsc=$2
@@ -15,7 +15,7 @@ systemctl daemon-reload
 systemctl start gsa.service
 
 sleep 30
-echo "InsightEdge started."
+echo "Manager server started."
 #source setenv.sh
 #cd $GS_HOME/bin
 #nohup ./gs.sh host run-agent --auto --gsc=2 > /tmp/agent-console.log 2>&1 &

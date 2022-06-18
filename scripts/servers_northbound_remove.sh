@@ -10,5 +10,5 @@ pwd
 cd
 #source setenv.sh
 sed -i '/export NB_HOME/d' .bashrc
-rm -rf $NB_HOME install install.tar dbagigashare
+rm -rf $NB_HOME install install.tar
 echo "Removing north bound -Done!"

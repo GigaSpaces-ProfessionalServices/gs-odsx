@@ -140,7 +140,7 @@ def installCluster():
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Base logs folder for Zookeeper : "+logsFolderZK+"" + Fore.RESET)
     logger.info(" logsFolderZK: " + str(logsFolderZK))
-    wantJava = str(getYamlFilePathInsideFolder("current.kafka.jolokiaJar"))
+    wantJava = str(getYamlFilePathInsideFolder(".kafka.jolokiaJar"))
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Jolokia jar file path source : "+wantJava+"" + Fore.RESET)
     logger.info(" wantJava: " + str(wantJava))
@@ -167,7 +167,7 @@ def installCluster():
 
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :" + str(host))
-    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
         cmd = 'sudo cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/zk/"
@@ -178,7 +178,7 @@ def buildTarFileToLocalMachine(host):
     with Spinner():
         status = os.system(cmd)
         status = os.system(cmd2)
-    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
     cmd = 'tar -cvf install/install.tar install'#+sourceInstallerDirectory  # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
@@ -199,18 +199,17 @@ def executeCommandForInstall(host, type, count,nodeListSize):
     logger.info("executeCommandForInstall(): start host : " + str(host) + " type : " + str(type))
 
     try:
-
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
         if (len(clusterHosts) == 4):
             commandToExecute = "scripts/servers_di_install.sh"
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)
@@ -238,18 +237,18 @@ def validateRPM():
     cmd = "pwd"
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home dir : " + str(home))
-    cmd = 'find /dbagigashare/current/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    cmd = 'find '+sourceInstallerDirectory+'/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     javaRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("javaRpm found :" + str(javaRpm))
-    cmd = 'find /dbagigashare/current/kafka/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
+    cmd = 'find '+sourceInstallerDirectory+'/kafka/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
     kafkaZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("kafkaZip found :" + str(kafkaZip))
-    cmd = 'find /dbagigashare/current/zk/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    cmd = 'find '+sourceInstallerDirectory+'/zk/ -name *.tar.gz -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     zkZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("ZookeeperZip found :" + str(zkZip))
-    cmd = 'find /dbagigashare/current/kafka/ -name *.jar -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
+    cmd = 'find '+sourceInstallerDirectory+'/kafka/ -name *.jar -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     jolokiaJar = executeLocalCommandAndGetOutput(cmd)
-    cmd = 'find /dbagigashare/current/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    cmd = 'find '+sourceInstallerDirectory+'/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
     telegrafRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("telegrafRpm found :" + str(telegrafRpm))
 
@@ -264,14 +263,16 @@ def validateRPM():
     for name, installer in di_installer_dict.items():
         if (len(str(installer)) == 0):
             verboseHandle.printConsoleInfo(
-                "Pre-requisite installer /dbagigashare/current/.. " + str(name) + " not found")
+                "Pre-requisite installer "+sourceInstallerDirectory+"/.. " + str(name) + " not found")
             return False
     return True
 
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> DI -> Install')
+    sourceInstallerDirectory=""
     try:
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         if (validateRPM()):
             installCluster()
         else:

@@ -2,9 +2,11 @@
 import argparse
 import os
 import sys
+
+from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
 from utils.odsx_print_tabular_data import printTabular
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_space_hosts
+from utils.ods_cluster_config import config_get_space_hosts, config_get_grafana_list, config_get_influxdb_node
 from colorama import Fore
 import socket, platform
 from utils.ods_validation import getSpaceServerStatus,port_check_config
@@ -119,12 +121,13 @@ def listSpaceServer():
         logger.info("listSpaceServer()")
         spaceServers = config_get_space_hosts()
         verboseHandle.printConsoleWarning("Menu -> Servers -> Space -> List\n")
-        headers = [Fore.YELLOW+"IP"+Fore.RESET,
-                   Fore.YELLOW+"Host"+Fore.RESET,
+        headers = [Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
                    Fore.YELLOW+"Installed"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET,
-                   Fore.YELLOW+"Version"+Fore.RESET
+                   Fore.YELLOW+"Version"+Fore.RESET,
+                   Fore.YELLOW+"Influxdb"+Fore.RESET,
+                   Fore.YELLOW+"Grafana"+Fore.RESET
                    ]
         data=[]
         userConfig = readValuefromAppConfig("app.server.user")
@@ -169,12 +172,15 @@ def listSpaceServer():
                 gsc = host_gsc_dict_obj.get(str(host))
                 logger.info(" Host :"+str(server.ip)+" is not reachable")
             #version = getVersion(server.ip)
+            influx = validateMetricsXmlInflux(host)
+            grafana = validateMetricsXmlGrafana(host)
             dataArray=[Fore.GREEN+host+Fore.RESET,
-                       Fore.GREEN+host+Fore.RESET,
                        Fore.GREEN+str(gsc)+Fore.RESET,
                        Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                        Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
-                       Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET]
+                       Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
+                       Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+                       Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
             data.append(dataArray)
 
         printTabular(None,headers,data)

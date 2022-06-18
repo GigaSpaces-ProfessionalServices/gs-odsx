@@ -3,13 +3,17 @@
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform,socket
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
+    getYamlJarFilePath, getYamlFilePathInsideFolder
 from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
-from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
+from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion
+from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
 from scripts.spinner import Spinner
-from utils.ods_scp import scp_upload,scp_upload_multiple
+from utils.ods_scp import scp_upload,scp_upload_specific_extension
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -66,16 +70,26 @@ def handleException(e):
         'trace': trace
     })))
 
+def getSpaceHostFromEnv():
+    logger.info("getSpaceHostFromEnv()")
+    hosts = ''
+    spaceNodes = config_get_space_hosts()
+    for node in spaceNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
 def getHostConfiguration():
     logger.info("getHostConfiguration()")
     try:
         hostsConfig=''
-        hostsConfig = readValuefromAppConfig("app.manager.hosts")
-
+        #hostsConfig = readValuefromAppConfig("app.manager.hosts")
+        hostsConfig =getManagerHostFromEnv()
+        logger.info("Manager hostConfig : "+str(hostsConfig))
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
-        if(len(str(applicativeUser))==0):
-            applicativeUser = str(applicativeUserFile)
+        #applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
+        #if(len(str(applicativeUser))==0):
+        applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
         set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
         set_value_in_property_file_generic('User',applicativeUser,'install/gs/gsa.service','Service')
@@ -84,10 +98,10 @@ def getHostConfiguration():
 
         if(len(hostsConfig)==2):
             hostsConfig=hostsConfig.replace('"','')
-        if(len(str(hostsConfig))>0):
-            verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
-        else:
-            verboseHandle.printConsoleError("No manager configuration found:")
+        #if(len(str(hostsConfig))>0):
+        #    verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
+        #else:
+        #    verboseHandle.printConsoleError("No manager configuration found:")
         return hostsConfig
     except Exception as e:
         handleException(e)
@@ -95,26 +109,23 @@ def getHostConfiguration():
 
 def getInputParamForSecurityCredantials():
     logger.info("getInputParamForSecurityCredantials()")
-    global appId
-    global safeId
-    global objectId
     appIdConfig = str(readValuefromAppConfig("app.space.security.appId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    appId = str(input(Fore.YELLOW+"Enter appId for credentials ["+appIdConfig+"] : "))
-    if(len(str(appId))==0):
-        appId = appIdConfig
-    set_value_in_property_file("app.space.security.appId",appId)
+    #appId = str(input(Fore.YELLOW+"Enter appId for credentials ["+appIdConfig+"] : "))
+    #if(len(str(appId))==0):
+    appId = appIdConfig
+    #set_value_in_property_file("app.space.security.appId",appId)
 
     safeConfig = str(readValuefromAppConfig("app.space.security.safe")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    safeId = str(input(Fore.YELLOW+"Enter safe for credentials ["+safeConfig+"] : "))
-    if(len(str(safeId))==0):
-        safeId = safeConfig
-    set_value_in_property_file("app.space.security.safeId",safeId)
+    #safeId = str(input(Fore.YELLOW+"Enter safe for credentials ["+safeConfig+"] : "))
+    #if(len(str(safeId))==0):
+    safeId = safeConfig
+    #set_value_in_property_file("app.space.security.safeId",safeId)
 
     objectConfig = str(readValuefromAppConfig("app.space.security.object")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    objectId = str(input(Fore.YELLOW+"Enter object for credentials ["+objectConfig+"] : "))
-    if(len(str(objectId))==0):
-        objectId = objectConfig
-    set_value_in_property_file("app.space.security.objectId",objectId)
+    #objectId = str(input(Fore.YELLOW+"Enter object for credentials ["+objectConfig+"] : "))
+    #if(len(str(objectId))==0):
+    objectId = objectConfig
+    #set_value_in_property_file("app.space.security.objectId",objectId)
 
 def execute_ssh_server_manager_install(hostsConfig,user):
     logger.info("execute_ssh_server_manager_install()")
@@ -128,47 +139,51 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         targetDirectory=''
         gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        additionalParam = str(readValuefromAppConfig("app.space.targetDirectory"))
+        #print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
         targetDirectory=str(additionalParam)
-        if(len(additionalParam)==0):
-            targetDirectory='/dbagiga'
+        #if(len(additionalParam)==0):
+        targetDirectory=additionalParam
         logger.info("targetDirecory :"+str(targetDirectory))
-        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsOptionExt))==0):
-            #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
-            gsOptionExt=gsOptionExtFromConfig
-        else:
-            set_value_in_property_file('app.space.gsOptionExt',gsOptionExt)
+        gsOptionExt = ""
+        #print(Fore.YELLOW+'GS_OPTIONS_EXT : '+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+' '+Fore.RESET)
+        #if(len(str(gsOptionExt))==0):
+        #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
+        gsOptionExt=gsOptionExtFromConfig
+        #else:
+        #    set_value_in_property_file('app.space.gsOptionExt',gsOptionExt)
         gsOptionExt='"\\"{}\\""'.format(gsOptionExt)
         #print("gsoptionext:"+gsOptionExt)
 
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsManagerOptions))==0):
-            #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
-            gsManagerOptions=gsManagerOptionsFromConfig
-        else:
-            set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
+        gsManagerOptions = ""
+        #print(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
+        #if(len(str(gsManagerOptions))==0):
+        #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
+        gsManagerOptions=gsManagerOptionsFromConfig
+        #else:
+        #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
-        gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
+        gsLogsConfigFileFromConfig = str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsLogsConfigFile))==0):
-            #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
-            gsLogsConfigFile=gsLogsConfigFileFromConfig
-        else:
-            set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
+        gsLogsConfigFile = ""
+        #print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
+        #if(len(str(gsLogsConfigFile))==0):
+        #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
+        gsLogsConfigFile=gsLogsConfigFileFromConfig
+        #else:
+        #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
         gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = readValueByConfigObj("app.manager.license")
         #licenseConfig='"{}"'.format(licenseConfig)
-        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
-        if(len(str(gsLicenseFile))==0):
-            gsLicenseFile = licenseConfig
+        #gsLicenseFile = str(input(Fore.YELLOW+'GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
+        #if(len(str(gsLicenseFile))==0):
+        gsLicenseFile = licenseConfig
         #else:
         #    gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
@@ -177,61 +192,68 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
+        nofileLimitFile = ""
+        #print(Fore.YELLOW+'User level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET)
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
-        if(len(str(nofileLimitFile))==0):
-            nofileLimitFile = nofileLimit
+        #if(len(str(nofileLimitFile))==0):
+        nofileLimitFile = nofileLimit
         #else:
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
-        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "+Fore.RESET))
-        if(len(str(wantToInstallJava))==0):
-            wantToInstallJava='n'
+        wantToInstallJava = str(readValuefromAppConfig("app.space.wantInstallJava"))
+        #print(Fore.YELLOW+"Install Java : "+wantToInstallJava+Fore.RESET)
+        #if(len(str(wantToInstallJava))==0):
+        #    wantToInstallJava='n'
 
-        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "+Fore.RESET))
-        if(len(str(wantToInstallUnzip))==0):
-            wantToInstallUnzip='n'
+        wantToInstallUnzip = str(readValuefromAppConfig("app.space.wantInstallUnzip"))
+        #print(Fore.YELLOW+"Install unzip : "+wantToInstallUnzip+Fore.RESET)
+        #if(len(str(wantToInstallUnzip))==0):
+        #    wantToInstallUnzip='n'
         global gscCount
         global memoryGSC
         global zoneGSC
+
         gscCountConfig = str(readValuefromAppConfig("app.space.gsc.count"))
-        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create ["+str(gscCountConfig)+"]: "+Fore.RESET))
-        if(len(str(gscCount))==0):
-            gscCount = gscCountConfig
-        set_value_in_property_file("app.space.gsc.count",str(gscCount))
+        gscCount = ""
+        #print(Fore.YELLOW+"Number of GSC to create : "+str(gscCountConfig)+Fore.RESET)
+        #if(len(str(gscCount))==0):
+        gscCount = gscCountConfig
+        #set_value_in_property_file("app.space.gsc.count",str(gscCount))
 
         memoryGSCConfig = str(readValuefromAppConfig("app.space.gsc.memory"))
-        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC ["+str(memoryGSCConfig)+"]: "+Fore.RESET))
-        if(len(str(memoryGSC))==0):
-            memoryGSC = memoryGSCConfig
-        set_value_in_property_file("app.space.gsc.memory",memoryGSC)
+        memoryGSC = ""
+        #print(Fore.YELLOW+"Memory required to create GSC : "+str(memoryGSCConfig)+Fore.RESET)
+        #if(len(str(memoryGSC))==0):
+        memoryGSC = memoryGSCConfig
+        #set_value_in_property_file("app.space.gsc.memory",memoryGSC)
 
-        zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
-        if(len(str(zoneGSC))==0):
-            zoneGSC = 'bll'
+        zoneGSC = str(readValuefromAppConfig("app.space.gsc.zone"))
+        #print(Fore.YELLOW+"Zone to create GSC : "+zoneGSC+Fore.RESET)
+        #if(len(str(zoneGSC))==0):
+        #    zoneGSC = 'bll'
 
-        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
-        if(len(str(sourceDirectoryForJar))==0):
-            sourceDirectoryForJar='/dbagiga'
-
-        getInputParamForSecurityCredantials()
-
+        sourceDirectoryForJar = str(readValuefromAppConfig("app.space.jar.sourceFolder"))
+        #print(Fore.YELLOW+"Source directory to copy jars from : "+sourceDirectoryForJar+Fore.RESET)
+        #if(len(str(sourceDirectoryForJar))==0):
+        #    sourceDirectoryForJar='/dbagiga'
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
-        noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
-        while (len(str(noOfHost))==0):
-            noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
+        #noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
+        #while (len(str(noOfHost))==0):
+        #    noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
+        noOfHost=len(getSpaceHostFromEnv().split(','))
         logger.debug("No of space host :"+str(noOfHost))
         host_nic_dict_obj = host_nic_dictionary()
-        noOfHost=int(noOfHost)
-        spaceHostConfig=""
-        for x in range(1,noOfHost+1):
+        spaceHostConfig=getSpaceHostFromEnv()
+        for host in getSpaceHostFromEnv().split(','):
+            '''
             host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
             while(len(str(host))==0):
                 host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
@@ -239,10 +261,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 spaceHostConfig = spaceHostConfig+','+host
             else:
                 spaceHostConfig = host
+            '''
             host_nic_dict_obj.add(host,'')
-        set_value_in_property_file('app.space.hosts',spaceHostConfig)
-        #print("hostnic without"+str(host_nic_dict_obj))
-        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
+        #set_value_in_property_file('app.space.hosts',spaceHostConfig)
+        wantNicAddress = str(readValuefromAppConfig("app.space.gsNicAddress"))
+        #str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantNicAddress))==0):
             wantNicAddress='n'
         if(wantNicAddress=="yes" or wantNicAddress=="y"):
@@ -251,33 +274,31 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.debug("host enter:"+host+" nicAddr :"+nicAddr)
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
-
-        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
-        cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
-
-        db2jccJarInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc-4.26.14.jar")).replace('[','').replace(']','')
-        db2jccJarInput = sourceDirectoryForJar+'/'+db2jccJarInput
-        db2jccJarLicenseInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
-        db2jccJarLicenseInput=sourceDirectoryForJar+'/'+db2jccJarLicenseInput
+        db2ccJarPath = ".db2.jars.db2ccjar"
+        db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
+        db2jccJarInput =getYamlJarFilePath(".db2.jars",db2jccJarInput)
+        db2ccJarLicensePath=".db2.jars.db2ccLicense"
+        db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
+        db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
 
-        springLdapCoreJarInput = str(readValuefromAppConfig("app.manager.security.spring.ldap.core.jar")).replace('[','').replace(']','')
-        springLdapCoreJarInput=sourceDirectoryForJar+'/'+springLdapCoreJarInput
-        springLdapJarInput = str(readValuefromAppConfig("app.manager.security.spring.ldap.jar")).replace('[','').replace(']','')
-        springLdapJarInput=sourceDirectoryForJar+'/'+springLdapJarInput
-        vaultSupportJarInput = str(readValuefromAppConfig("app.manager.security.spring.vaultSupport.jar")).replace('[','').replace(']','')
-        vaultSupportJarInput=sourceDirectoryForJar+'/'+vaultSupportJarInput
-        javaPasswordJarInput = str(readValuefromAppConfig("app.manager.security.spring.javaPassword.jar")).replace('[','').replace(']','')
-        javaPasswordJarInput=sourceDirectoryForJar+'/'+javaPasswordJarInput
+        springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
+        springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
+        vaultSupportJarInput = str(getYamlFilePathInsideFolder(".security.jars.vaultsupportjar")).replace('[','').replace(']','')
+        javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
+
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
-        msSqlFeederFileSource = str(readValuefromAppConfig("app.space.mssqlfeeder.files.source")).replace('[','').replace(']','')
+        msSqlFeederFilePath=".mssql.files"
+        msSqlFeederFileSource = sourceInstallerDirectory+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
-        ldapSecurityConfigInput = str(readValuefromAppConfig("app.manager.security.config.ldap.source.file"))
-        ldapSecurityConfigInput=sourceDirectoryForJar+'/'+ldapSecurityConfigInput
+        ldapSecurityConfigInput = str(getYamlFilePathInsideFolder(".security.config.ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
         #To Display Summary ::
@@ -358,12 +379,16 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"25. "+
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"19. "+
+        print(Fore.GREEN+"26. "+
               Fore.GREEN+"MsSQL Feeder files source : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileSource).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"20. "+
+        print(Fore.GREEN+"27. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"28. "+
+              Fore.GREEN+"Space server installation : "+Fore.RESET,
+              Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
+
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -371,47 +396,70 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
             for host in host_nic_dict_obj:
-                gsNicAddress = host_nic_dict_obj[host]
-                #print(host+"  "+gsNicAddress)
-                additionalParam=additionalParam+' '+gsNicAddress
-                logger.info("additionalParam - Installation :")
-                logger.info("Building .tar file : tar -cvf install/install.tar install")
-                cmd = 'tar -cvf install/install.tar install'
-                with Spinner():
-                    status = os.system(cmd)
-                    logger.info("Creating tar file status : "+str(status))
-                with Spinner():
-                    scp_upload(host, user, 'install/install.tar', '')
-                    #scp_upload(host, user, 'install/gs.service', '')
-                cmd = 'tar -xvf install.tar'
-                verboseHandle.printConsoleInfo("Extracting..")
-                logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
-                output = executeRemoteCommandAndGetOutput(host, user, cmd)
-                logger.debug("Execute RemoteCommand output:"+str(output))
-                verboseHandle.printConsoleInfo(output)
+                installStatus='No'
+                install = isInstalledAndGetVersion(host)
+                logger.info("install : "+str(install))
+                if(len(str(install))>0):
+                    installStatus='Yes'
+                if installStatus == 'No':
+                    gsNicAddress = host_nic_dict_obj[host]
+                    #print(host+"  "+gsNicAddress)
+                    additionalParam=additionalParam+' '+gsNicAddress
+                    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
+                    logger.info("additionalParam - Installation :")
+                    logger.info("Building .tar file : tar -cvf install/install.tar install")
+                    '''
+                    userCMD = os.getlogin()
+                    if userCMD == 'ec2-user':
+                        cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+                    else:
+                        cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+                    with Spinner():
+                        status = os.system(cmd)
+                    '''
+                    cmd = 'tar -cvf install/install.tar install'
+                    with Spinner():
+                        status = os.system(cmd)
+                        logger.info("Creating tar file status : "+str(status))
+                    with Spinner():
+                        scp_upload(host, user, 'install/install.tar', '')
+                        #scp_upload(host, user, 'install/gs.service', '')
+                    cmd = 'tar -xvf install.tar'
+                    verboseHandle.printConsoleInfo("Extracting..")
+                    logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
+                    output = executeRemoteCommandAndGetOutput(host, user, cmd)
+                    logger.debug("Execute RemoteCommand output:"+str(output))
+                    verboseHandle.printConsoleInfo(output)
 
-                commandToExecute="scripts/security_space_install.sh"
-                logger.info("additionalParam : "+str(additionalParam))
-                logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                with Spinner():
-                    outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-                    logger.debug("script output"+str(outputShFile))
-                    #print(outputShFile)
-                    #Upload CEF logging jar
-                    scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-                    scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
-                    scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                    scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
-                    scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-                serverHost=''
-                try:
-                    serverHost = socket.gethostbyaddr(host).__getitem__(0)
-                except Exception as e:
-                    serverHost=host
-                managerList = config_add_space_node(host, host, "N/A")
-                logger.info("Installation of space server "+str(host)+" has been done!")
-                verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
+                    commandToExecute="scripts/security_space_install.sh"
+                    logger.info("additionalParam : "+str(additionalParam))
+                    logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+                    with Spinner():
+                        outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+                        #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+                        logger.debug("script output"+str(outputShFile))
+                        #print(outputShFile)
+                        #Upload CEF logging jar
+                        scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                        #UPLOAD DB2FEEDER JAR
+                        #if(confirmDb2FeederJar=='y'):
+                        #print("source :"+db2jccJarInput)
+                        scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                        #print("source2 :"+db2jccJarLicenseInput)
+                        scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
+                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                    serverHost=''
+                    try:
+                        serverHost = socket.gethostbyaddr(host).__getitem__(0)
+                    except Exception as e:
+                        serverHost=host
+                    #managerList = config_add_space_node(host, host, "N/A", "true")
+                    logger.info("Installation of space server "+str(host)+" has been done!")
+                    verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
+                else:
+                    verboseHandle.printConsoleInfo("Found installation. skipping installation for host "+host)
+                    logger.info("Found installation. skipping installation for host "+host)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -421,55 +469,64 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 if __name__ == '__main__':
     logger.info("odsx_security_space-install")
     verboseHandle.printConsoleWarning('Menu -> Security -> Space -> Install')
+    global appId
+    global safeId
+    global objectId
+    appId=""
+    safeId=""
+    objectId=""
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     #print('Len : ',len(sys.argv))
     #print('Flag : ',sys.argv[0])
     args.append(sys.argv[0])
     try:
-        if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-            arguments = myCheckArg(sys.argv[1:])
-            if(arguments.dryrun==True):
-                current_os = platform.system().lower()
-                logger.debug("Current OS:"+str(current_os))
-                if current_os == "windows":
-                    parameter = "-n"
-                else:
-                    parameter = "-c"
-                exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                if(exit_code == 0):
-                    verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                    logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                else:
-                    verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                    logger.debug("Unable to connect to server.:"+arguments.host)
-                quit()
-            for arg in sys.argv[1:]:
-                args.append(arg)
-        # print('install :',args)
-        elif(sys.argv[1]==menuDrivenFlag):
-            args.append(menuDrivenFlag)
-            #host = str(input("Enter your host: "))
-            #args.append('--host')
-            #args.append(host)
-            #user = readValuefromAppConfig("app.server.user")
-            user = str(input("Enter your user [root]: "))
-            if(len(str(user))==0):
+        isValidRPMs = validateRPMS()
+        if(isValidRPMs):
+            if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
+                arguments = myCheckArg(sys.argv[1:])
+                if(arguments.dryrun==True):
+                    current_os = platform.system().lower()
+                    logger.debug("Current OS:"+str(current_os))
+                    if current_os == "windows":
+                        parameter = "-n"
+                    else:
+                        parameter = "-c"
+                    exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
+                    if(exit_code == 0):
+                        verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
+                        logger.debug("Connected to server with dryrun mode.!"+arguments.host)
+                    else:
+                        verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
+                        logger.debug("Unable to connect to server.:"+arguments.host)
+                    quit()
+                for arg in sys.argv[1:]:
+                    args.append(arg)
+            # print('install :',args)
+            elif(sys.argv[1]==menuDrivenFlag):
+                args.append(menuDrivenFlag)
+                #host = str(input("Enter your host: "))
+                #args.append('--host')
+                #args.append(host)
+                #user = readValuefromAppConfig("app.server.user")
+                #user = str(input("Enter your user [root]: "))
+                #if(len(str(user))==0):
                 user="root"
-            args.append('-u')
-            args.append(user)
-        hostsConfig = readValuefromAppConfig("app.manager.hosts")
-        args.append('--id')
-        hostsConfig=getHostConfiguration()
-        args = str(args)
-        args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-        args =args+' '+str(hostsConfig)
-        logger.debug('Arguments :'+args)
-        if(config_get_cluster_airgap):
-            execute_ssh_server_manager_install(hostsConfig,user)
-        #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
-        ## Execution script flow diverted to this file hence major changes required and others scripts will going to distrub
-
+                args.append('-u')
+                args.append(user)
+            hostsConfig = readValuefromAppConfig("app.manager.hosts")
+            args.append('--id')
+            hostsConfig=getHostConfiguration()
+            args = str(args)
+            args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+            args =args+' '+str(hostsConfig)
+            logger.debug('Arguments :'+args)
+            if(config_get_cluster_airgap):
+                execute_ssh_server_manager_install(hostsConfig,user)
+            #os.system('python3 scripts/servers_manager_scriptbuilder.py '+args)
+            ## Execution script flow diverted to this file hence major changes required and others scripts will going to distrub
+        else:
+            pass
     except Exception as e:
         handleException(e)
 
