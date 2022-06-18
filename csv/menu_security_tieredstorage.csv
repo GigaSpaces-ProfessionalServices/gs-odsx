@@ -1,1 +1,1 @@
-Deploy,UpdateCachePolicy,List,Undeploy,Rollback,EXIT
+Deploy,UpdateCachePolicy,Undeploy,List,Rollback,EXIT
