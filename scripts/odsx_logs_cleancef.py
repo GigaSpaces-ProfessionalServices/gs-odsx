@@ -5,7 +5,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
@@ -88,7 +88,7 @@ def proceedForInputParam(configXapLogLocation):
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Logs -> Disable CEF')
     try:
-        configXapLogLocation = str(readValuefromAppConfig("app.manager.gsLogsConfigFile"))
+        configXapLogLocation = str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging")).replace('[','').replace(']','')
         proceedForInputParam(configXapLogLocation)
     except Exception as e:
         logger.error("Exception in Logs -> Disable CEF : "+str(e))

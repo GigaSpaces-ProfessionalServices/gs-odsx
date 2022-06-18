@@ -50,6 +50,8 @@ sed -i '/export PYTHONPATH=$(dirname $(pwd))/d' ~/.bash_profile
 project_home_dir=$(dirname $(pwd))
 python_path="export PYTHONPATH="$project_home_dir
 echo "$python_path" >> ~/.bashrc
+odsx_path="export ODSXARTIFACTS=/dbagigashare/current/"
+echo "$odsx_path" >> ~/.bashrc
 
 wget https://bootstrap.pypa.io/get-pip.py -P /tmp
 python3 /tmp/get-pip.py

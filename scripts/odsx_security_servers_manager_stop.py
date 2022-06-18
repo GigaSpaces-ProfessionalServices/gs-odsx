@@ -7,6 +7,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
 from utils.ods_cluster_config import config_get_manager_listWithStatus
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -58,7 +59,8 @@ if __name__ == '__main__':
     managerDict = config_get_manager_listWithStatus()
 
     hostsConfig=''
-    hostsConfig = readValuefromAppConfig("app.manager.hosts")
+    #hostsConfig = readValuefromAppConfig("app.manager.hosts")
+    hostsConfig = getManagerHostFromEnv()
     logger.info("hostConfig:"+str(hostsConfig))
     hostsConfig=hostsConfig.replace('"','')
     if(len(str(hostsConfig))>0):
@@ -115,14 +117,14 @@ if __name__ == '__main__':
                 optionMenu = str(input("Enter your host number to stop : "))
                 while(len(optionMenu)==0):
                     optionMenu = str(input("Enter your host number to stop : "))
-                confirm = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                    confirm = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     managerStart = managerDict.get(int(optionMenu))
                     args.append('--host')
-                    args.append(str(managerStart.ip))
+                    args.append(str(os.getenv(managerStart.ip)))
                     # changed : 25-Aug hence systemctl always with root no need to ask
                     #userConfig = readValuefromAppConfig("app.server.user")
                     #user = str(input("Enter your user ["+userConfig+"]: "))
@@ -142,9 +144,9 @@ if __name__ == '__main__':
             elif(hostConfiguration=='99'):
                 logger.info("99 - Exist stop")
             else:
-                confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                    confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     logger.info("Stopping Cluster")

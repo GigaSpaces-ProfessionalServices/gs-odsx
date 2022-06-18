@@ -8,7 +8,7 @@ from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
-    config_get_dataEngine_nodes, config_remove_dataEngine_byNameIP
+    config_get_dataEngine_nodes, config_remove_dataEngine_byNameIP, isInstalledAdabasService
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from scripts.odsx_servers_di_list import listDIServers
 from utils.odsx_print_tabular_data import printTabular
@@ -51,9 +51,9 @@ def getDEServerHostList():
         # if(str(node.role).casefold() == 'server'):
         if node.role == "mq-connector":
             if (len(nodes) == 0):
-                nodes = node.ip
+                nodes = os.getenv(node.ip)
             else:
-                nodes = nodes + ',' + node.ip
+                nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 def removeInputUserAndHost():
@@ -61,9 +61,9 @@ def removeInputUserAndHost():
     try:
         global user
         global host
-        user = str(input(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
-        if(len(str(user))==0):
-            user="root"
+        #user = str(input(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
+        #if(len(str(user))==0):
+        user="root"
         logger.info(" user: "+str(user))
 
     except Exception as e:
@@ -99,18 +99,18 @@ class obj_type_dictionary(dict):
         self[key] = value
 
 def getAdabusServiceStatus(node):
-    logger.info("getConsolidatedStatus() : " + str(node.ip))
+    logger.info("getConsolidatedStatus() : " + str(os.getenv(node.ip)))
     cmdList = ["systemctl status odsxadabas"]
     for cmd in cmdList:
-        logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
+        logger.info("cmd :" + str(cmd) + " host :" + str(os.getenv(node.ip)))
         logger.info("Getting status.. :" + str(cmd))
         user = 'root'
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : " + str(output))
             if (output != 0):
                 # verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :" + str(cmd) + " not started." + str(node.ip))
+                logger.info(" Service :" + str(cmd) + " not started." + str(os.getenv(node.ip)))
             return output
 
 def listDIServers():
@@ -120,23 +120,25 @@ def listDIServers():
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
                Fore.YELLOW + "Ip" + Fore.RESET,
                Fore.YELLOW + "Host" + Fore.RESET,
+               Fore.YELLOW + "Installed" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     counter = 1
     for node in dEServers:
         if node.role == "mq-connector":
+            installStatus='No'
             host_dict_obj.add(str(counter), str(node.ip))
             status = getAdabusServiceStatus(node)
-            if (status == 0):
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
-                             Fore.GREEN + "ON" + Fore.RESET]
-            else:
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
-                             Fore.RED + "OFF" + Fore.RESET]
+            install = isInstalledAdabasService(str(os.getenv(node.ip)))
+            logger.info("install : "+str(install))
+            if(len(str(install))>0):
+                installStatus='Yes'
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.name) + Fore.RESET,
+                         Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                         Fore.GREEN+"ON"+Fore.RESET if(status == 0) else Fore.RED+"OFF"+Fore.RESET
+                         ]
             data.append(dataArray)
             counter = counter + 1
     printTabular(None, headers, data)
@@ -168,7 +170,7 @@ def executeCommandForUnInstall():
                             print(host)
                             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                             print(outputShFile)
-                            config_remove_dataEngine_byNameIP(host,host)
+                            #config_remove_dataEngine_byNameIP(host,host)
                             #set_value_in_property_file('app.di.hosts','')
                             verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
             if(removeType=='1'):

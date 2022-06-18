@@ -80,7 +80,6 @@ def installUserAndTargetDirectory():
 def buildUploadInstallTarToServer():
     logger.info("buildUploadInstallTarToServer(): start")
     try:
-        sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
         cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
         with Spinner():
             status = os.system(cmd)
@@ -95,9 +94,10 @@ def buildUploadInstallTarToServer():
 def executeCommandForInstall():
     logger.info("executeCommandForInstall(): start")
     try:
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         commandToExecute="scripts/servers_influxdb_install.sh"
-        additionalParam=targetDirectory
-        logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+        additionalParam=targetDirectory+' '+sourceInstallerDirectory
+        logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+"sourceInstallerDire :"+sourceInstallerDirectory)
         with Spinner():
             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
             #config_add_influxdb_node(host,host,'influxdb')

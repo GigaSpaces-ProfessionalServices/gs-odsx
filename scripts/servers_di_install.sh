@@ -4,7 +4,7 @@ echo "Starting DI Installation."
 #echo " installtelegrafFlag "$1
 
 function installAirGapJava {
-  installation_path=/dbagigashare/current/jdk
+  installation_path=$sourceInstallerDirectory/jdk
   installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
   echo "Installation File :"$installation_file
   echo $installation_path"/"$installation_file
@@ -30,12 +30,12 @@ dataFolderZK=$9
 logsFolderKafka=${10}
 logsFolderZK=${11}
 wantInstallJava=${12}
-
+sourceInstallerDirectory=${13}
 if [ "$wantInstallJava" == "y" ]; then
     echo "Setup AirGapJava"
     installAirGapJava
   fi
-echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK
+echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK" sourceInstallerDirectory "$sourceInstallerDirectory
 cd /dbagiga/
 tar -xvf install.tar
 home_dir=$(pwd)
@@ -45,7 +45,7 @@ echo "">>setenv.sh
 # Step for KAFKA Unzip and Set KAFKAPATH
 if [[ $id != 4 ]]; then
     echo "Install AirGapKafka"
-    installation_path=/dbagigashare/current/kafka
+    installation_path=$sourceInstallerDirectory/kafka
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.tgz" -printf "%f\n")
     echo "InstallationFile:"$installation_file
@@ -66,12 +66,12 @@ if [[ $id != 4 ]]; then
     echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
     echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
 
-    cp "/dbagigashare/current/kafka/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
+    cp $sourceInstallerDirectory"/kafka/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
 fi
 
 #zookeeper setup
 if [[ $id != 2 ]]; then
-    installation_path=/dbagigashare/current/zk
+    installation_path=$sourceInstallerDirectory/zk
     echo "InstallationPath="$installation_path
     installation_file=$(find $installation_path -name "*.gz" -printf "%f\n")
     echo "InstallationFile:"$installation_file
@@ -236,7 +236,7 @@ fi
 if [[ $installtelegrafFlag == "y" ]]; then
   # Install Telegraf
   echo "Installing Telegraf"
-  installation_path=/dbagigashare/current/telegraf
+  installation_path=$sourceInstallerDirectory/telegraf
   echo "InstallationPath :"$installation_path
   installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
   echo "Installation File :"$installation_file

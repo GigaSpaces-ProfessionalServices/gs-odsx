@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 
 import os,time,subprocess,requests, json, math, glob, sqlite3
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
+from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -73,9 +73,9 @@ def getDIServerHostList():
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
         if (len(nodes) == 0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 def getBootstrapAddress(hostConfig):
@@ -92,9 +92,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -140,10 +140,10 @@ def listSpacesOnServer(managerNodes):
         logger.info("listSpacesOnServer : managerNodes :"+str(managerNodes))
         managerHost=''
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
-            logger.info("Ip :"+str(node.ip)+"Status : "+str(status))
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            logger.info("Ip :"+str(os.getenv(node.ip))+"Status : "+str(status))
             if(status=="ON"):
-                managerHost = node.ip;
+                managerHost = os.getenv(node.ip);
         logger.info("managerHost :"+managerHost)
         response = requests.get("http://"+managerHost+":8090/v2/spaces",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code))
@@ -174,9 +174,9 @@ def get_gs_host_details(managerNodes):
     try:
         logger.info("get_gs_host_details() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHostConfig = node.ip;
+                managerHostConfig = os.getenv(node.ip);
         logger.info("managerHostConfig : "+str(managerHostConfig))
         response = requests.get('http://'+managerHostConfig+':8090/v2/hosts', headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHostConfig)+" status :"+str(response.status_code))
@@ -198,8 +198,8 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         space_dict_obj = host_dictionary_obj()
         logger.info("space_dict_obj : "+str(space_dict_obj))
         for node in spaceNodes:
-            if(gs_host_details_obj.__contains__(str(node.name)) or (str(node.name) in gs_host_details_obj.values())):
-                space_dict_obj.add(str(counter+1),node.name)
+            if(gs_host_details_obj.__contains__(str(os.getenv(node.name))) or (str(os.getenv(node.name)) in gs_host_details_obj.values())):
+                space_dict_obj.add(str(counter+1),os.getenv(node.name))
                 counter=counter+1
         logger.info("space_dict_obj : "+str(space_dict_obj))
         #verboseHandle.printConsoleWarning("Space hosts lists")
@@ -219,8 +219,8 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 def proceedToCreateGSC(zoneGSC):
     logger.info("proceedToCreateGSC()")
     for host in spaceNodes:
-        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Ddb2.jcc.charsetDecoderEncoder=3  "+str(host.ip)+" | grep -v JAVA_HOME"
-        verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(host.ip))
+        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Ddb2.jcc.charsetDecoderEncoder=3  "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
+        verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
         logger.info("commandToExecute : "+str(commandToExecute))
         with Spinner():
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
@@ -232,14 +232,16 @@ def createGSCInputParam():
     global numberOfGSC
     global memoryGSC
 
-    numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
-    while(len(str(numberOfGSC))==0):
-        numberOfGSC=1
+    numberOfGSC = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.gscperhost"))
+    #str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
+    #while(len(str(numberOfGSC))==0):
+    #    numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
-    memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
-    while(len(str(memoryGSC))==0):
-        memoryGSC='1g'
+    memoryGSC = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.gsc.memory"))
+    #str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
+    #while(len(str(memoryGSC))==0):
+    #    memoryGSC='1g'
 
 def updateAndCopyJarFileFromSourceToShFolder(puName):
     global filePrefix
@@ -250,7 +252,11 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     fileName= str(tail).replace('.jar','')
     filePrefix = fileName
     targetJarFile=sourceDB2FeederShFilePath+fileName+puName+'.jar'
-    cmd = "cp "+sourceDB2JarFilePath+' '+sourceDB2FeederShFilePath+fileName+puName+'.jar'
+    userCMD = os.getlogin()
+    if userCMD == 'ec2-user':
+        cmd = "sudo cp "+sourceDB2JarFilePath+' '+sourceDB2FeederShFilePath+fileName+puName+'.jar'
+    else:
+        cmd = "cp "+sourceDB2JarFilePath+' '+sourceDB2FeederShFilePath+fileName+puName+'.jar'
     logger.info("cmd : "+str(cmd))
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home: "+str(home))
@@ -404,7 +410,11 @@ def proceedToDeployPU():
                             time.sleep(2)
                             createDB2EntryInSqlLite(puName,file,restPort)
                             verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
-                            cmd = "rm -f "+sourceDB2FeederShFilePath+resource
+                            userCMD = os.getlogin()
+                            if userCMD == 'ec2-user':
+                                cmd = "sudo rm -f "+sourceDB2FeederShFilePath+resource
+                            else:
+                                cmd = "rm -f "+sourceDB2FeederShFilePath+resource
                             logger.info("cmd : "+str(cmd))
                             home = executeLocalCommandAndGetOutput(cmd)
                             break
@@ -423,13 +433,14 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
         verboseHandle.printConsoleInfo("Enter number of GSCs per host :"+str(numberOfGSC))
-        verboseHandle.printConsoleInfo("Enter memory of GSC [1g] :"+memoryGSC)
+        verboseHandle.printConsoleInfo("Enter memory of GSC :"+memoryGSC)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
     verboseHandle.printConsoleInfo("Enter db2.host : "+str(db2Host))
     verboseHandle.printConsoleInfo("Enter db2.port : "+str(db2Port))
     verboseHandle.printConsoleInfo("Enter db2.database : "+str(db2Database))
     verboseHandle.printConsoleInfo("Enter db2.user : "+str(db2Username))
+    verboseHandle.printConsoleInfo("Enter db2.password : "+str(db2Password))
     verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
     verboseHandle.printConsoleInfo("Enter source file path of db2-feeder .jar file including file name : "+str(sourceDB2JarFilePath))
@@ -437,26 +448,28 @@ def displaySummaryOfInputParam():
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
-
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
     global sourceDB2JarFilePath
-    sourceDb2JarFileConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.jar"))
-    sourceDB2JarFilePath = str(input(Fore.YELLOW+"Enter source file path of db2-feeder .jar file including file name ["+sourceDb2JarFileConfig+"] : "+Fore.RESET))
-    if(len(str(sourceDB2JarFilePath))==0):
-        sourceDB2JarFilePath = sourceDb2JarFileConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.jar",sourceDB2JarFilePath)
+    sourceDb2JarFileConfig = str(getYamlFilePathInsideFolder(".db2.jars.db2feederJar"))
+    #print(Fore.YELLOW+" source file path of db2-feeder .jar file including file name ["+sourceDb2JarFileConfig+"] : "+Fore.RESET)
+    #if(len(str(sourceDB2JarFilePath))==0):
+    sourceDB2JarFilePath = sourceDb2JarFileConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.jar",sourceDB2JarFilePath)
 
     global sourceDB2FeederShFilePath
-    sourceDB2FeederShFilePathConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.filePath.shFile"))
-    sourceDB2FeederShFilePath = str(input(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceDB2FeederShFilePathConfig+"] : "+Fore.RESET))
-    if(len(str(sourceDB2FeederShFilePath))==0):
-        sourceDB2FeederShFilePath = sourceDB2FeederShFilePathConfig
+
+    sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
+    #print(Fore.YELLOW+" source file path (directory) of *.sh file ["+sourceDB2FeederShFilePathConfig+"] : "+Fore.RESET)
+    #if(len(str(sourceDB2FeederShFilePath))==0):
+    sourceDB2FeederShFilePath = sourceDB2FeederShFilePathConfig
     lastChar = str(sourceDB2FeederShFilePath[-1])
     logger.info("last char:"+str(lastChar))
     if(lastChar!='/'):
         sourceDB2FeederShFilePath = sourceDB2FeederShFilePath+'/'
-    set_value_in_property_file("app.dataengine.db2-feeder.filePath.shFile",sourceDB2FeederShFilePath)
+    #set_value_in_property_file("app.dataengine.db2-feeder.filePath.shFile",sourceDB2FeederShFilePath)
 
-    uploadFileRest(managerHost)
+    #uploadFileRest(managerHost)
 
     global partition
     partition='1'
@@ -466,50 +479,55 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
     global spaceName
-    spaceName = str(input(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
-    if(len(str(spaceName))==0):
-        spaceName='bllspace'
+
+    spaceName = str(readValuefromAppConfig("app.dataengine.db2-feeder.space.name"))
+    #print(Fore.YELLOW+" space.name ["+spaceName+"] : "+Fore.RESET)
+    #if(len(str(spaceName))==0):
+    #spaceName='bllspace'
 
     global db2Host
     db2HostConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.host"))
-    db2Host = str(input(Fore.YELLOW+"Enter db2.host ["+db2HostConfig+"]: "+Fore.RESET))
-    if(len(str(db2Host))==0):
-        db2Host = db2HostConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.host",db2Host)
+    #print(Fore.YELLOW+" db2.host ["+db2HostConfig+"]: "+Fore.RESET)
+    #if(len(str(db2Host))==0):
+    db2Host = db2HostConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.host",db2Host)
 
     global db2Port
     db2PortConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.port"))
-    db2Port = str(input(Fore.YELLOW+"Enter db2.port ["+db2PortConfig+"] : "+Fore.RESET))
-    if(len(str(db2Port))==0):
-        db2Port = db2PortConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.port",db2Port)
+    #print(Fore.YELLOW+" db2.port ["+db2PortConfig+"] : "+Fore.RESET)
+    #if(len(str(db2Port))==0):
+    db2Port = db2PortConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.port",db2Port)
 
     global db2Database
     db2DatabaseConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.database"))
-    db2Database = str(input(Fore.YELLOW+"Enter db2.database ["+db2DatabaseConfig+"] : "+Fore.RESET))
-    if(len(str(db2Database))==0):
-        db2Database = db2DatabaseConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.database",db2Database)
+    #print(Fore.YELLOW+" db2.database ["+db2DatabaseConfig+"] : "+Fore.RESET)
+    #if(len(str(db2Database))==0):
+    db2Database = db2DatabaseConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.database",db2Database)
 
     global db2Username
     db2UsernameConfig = str(readValueByConfigObj("app.dataengine.db2-feeder.db2.username"))
-    db2Username = str(input(Fore.YELLOW+"Enter db2.user ["+db2UsernameConfig+"]: "))
-    if(len(str(db2Username))==0):
-        db2Username = db2UsernameConfig
-    set_value_in_property_file("app.dataengine.db2-feeder.db2.username",db2Username)
+    #print(Fore.YELLOW+" db2.user ["+db2UsernameConfig+"]: ")
+    #if(len(str(db2Username))==0):
+    db2Username = db2UsernameConfig
+    #set_value_in_property_file("app.dataengine.db2-feeder.db2.username",db2Username)
 
     global db2Password
-    db2Password = str(input(Fore.YELLOW+"Enter db2Password : "+Fore.RESET))
+    db2Password = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.password"))
+    #str(input(Fore.YELLOW+"Enter db2Password : "+Fore.RESET))
 
     global feederWriteBatchSize
-    feederWriteBatchSize = str(input(Fore.YELLOW+"Enter feeder.writeBatchSize [10000] :"+Fore.RESET))
-    if(len(feederWriteBatchSize)==0):
-        feederWriteBatchSize='10000'
+    feederWriteBatchSize = str(readValuefromAppConfig("app.dataengine.db2-feeder.writeBatchSize"))
+    #print(Fore.YELLOW+" feeder.writeBatchSize ["+feederWriteBatchSize+"] :"+Fore.RESET)
+    #if(len(feederWriteBatchSize)==0):
+    #    feederWriteBatchSize='10000'
 
     global feederSleepAfterWrite
-    feederSleepAfterWrite = str(input(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis [500] :"+Fore.RESET))
-    if(len(feederSleepAfterWrite)==0):
-        feederSleepAfterWrite='500'
+    feederSleepAfterWrite = str(readValuefromAppConfig("app.dataengine.db2-feeder.sleepAfterWriteInMillis"))
+    #print(Fore.YELLOW+" feeder.sleepAfterWriteInMillis ["+feederSleepAfterWrite+"] :"+Fore.RESET)
+    #if(len(feederSleepAfterWrite)==0):
+    #    feederSleepAfterWrite='500'
 
     displaySummaryOfInputParam()
 
@@ -518,6 +536,7 @@ def proceedToDeployPUInputParam(managerHost):
         finalConfirm='y'
     if(finalConfirm=='y'):
         logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+        uploadFileRest(managerHost)
         proceedToDeployPU()
     else:
         return
@@ -547,13 +566,14 @@ if __name__ == '__main__':
                 #updateAndCopyJarFileFromSourceToShFolder()
                 logger.info("managerHost : main"+str(managerHost))
                 if(len(str(managerHost))>0):
-                    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                    password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
                     listSpacesOnServer(managerNodes)
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
-                        confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
+                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.db2-feeder.db2.gsc.create"))
+                        #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
                             createGSCInputParam()

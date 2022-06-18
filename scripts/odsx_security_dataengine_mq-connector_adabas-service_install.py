@@ -5,8 +5,9 @@ import subprocess
 from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
-from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
+from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, readValuefromAppConfig, \
+    getYamlFilePathInsideFolder
+from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node, config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 
@@ -58,18 +59,19 @@ def getDIServerHostList():
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
         if (len(nodes) == 0):
-            nodes = node.ip
+            nodes = os.getenv(node.ip)
         else:
-            nodes = nodes + ',' + node.ip
+            nodes = nodes + ',' + os.getenv(node.ip)
     return nodes
 
 
 def displaySummary():
     logger.info("displaySummary()")
-    verboseHandle.printConsoleInfo("----------------------------------------------------------------")
+    #verboseHandle.printConsoleInfo("----------------------------------------------------------------")
     verboseHandle.printConsoleWarning("-----------------------*****Summary****-------------------------")
     verboseHandle.printConsoleInfo("Enter target directory to install mq-connector         : "+str(targetDir))
-    verboseHandle.printConsoleInfo("Enter source adabas-0.0.1-SNAPSHOT.jar file path including file name : "+str(sourceAdabasJarFile))
+    verboseHandle.printConsoleInfo("MQ-Connector will going to install on hosts ["+str(kafkahostConfig)+"] ")
+    verboseHandle.printConsoleInfo("Enter source adabas .jar file path including file name : "+str(sourceAdabasJarFile))
     verboseHandle.printConsoleInfo("keystore.jks file source : "+str(sourceKeyStoreFile))
     verboseHandle.printConsoleInfo("keystore.jks file target : "+str(targetDir)+"/keystore.jks")
     verboseHandle.printConsoleInfo("Enter mq hostname        : "+str(mqHostname))
@@ -85,6 +87,7 @@ def getInputParam(kafkaHosts):
     numMQhostToInstall=''
     confirmMQHosts=''
     hostConfig=''
+    global kafkahostConfig
     global targetDir
     global sourceAdabasJarFile
     global targetAdabasJarFile
@@ -95,58 +98,59 @@ def getInputParam(kafkaHosts):
     global sslChipherSuite
     global mqPort
     global sourceKeyStoreFile
+    kafkahostConfig = kafkaHosts
     sourceAdabasJarFile=''
     targetAdabasJarFile=''
     targetDir = str(readValueByConfigObj("app.dataengine.mq.adabas.targetDir")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    verboseHandle.printConsoleWarning("MQ-Connector will going to install on hosts ["+str(kafkaHosts)+"] ")
-    targetDirConfirm = str(input(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
-    if(len(str(targetDirConfirm))==0):
-        targetDirConfirm=targetDir
+    #verboseHandle.printConsoleWarning("MQ-Connector will going to install on hosts ["+str(kafkaHosts)+"] ")
+    #targetDirConfirm = str(input(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
+    #if(len(str(targetDirConfirm))==0):
+    targetDirConfirm=targetDir
 
-    sourceConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.jar")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    sourceAdabasJarFile = str(input(Fore.YELLOW+"Enter source adabas-0.0.1-SNAPSHOT.jar file path including file name ["+str(sourceConfig)+"] : "+Fore.RESET))
-    if(len(str(sourceAdabasJarFile))==0):
-        sourceAdabasJarFile=sourceConfig
-    verboseHandle.printConsoleWarning("Target path will be "+targetDir+"/"+(os.path.basename(sourceAdabasJarFile)))
+    sourceConfig = str(getYamlFilePathInsideFolder(".mq-connector.adabas.jars.jarFile")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    #print(Fore.YELLOW+"Enter source adabas .jar file path including file name ["+str(sourceConfig)+"] : "+Fore.RESET)
+    #if(len(str(sourceAdabasJarFile))==0):
+    sourceAdabasJarFile=sourceConfig
+    #verboseHandle.printConsoleWarning("Target path will be "+targetDir+"/"+(os.path.basename(sourceAdabasJarFile)))
     targetAdabasJarFile = targetDirConfirm+"/"+(os.path.basename(sourceAdabasJarFile))
 
     mqHostnameConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.mqHostname")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    mqHostname = str(input(Fore.YELLOW+"Enter mq hostname ["+mqHostnameConfig+"] : "+Fore.RESET))
-    if(len(str(mqHostname))==0):
-        mqHostname=mqHostnameConfig
-    set_value_in_property_file("app.dataengine.mq.adabas.mqHostname",mqHostname)
+    #print(Fore.YELLOW+"Enter mq hostname ["+mqHostnameConfig+"] : "+Fore.RESET)
+    #if(len(str(mqHostname))==0):
+    mqHostname=mqHostnameConfig
+    #set_value_in_property_file("app.dataengine.mq.adabas.mqHostname",mqHostname)
 
     mqChannelConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.channel")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    mqChannel = str(input(Fore.YELLOW+"Enter mq channel ["+mqChannelConfig+"] : "+Fore.RESET))
-    if(len(str(mqChannel))==0):
-        mqChannel = mqChannelConfig
-    set_value_in_property_file("app.dataengine.mq.adabas.channel",mqChannel)
+    #print(Fore.YELLOW+"Enter mq channel ["+mqChannelConfig+"] : "+Fore.RESET)
+    #if(len(str(mqChannel))==0):
+    mqChannel = mqChannelConfig
+    #set_value_in_property_file("app.dataengine.mq.adabas.channel",mqChannel)
 
     mqManagerConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.manager")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    mqManager = str(input(Fore.YELLOW+"Enter mq qmanager ["+mqManagerConfig+"] : "+Fore.RESET))
-    if(len(str(mqManager))==0):
-        mqManager = mqManagerConfig
-    set_value_in_property_file("app.dataengine.mq.adabas.manager",mqManager)
+    #print(Fore.YELLOW+"Enter mq qmanager ["+mqManagerConfig+"] : "+Fore.RESET)
+    #if(len(str(mqManager))==0):
+    mqManager = mqManagerConfig
+    #set_value_in_property_file("app.dataengine.mq.adabas.manager",mqManager)
 
     queueNameConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.queuename")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    queueName = str(input(Fore.YELLOW+"Enter mq queueName ["+queueNameConfig+"] : "+Fore.RESET))
-    if(len(str(queueName))==0):
-        queueName = queueNameConfig
-    set_value_in_property_file("app.dataengine.mq.adabas.queuename",queueName)
+    #print(Fore.YELLOW+"Enter mq queueName ["+queueNameConfig+"] : "+Fore.RESET)
+    #if(len(str(queueName))==0):
+    queueName = queueNameConfig
+    #set_value_in_property_file("app.dataengine.mq.adabas.queuename",queueName)
 
     sslChipherSuiteConfig = str(readValueByConfigObj("app.dataengine.mq.adabas.sslChipherSuite")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    sslChipherSuite = str(input(Fore.YELLOW+"Enter mq sslChipherSuite ["+sslChipherSuiteConfig+"] : "+Fore.RESET))
-    if(len(str(sslChipherSuite))==0):
-        sslChipherSuite = sslChipherSuiteConfig
-    set_value_in_property_file("app.dataengine.mq.adabas.sslChipherSuite",sslChipherSuite)
+    #print(Fore.YELLOW+"Enter mq sslChipherSuite ["+sslChipherSuiteConfig+"] : "+Fore.RESET)
+    #if(len(str(sslChipherSuite))==0):
+    sslChipherSuite = sslChipherSuiteConfig
+    #set_value_in_property_file("app.dataengine.mq.adabas.sslChipherSuite",sslChipherSuite)
 
     mqPortConfig =  str(readValueByConfigObj("app.dataengine.mq.adabas.port")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    mqPort = str(input(Fore.YELLOW+"Enter mq port ["+mqPortConfig+"] : "+Fore.RESET))
-    if(len(str(mqPort))==0):
-        mqPort = mqPortConfig
-    set_value_in_property_file("app.dataengine.mq.adabas.port",mqPort)
+    #print(Fore.YELLOW+"Enter mq port ["+mqPortConfig+"] : "+Fore.RESET)
+    #if(len(str(mqPort))==0):
+    mqPort = mqPortConfig
+    #set_value_in_property_file("app.dataengine.mq.adabas.port",mqPort)
 
-    sourceKeyStoreFile = str(readValueByConfigObj("app.dataengine.mq.keystore.file.source")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    sourceKeyStoreFile = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.config.keystore")).replace('[','').replace(']','').replace("'","").replace(', ',',')
 
     displaySummary()
     return kafkaHosts
@@ -186,6 +190,13 @@ def getBootstrapAddress(hostConfig):
     logger.info("getBootstrapAddress : "+str(bootstrapAddress))
     return bootstrapAddress
 
+def getInfluxdbHost():
+    host=''
+    nodeList = config_get_influxdb_node()
+    for host in nodeList:
+        host = os.getenv(host.ip)
+    return host
+
 def proceedForInstallation(hostConfig):
     logger.info("proceedForInstallation()")
     confirmInstallation=str(input(Fore.YELLOW+"Are you sure want to proceed for Installation on hosts ["+hostConfig+"] ? (y/n) [y] : "))
@@ -194,8 +205,11 @@ def proceedForInstallation(hostConfig):
         hostList = hostConfig.split(',')
         connectionStr = getConnectionStr(hostConfig)
         bootstrapAddress = getBootstrapAddress(hostConfig)
+        influxdbhost = str(getInfluxdbHost())
+        if(len(influxdbhost)==0):
+            verboseHandle.printConsoleWarning("No influxdb configuration found.")
         additionalParam = ""+targetDir+' '+hostConfig+' '+connectionStr+' '+bootstrapAddress+' '+os.path.basename(sourceAdabasJarFile)
-        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort
+        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort+' '+influxdbhost
         print(additionalParam)
         logger.info("additionalParam : "+str(additionalParam))
         user='root'
@@ -214,7 +228,7 @@ def proceedForInstallation(hostConfig):
                 print(outputShFile)
                 logger.info("outputShFile kafka : " + str(outputShFile))
 
-            config_add_dataEngine_node(host, host, "dataEngine", "mq-connector",  "")
+            #config_add_dataEngine_node(host, host, "dataEngine", "mq-connector", "")
             verboseHandle.printConsoleInfo("Installation of mq-connector done on host :"+str(host))
 
 if __name__ == '__main__':

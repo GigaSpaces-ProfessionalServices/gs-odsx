@@ -76,7 +76,6 @@ def installUserAndTargetDirectory():
 def buildUploadInstallTarToServer():
     logger.info("buildUploadInstallTarToServer(): start")
     try:
-        sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
         cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
         with Spinner():
             status = os.system(cmd)
@@ -93,11 +92,12 @@ def executeCommandForInstall():
     logger.info("executeCommandForInstall(): start")
     try:
         commandToExecute="scripts/servers_grafana_install.sh"
-        additionalParam=""
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
+        additionalParam=sourceInstallerDirectory
         for host in hostList.split(','):
-            logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+            logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
             with Spinner():
-                outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
+                outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                 verboseHandle.printConsoleInfo("Grafana has been installed on host :"+str(host))
     except Exception as e:
         handleException(e)

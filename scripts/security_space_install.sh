@@ -127,7 +127,7 @@ function setGSHome {
 function installAirGapJava {
     echo "Installation of AirGapJava"
     home_dir=$(pwd)
-    installation_path=$home_dir/install/java
+    installation_path=$sourceInstallerDirectory/jdk
     installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
     echo "Installation File :"$installation_file
     if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ]  || [[ "$osType" ==  *"Linux"*  ]]; then
@@ -155,7 +155,7 @@ function installAirGapJava {
 function installAirGapUnzip {
    echo "Install AirGapUnzip"
    home_dir=$(pwd)
-   installation_path=$home_dir/install/unzip
+   installation_path=$sourceInstallerDirectory/unzip
    installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
    if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [[ "$osType" ==  *"Linux"*  ]]; then
       rpm -ivh $installation_path"/"$installation_file
@@ -227,7 +227,7 @@ function installAirGapGS {
    echo "Installing Gigaspace InsightEdge at "$targetDir
    home_dir=$(pwd)
    echo "homedir: "$home_dir
-   installation_path=$home_dir/install/gs
+   installation_path=$sourceInstallerDirectory/gs
    installation_file=$(find $installation_path -name *.zip -printf "%f\n")
    echo $installation_path"/"$installation_file
    pwd
@@ -346,8 +346,8 @@ function loadEnv {
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigalogs/ /dbagigawork/ /dbagiga/*  /dbagigadata
-  #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
+  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
+  find /dbagigalogs -maxdepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"
@@ -380,10 +380,10 @@ function gsCreateGSServeice {
   prefix2="${prefix1}2"
   cmd="ps -ef | grep GSC | grep java | awk '{print $prefix2}' | xargs kill -9"
   echo "$cmd">>$stop_gsc_file
-
+  gs_installation_path=$home_dir_sh/install/gs/
   mv $home_dir_sh/st*_gs*.sh /tmp
-  mv $home_dir_sh/install/gs/$gsa_service_file /tmp
-  mv $home_dir_sh/install/gs/$gsc_service_file /tmp
+  mv $gs_installation_path/$gsa_service_file /tmp
+  mv $gs_installation_path/$gsc_service_file /tmp
   mv /tmp/st*_gs*.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
@@ -436,7 +436,8 @@ zoneGSC=${14}
 appId=${15}
 safeId=${16}
 objectId=${17}
-gsNicAddress=${18}
+sourceInstallerDirectory=${18}
+gsNicAddress=${19}
 
 echo "param1"$1
 echo "param2"$targetDir
@@ -455,7 +456,8 @@ echo "param14"$zoneGSC
 echo "param15"$appId
 echo "param16"$safeId
 echo "param17"$objectId
-echo "param18"$gsNicAddress
+echo "param18"$sourceInstallerDirectory
+echo "param19"$gsNicAddress
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else

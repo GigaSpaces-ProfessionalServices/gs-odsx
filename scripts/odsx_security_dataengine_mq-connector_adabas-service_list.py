@@ -4,10 +4,10 @@ import os
 import sys
 from utils.odsx_print_tabular_data import printTabular
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes, isInstalledAdabasService
 from colorama import Fore
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -57,37 +57,37 @@ def myCheckArg(args=None):
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
 def getKafkaStatus(node):
-    logger.info("getConsolidatedStatus() : "+str(node.ip))
+    logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
     cmdList = [ "systemctl status odsxzookeeper" , "systemctl status odsxkafka"]
     for cmd in cmdList:
-        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
+        logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         logger.info("Getting status.. :"+str(cmd))
         user = 'root'
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
             if(output!=0):
                 #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+                logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
             return output
 
 def getConsolidatedStatus(node):
     output=''
-    logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper"]
+    logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status odsxcr8", "systemctl status telegraf"]
     for cmd in cmdList:
-        logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
-        if(str(node.type)=='Witness' and cmd=='systemctl status odsxcr8'):
+        logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
+        if(str(os.getenv(node.type))=='Witness' and cmd=='systemctl status odsxcr8'):
             output=0
         else:
             logger.info("Getting status.. :"+str(cmd))
             user = 'root'
             with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+                output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                 logger.info("output1 : "+str(output))
                 if(output!=0):
                     #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                    logger.info(" Service :"+str(cmd)+" not started."+str(node.ip))
+                    logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
                     return output
     return output
 
@@ -106,14 +106,14 @@ def roleOfCurrentNode(ip):
         return "None"
 
 def getAdabusServiceStatus(node):
-    logger.info("getConsolidatedStatus() : " + str(node.ip))
+    logger.info("getConsolidatedStatus() : " + str(os.getenv(node.ip)))
     cmdList = ["systemctl status odsxadabas"]
     for cmd in cmdList:
-        logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
+        logger.info("cmd :" + str(cmd) + " host :" + str(os.getenv(node.ip)))
         logger.info("Getting status.. :" + str(cmd))
         user = 'root'
         with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
+            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : " + str(output))
             if (output != 0):
                 # verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
@@ -127,23 +127,25 @@ def listAdabusServiceServers():
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
                Fore.YELLOW + "Ip" + Fore.RESET,
                Fore.YELLOW + "Host" + Fore.RESET,
+               Fore.YELLOW + "Installed" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     counter = 1
     for node in dEServers:
         if node.role == "mq-connector":
-            host_dict_obj.add(str(counter), str(node.ip))
+            host_dict_obj.add(str(counter), str(os.getenv(node.ip)))
             status = getAdabusServiceStatus(node)
-            if (status == 0):
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
-                             Fore.GREEN + "ON" + Fore.RESET]
-            else:
-                dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                             Fore.GREEN + node.ip + Fore.RESET,
-                             Fore.GREEN + node.name + Fore.RESET,
-                             Fore.RED + "OFF" + Fore.RESET]
+            installStatus='No'
+            install = isInstalledAdabasService(str(os.getenv(node.ip)))
+            logger.info("install : "+str(install))
+            if(len(str(install))>0):
+                installStatus='Yes'
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
+                         Fore.GREEN + os.getenv(node.name) + Fore.RESET,
+                         Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                         Fore.GREEN+"ON"+Fore.RESET if(status == 0) else Fore.RED+"OFF"+Fore.RESET
+                         ]
             data.append(dataArray)
             counter = counter + 1
     printTabular(None, headers, data)

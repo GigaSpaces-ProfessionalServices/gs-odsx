@@ -448,14 +448,15 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
 
     global sourceDB2JarFilePath
-    sourceDb2JarFileConfig = str(getYamlFilePathInsideFolder("current.db2.jars.db2feederJar"))
+    sourceDb2JarFileConfig = str(getYamlFilePathInsideFolder(".db2.jars.db2feederJar"))
     #print(Fore.YELLOW+" source file path of db2-feeder .jar file including file name ["+sourceDb2JarFileConfig+"] : "+Fore.RESET)
     #if(len(str(sourceDB2JarFilePath))==0):
     sourceDB2JarFilePath = sourceDb2JarFileConfig
     #set_value_in_property_file("app.dataengine.db2-feeder.jar",sourceDB2JarFilePath)
 
     global sourceDB2FeederShFilePath
-    sourceDB2FeederShFilePathConfig = str("/dbagigashare/"+"current.db2.scripts.").replace('.','/')
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
     #print(Fore.YELLOW+" source file path (directory) of *.sh file ["+sourceDB2FeederShFilePathConfig+"] : "+Fore.RESET)
     #if(len(str(sourceDB2FeederShFilePath))==0):
     sourceDB2FeederShFilePath = sourceDB2FeederShFilePathConfig

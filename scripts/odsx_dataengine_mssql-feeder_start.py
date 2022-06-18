@@ -75,7 +75,9 @@ def displayMSSQLFeederShFiles():
     global fileNameDict
     global sourceMSSQLFeederShFilePath
     global fileNamePuNameDict
-    sourceMSSQLFeederShFilePath = str(str(".dbagigashare.current.mssql.scripts.").replace('.','/'))
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    sourceMSSQLFeederShFilePath = str(str(sourceInstallerDirectory+".mssql.scripts.").replace('.','/'))
     logger.info("sourceDB2FeederShFilePath: "+str(sourceMSSQLFeederShFilePath))
     counter=1
     directory = os.getcwd()

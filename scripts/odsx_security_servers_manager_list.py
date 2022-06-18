@@ -2,12 +2,14 @@
 import os.path,  argparse, sys
 import json
 import logging.config
-from utils.ods_cluster_config import config_get_manager_node
+
+from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
+from utils.ods_cluster_config import config_get_manager_node,isInstalledAndGetVersion
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
 from colorama import Fore
 import socket, platform, requests
-from utils.ods_validation import getSpaceServerStatus
+from utils.ods_validation import getSpaceServerStatus, port_check_config
 from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -53,9 +55,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = str(os.getenv(node.ip))
         return managerHost
     except Exception as e:
         handleException(e)
@@ -79,48 +81,58 @@ def getGSInfo(managerHost):
     print()
 
 def listFileFromDirectory():
-    logger.debug("security - manager - list")
-    logger.info("security - manager - list")
+    logger.info("servers - manager - list")
     managerNodes = config_get_manager_node()
     managerHost = getManagerHost(managerNodes)
     logger.info("managerHost : "+str(managerHost))
     try:
-        inputDirectory='backup'
-        if(len(str(managerHost))>0):
-            getGSInfo(managerHost)
-        else:
-            logger.info("Unable to retrive GS Info no manager status ON.")
-            verboseHandle.printConsoleInfo("Unable to retrive GS Info no manager status ON.")
-        logger.debug('Settings - Manager - List -listFileFromDirectory()')
-        headers = [Fore.YELLOW+"Manager Name"+Fore.RESET,
-                   Fore.YELLOW+"IP"+Fore.RESET,
-                   Fore.YELLOW+"Role"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET]
-        data=[]
-        managerNodes = config_get_manager_node()
-        for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
-            if(status=="ON"):
-                dataArray=[Fore.GREEN+node.name+Fore.RESET,
-                           Fore.GREEN+node.ip+Fore.RESET,
-                           Fore.GREEN+node.role+Fore.RESET,
-                           Fore.GREEN+status+Fore.RESET]
+        with Spinner():
+            inputDirectory='backup'
+            if(len(str(managerHost))>0):
+                getGSInfo(managerHost)
             else:
-                dataArray=[Fore.GREEN+node.name+Fore.RESET,
-                           Fore.GREEN+node.ip+Fore.RESET,
-                           Fore.GREEN+node.role+Fore.RESET,
-                           Fore.RED+status+Fore.RESET]
-            data.append(dataArray)
+                logger.info("Unable to retrive GS Info no manager status ON.")
+                verboseHandle.printConsoleInfo("Unable to retrive GS Info no manager status ON.")
+            logger.debug('Settings - Manager - List -listFileFromDirectory()')
+            headers = [Fore.YELLOW+"Host"+Fore.RESET,
+                       Fore.YELLOW+"Installed"+Fore.RESET,
+                       Fore.YELLOW+"Status"+Fore.RESET,
+                       Fore.YELLOW+"Version"+Fore.RESET,
+                       Fore.YELLOW+"Influxdb"+Fore.RESET,
+                       Fore.YELLOW+"Grafana"+Fore.RESET]
+            data=[]
+            managerNodes = config_get_manager_node()
 
+            for node in managerNodes:
+                installStatus='No'
+                if (port_check_config(os.getenv(str(node.ip)),22)):
+                    status = getSpaceServerStatus(os.getenv(str(node.ip)))
+                else:
+                    status="NOT REACHABLE"
+                install = isInstalledAndGetVersion(os.getenv(str(node.ip)))
+                logger.info("install : "+str(install))
+                influx = validateMetricsXmlInflux(os.getenv(str(node.ip)))
+                grafana = validateMetricsXmlGrafana(os.getenv(str(node.ip)))
+                if(len(str(install))>0):
+                    installStatus='Yes'
+                dataArray=[Fore.GREEN+os.getenv(str(node.ip))+Fore.RESET,
+                           Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                           Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
+                           Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
+                           Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+                           Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
+                data.append(dataArray)
         printTabular(None,headers,data)
     except Exception as e:
-        logger.error("Exception while listing manager"+str(e))
+        handleException(e)
 
 def get_my_key(obj):
     return obj['timeStamp']
 
 if __name__=="__main__" :
     verboseHandle.printConsoleWarning('Menu -> Security -> Manager -> List')
-    myCheckArg()
-    with Spinner():
+    try:
+        myCheckArg()
         listFileFromDirectory()
+    except Exception as e:
+        handleException(e)

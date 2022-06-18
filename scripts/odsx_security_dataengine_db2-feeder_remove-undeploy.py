@@ -59,9 +59,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
@@ -380,8 +380,8 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 managerHostConfig = str(input(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 if(len(str(managerHostConfig))>0):
                     managerHost = managerHostConfig
                 logger.info("Manager Host :"+str(managerHost))

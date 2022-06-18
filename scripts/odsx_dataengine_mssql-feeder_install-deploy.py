@@ -441,14 +441,16 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
 
     global sourceMSSQLJarFilePath
-    sourceMSSQLJarFileConfig = str(getYamlFilePathInsideFolder("current.mssql.jars.mssqlJarFile"))
+    sourceMSSQLJarFileConfig = str(getYamlFilePathInsideFolder(".mssql.jars.mssqlJarFile"))
     #print(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET)
     #if(len(str(sourceMSSQLJarFilePath))==0):
     sourceMSSQLJarFilePath = sourceMSSQLJarFileConfig
     #set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceMSSQLJarFilePath)
 
     global sourceMSSQLFeederShFilePath
-    sourceMSSQLFeederShFilePathConfig = str("/dbagigashare/"+"current.mssql.scripts.").replace('.','/')
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    sourceMSSQLFeederShFilePathConfig = str(sourceInstallerDirectory+".mssql.scripts.").replace('.','/')
 
     #print(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceMSSQLFeederShFilePathConfig+"] : "+Fore.RESET)
     #if(len(str(sourceMSSQLFeederShFilePath))==0):

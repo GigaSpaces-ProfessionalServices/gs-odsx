@@ -2,19 +2,21 @@ echo "Starting pre Installation cofiguration."
 echo "Extracting install.tar to "$targetDir
 tar -xvf install.tar
 targetDir=$1
-echo "TargetDir"$targetDir
+sourceInstallerDirectory=$2
 
+echo "TargetDir"$targetDir
+echo "sourceInstallerDirectory:"$sourceInstallerDirectory
 echo "getting installation file .gz"
 home_dir=$(pwd)
 echo "homedir: "$home_dir
-installation_path=/dbagigashare/current/nb/
+installation_path=$sourceInstallerDirectory/nb/
 installation_file=$(find $installation_path -name *.tar.gz -printf "%f\n")
 echo $installation_path"/"$installation_file
 
 echo "Extracting .tar.gz file from "$installation_path
 tar -xzf $installation_path/*.tar.gz -C /dbagiga
 
-dbagigashareManagementPath='/dbagigashare/current/nb/management'
+dbagigashareManagementPath=$sourceInstallerDirectory'/nb/management'
 
 echo "Moving file from $installation_path/nb.conf To $targetDir/nb-infra/"
 mv $dbagigashareManagementPath/nb.conf $targetDir/nb-infra/

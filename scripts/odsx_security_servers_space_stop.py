@@ -122,7 +122,7 @@ if __name__ == '__main__':
                         elif(sys.argv[1]==menuDrivenFlag):
                             args.append(menuDrivenFlag)
                             args.append('--host')
-                            args.append(spaceStart.ip)
+                            args.append(os.getenv(spaceStart.ip))
                             args.append('-u')
                             args.append(user)
                         args = str(args)
@@ -152,7 +152,7 @@ if __name__ == '__main__':
                 for host in spaceHosts:
                     args.append(menuDrivenFlag)
                     args.append('--host')
-                    args.append(host)
+                    args.append(os.getenv(host))
                     args.append('-u')
                     args.append(user)
                     argsString = str(args)
@@ -162,7 +162,7 @@ if __name__ == '__main__':
                     os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
                     args.remove(menuDrivenFlag)
                     args.remove("--host")
-                    args.remove(host)
+                    args.remove(os.getenv(host))
                     args.remove('-u')
                     args.remove(user)
                     logger.info(args)

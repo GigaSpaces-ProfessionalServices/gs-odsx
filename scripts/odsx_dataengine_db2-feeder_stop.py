@@ -77,7 +77,9 @@ def displayDB2FeederShFiles():
     global fileNameDict
     global sourceDB2FeederShFilePath
     global fileNamePuNameDict
-    sourceDB2FeederShFilePath = str(str(".dbagigashare.current.db2.scripts.").replace('.','/'))
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    sourceDB2FeederShFilePath = str(str(sourceInstallerDirectory+".db2.scripts.").replace('.','/'))
     logger.info("sourceDB2FeederShFilePath: "+str(sourceDB2FeederShFilePath))
     counter=1
     directory = os.getcwd()

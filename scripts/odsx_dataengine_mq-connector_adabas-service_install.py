@@ -107,7 +107,7 @@ def getInputParam(kafkaHosts):
     #if(len(str(targetDirConfirm))==0):
     targetDirConfirm=targetDir
 
-    sourceConfig = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.jars.jarFile")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    sourceConfig = str(getYamlFilePathInsideFolder(".mq-connector.adabas.jars.jarFile")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     #print(Fore.YELLOW+"Enter source adabas .jar file path including file name ["+str(sourceConfig)+"] : "+Fore.RESET)
     #if(len(str(sourceAdabasJarFile))==0):
     sourceAdabasJarFile=sourceConfig
@@ -157,16 +157,7 @@ def getInputParam(kafkaHosts):
 
 def buildTarFileToLocalMachine():
     logger.info("buildTarFileToLocalMachine :")
-    '''
-    sourceInstallerDirectory = str(readValuefromAppConfig("app.setup.sourceInstaller"))
-    userCMD = os.getlogin()
-    if userCMD == 'ec2-user':
-        cmd = 'sudo cp -R install/mq-connector/* '+sourceInstallerDirectory+"/MQ-CONNECTOR/"
-    else:
-        cmd = 'cp -R install/mq-connector/* '+sourceInstallerDirectory+"/MQ-CONNECTOR/"
-    with Spinner():
-        status = os.system(cmd)
-    '''
+
     cmd = 'tar -cvf install/install.tar install'#+sourceInstallerDirectory # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
