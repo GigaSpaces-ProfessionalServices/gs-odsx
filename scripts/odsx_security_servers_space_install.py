@@ -106,27 +106,6 @@ def getHostConfiguration():
     except Exception as e:
         handleException(e)
 
-
-def getInputParamForSecurityCredantials():
-    logger.info("getInputParamForSecurityCredantials()")
-    appIdConfig = str(readValuefromAppConfig("app.space.security.appId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    #appId = str(input(Fore.YELLOW+"Enter appId for credentials ["+appIdConfig+"] : "))
-    #if(len(str(appId))==0):
-    appId = appIdConfig
-    #set_value_in_property_file("app.space.security.appId",appId)
-
-    safeConfig = str(readValuefromAppConfig("app.space.security.safe")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    #safeId = str(input(Fore.YELLOW+"Enter safe for credentials ["+safeConfig+"] : "))
-    #if(len(str(safeId))==0):
-    safeId = safeConfig
-    #set_value_in_property_file("app.space.security.safeId",safeId)
-
-    objectConfig = str(readValuefromAppConfig("app.space.security.object")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-    #objectId = str(input(Fore.YELLOW+"Enter object for credentials ["+objectConfig+"] : "))
-    #if(len(str(objectId))==0):
-    objectId = objectConfig
-    #set_value_in_property_file("app.space.security.objectId",objectId)
-
 def execute_ssh_server_manager_install(hostsConfig,user):
     logger.info("execute_ssh_server_manager_install()")
     try:
@@ -167,7 +146,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
-        gsLogsConfigFileFromConfig = str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging")).replace('[','').replace(']','')
+        gsLogsConfigFileFromConfig = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = ""
         #print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
@@ -233,11 +212,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #if(len(str(zoneGSC))==0):
         #    zoneGSC = 'bll'
 
-        sourceDirectoryForJar = str(readValuefromAppConfig("app.space.jar.sourceFolder"))
-        #print(Fore.YELLOW+"Source directory to copy jars from : "+sourceDirectoryForJar+Fore.RESET)
-        #if(len(str(sourceDirectoryForJar))==0):
-        #    sourceDirectoryForJar='/dbagiga'
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+
+        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        objectId= str(readValuefromAppConfig("app.space.security.objectId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
         else:

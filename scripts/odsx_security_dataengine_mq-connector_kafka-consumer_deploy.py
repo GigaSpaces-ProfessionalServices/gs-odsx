@@ -250,7 +250,7 @@ def createGSCInputParam(managerHost,spaceNode):
     #print(Fore.YELLOW+"Memory of GSC ["+memoryGSC+"] : "+Fore.RESET)
     #while(len(str(memoryGSC))==0):
     #    memoryGSC='1g'
-    dPipelineSourceConfig = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.config.pipeline")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    dPipelineSourceConfig = str(getYamlFilePathInsideFolder(".mq-connector.adabas.config.pipeline")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     #print(Fore.YELLOW+"-Dpipeline.config.location source ["+str(dPipelineSourceConfig)+"] : "+Fore.RESET)
     #if(len(str(dPipelineLocationSourceInput))==0):
     dPipelineLocationSource=str(dPipelineSourceConfig)
@@ -267,7 +267,7 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         global pathOfSourcePU
-        pathOfSourcePU = str(getYamlFilePathInsideFolder("current.mq-connector.adabas.jars.kafkaConnector")).replace('"','')
+        pathOfSourcePU = str(getYamlFilePathInsideFolder(".mq-connector.adabas.jars.kafkaConnector")).replace('"','')
         #print(Fore.YELLOW+"Path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET)
         #if(len(str(pathOfSourcePUInput))>0):
         #pathOfSourcePU = pathOfSourcePUInput

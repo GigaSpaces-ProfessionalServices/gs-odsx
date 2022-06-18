@@ -320,7 +320,7 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         global pathOfSourcePU
-        pathOfSourcePU = "current.gs.jars.ts.tieredStorageBuild"
+        pathOfSourcePU = ".gs.jars.ts.tieredStorageBuild"
         pathOfSourcePU = str(getYamlFilePathInsideFolder(pathOfSourcePU)).replace('"','')
         #print(Fore.YELLOW+"Path filename of processing unit to deploy :"+str(pathOfSourcePU)+Fore.RESET)
         #if(len(str(pathOfSourcePUInput))>0):
@@ -347,7 +347,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         logger.info("slaProperties :"+str(slaProperties))
 
         global tieredCriteriaConfigFilePath
-        tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder("current.gs.config.ts.criteria")).replace('"','')
+        tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.ts.criteria")).replace('"','')
         #tieredCriteriaConfigFilePathInput = \
         #print(Fore.YELLOW+"tieredCriteriaConfig.filePath : "+str(tieredCriteriaConfigFilePath)+Fore.RESET)
         #if(len(str(tieredCriteriaConfigFilePathInput))>0):
@@ -369,7 +369,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         #set_value_in_property_file('app.tieredstorage.criteria.filepath.target',str(tieredCriteriaConfigFilePathTarget))
 
         global spacePropertyConfigFilePath
-        spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder("current.gs.config.ts.spaceproperty")).replace('"','')
+        spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.ts.spaceproperty")).replace('"','')
         logger.info("app.space.property.filePath :"+str(spacePropertyConfigFilePath))
         #spacePropertyConfigFilePathInput =
         #print(Fore.YELLOW+" space.property.filePath : "+str(spacePropertyConfigFilePath)+Fore.RESET)
