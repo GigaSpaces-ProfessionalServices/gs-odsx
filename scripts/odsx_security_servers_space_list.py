@@ -87,7 +87,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
     logger.info("getGSCByManagerServerConfig() : managerServerConfig :"+str(managerServerConfig)+" host_gsc_dict_obj :"+str(host_gsc_dict_obj))
     try:
         logger.info("Getting response for :"+str(managerServerConfig))
-        response = requests.get(('http://'+managerServerConfig+':8090/v2/containers'), headers={'Accept': 'application/json'})
+        response = requests.get(('http://'+managerServerConfig+':8090/v2/containers'), headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
         output = response.content.decode("utf-8")
         logger.info("Json Response container:"+str(output))
         data = json.loads(output)
@@ -189,8 +189,8 @@ def listSpaceServer():
                 status = getStatusOfSpaceHost(str(host))
                 logger.info("status : "+str(status))
                 logger.info("Host:"+str(host))
-                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
-                #gsc = host_gsc_dict_obj.get(str(host))
+                #gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+                gsc = host_gsc_dict_obj.get(str(host))
                 logger.info("GSC : "+str(gsc))
             else:
                 status="NOT REACHABLE"
@@ -218,9 +218,9 @@ def getManagerHost(managerNodes):
     try:
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         for node in managerNodes:
-            status = getSpaceServerStatus(node.ip)
+            status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                managerHost = node.ip
+                managerHost = os.getenv(node.ip)
         return managerHost
     except Exception as e:
         handleException(e)
