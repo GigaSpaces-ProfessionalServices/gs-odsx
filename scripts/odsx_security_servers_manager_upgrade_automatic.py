@@ -150,7 +150,7 @@ def validateServer(host):
 
 if __name__ == '__main__':
     logger.info("Menu -> Security -> Servers - Manager - upgrade - manual ")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Servers -> Manager -> Upgrade -> Manual')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Upgrade -> Manual')
     username = ""
     password = ""
     appId=""

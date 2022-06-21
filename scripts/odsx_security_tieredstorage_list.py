@@ -128,7 +128,7 @@ def listDeployed(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_security_tieredstorage_list")
-    verboseHandle.printConsoleWarning("Menu -> Security -> TieredStorage -> List")
+    verboseHandle.printConsoleWarning("Menu -> TieredStorage -> List")
     username = ""
     password = ""
     appId=""
@@ -144,8 +144,8 @@ if __name__ == '__main__':
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
             if(len(str(managerHost))>0):
-                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 listDeployed(managerHost)
             else:
                 logger.info("Please check manager server status.")

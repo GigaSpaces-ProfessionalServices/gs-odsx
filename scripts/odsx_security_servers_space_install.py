@@ -448,7 +448,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
 if __name__ == '__main__':
     logger.info("odsx_security_space-install")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Space -> Install')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Install')
     global appId
     global safeId
     global objectId

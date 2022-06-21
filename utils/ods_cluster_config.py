@@ -1349,28 +1349,6 @@ def discoverHostConfig():
                 os.environ[host] = str(v)
                 config_add_nb_node(host,host,'agent server', "config/cluster.config")
                 nbHostCount+=1
-        '''
-        if 'dataEngine' in content['servers']:
-            hostCount=0
-            deHostCount=1
-            for host,v in content['servers']['dataEngine'].items():
-                hostCount+=1
-            if hostCount==1:
-                host = 'dataEngine'+str(hostCount)
-                os.environ[host] = str(v)
-                config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'SingleNode')
-            else:
-                for host,v in content['servers']['dataEngine'].items():
-                    host = 'dataEngine'+str(deHostCount)
-                    os.environ[host] = str(v)
-                    if deHostCount == 1:
-                        config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'Master')
-                    elif deHostCount == 2:
-                        config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'Standby')
-                    elif deHostCount == 3:
-                        config_add_dataEngine_node(host, host, "cr8", "dataEngine", 'Witness')
-                    deHostCount+=1
-        '''
     except Exception as e:
         handleException(e)
 

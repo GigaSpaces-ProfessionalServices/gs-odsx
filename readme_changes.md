@@ -13,13 +13,14 @@
     - Added:
         For security menu items keep 
             - app.setup.profile=security
+            - app.security.menu=manager,space,tieredstorage,feeder,mq
         For Non security
             - app.setup.profile=
         - app.manager.cefXapLogging.target.file
     - changed:
         - app.di.base.kafka.zk=/dbagigasoft/
     - Removed:
-        - current.security.jars.cef.cefloggingjar
+        - app.server.di.env=source /home/dbsh/setenv.sh;
         - app.manager.cefXapLogging.source.file
         - app.manager.source.directory.jarfiles
         - app.space.property.filePath
@@ -55,7 +56,5 @@
            -  GRAFANA_SERVERS="" 
     - rename config/nb.conf to /dbagigashare/current/nb/applicative/nb.conf.template
            - For management required above three
-             
-
-        
-           
+5. config/host.yaml
+  - Removed Data Engine nodes section from host.yaml file because same installation as Data Integration 

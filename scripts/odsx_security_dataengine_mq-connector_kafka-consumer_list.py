@@ -125,7 +125,7 @@ def getPasswordByHost(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_security_mq-connector_kafka-consumer_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> MQ-Connector -> Kafka consumer -> List")
+    verboseHandle.printConsoleWarning("Menu -> MQ-Connector -> Kafka consumer -> List")
     username = ""
     password = ""
     appId=""
@@ -140,8 +140,8 @@ if __name__ == '__main__':
         logger.info("managerNodes: main"+str(managerNodes))
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
-            username = "gs-admin"#str(getUsernameByHost(managerHost))
-            password = "gs-admin"#str(getPasswordByHost(managerHost))
+            username = str(getUsernameByHost(managerHost))
+            password = str(getPasswordByHost(managerHost))
             listDeployed(managerHost)
     except Exception as e:
         verboseHandle.printConsoleError("Eror in odsx_tieredstorage_undeployed : "+str(e))

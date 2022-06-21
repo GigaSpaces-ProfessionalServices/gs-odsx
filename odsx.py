@@ -48,10 +48,7 @@ def displayMainMenu(menu,currentMenu):
     #print('defMenu1',defaultMenu)
     if(menu == '' or menu == 'menu'):
         #print('a')
-        if profile=='security':
-            defaultMenu ="menu_security"
-        else:
-            defaultMenu="menu"
+        defaultMenu ="menu"
     elif(menu.count(findExit)):
 
         #print('b')
@@ -63,10 +60,7 @@ def displayMainMenu(menu,currentMenu):
         #print('c')
         defaultMenu=defaultMenu+'_'+menu
     else:
-        if profile=='security':
-            defaultMenu ="menu_security"
-        else:
-            defaultMenu="menu"
+        defaultMenu='menu'
     #Dsisplay Tree stucture
     print(defaultMenu.upper().replace('_',' -> '))
     print('\n')
@@ -115,8 +109,6 @@ def displayMainMenu(menu,currentMenu):
 
                         if(defaultMenu =='menu' and selectedOption.lower().strip() == findExit):
                             quit()
-                        if(defaultMenu =='menu_security' and selectedOption.lower().strip() == findExit and profile=='security'):
-                            quit()
                         elif(menu != 'menu'):
                             displayMainMenu(selectedOption.lower().strip(),defaultMenu)
                         else:
@@ -126,9 +118,16 @@ def displayMainMenu(menu,currentMenu):
                     #optionMainMenu = int(input("Enter your option: "))
     else:
         scriptMenu = defaultMenu.replace('menu','odsx')
+        menuItems = str(readValuefromAppConfig("app.security.menu"))
+        if profile=='security':
+            for menu in menuItems.split(','):
+                if defaultMenu.__contains__(menu):
+                    scriptMenu = defaultMenu.replace('menu','odsx_security')
         #print(scriptsFolder+'/'+scriptMenu+'.py')
         logger.info("Finding file to execute selected command: "+scriptsFolder+'/'+scriptMenu+'.py')
         menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
+        #print("scriptsFolder:"+scriptsFolder)
+        #print("scriptMenu:"+str(scriptMenu))
         try:
             if(path.exists(scriptsFolder+'/'+scriptMenu+'.py')):
                 logger.info("File "+scriptsFolder+'/'+scriptMenu+'.py'+' exist.')
@@ -152,11 +151,7 @@ def displayMainMenu(menu,currentMenu):
             #print('currMennn',currentMenu)
             #print('scriptMenuuu',scriptMenu)
             logger.error("Invalid Option or file does not exist. : "+scriptsFolder+'/'+scriptMenu+'.py')
-            if profile=='security':
-                displayMainMenu('','menu_security')
-            else:
-                displayMainMenu('','menu')
-
+            displayMainMenu('','menu')
 #To find command in file
 def findArgumentInFile(currentArg,initialFileName):
     #logger.info("findArgumentInFile-currentArg : "+currentArg+ " initialFileName :"+initialFileName)
@@ -241,10 +236,7 @@ def main(**args):
             except Exception as e:
                 print(e)
     else:
-        if profile=='security':
-            displayMainMenu('','menu_security')
-        else:
-            displayMainMenu('','menu')
+        displayMainMenu('menu','')
 
 if __name__== "__main__":
   parser = ap.ArgumentParser()

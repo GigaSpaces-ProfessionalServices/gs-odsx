@@ -152,7 +152,7 @@ def listAdabusServiceServers():
     return host_dict_obj
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Security -> MQ Connector -> Adabas Service -> List")
+    verboseHandle.printConsoleWarning("Menu -> MQ Connector -> Adabas Service -> List")
     try:
         args = []
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section

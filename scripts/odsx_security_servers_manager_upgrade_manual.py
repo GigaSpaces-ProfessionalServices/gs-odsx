@@ -118,7 +118,7 @@ def handleException(e):
 
 if __name__ == '__main__':
     logger.info("Menu -> Security ->servers - manager - upgrade - manual ")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Servers -> Manager -> Upgrade -> Manual')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Upgrade -> Manual')
     username = ""
     password = ""
     appId=""

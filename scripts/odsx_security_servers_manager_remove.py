@@ -81,7 +81,7 @@ def exitAndDisplay(isMenuDriven):
 
 if __name__ == '__main__':
     logger.info("security - manager - Remove ")
-    verboseHandle.printConsoleWarning('Security -> Manager -> Remove')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Remove')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])

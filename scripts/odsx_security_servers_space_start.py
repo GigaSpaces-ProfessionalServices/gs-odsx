@@ -46,7 +46,7 @@ def exitAndDisplay(isMenuDriven):
 
 if __name__ == '__main__':
     logger.info("security - space - start ")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Space -> Start')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Start')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])

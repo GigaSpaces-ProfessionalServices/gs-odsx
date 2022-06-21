@@ -145,7 +145,7 @@ def listSpaceServer():
         logger.debug("listing space server")
         logger.info("listSpaceServer()")
         spaceServers = config_get_space_hosts()
-        verboseHandle.printConsoleWarning("Menu -> Security -> Space -> List\n")
+        verboseHandle.printConsoleWarning("Menu -> Servers -> Space -> List\n")
         headers = [Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
                    Fore.YELLOW+"Installed"+Fore.RESET,
@@ -244,8 +244,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes)
         logger.info("managerHost : main"+str(managerHost))
-        username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
         with Spinner():
             listSpaceServer()
     except Exception as e:

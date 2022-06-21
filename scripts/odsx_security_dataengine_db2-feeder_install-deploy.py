@@ -543,7 +543,7 @@ def proceedToDeployPUInputParam(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_security_dataengine_db2-feeder_install")
-    verboseHandle.printConsoleWarning('Menu -> Security -> DataEngine -> DB2-Feeder -> Install-Deploy')
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> DB2-Feeder -> Install-Deploy')
     username = ""
     password = ""
     appId=""
@@ -566,8 +566,8 @@ if __name__ == '__main__':
                 #updateAndCopyJarFileFromSourceToShFolder()
                 logger.info("managerHost : main"+str(managerHost))
                 if(len(str(managerHost))>0):
-                    username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                     listSpacesOnServer(managerNodes)
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)

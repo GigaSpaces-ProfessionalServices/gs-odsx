@@ -46,7 +46,7 @@ def execute_scriptBuilder(args):
 
 if __name__ == '__main__':
     logger.info("security - manager - start ")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Manager -> Start')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Start')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])

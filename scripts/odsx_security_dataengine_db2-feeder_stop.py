@@ -199,7 +199,7 @@ def proceedToStopDB2Feeder(fileNumberToStop):
 
 if __name__ == '__main__':
     logger.info("odsx_security_dataengine_db2-feeder_stop")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> stop")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> DB2-Feeder -> stop")
     username = ""
     password = ""
     appId=""
@@ -214,8 +214,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes);
         if(len(str(managerHost))>0):
-            username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
             displayDB2FeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
