@@ -232,7 +232,7 @@ def proceedForInstallation(hostConfig):
             verboseHandle.printConsoleInfo("Installation of mq-connector done on host :"+str(host))
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Security -> MQ-Connector -> Adabas Service -> Install')
+    verboseHandle.printConsoleWarning('Menu -> MQ-Connector -> Adabas Service -> Install')
     try:
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))

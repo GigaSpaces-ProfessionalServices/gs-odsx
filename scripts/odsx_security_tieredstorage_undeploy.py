@@ -366,7 +366,7 @@ def removeGSC(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_tieredstorage_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> TieredStorage -> Undeploy")
+    verboseHandle.printConsoleWarning("Menu -> TieredStorage -> Undeploy")
     username = ""
     password = ""
     appId=""
@@ -386,8 +386,8 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
-                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 gs_space_dictionary_obj = listDeployed(managerHost)
                 if(len(str(gs_space_dictionary_obj))>0):
                     proceedToUndeployPU(managerHost)

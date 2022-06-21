@@ -583,7 +583,7 @@ def listGSC(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_security_tieredstorage_rollback")
-    verboseHandle.printConsoleWarning("Menu -> Security -> TieredStorage -> Rollback")
+    verboseHandle.printConsoleWarning("Menu -> TieredStorage -> Rollback")
     username = ""
     password = ""
     appId=""

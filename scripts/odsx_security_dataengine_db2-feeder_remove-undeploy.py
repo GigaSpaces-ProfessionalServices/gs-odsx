@@ -360,7 +360,7 @@ def proceedForPersistUndeploy():
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_db2-feeder_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> Stop-UnDeploy")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> DB2-Feeder -> Stop-UnDeploy")
     username = ""
     password = ""
     appId=""
@@ -380,8 +380,8 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 managerHostConfig = str(input(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
-                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 if(len(str(managerHostConfig))>0):
                     managerHost = managerHostConfig
                 logger.info("Manager Host :"+str(managerHost))

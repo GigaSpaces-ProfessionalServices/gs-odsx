@@ -81,7 +81,7 @@ def exitAndDisplay(isMenuDriven):
 
 if __name__ == '__main__':
     logger.info("odsx_security_space_remove")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Space -> Remove')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Remove')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])

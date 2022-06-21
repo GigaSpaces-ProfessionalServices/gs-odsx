@@ -452,7 +452,7 @@ def getPasswordByHost(managerHost):
     return  output
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Security -> MQ-Connector -> Kafka consumer -> Deploy')
+    verboseHandle.printConsoleWarning('Menu -> MQ-Connector -> Kafka consumer -> Deploy')
     username = ""
     password = ""
     appId=""
@@ -473,8 +473,8 @@ if __name__ == '__main__':
                 managerHost = getManagerHost(managerNodes)
                 logger.info("managerHost : main"+str(managerHost))
                 if(len(str(managerHost))>0):
-                    username = "gs-admin"#str(getUsernameByHost(managerHost))
-                    password = "gs-admin"#str(getPasswordByHost(managerHost))
+                    username = str(getUsernameByHost(managerHost))
+                    password = str(getPasswordByHost(managerHost))
                     listSpacesOnServer(managerNodes)
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)

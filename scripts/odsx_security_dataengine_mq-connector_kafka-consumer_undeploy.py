@@ -415,7 +415,7 @@ def proceedForGSCRemove():
 
 if __name__ == '__main__':
     logger.info("odsx_security_mq-connector_kafka-consumer_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> MQ-Connector -> Kafka consumer -> UnDeploy")
+    verboseHandle.printConsoleWarning("Menu -> MQ-Connector -> Kafka consumer -> UnDeploy")
     username = ""
     password = ""
     appId=""
@@ -432,8 +432,8 @@ if __name__ == '__main__':
             spaceNodes = config_get_space_hosts()
             logger.info("spaceNodes: main"+str(spaceNodes))
             managerHost = getManagerHost(managerNodes)
-            username = "gs-admin"#str(getUsernameByHost(managerHost))
-            password = "gs-admin"#str(getPasswordByHost(managerHost))
+            username = str(getUsernameByHost(managerHost))
+            password = str(getPasswordByHost(managerHost))
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 managerHostConfig = str(input(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))

@@ -601,7 +601,7 @@ def validateResponseGetDescription(responseCode):
 if __name__ == '__main__':
     logger.info("Menu -> Security -> TieredStorage -> Deploy")
     #loggerTiered.info("Deploy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> TieredStorage -> Deploy")
+    verboseHandle.printConsoleWarning("Menu -> TieredStorage -> Deploy")
     username = ""
     password = ""
     appId=""
@@ -621,8 +621,8 @@ if __name__ == '__main__':
             logger.info("managerHost : main"+str(managerHost))
 
             if(len(str(managerHost))>0):
-                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 managerHostConfig = managerHost
                 logger.info("managerHostConfig : "+str(managerHost))
                 listSpacesOnServer(managerNodes)

@@ -525,7 +525,7 @@ def validateRPMS():
 
 if __name__ == '__main__':
     logger.info("odsx_security_manager -> install")
-    verboseHandle.printConsoleWarning('Menu -> Security -> Manager -> Install')
+    verboseHandle.printConsoleWarning('Menu -> Servers ->  Manager -> Install')
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     #print('Len : ',len(sys.argv))

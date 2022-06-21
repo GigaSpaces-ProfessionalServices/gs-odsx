@@ -130,7 +130,7 @@ def get_my_key(obj):
     return obj['timeStamp']
 
 if __name__=="__main__" :
-    verboseHandle.printConsoleWarning('Menu -> Security -> Manager -> List')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> List')
     try:
         myCheckArg()
         listFileFromDirectory()

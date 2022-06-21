@@ -148,19 +148,38 @@ sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPER
 
   # adding properties
   #if [[ $id != 2 ]]; then
+  echo "kafkaBrokerCount: "$kafkaBrokerCount
   if [ "$kafkaBrokerCount" == 3 ]; then
-      echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "server.2="$kafkaBrokerHost2":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "server.3="$kafkaBrokerHost3":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "zookeeper.connect="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>$KAFKAPATH/config/server.properties
+
+    sed -i '/^offsets.topic.replication.factor/d' $KAFKAPATH/config/server.properties
+    echo "offsets.topic.replication.factor=3">>$KAFKAPATH/config/server.properties
+    sed -i '/^transaction.state.log.replication.factor/d' $KAFKAPATH/config/server.properties
+    echo "transaction.state.log.replication.factor=3">>$KAFKAPATH/config/server.properties
+    sed -i '/^transaction.state.log.min.isr/d' $KAFKAPATH/config/server.properties
+    echo "transaction.state.log.min.isr=3">>$KAFKAPATH/config/server.properties
+    sed -i '/^exec $base_dir/d' $KAFKAPATH/bin/kafka-server-start.sh
+    echo "min.insync.replicas=2">>$KAFKAPATH/config/server.properties
+
   fi
   if [ "$kafkaBrokerCount" == 1 ]; then
     echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "zookeeper.connect="$kafkaBrokerHost1":2181">>$KAFKAPATH/config/server.properties
+
+    sed -i '/^offsets.topic.replication.factor/d' $KAFKAPATH/config/server.properties
+    echo "offsets.topic.replication.factor=1">>$KAFKAPATH/config/server.properties
+    sed -i '/^transaction.state.log.replication.factor/d' $KAFKAPATH/config/server.properties
+    echo "transaction.state.log.replication.factor=1">>$KAFKAPATH/config/server.properties
+    sed -i '/^transaction.state.log.min.isr/d' $KAFKAPATH/config/server.properties
+    echo "transaction.state.log.min.isr=1">>$KAFKAPATH/config/server.properties
+
   fi
   if [[ $id != 4 ]]; then
     echo "broker.id="$id"">>$KAFKAPATH/config/server.properties
@@ -168,17 +187,8 @@ sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPER
     source setenv.sh
     sed -i -e '/listeners=PLAINTEXT:\/\/:9092/s/^#//g' $KAFKAPATH/config/server.properties
     sed -i -e '/advertised.listeners=PLAINTEXT:/s/^#//g' $KAFKAPATH/config/server.properties
-    sed -i '/^offsets.topic.replication.factor/d' $KAFKAPATH/config/server.properties
-    sed -i '/^transaction.state.log.replication.factor/d' $KAFKAPATH/config/server.properties
-    sed -i '/^transaction.state.log.min.isr/d' $KAFKAPATH/config/server.properties
     sed -i '/^min.insync.replicas/d' $KAFKAPATH/config/server.properties
     sed -i '/^exec $base_dir/d' $KAFKAPATH/bin/kafka-server-start.sh
-
-    echo "# Internal Topic Settings">>$KAFKAPATH/config/server.properties
-    echo "offsets.topic.replication.factor=3">>$KAFKAPATH/config/server.properties
-    echo "transaction.state.log.replication.factor=3">>$KAFKAPATH/config/server.properties
-    echo "transaction.state.log.min.isr=3">>$KAFKAPATH/config/server.properties
-    echo "min.insync.replicas=2">>$KAFKAPATH/config/server.properties
 
     echo "export JMX_PORT=9999" >> $KAFKAPATH/bin/kafka-server-start.sh
     echo "export RMI_HOSTNAME=127.0.0.1" >> $KAFKAPATH/bin/kafka-server-start.sh

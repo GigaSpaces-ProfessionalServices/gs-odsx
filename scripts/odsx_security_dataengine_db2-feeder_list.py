@@ -110,7 +110,7 @@ def listDeployed(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_db2-feeder_list")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> List")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> DB2-Feeder -> List")
     username = ""
     password = ""
     appId=""
@@ -125,8 +125,8 @@ if __name__ == '__main__':
         logger.info("managerNodes: main"+str(managerNodes))
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
-            username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
             listDeployed(managerHost)
     except Exception as e:
         handleException(e)

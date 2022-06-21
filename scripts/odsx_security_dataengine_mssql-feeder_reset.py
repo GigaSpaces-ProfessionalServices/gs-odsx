@@ -62,7 +62,7 @@ def sqlLiteDeleteTableMsSqlFeeder():
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_MsSql-feeder_reset")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> MSSQL-Feeder -> Reset")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> MSSQL-Feeder -> Reset")
     try:
         sqlLiteDeleteTableMsSqlFeeder()
     except Exception as e:

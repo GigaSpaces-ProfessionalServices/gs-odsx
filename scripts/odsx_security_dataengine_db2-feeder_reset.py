@@ -66,7 +66,7 @@ def sqlLiteDeleteTableDb2Feeder():
 
 if __name__ == '__main__':
     logger.info("odsx_security_dataengine_db2-feeder_reset")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> DB2-Feeder -> Reset")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> DB2-Feeder -> Reset")
     try:
         sqlLiteDeleteTableDb2Feeder()
     except Exception as e:

@@ -51,7 +51,7 @@ def exitAndDisplay(isMenuDriven):
 if __name__ == '__main__':
     logger.info("odsx_security_manager_Stop")
     logger.debug("odsx_security_manager_Stop")
-    verboseHandle.printConsoleWarning("Menu -> Security -> Manager -> Stop")
+    verboseHandle.printConsoleWarning("Menu -> Servers -> Manager -> Stop")
     args = []
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])

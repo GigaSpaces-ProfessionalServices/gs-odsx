@@ -666,7 +666,7 @@ def listGSC(managerHost):
 if __name__ == '__main__':
     logger.info("odsx_security_tieredstorage_updatecachepolicy")
     loggerTiered.info("Updatecachepolicy")
-    verboseHandle.printConsoleWarning("Menu -> Security -> TieredStorage -> Update Cache Policy")
+    verboseHandle.printConsoleWarning("Menu -> TieredStorage -> Update cache policy")
     username = ""
     password = ""
     appId=""
@@ -685,8 +685,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
-                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 logger.info("Manager Host :"+str(managerHost))
                 gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
                 logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))

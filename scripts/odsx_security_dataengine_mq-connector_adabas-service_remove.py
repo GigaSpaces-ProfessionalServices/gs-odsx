@@ -185,7 +185,7 @@ def executeCommandForUnInstall():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning("Menu -> Security -> MQ Connector -> Adabas Service -> Remove")
+    verboseHandle.printConsoleWarning("Menu -> MQ Connector -> Adabas Service -> Remove")
     try:
         removeInputUserAndHost()
         executeCommandForUnInstall()

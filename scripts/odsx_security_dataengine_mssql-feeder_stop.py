@@ -201,7 +201,7 @@ def proceedToStopMSSQLFeeder(fileNumberToStop):
 
 if __name__ == '__main__':
     logger.info("odsx_security_dataengine_mssql-feeder_stop")
-    verboseHandle.printConsoleWarning("Menu -> Security -> DataEngine -> MSSQL-Feeder -> Stop")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> MSSQL-Feeder -> Stop")
     username = ""
     password = ""
     appId=""
@@ -216,8 +216,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes);
         if(len(str(managerHost))>0):
-            username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
             displayMSSQLFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
