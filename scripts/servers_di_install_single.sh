@@ -135,14 +135,12 @@ mkdir -p $dataFolderKafka
     sed -i '/^offsets.topic.replication.factor/d' $KAFKAPATH/config/server.properties
     sed -i '/^transaction.state.log.replication.factor/d' $KAFKAPATH/config/server.properties
     sed -i '/^transaction.state.log.min.isr/d' $KAFKAPATH/config/server.properties
-    sed -i '/^min.insync.replicas/d' $KAFKAPATH/config/server.properties
     sed -i '/^exec $base_dir/d' $KAFKAPATH/bin/kafka-server-start.sh
 
     echo "# Internal Topic Settings">>$KAFKAPATH/config/server.properties
-    echo "offsets.topic.replication.factor=3">>$KAFKAPATH/config/server.properties
-    echo "transaction.state.log.replication.factor=3">>$KAFKAPATH/config/server.properties
-    echo "transaction.state.log.min.isr=3">>$KAFKAPATH/config/server.properties
-    echo "min.insync.replicas=2">>$KAFKAPATH/config/server.properties
+    echo "offsets.topic.replication.factor=1">>$KAFKAPATH/config/server.properties
+    echo "transaction.state.log.replication.factor=1">>$KAFKAPATH/config/server.properties
+    echo "transaction.state.log.min.isr=1">>$KAFKAPATH/config/server.properties
 
     echo "export JMX_PORT=9999" >> $KAFKAPATH/bin/kafka-server-start.sh
     echo "export RMI_HOSTNAME=127.0.0.1" >> $KAFKAPATH/bin/kafka-server-start.sh

@@ -417,7 +417,6 @@ def executeCommandForInstall(host, type, count):
         # outputVersion = executeRemoteCommandAndGetOutputPython36(host,user,cmd)
         # print("output java version :"+str(outputVersion))
         commandToExecute = "scripts/servers_di_install.sh"
-        additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
         if (len(clusterHosts) == 4):
             additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(
