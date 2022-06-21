@@ -19,6 +19,7 @@
         - app.manager.cefXapLogging.target.file
     - changed:
         - app.di.base.kafka.zk=/dbagigasoft/
+        - Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 to -Dcom.gs.manager.leader-election.zookeeper.session-timeout=300000
     - Removed:
         - app.server.di.env=source /home/dbsh/setenv.sh;
         - app.manager.cefXapLogging.source.file
