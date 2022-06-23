@@ -190,7 +190,7 @@ def buildUploadInstallTarToServer(host):
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))
-            scp_upload(host, user, 'install/install.tar', '/dbagiga')
+            scp_upload(host, user, 'install/install.tar', '')
     except Exception as e:
         handleException(e)
 
