@@ -7,7 +7,7 @@ from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_f
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder
 from colorama import Fore
-from utils.ods_scp import scp_upload
+from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion
 from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
@@ -429,6 +429,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
                         scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
                         scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                        scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
+                        scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
                     serverHost=''
                     try:
                         serverHost = socket.gethostbyaddr(host).__getitem__(0)
