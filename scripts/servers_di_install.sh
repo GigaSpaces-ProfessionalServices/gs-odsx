@@ -36,7 +36,7 @@ if [ "$wantInstallJava" == "y" ]; then
     installAirGapJava
   fi
 echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK" sourceInstallerDirectory "$sourceInstallerDirectory
-cd /dbagiga/
+#cd /dbagiga/
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
