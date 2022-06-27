@@ -21,5 +21,10 @@ servers :
     host3 : 10.0.0.114
   nb_management :
     host1 : 10.0.0.119
+  data_validator_server :
+    host1 : 10.0.0.18
+  data_validator_agent :
+    host1 : 10.0.0.83
+    host2 : 10.0.0.68
   pivot :
     host1 : 127.0.0.1

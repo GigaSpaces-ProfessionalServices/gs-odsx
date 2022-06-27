@@ -140,30 +140,16 @@ def validateRPM():
     logger.info("validateRPM()")
     installerArray = []
     cmd = "pwd"
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    print(sourceInstallerDirectory)
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home dir : "+str(home))
-    cmd = 'find '+str(home)+'/install/java/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
+    cmd = 'find '+str(sourceInstallerDirectory)+'/jdk/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
     javaRpm = executeLocalCommandAndGetOutput(cmd)
     logger.info("javaRpm found :"+str(javaRpm))
-    cmd = 'find '+str(home)+'/install/kafka/ -name *.tgz -printf "%f\n"' # Creating .tar file on Pivot machine
-    #kafkaZip = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("kafkaZip found :"+str(kafkaZip))
-    #cmd = 'find '+str(home)+'/install/cr8/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
-    #cr8Rpm = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("cr8Rpm found :"+str(cr8Rpm))
-    #cmd = 'find '+str(home)+'/install/cr8/ -name *.gz -printf "%f\n"' # Creating .tar file on Pivot machine
-    #localSetupZip = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("localSetupZip found :"+str(localSetupZip))
-    #cmd = 'find '+str(home)+'/install/telegraf/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
-    #telegrafRpm = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("telegrafRpm found :"+str(telegrafRpm))
 
     di_installer_dict = obj_type_dictionary()
     di_installer_dict.add('Java',javaRpm)
-    #di_installer_dict.add('KafkaZip',kafkaZip)
-    #di_installer_dict.add('CR8Rpm',cr8Rpm)
-    #di_installer_dict.add('CR8-LocalSetupZip',localSetupZip)
-    #di_installer_dict.add('Telegraf',telegrafRpm)
 
     for name,installer in di_installer_dict.items():
         if(len(str(installer))==0):
