@@ -7,6 +7,9 @@ from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite, getMSSQLQueryStatusFromSqlLite
+from utils.ods_app_config import readValuefromAppConfig
+from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -65,8 +68,12 @@ def listDeployed(managerHost):
     logger.info("listDeployed - db2-Feeder list")
     global gs_space_dictionary_obj
     try:
+        response=""
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        if profile == 'security':
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        else:
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -83,7 +90,10 @@ def listDeployed(managerHost):
         dataTable=[]
         for data in jsonArray:
             hostId=''
-            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
+            if profile == 'security':
+                response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
+            else:
+                response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
             jsonArray2 = json.loads(response2.text)
             queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
             for data2 in jsonArray2:
@@ -104,12 +114,18 @@ def listDeployed(managerHost):
 
         # For Kafka - Consumer
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        if profile == 'security':
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        else:
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray2 = json.loads(response.text)
         for data in jsonArray:
             hostId=''
-            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
+            if profile == 'security':
+                response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
+            else:
+                response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
             jsonArray2 = json.loads(response2.text)
             for data2 in jsonArray2:
                 hostId=data2["hostId"]
@@ -127,12 +143,18 @@ def listDeployed(managerHost):
                 counter=counter+1
                 dataTable.append(dataArray)
         # For MS-SQL-Feeder
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        if profile=='security':
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        else:
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         for data in jsonArray:
             hostId=''
-            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
+            if profile == 'security':
+                response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
+            else:
+                response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
             jsonArray2 = json.loads(response2.text)
             queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
             for data2 in jsonArray2:
@@ -158,11 +180,24 @@ def listDeployed(managerHost):
 if __name__ == '__main__':
     logger.info("odsx_dataengine_list-all")
     verboseHandle.printConsoleWarning("Menu -> DataEngine ->List-All")
+    profile=str(readValuefromAppConfig("app.setup.profile"))
+    username = ""
+    password = ""
+    appId=""
+    safeId=""
+    objectId=""
     try:
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
             if(len(str(managerHost))>0):
+                if profile=='security':
+                    appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+                    safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+                    objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+                    logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+                    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 listDeployed(managerHost)
             else:
                 logger.info("No manager status ON.")

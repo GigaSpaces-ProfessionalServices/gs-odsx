@@ -1347,8 +1347,21 @@ def discoverHostConfig():
             for host,v in content['servers']['space'].items():
                 host = 'nb_agent'+str(nbHostCount)
                 os.environ[host] = str(v)
-                config_add_nb_node(host,host,'agent server', "config/cluster.config")
+                config_add_nb_node(host,host,'agent', "config/cluster.config")
                 nbHostCount+=1
+        dvHostCount=1
+        if 'data_validator_server' in content['servers']:
+            for host,v in content['servers']['data_validator_server'].items():
+                host = 'datavalidation'+str(dvHostCount)
+                os.environ[host]=str(v)
+                config_add_dataValidation_node(host, host,'DataValidation', 'server')
+                dvHostCount+=1
+        if 'data_validator_agent' in content['servers']:
+            for host,v in content['servers']['data_validator_agent'].items():
+                host = 'datavalidation'+str(dvHostCount)
+                os.environ[host]=str(v)
+                config_add_dataValidation_node(host, host,'DataValidation', 'agent')
+                dvHostCount+=1
     except Exception as e:
         handleException(e)
 

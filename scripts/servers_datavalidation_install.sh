@@ -1,11 +1,19 @@
 echo "Starting Data Validation Installation."
 #echo "Extracting install.tar to "$targetDir
-cd /home/gsods
+sourceInstallerDirectory=$1
+targetInstallDir=$2
+sourceDvServerJar=$3
+echo "sourceInstallerDirectory:"$sourceInstallerDirectory
+echo "targetInstallDir:"$targetInstallDir
+echo "sourceDvServerJar:"$sourceDvServerJar
+serverJarFileName=$(basename $sourceDvServerJar)
+echo "serverJarFile Name:"$serverJarFileName
+cd $targetInstallDir
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
 if [[ ${#javaInstalled} -eq 0 ]]; then
-  installation_path=$home_dir/install/java
+  installation_path=$sourceInstallerDirectory/jdk
   installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
   echo "Installation File :"$installation_file
   echo $installation_path"/"$installation_file
@@ -25,12 +33,14 @@ start_data_validation_file="start_data_validation.sh"
 stop_data_validation_file="stop_data_validation.sh"
 data_validation_service_file="odsxdatavalidation.service"
 
+cp $sourceDvServerJar $home_dir/install/data-validation/
+
 # start data validation service
 source setenv.sh
-cmd="nohup java -jar $home_dir/install/data-validation/data-validator-0.0.1-SNAPSHOT.jar &"
+cmd="java -jar $home_dir/install/data-validation/data-validator-server-0.0.1-SNAPSHOT.jar"
 echo "$cmd">>$start_data_validation_file
 # stop data validation service
-cmd="nohup pkill -9 -f data-validator-0.0.1-SNAPSHOT.jar  &"
+cmd="pkill -9 -f data-validator-0.0.1-SNAPSHOT.jar"
 echo "$cmd">>$stop_data_validation_file
 
 home_dir_sh=$(pwd)
@@ -45,4 +55,5 @@ mv /tmp/st*_data_validation.sh /usr/local/bin/
 chmod +x /usr/local/bin/st*_data_validation.sh
 
 mv /tmp/$data_validation_service_file /etc/systemd/system/
+
 
