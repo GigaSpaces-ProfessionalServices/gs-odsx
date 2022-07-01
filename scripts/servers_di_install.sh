@@ -238,7 +238,7 @@ if [[ $installtelegrafFlag == "y" ]]; then
   echo "Installing Telegraf"
   installation_path=$sourceInstallerDirectory/telegraf
   echo "InstallationPath :"$installation_path
-  installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
+  installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
   echo "Installation File :"$installation_file
   echo $installation_path"/"$installation_file
   yum install -y $installation_path"/"$installation_file

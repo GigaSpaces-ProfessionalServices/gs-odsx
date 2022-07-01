@@ -143,6 +143,7 @@ def proceedForEnvHostConfiguration(sourceNbConfFile,flag):
         lines = update_app_config_file_shared("grafana_servers=".upper(), validateAndConfigureGrafana(), lines,sourceNbConfFile,flag)
         lines = update_app_config_file_shared("gridui_servers=".upper(), getNBOPSManagerHostFromEnv(), lines,sourceNbConfFile,flag)
         lines = update_app_config_file_shared("opsmanager_servers=".upper(), getNBOPSManagerHostFromEnv(), lines,sourceNbConfFile,flag)
+        lines = update_app_config_file_shared("pivot_servers=".upper(), str(os.getenv('pivot1')), lines,sourceNbConfFile,flag)
     update_app_config_file_shared("CONSUL_REPLICA_NUMBER=".upper(), str(len(getNBApplicativeHostFromEnv().split(","))), lines,sourceNbConfFile,flag)
 
 def displayInputParam(nbConfig):
@@ -157,6 +158,7 @@ def displayInputParam(nbConfig):
     print(str("GRIDUI_SERVERS= "+nbConfig.get("GRIDUI_SERVERS")).replace('"',''))
     print(str("OPSMANAGER_SERVERS= "+nbConfig.get("OPSMANAGER_SERVERS")).replace('"',''))
     print(str("GRAFANA_SERVERS= "+nbConfig.get("GRAFANA_SERVERS")).replace('"',''))
+    print(str("PIVOT_SERVERS= "+nbConfig.get("PIVOT_SERVERS")).replace('"',''))
 
 def summaryForApplicativeInstallation():
     nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf"

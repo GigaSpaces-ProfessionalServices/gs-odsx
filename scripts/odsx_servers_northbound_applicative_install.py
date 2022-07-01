@@ -139,6 +139,7 @@ def proceedForEnvHostConfiguration(sourceNbConfFile,flag):
     #update_app_config_file_shared(linePatternToReplace, value, lines1,fileName)
     lines = update_app_config_file_shared("consul_servers=".upper(), getNBApplicativeHostFromEnv(), None,sourceNbConfFile,flag)
     lines = update_app_config_file_shared("influxdb_servers=".upper(), validateAndConfigureInfluxdb(), lines,sourceNbConfFile,flag)
+    lines = update_app_config_file_shared("pivot_servers=".upper(), str(os.getenv('pivot1')), lines,sourceNbConfFile,flag)
     update_app_config_file_shared("CONSUL_REPLICA_NUMBER=".upper(), str(len(getNBApplicativeHostFromEnv().split(","))), lines,sourceNbConfFile,flag)
 
 def displayInputParam(nbConfig):
@@ -153,6 +154,7 @@ def displayInputParam(nbConfig):
     print(str("GRIDUI_SERVERS= "+nbConfig.get("GRIDUI_SERVERS")).replace('"',''))
     print(str("OPSMANAGER_SERVERS= "+nbConfig.get("OPSMANAGER_SERVERS")).replace('"',''))
     print(str("GRAFANA_SERVERS= "+nbConfig.get("GRAFANA_SERVERS")).replace('"',''))
+    print(str("PIVOT_SERVERS= "+nbConfig.get("PIVOT_SERVERS")).replace('"',''))
 
 def summaryForApplicativeInstallation():
     nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf"

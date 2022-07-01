@@ -1,4 +1,4 @@
-source /dbagiga/setenv.sh
+#source /dbagiga/setenv.sh
 
 systemctl stop odsxkafka.service
 sleep 2
