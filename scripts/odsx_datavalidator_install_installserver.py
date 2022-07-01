@@ -152,7 +152,7 @@ def buildUploadInstallTarToServer(host):
     try:
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
-            scp_upload(host, user, 'install/install.tar', '/home/gsods')
+            scp_upload(host, user, 'install/install.tar', targetInstallDir)
     except Exception as e:
         handleException(e)
 

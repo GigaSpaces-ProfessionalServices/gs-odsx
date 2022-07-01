@@ -34,7 +34,7 @@ stop_data_validation_file="stop_data_validation.sh"
 data_validation_service_file="odsxdatavalidation.service"
 
 #Replace keytab path according to agent machine
-sed -i '/keyTab/c\keyTab=\'$home_dir'"/UTKA02E.keytab\"' $home_dir/SQLJDBCDriver.conf
+#sed -i '/keyTab/c\keyTab=\'$home_dir'"/UTKA02E.keytab\"' $home_dir/SQLJDBCDriver.conf
 
 cp $sourceDvServerJar $home_dir/install/data-validation/
 
