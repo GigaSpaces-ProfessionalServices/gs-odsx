@@ -64,12 +64,15 @@ def displayMainMenu(menu,currentMenu):
     #Dsisplay Tree stucture
     print(defaultMenu.upper().replace('_',' -> '))
     print('\n')
+    env = str(readValuefromAppConfig("app.setup.env"))
     if path.exists('csv/'+defaultMenu+'.csv'):
         with open('csv/'+defaultMenu+'.csv','r') as menuFile:
             reader = csv.reader(menuFile, delimiter=",")
             stringRow =""
             for row in reader:
                 stringRow+= str(row)
+            if env=='dr':  # FOR DR envirounment DI is not applicable
+                stringRow = stringRow.replace(" 'DI',","")
             stringRow =stringRow.replace('[',' ').replace('\'','').replace(']','')
             splittedRow = stringRow.split(',')
             #print(splittedRow[0])
