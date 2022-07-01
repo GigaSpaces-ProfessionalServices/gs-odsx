@@ -56,12 +56,15 @@ class obj_type_dictionary(dict):
 def getDIServerHostList():
     nodeList = config_get_dataIntegration_nodes()
     nodes = ""
+    count=0  # Only 3 Kafka host we will configure
     for node in nodeList:
         # if(str(node.role).casefold() == 'server'):
-        if (len(nodes) == 0):
-            nodes = os.getenv(node.ip)
-        else:
-            nodes = nodes + ',' + os.getenv(node.ip)
+        if count <3:
+            if (len(nodes) == 0):
+                nodes = os.getenv(node.ip)
+            else:
+                nodes = nodes + ',' + os.getenv(node.ip)
+        count=count+1
     return nodes
 
 

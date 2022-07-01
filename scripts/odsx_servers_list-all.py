@@ -2,6 +2,7 @@
 
 import os.path,  argparse, sys, subprocess
 from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from colorama import Fore
 from utils.ods_validation import getSpaceServerStatus
@@ -247,23 +248,24 @@ def listAllServers():
                    Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                    Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
         data.append(dataArray)
+    env = str(readValuefromAppConfig("app.setup.env"))
+    if env != "dr":
+        logger.info("DI servers list")
+        dIServers = config_get_dataIntegration_nodes()
+        counter=1
+        for node in dIServers:
+            count=count+1
+            host_dict_obj.add(str(counter),str(node.ip))
+            output = getConsolidatedStatus(node,str(node.type))
+            installStatus = isInstalledNot(os.getenv(node.ip),str(node.type))
+            dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                       Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
+                       Fore.GREEN+os.getenv(node.name)+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                       Fore.GREEN+"ON"+Fore.RESET if(output==0) else Fore.RED+"OFF"+Fore.RESET]
 
-    logger.info("DI servers list")
-    dIServers = config_get_dataIntegration_nodes()
-    counter=1
-    for node in dIServers:
-        count=count+1
-        host_dict_obj.add(str(counter),str(node.ip))
-        output = getConsolidatedStatus(node,str(node.type))
-        installStatus = isInstalledNot(os.getenv(node.ip),str(node.type))
-        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                   Fore.GREEN+str(node.role)+" "+str(node.type)+Fore.RESET,
-                   Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-                   Fore.GREEN+"ON"+Fore.RESET if(output==0) else Fore.RED+"OFF"+Fore.RESET]
-
-        data.append(dataArray)
-        counter=counter+1
+            data.append(dataArray)
+            counter=counter+1
     printTabular(None,headers,data)
 
 if __name__ == '__main__':
