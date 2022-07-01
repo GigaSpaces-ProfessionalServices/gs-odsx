@@ -8,6 +8,7 @@
        security -> jars -> cef [folder] ->CEFLogger-1.0-SNAPSHOT.jar
        security -> jars -> security jars
     - DataValidator section added
+    - grafana section added
  3. logging.config
     - Changed logging for odsx to -> /dbagigalogs/odsx.log
  4. app.config
@@ -15,6 +16,8 @@
         For security menu items keep 
             - app.setup.profile=security
             - app.security.menu=manager,space,tieredstorage,feeder,mq
+        For enable DR env 
+            - app.setup.env=dr  cuurently checked in as #dr to avoid 
         For Non security
             - app.setup.profile=
         - app.manager.cefXapLogging.target.file
@@ -24,7 +27,7 @@
     - changed:
         - app.dataengine.db2-feeder.writeBatchSize=4000
         - app.di.base.kafka.zk=/dbagigasoft/
-        - Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 to -Dcom.gs.manager.leader-election.zookeeper.session-timeout=300000
+        - Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 to -Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000
     - Removed:
         - app.space.jar.sourceFolder=/dbagiga
         - app.server.di.env=source /home/dbsh/setenv.sh;
@@ -69,4 +72,5 @@
   - Added Pivot host  
   - Added Data-Validation - Servers / aget 
 6. For Pivot machine create directory structure same as app.yaml file
-  - sudo mkdir -p /dbagigashare/current/data-validator/files /dbagigashare/current/data-validator/jars /dbagigashare/current/gs/jars/ts /dbagigashare/current/mq-connector/adabas/jars /dbagigashare/current/mq-connector/adabas/config /dbagigashare/current/mssql/files /dbagigashare/current/mq-connector /dbagigashare/current/security/jars/cef /dbagigashare/current/gs/config/logs/ /dbagigashare/current/gs/jars /dbagigashare/current/gs/config/ts /dbagigashare/current/odsx /dbagigashare/current/mssql/jars /dbagigashare/current/mssql/scripts /dbagigashare/current/db2/jars /dbagigashare/current/db2/scripts /dbagigashare/current/cr8 /dbagigashare/current/grafana /dbagigashare/current/influxdb /dbagigashare/current/gs /home/ec2-user/dbagigashare/gs/config /dbagigashare/current/jdk /dbagigashare/current/kafka /dbagigashare/current/nb /dbagigashare/current/nb/applicative/ssl /dbagigashare/current/nb/management/ssl /dbagigashare/current/sqlite /dbagigashare/current/security /dbagigashare/current/unzip /dbagigashare/current/zk /dbagigashare/current/telegraf
+  - sudo mkdir -p /dbagigashare/current/grafana/catalog/jars /dbagigashare/current/data-validator/files /dbagigashare/current/data-validator/jars /dbagigashare/current/gs/jars/ts /dbagigashare/current/mq-connector/adabas/jars /dbagigashare/current/mq-connector/adabas/config /dbagigashare/current/mssql/files /dbagigashare/current/mq-connector /dbagigashare/current/security/jars/cef /dbagigashare/current/gs/config/logs/ /dbagigashare/current/gs/jars /dbagigashare/current/gs/config/ts /dbagigashare/current/odsx /dbagigashare/current/mssql/jars /dbagigashare/current/mssql/scripts /dbagigashare/current/db2/jars /dbagigashare/current/db2/scripts /dbagigashare/current/cr8 /dbagigashare/current/grafana /dbagigashare/current/influxdb /dbagigashare/current/gs /home/ec2-user/dbagigashare/gs/config /dbagigashare/current/jdk /dbagigashare/current/kafka /dbagigashare/current/nb /dbagigashare/current/nb/applicative/ssl /dbagigashare/current/nb/management/ssl /dbagigashare/current/sqlite /dbagigashare/current/security /dbagigashare/current/unzip /dbagigashare/current/zk /dbagigashare/current/telegraf
+  
