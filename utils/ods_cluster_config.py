@@ -1362,6 +1362,11 @@ def discoverHostConfig():
                 os.environ[host]=str(v)
                 config_add_dataValidation_node(host, host,'DataValidation', 'agent')
                 dvHostCount+=1
+        if 'pivot' in content['servers']:
+            pivotHostCount=1
+            for host,v in content['servers']['pivot'].items():
+                host='pivot'+str(pivotHostCount)
+                os.environ[host]=str(v)
     except Exception as e:
         handleException(e)
 
