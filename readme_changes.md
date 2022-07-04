@@ -65,7 +65,7 @@
            -  GRIDUI_SERVERS=""
            -  OPSMANAGER_SERVERS=""
            -  GRAFANA_SERVERS="" 
-    - rename config/nb.conf to /dbagigashare/current/nb/applicative/nb.conf.template
+    - rename config/nb.conf to /dbagigashare/current/nb/management/nb.conf.template
            - For management required above three
 5. config/host.yaml
   - Removed Data Engine nodes section from host.yaml file because same installation as Data Integration
