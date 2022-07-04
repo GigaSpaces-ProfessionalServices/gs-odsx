@@ -5,7 +5,8 @@ from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder, \
+    readValueFromYaml
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
@@ -518,10 +519,10 @@ def copyFilesFromODSXToSpaceServer():
     logger.info("copyFilesFromODSXToSpaceServer()")
     ips = getSpaceNodeIps()
     logger.info("ips :"+str(ips))
-    tieredCriteriaConfigFilePathError = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath")).replace('"','')
+    tieredCriteriaConfigFilePathError = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.currentTs")).replace('"','')
     logger.info("tieredCriteriaConfigFilePathError : "+str(tieredCriteriaConfigFilePathError))
     tieredCriteriaConfigFilePath=""
-    tieredCriteriaConfigFilePathBck = str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup")).replace('"','')
+    tieredCriteriaConfigFilePathBck = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.previousTs")).replace('"','')
     logger.info("tieredCriteriaConfigFilePathBck : "+str(tieredCriteriaConfigFilePathBck))
     if(tieredCriteriaConfigFilePathBck.__contains__('.bck')):
         tieredCriteriaConfigFilePath = tieredCriteriaConfigFilePathBck.replace(".bck","")
@@ -536,7 +537,7 @@ def copyFilesFromODSXToSpaceServer():
     if(copyFile(ips, tieredCriteriaConfigFilePath, tieredCriteriaConfigFilePathTarget)):
         logger.info("File copied successfully.. taking backup of source file")
         #cmd = "cp "+str(tieredCriteriaConfigFilePath)+" "+str(tieredCriteriaConfigFilePath)
-        set_value_in_property_file('app.tieredstorage.criteria.filepath',str(tieredCriteriaConfigFilePath))
+        #set_value_in_property_file('app.tieredstorage.criteria.filepath',str(tieredCriteriaConfigFilePath))
         #status = os.system(cmd)
         #logger.info("status : "+str(status))
         #logger.info("mv status :"+str(status))
@@ -565,13 +566,13 @@ def listGSC(managerHost):
             logger.info("typeOfRestart : "+str(typeOfRestart))
             if(len(str(typeOfRestart))==0):
                 #confirmParamAndRestartGSC()
-                inputParams()
+                #inputParams()
                 confirmAndProceedForAll()
             elif(str(typeOfRestart)=='1'):
                 display='true'
                 listUpdatedGSCStatus(display)
             elif(str(typeOfRestart)=='2'):
-                inputParams()
+                #inputParams()
                 confirmAndProceedForIndividualRestartGSC()
             elif(str(typeOfRestart)=='99'):
                 return
@@ -593,14 +594,14 @@ if __name__ == '__main__':
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
                 global sourceFile
-                sourceFile = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath")).replace('"','')
+                sourceFile = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.currentTs")).replace('"','')
                 logger.info("sourceFile : "+str(sourceFile))
                 global backupCriteriaFile
-                backupCriteriaFile = str(readValuefromAppConfig("app.tieredstorage.criteria.filepathbackup.prev")).replace('"','')
+                backupCriteriaFile = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.previousTs")).replace('"','')
                 logger.info("backupFile : "+str(backupCriteriaFile))
                 if(Path(backupCriteriaFile).is_file()):
                     logger.info("File exist"+str(backupCriteriaFile))
-                    confirm = str(input(Fore.YELLOW+"Using "+str(backupCriteriaFile)+" for rolling instead of current "+str(sourceFile)+" please approve [y/n]"+Fore.RESET))
+                    confirm = str(input(Fore.YELLOW+"Using "+str(backupCriteriaFile)+" for rolling instead of current "+str(sourceFile)+" please approve [y/n] : "+Fore.RESET))
                     if(confirm=='y' or len(str(confirm))==0):
                         gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
                         logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))
