@@ -239,7 +239,7 @@ function installAirGapGS {
    echo "extracted_folder: "$extracted_folder
 
    #sudo -u 'root' -H sh -c "sed -i '/export GS_LICENSE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
-   sed -i '/export GS_LICENSE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   #sed -i '/export GS_LICENSE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
    #sudo -u 'root' -H sh -c "sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
    sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
    #sudo -u 'root' -H sh -c "sed -i '/export GS_LOGS_CONFIG_FILE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh"
@@ -258,13 +258,14 @@ function installAirGapGS {
 
    #sudo -u 'root' -H sh -c "cd /;echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh"
    echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
-   if [ $gsLicenseConfig == "tryme" ]; then
-    licenseConfig="export GS_LICENSE="$gsLicenseConfig
-   else
-    licenseConfig="export GS_LICENSE=""\"$gsLicenseConfig"\"
-   fi
+   #if [ $gsLicenseConfig == "tryme" ]; then
+   # licenseConfig="export GS_LICENSE="$gsLicenseConfig
+   #else
+   # licenseConfig="export GS_LICENSE=""\"$gsLicenseConfig"\"
+   #fi
    #sudo -u 'root' -H sh -c "cd /;echo  export GS_LICENSE='\"$gsLicenseConfig\"'>>$targetDir/$extracted_folder/bin/setenv-overrides.sh"
-   echo  $licenseConfig>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   #echo  $licenseConfig>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   cp -f $gsLicenseConfig $targetDir/$extracted_folder/
 
    hostCfg="export GS_MANAGER_SERVERS="$gs_clusterhosts
    #echo "hostCfg :"$hostCfg
