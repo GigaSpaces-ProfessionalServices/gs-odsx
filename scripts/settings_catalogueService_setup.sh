@@ -1,17 +1,20 @@
 #!/bin/bash
 echo "Consul host="$1
-catalogJar=$2
+serviceJarName=$2
 home_dir_sh=$(pwd)
 service_name='catalogue-service.service'
-serviceJarName=$catalogJar
+echo "serviceJarName:"$serviceJarName
 consul_host=$1
-log_location=$home_dir_sh/logs
-cp $home_dir_sh/systemServices/catalogue/$service_name /tmp/$service_name
-cp $serviceJarName  $home_dir_sh/systemServices/catalogue/
-serviceJar=$home_dir_sh/systemServices/catalogue/$serviceJarName
-serviceJar=$(readlink --canonicalize $serviceJar)
+log_location=/dbagigalogs/
 
-sed -i 's,$serviceJar,'$serviceJar',g' /tmp/$service_name
+cp $home_dir_sh/systemServices/catalogue/$service_name /tmp/$service_name
+cp $serviceJarName  /dbagiga/
+
+serviceJar=$(readlink --canonicalize $serviceJarName)
+base_name=$(basename ${serviceJar})
+echo "base_name"$base_name
+
+sed -i 's,$serviceJar,'/dbagiga/$base_name',g' /tmp/$service_name
 sed -i 's,$consul_host,'$consul_host',g' /tmp/$service_name
 sed -i 's,$log_location,'$log_location',g' /tmp/$service_name
 

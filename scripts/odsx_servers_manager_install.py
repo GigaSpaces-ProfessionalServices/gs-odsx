@@ -309,7 +309,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
         gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
 
-        licenseConfig = readValueByConfigObj("app.manager.license")
+        licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
         gsLicenseFile = str(readValuefromAppConfig("app.manager.license"))
         #str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+''+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
