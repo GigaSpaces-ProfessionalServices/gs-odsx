@@ -22,6 +22,8 @@ current:
       log:
         xap_logging: xap_logging.properties
       services: gsa.service
+      license:
+        gslicense: gs-license.txt
       ts:
         bck:
           currentTs: null
