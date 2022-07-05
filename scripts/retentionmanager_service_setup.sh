@@ -1,0 +1,48 @@
+#!/bin/bash
+home_dir_sh=$(pwd)
+service_name='retention-manager.service'
+serviceJarName='retention-manager.jar'
+log_location=/dbagigalogs/retenion-manager/
+space_name=$1
+manager_host=$2
+db_location=$3
+influxdb_host=$4
+scheduler_config=$5
+scheduler_interval=$6
+scheduler_minute=$7
+scheduler_hour=$8
+
+if [ ! -d "$log_location" ]; then
+  mkdir $log_location
+fi
+
+if [ ! -f "$db_location" ]; then
+    sudo mkdir /dbagigawork/sqlite
+    cp $home_dir_sh/systemServices/retentionManager/retention-manager.db /dbagigawork/sqlite/
+
+fi
+
+cp $home_dir_sh/systemServices/retentionManager/$service_name /tmp/$service_name
+
+serviceJar=$home_dir_sh/systemServices/retentionManager/$serviceJarName
+serviceJar=$(readlink --canonicalize $serviceJar)
+
+sed -i 's,$serviceJar,'$serviceJar',g' /tmp/$service_name
+sed -i 's,$db_location,'$db_location',g' /tmp/$service_name
+sed -i 's,$space_name,'$space_name',g' /tmp/$service_name
+sed -i 's,$manager_host,'$manager_host',g' /tmp/$service_name
+sed -i 's,$log_location,'$log_location',g' /tmp/$service_name
+sed -i 's,$influxdb_host,'$influxdb_host',g' /tmp/$service_name
+sed -i 's,$scheduler_minute,'$scheduler_minute',g' /tmp/$service_name
+sed -i 's,$scheduler_hour,'$scheduler_hour',g' /tmp/$service_name
+sed -i 's,$scheduler_config,'$scheduler_config',g' /tmp/$service_name
+sed -i 's,$scheduler_interval,'$scheduler_interval',g' /tmp/$service_name
+
+sudo mv -f /tmp/$service_name /etc/systemd/system/
+sudo systemctl daemon-reload
+sudo systemctl enable $service_name
+sudo systemctl start $service_name
+sudo sleep 10s
+sudo systemctl restart $service_name 
+
+#echo "Retention Manager service setup - Completed!."
