@@ -17,8 +17,11 @@ if [ ! -d "$log_location" ]; then
 fi
 
 if [ ! -f "$db_location" ]; then
-    sudo mkdir /dbagigawork/sqlite
-    cp $home_dir_sh/systemServices/retentionManager/retention-manager.db /dbagigawork/sqlite/
+  if [ ! -d "/dbagigawork/sqlite" ]; then
+    mkdir /dbagigawork/sqlite
+  fi
+  
+  sudo cp $home_dir_sh/systemServices/retentionManager/retention-manager.db /dbagigawork/sqlite/
 
 fi
 
