@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import signal
 import sys
 
 from utils.ods_app_config import getYamlFilePathInsideFolder
+from utils.ods_cleanup import signal_handler
 from utils.ods_scp import scp_upload
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
@@ -225,6 +227,7 @@ def uploadDashboadProvisionFile(host):
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Settings -> CatalogueService -> Setup")
     args = []
+    signal.signal(signal.SIGINT, signal_handler)
     args = myCheckArg()
     setupService()
     setupGrafanaDashboard()

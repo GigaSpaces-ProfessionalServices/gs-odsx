@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 
 import os, socket
+import signal
 import subprocess,shlex
 from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file
+from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -114,6 +116,7 @@ def getInputParam():
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Utilities -> Rebalancing -> Apply')
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         nodeList = config_get_manager_node()
         if(len(str(nodeList))>0):

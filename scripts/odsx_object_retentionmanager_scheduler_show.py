@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import signal
 import sys
+
+from utils.ods_cleanup import signal_handler
 from utils.ods_scp import scp_upload
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
@@ -37,5 +40,6 @@ def showScheduleInterval():
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("MENU -> Object -> Retention Manager -> Scheduler -> Show")
+    signal.signal(signal.SIGINT, signal_handler)
     showScheduleInterval()
     

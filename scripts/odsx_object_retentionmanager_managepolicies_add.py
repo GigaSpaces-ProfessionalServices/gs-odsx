@@ -2,12 +2,14 @@
 import argparse
 import json
 import os
+import signal
 import sys
 import re
 from colorama import Fore
 import requests
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_cleanup import signal_handler
 from utils.ods_ssh import executeLocalCommandAndGetOutput
 from utils.odsx_retentionmanager_utilities import validateObjectType, validateRetentionPolicy,getLocalHostName
 
@@ -103,7 +105,7 @@ def displaySummary(object_type,retention_period,contraintField):
 if __name__ == '__main__':
     logger.info("MENU -> Retention Manager -> Manage Retention Policy -> Add")
     verboseHandle.printConsoleWarning("MENU -> Object ->Retention Manager -> Manage Policy -> Add")
-    
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         # with Spinner():
         addRetentionPolicy()

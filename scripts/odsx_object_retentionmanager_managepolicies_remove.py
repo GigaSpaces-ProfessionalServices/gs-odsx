@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 import json
 import os
+import signal
 import sys
 import re
 from colorama import Fore
 import requests
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_cleanup import signal_handler
 from utils.ods_ssh import executeLocalCommandAndGetOutput
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_retentionmanager_utilities import validateRetentionPolicy,getLocalHostName
@@ -130,8 +132,8 @@ def editRetentionPolicy():
 if __name__ == '__main__':
     logger.info("MENU -> Retention Manager -> Manage Retention Policy -> Edit")
     verboseHandle.printConsoleWarning("MENU -> Object -> Retention Manager -> Manage Policies -> Remove")
-    
     try:
+        signal.signal(signal.SIGINT, signal_handler)
         # with Spinner():
         editRetentionPolicy()
     except Exception as e:

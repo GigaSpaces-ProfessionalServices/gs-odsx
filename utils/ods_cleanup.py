@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-import os
+import os,sys
 from utils.ods_cluster_config import get_cluster_obj, ClusterEncoder, config_get_grafana_node, config_get_influxdb_node
 from utils.ods_app_config import set_value_in_property_file
 from scripts.logManager import LogManager
@@ -172,6 +172,9 @@ def cleanUp():
     elif(answer.lower() == "c"):
         return
 
+def signal_handler(sig, frame):
+    print('\n\nOperation aborted by user!\n')
+    sys.exit(0)
 
 
 if __name__ == '__main__':

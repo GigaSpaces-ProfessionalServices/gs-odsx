@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 import os, time
+import signal
+
 from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
+
+from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
@@ -353,6 +357,7 @@ def removeGSC(managerHost):
 if __name__ == '__main__':
     logger.info("odsx_tieredstorage_undeploy")
     verboseHandle.printConsoleWarning("Menu -> TieredStorage -> Undeploy")
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):

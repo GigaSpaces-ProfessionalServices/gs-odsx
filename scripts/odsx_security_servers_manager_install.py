@@ -1,11 +1,13 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform,socket
+import os, subprocess, sys, argparse, platform,socket,signal
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder
 from colorama import Fore
+
+from utils.ods_cleanup import signal_handler
 from utils.ods_scp import scp_upload,scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
@@ -534,6 +536,7 @@ if __name__ == '__main__':
     #print('Len : ',len(sys.argv))
     #print('Flag : ',sys.argv[0])
     args.append(sys.argv[0])
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         isValidRPMs = validateRPMS()
         if(isValidRPMs):

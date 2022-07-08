@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import signal
 import sys
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_cleanup import signal_handler
 from utils.ods_ssh import executeLocalCommandAndGetOutput
 from colorama import Fore
 
@@ -58,4 +60,5 @@ def stopService():
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Object -> RetentionManager -> Service -> Disable")
+    signal.signal(signal.SIGINT, signal_handler)
     stopService()
