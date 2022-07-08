@@ -1,0 +1,15 @@
+[Unit]
+Description=Retention Manager
+After=network.target
+
+[Service]
+User=root
+Type=simple
+ExecStart=/usr/bin/java -jar $serviceJar --db.location=$db_location --log.location=$log_location --space.name=$space_name --scheduler.config=$scheduler_config --scheduler.interval=$scheduler_interval --scheduler.minute=$scheduler_minute --scheduler.hour=$scheduler_hour --manager.host=$manager_host --influxdb_host=$influxdb_host
+SuccessExitStatus=143
+Restart=always
+RestartSec=30
+
+
+[Install] 
+WantedBy=multi-user.target

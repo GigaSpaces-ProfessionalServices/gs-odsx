@@ -124,8 +124,11 @@ def displayMainMenu(menu,currentMenu):
         menuItems = str(readValuefromAppConfig("app.security.menu"))
         if profile=='security':
             for menu in menuItems.split(','):
-                if defaultMenu.__contains__(menu):
+                #skip for retention manager
+                menu = str(menu).strip()
+                if not(defaultMenu.__contains__('retentionmanager')) and defaultMenu.__contains__(menu):
                     scriptMenu = defaultMenu.replace('menu','odsx_security')
+
         #print(scriptsFolder+'/'+scriptMenu+'.py')
         logger.info("Finding file to execute selected command: "+scriptsFolder+'/'+scriptMenu+'.py')
         menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
