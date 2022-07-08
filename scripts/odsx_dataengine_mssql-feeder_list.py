@@ -3,6 +3,7 @@
 import os, time, requests,json, subprocess, sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
+from utils.ods_app_config import readValueByConfigObj
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
@@ -65,6 +66,9 @@ def listDeployed(managerHost):
     logger.info("listDeployed()")
     global gs_space_dictionary_obj
     try:
+        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        cnx = sqlite3.connect(db_file)
+
         logger.info("managerHost :"+str(managerHost))
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
@@ -98,9 +102,16 @@ def listDeployed(managerHost):
                              Fore.GREEN+str(queryStatus)+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
+                logger.info("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                mycursor = cnx.execute("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                logger.info("query result:"+str(mycursor.rowcount))
+
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
+        cnx.commit()
+        cnx.close()
+
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:
