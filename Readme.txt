@@ -4,6 +4,8 @@ C
 III
 For  Initial Setup :
 --------------------
+ > Create NFS shared directory in AWS
+ > sudo mkdir -p /dbagigashare/current/gs/jars/retention /dbagigashare/current/grafana/catalog/jars /dbagigashare/current/data-validator/files /dbagigashare/current/data-validator/jars /dbagigashare/current/gs/jars/ts /dbagigashare/current/mq-connector/adabas/jars /dbagigashare/current/mq-connector/adabas/config /dbagigashare/current/mssql/files /dbagigashare/current/mq-connector /dbagigashare/current/security/jars/cef /dbagigashare/current/gs/config/logs/ /dbagigashare/current/gs/jars /dbagigashare/current/gs/config/ts /dbagigashare/current/odsx /dbagigashare/current/mssql/jars /dbagigashare/current/mssql/scripts /dbagigashare/current/db2/jars /dbagigashare/current/db2/scripts /dbagigashare/current/cr8 /dbagigashare/current/grafana /dbagigashare/current/influxdb /dbagigashare/current/gs /home/ec2-user/dbagigashare/gs/config /dbagigashare/current/jdk /dbagigashare/current/kafka /dbagigashare/current/nb /dbagigashare/current/nb/applicative/ssl /dbagigashare/current/nb/management/ssl /dbagigashare/current/sqlite /dbagigashare/current/security /dbagigashare/current/unzip /dbagigashare/current/zk /dbagigashare/current/telegraf
  > Untar file in home directory or download from https://github.com/GigaSpaces-ProfessionalServices/odsx-Bank-Leumi
  > cd odsx-Bank-Leumi/scripts
   This will start installing required libraries
