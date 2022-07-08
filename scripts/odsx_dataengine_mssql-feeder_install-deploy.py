@@ -253,7 +253,7 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
         cmd = "sudo cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
-        print(cmd)
+        #print(cmd)
     else:
         cmd = "cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
     logger.info("cmd : "+str(cmd))
