@@ -1,8 +1,11 @@
 #!/usr/bin/env python3
 
 import os.path,  argparse, sys, subprocess
+import signal
+
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_manager_node
 from colorama import Fore
 from utils.ods_validation import getSpaceServerStatus
@@ -270,6 +273,7 @@ def listAllServers():
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> List-All')
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         listAllServers()
     except Exception as e:

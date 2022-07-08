@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 
 import os, time
+import signal
+
 from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
+
+from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueFromYaml, \
     getYamlFilePathInsideFolder, set_value_yaml_config
@@ -595,6 +599,7 @@ if __name__ == '__main__':
     logger.info("Menu -> TieredStorage -> Deploy")
     #loggerTiered.info("Deploy")
     verboseHandle.printConsoleWarning("Menu -> TieredStorage -> Deploy")
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))

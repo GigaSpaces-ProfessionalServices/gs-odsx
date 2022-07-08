@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import signal
 import subprocess
 
 from colorama import Fore
@@ -8,6 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_add_dataIntegration_node, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -271,6 +273,7 @@ def validateRPM():
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> DI -> Install')
     sourceInstallerDirectory=""
+    signal.signal(signal.SIGINT, signal_handler)
     try:
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         if (validateRPM()):

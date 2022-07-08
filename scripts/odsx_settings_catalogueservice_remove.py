@@ -1,7 +1,10 @@
 #!/usr/bin/env python3
 import argparse
 import os
+import signal
 import sys
+
+from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_grafana_list,config_get_nb_list
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
 from utils.ods_scp import scp_upload
@@ -136,5 +139,6 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Settings -> CatalogueService -> Remove")
     args = []
     args = myCheckArg()
+    signal.signal(signal.SIGINT, signal_handler)
     removeService()
     removeGrafanaDashboard()
