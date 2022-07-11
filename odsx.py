@@ -4,10 +4,12 @@
 import getopt, sys
 import csv
 import os.path
+import signal
 from os import path
 import  pyfiglet
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import discoverHostConfig
 ###############################
 # For autocomplete
@@ -247,6 +249,7 @@ def main(**args):
 if __name__== "__main__":
   parser = ap.ArgumentParser()
   subparser = parser.add_subparsers()
+  signal.signal(signal.SIGINT, signal_handler)
   profile=str(readValuefromAppConfig("app.setup.profile"))
   #print("profile="+profile)
   logger.info("Profile :"+str(profile))
