@@ -164,7 +164,7 @@ def showAndSelectOption():
 
 if __name__ == '__main__':
     logger.info("odsx_utilities_cleandirectories_manager")
-    verboseHandle.printConsoleWarning("Menu -> Utilitites -> Clean Directories")
+    verboseHandle.printConsoleWarning("Menu -> Utilities -> Clean Directories")
     try:
 
         optionSelected = showAndSelectOption()

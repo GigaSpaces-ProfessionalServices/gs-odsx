@@ -232,7 +232,14 @@ def main(**args):
             #print('Remaining Command: ',cmdlist)
             args = str(cmdlist)
             args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-            #print(args)
+            menuItems = str(readValuefromAppConfig("app.security.menu"))
+            if profile=='security':
+                for menu in menuItems.split(','):
+                    #skip for retention manager
+                    menu = str(menu).strip()
+                    if not(initialFileName.__contains__('retentionmanager')) and initialFileName.__contains__(menu):
+                        initialFileName = initialFileName.replace('odsx','odsx_security')
+            print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
             try:
                 if(path.exists(scriptsFolder+'/'+initialFileName)):
                     #print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)

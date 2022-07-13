@@ -29,7 +29,7 @@ rm -rf $GS_HOME
 rm -rf setenv.sh gs install install.tar /dbagiga/giga* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
 find /dbagigalogs -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete
 cd /dbagiga
-rm -f gigaspaces-smart-ods
+rm -f gigaspaces-smart-ods /dbagiga/gs_config/metrics.xml
 echo "Remove symlink done!"
 systemctl daemon-reload
 sed -i '/hard nofile/d' /etc/security/limits.conf

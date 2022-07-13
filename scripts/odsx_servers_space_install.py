@@ -3,6 +3,7 @@
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform,socket
 from scripts.logManager import LogManager
+from scripts.odsx_security_servers_space_install import configureMetricsXML
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder
@@ -396,6 +397,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
                         scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
                         scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                        configureMetricsXML(host)
                     serverHost=''
                     try:
                         serverHost = socket.gethostbyaddr(host).__getitem__(0)

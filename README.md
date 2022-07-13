@@ -1,11 +1,42 @@
 # <u>ODSX (Bank Leumi)</u>
 
 ### <u>Environment setup</u>
-
+  - In AWS go to EFS -> create -> 
+  - Make sure security group is same for EFS and EC2 user
+  - For Pivot machine create directory structure same as app.yaml file
+      - sudo mkdir -p /dbagigashare/current/gs/config/space /dbagigashare/current/gs/config/metrics /dbagigashare/current/gs/jars/space /dbagigashare/current/gs/config/license /dbagigashare/current/grafana/catalog/jars /dbagigashare/current/data-validator/files /dbagigashare/current/data-validator/jars /dbagigashare/current/gs/jars/ts /dbagigashare/current/mq-connector/adabas/jars /dbagigashare/current/mq-connector/adabas/config /dbagigashare/current/mssql/files /dbagigashare/current/mq-connector /dbagigashare/current/security/jars/cef /dbagigashare/current/gs/config/logs/ /dbagigashare/current/gs/jars /dbagigashare/current/gs/config/ts /dbagigashare/current/odsx /dbagigashare/current/mssql/jars /dbagigashare/current/mssql/scripts /dbagigashare/current/db2/jars /dbagigashare/current/db2/scripts /dbagigashare/current/cr8 /dbagigashare/current/grafana /dbagigashare/current/influxdb /dbagigashare/current/gs /home/ec2-user/dbagigashare/gs/config /dbagigashare/current/jdk /dbagigashare/current/kafka /dbagigashare/current/nb /dbagigashare/current/nb/applicative/ssl /dbagigashare/current/nb/management/ssl /dbagigashare/current/sqlite /dbagigashare/current/security /dbagigashare/current/unzip /dbagigashare/current/zk /dbagigashare/current/telegraf
+  - Go to EFS -> created EFS -> Click on Attach copy the command and point to /dbagigashare instead of efs
+  - Go to other machine create directory /dbagigashare,  install NFS and run same attach command to mount created shared directory /dbagigashare
   - Mount shared file location /dbagigashare/current in AWS with all installer servers (NFS).
 
-For Pivot machine create directory structure same as app.yaml file
-  - sudo mkdir -p /dbagigashare/current/gs/config/license /dbagigashare/current/grafana/catalog/jars /dbagigashare/current/data-validator/files /dbagigashare/current/data-validator/jars /dbagigashare/current/gs/jars/ts /dbagigashare/current/mq-connector/adabas/jars /dbagigashare/current/mq-connector/adabas/config /dbagigashare/current/mssql/files /dbagigashare/current/mq-connector /dbagigashare/current/security/jars/cef /dbagigashare/current/gs/config/logs/ /dbagigashare/current/gs/jars /dbagigashare/current/gs/config/ts /dbagigashare/current/odsx /dbagigashare/current/mssql/jars /dbagigashare/current/mssql/scripts /dbagigashare/current/db2/jars /dbagigashare/current/db2/scripts /dbagigashare/current/cr8 /dbagigashare/current/grafana /dbagigashare/current/influxdb /dbagigashare/current/gs /home/ec2-user/dbagigashare/gs/config /dbagigashare/current/jdk /dbagigashare/current/kafka /dbagigashare/current/nb /dbagigashare/current/nb/applicative/ssl /dbagigashare/current/nb/management/ssl /dbagigashare/current/sqlite /dbagigashare/current/security /dbagigashare/current/unzip /dbagigashare/current/zk /dbagigashare/current/telegraf
+### <u>ODSX Configuration setup</u>
+  - Copy app.config, host.yaml, app.yaml files into /dbagigashare/current/odsx/
+  - If you are on AWS EC2 then modify flag cluster.usingPemFile=True
+  - Uncomment or add your pem file cluster.pemFile=
+  - Security : app.setup.profile=security  if you want to do secure setup
+            - For unsecure installation : app.setup.profile= (keep blank)
+  - If you are on DR envirounment app.setup.env=#dr (remove #) app.setup.env=dr
+
+### <u>ODSX Configuration security setup</u>
+  - app.config : app.setup.profile=security
+  - After security installation of Manager, Space servers go to /dbagiga/gigaspaces-smart-ods/config/security/security.properties Make sure below configuration is present
+    - com.gs.security.security-manager.class=com.gigaspaces.security.spring.SpringSecurityManager
+      spring-security-config-location=../config/security/security-config.xml
+  - Go to respected scripts files and mention user / password = gs-admin (ONLY FOR AWS EC2 these changes shold not committed) 
+     Example : odsx_security_servers_manager_list.py
+        username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+        password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+
+### <u>ODSX Configuration new host / supporting jar setup</u>
+  - To add new host Example : 2 space servers but need to add 4 then
+  - host.yaml -> add entries host1,host2 ... host4 and mention the respected IP / hostname
+  - app.yaml maintain the supporting jars in yaml configuration
+     Example : 
+     gs:
+         config:
+           log:
+             xap_logging: xap_logging.properties
+                
 
 ### <u>Installation</u>
 

@@ -3,6 +3,7 @@
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform,socket,signal
 from scripts.logManager import LogManager
+from scripts.odsx_security_servers_space_install import configureMetricsXML
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder
 from colorama import Fore
@@ -471,6 +472,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
                     scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
                     scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
+                    configureMetricsXML(host)
                 serverHost=''
                 try:
                     serverHost = socket.gethostbyaddr(host).__getitem__(0)
@@ -535,44 +537,25 @@ if __name__ == '__main__':
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     #print('Len : ',len(sys.argv))
     #print('Flag : ',sys.argv[0])
+
     args.append(sys.argv[0])
     signal.signal(signal.SIGINT, signal_handler)
     try:
         isValidRPMs = validateRPMS()
         if(isValidRPMs):
-            if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-                arguments = myCheckArg(sys.argv[1:])
-                if(arguments.dryrun==True):
-                    current_os = platform.system().lower()
-                    logger.debug("Current OS:"+str(current_os))
-                    if current_os == "windows":
-                        parameter = "-n"
-                    else:
-                        parameter = "-c"
-                    exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                    if(exit_code == 0):
-                        verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                        logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                    else:
-                        verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                        logger.debug("Unable to connect to server.:"+arguments.host)
-                    quit()
-                for arg in sys.argv[1:]:
-                    args.append(arg)
-               # print('install :',args)
-            elif(sys.argv[1]==menuDrivenFlag):
-                args.append(menuDrivenFlag)
-                #host = str(input("Enter your host: "))
-                #args.append('--host')
-                #args.append(host)
-                #user = readValuefromAppConfig("app.server.user")
-                #user = str(input("Enter your user [root]: "))
-                user='root'
-                if(len(str(user))==0):
-                    user="root"
-                args.append('-u')
-                args.append(user)
-            hostsConfig = readValuefromAppConfig("app.manager.hosts")
+
+            args.append(menuDrivenFlag)
+            #host = str(input("Enter your host: "))
+            #args.append('--host')
+            #args.append(host)
+            #user = readValuefromAppConfig("app.server.user")
+            #user = str(input("Enter your user [root]: "))
+            user='root'
+            if(len(str(user))==0):
+                user="root"
+            args.append('-u')
+            args.append(user)
+            hostsConfig = getManagerHostFromEnv()
             args.append('--id')
             hostsConfig=getHostConfiguration()
             args = str(args)
