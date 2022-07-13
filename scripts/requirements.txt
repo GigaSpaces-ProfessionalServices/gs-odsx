@@ -7,3 +7,4 @@ ConfigObj
 pandas
 tabulate
 requests
+pyyaml
