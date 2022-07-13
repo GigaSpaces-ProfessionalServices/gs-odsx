@@ -309,10 +309,11 @@ function installAirGapGS {
      cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
    fi
    #sudo -u 'root' -H sh -c "cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir"
-   if [ ! -f "$targetConfigDir/metrics.xml" ]; then                #Condition added on 20Oct21 if file exist dont override it
-    echo "File $targetConfigDir/metrics.xml not exist so copying"
-    cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
-   fi
+   #if [ ! -f "$targetConfigDir/metrics.xml" ]; then                #Condition added on 20Oct21 if file exist dont override it
+   # echo "File $targetConfigDir/metrics.xml not exist so copying"
+   # cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
+   #fi
+   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
 
    limitContent="$applicativeUser hard nofile "$nofileLimitFile
    limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile

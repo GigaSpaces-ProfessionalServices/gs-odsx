@@ -86,51 +86,11 @@ if __name__ == '__main__':
                         else:
                             exitAndDisplay(isMenuDriven)
                     elif(choice.casefold()=='yes' or choice.casefold()=='y'):
-                        if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-                            arguments = myCheckArg(sys.argv[1:])
-                            if(arguments.dryrun==True):
-                                current_os = platform.system().lower()
-                                logger.debug("Current OS:"+str(current_os))
-                                if current_os == "windows":
-                                    parameter = "-n"
-                                else:
-                                    parameter = "-c"
-                                exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                                if(exit_code == 0):
-                                    verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                                    logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                                else:
-                                    verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                                    logger.debug("Unable to connect to server."+arguments.host)
-                                try:
-                                    exit_code = executeRemoteShCommandAndGetOutput(arguments.host, arguments.user, '', 'utils/java_check.sh')
-                                    if(str(exit_code).__contains__('javac')):
-                                        verboseHandle.printConsoleInfo("Java Installed.")
-                                    else:
-                                        verboseHandle.printConsoleInfo("Java not found.")
-                                except Exception as e:
-                                    verboseHandle.printConsoleInfo("Java not found.")
-                                try:
-                                    exit_code = executeRemoteShCommandAndGetOutput(arguments.host, arguments.user, '', 'utils/gs_check.sh')
-                                    if(len(str(exit_code)) > 6):
-                                        verboseHandle.printConsoleInfo("Gigaspace Installed.")
-                                    else:
-                                        verboseHandle.printConsoleInfo("Gigaspace not found.")
-                                except Exception as e:
-                                    verboseHandle.printConsoleInfo("Gigaspace not found.")
-                                quit()
-
-                            for arg in sys.argv[1:]:
-                                args.append(arg)
-                            #print('install :',args)
-                            args = str(args)
-                            logger.debug('Arguments :'+args)
-                        elif(sys.argv[1]==menuDrivenFlag):
-                            args.append(menuDrivenFlag)
-                            args.append('--host')
-                            args.append(os.getenv(spaceStart.ip))
-                            args.append('-u')
-                            args.append(user)
+                        args.append(menuDrivenFlag)
+                        args.append('--host')
+                        args.append(os.getenv(spaceStart.ip))
+                        args.append('-u')
+                        args.append(user)
                         args = str(args)
                         #print('args',args)
                         #logger.info('Menu driven flag :'+menuDrivenFlag)

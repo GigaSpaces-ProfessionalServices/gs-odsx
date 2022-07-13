@@ -59,7 +59,7 @@ def handleException(e):
 
 def execute_scriptBuilder(host):
     logger.info("execute_scriptBuilder(args)")
-    commandToExecute="scripts/servers_manager_remove.sh"
+    commandToExecute="scripts/security_manager_remove.sh"
 
     additionalParam = removeJava+' '+removeUnzip
     logger.info("additionalParam : "+str(additionalParam))
@@ -68,7 +68,7 @@ def execute_scriptBuilder(host):
         outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
         print(outputShFile)
         logger.info("Output : scripts/security_manager_remove.sh :"+str(outputShFile))
-        config_remove_manager_nodeByIP(host)
+        #config_remove_manager_nodeByIP(host)
         logger.debug(str(host)+" has been removed.")
         verboseHandle.printConsoleInfo(str(host)+" has been removed.")
 
@@ -95,52 +95,7 @@ if __name__ == '__main__':
     if(len(str(hostsConfig))>0):
         verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
     hostConfiguration = str(input(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove current Configuration. \nPress [99] for exit.: "+Fore.RESET))
-    logger.info("hostConfiguration"+str(hostConfiguration))
-
     try:
-        if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-            arguments = myCheckArg(sys.argv[1:])
-            global removeJava
-            global removeUnzip
-            if(arguments.dryrun==True):
-                current_os = platform.system().lower()
-                logger.debug("Current OS:"+str(current_os))
-                if current_os == "windows":
-                    parameter = "-n"
-                else:
-                    parameter = "-c"
-                exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                if(exit_code == 0):
-                    verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                    logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                else:
-                    verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                    logger.debug("Unable to connect to server."+arguments.host)
-                #output = subprocess.check_output("ssh -i ps-share.pem ec2-user@18.188.147.174 bash -s  < utils/java_check.sh | grep f89e7000 | awk '{print $1}'", shell=True)
-                try:
-                    exit_code = executeRemoteShCommandAndGetOutput(arguments.host, arguments.user, '', 'utils/java_check.sh')
-                    if(str(exit_code).__contains__('javac')):
-                        verboseHandle.printConsoleInfo("Java Installed.")
-                except Exception as e:
-                    verboseHandle.printConsoleInfo("Java not found.")
-                try:
-                    exit_code = executeRemoteShCommandAndGetOutput(arguments.host, arguments.user, '', 'utils/gs_check.sh')
-                    logger.info("exit_code"+str(exit_code))
-                    if(len(str(exit_code)) > 6):
-                        verboseHandle.printConsoleInfo("Gigaspace Installed.")
-                    else:
-                        verboseHandle.printConsoleInfo("Gigaspace not found.")
-                except Exception as e:
-                    verboseHandle.printConsoleInfo("Gigaspace not found.")
-                quit()
-
-            for arg in sys.argv[1:]:
-                args.append(arg)
-            logger.info('args : :'+str(args))
-            args = str(args)
-            logger.debug('Arguments :'+args)
-            execute_scriptBuilder(args)
-        elif(sys.argv[1]==menuDrivenFlag):
             logger.info("Menudriven..")
             args.append(menuDrivenFlag)
             if(hostConfiguration=='1'):
@@ -160,7 +115,7 @@ if __name__ == '__main__':
                 if(confirm=='yes' or confirm=='y'):
                     managerStart = managerDict.get(int(optionMenu))
                     args.append('--host')
-                    args.append(str(managerStart.ip))
+                    args.append(str(os.getenv(managerStart.ip)))
                     #userConfig = readValuefromAppConfig("app.server.user")
                     #user = str(input("Enter your user [root]: "))
                     #if(len(str(user))==0):
@@ -171,10 +126,10 @@ if __name__ == '__main__':
                     args.append('-u')
                     args.append(user)
                     args.append('--id')
-                    args.append(str(managerStart.ip))
+                    args.append(str(os.getenv(managerStart.ip)))
                     args.append(removeJava)
                     args.append(removeUnzip)
-                    execute_scriptBuilder(str(managerStart.ip))
+                    execute_scriptBuilder(str(os.getenv(managerStart.ip)))
                 elif(confirm =='no' or confirm=='n'):
                     if(menuDrivenFlag=='m'):
                         logger.info("menudriven")
