@@ -24,6 +24,10 @@ current:
       services: gsa.service
       license:
         gslicense: gs-license.txt
+      metrics:
+        metricsxml: metrics.xml.template
+      space:
+        spacepropertyfile: space.properties
       ts:
         bck:
           currentTs: null
@@ -35,6 +39,8 @@ current:
         tieredStorageBuild: bll-0.1.jar
       retention:
         retentionjar: retention-manager.jar
+      space:
+        spacejar: space-0.1.jar
   kafka:
     jolokiaJar: jolokia-agent.jar
   mq-connector:
@@ -53,6 +59,11 @@ current:
     jars:
       mssqlJarFile: mssqlFeeder-1.0.0.jar
     scripts: null
+  object:
+    config:
+      ddlparser: tableList.txt
+    jars:
+      objectmanagementjar:
   security:
     config:
       ldapsourcefile: ldap-security-config.xml
