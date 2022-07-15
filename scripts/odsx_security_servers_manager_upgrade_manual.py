@@ -5,12 +5,9 @@ import argparse
 import json
 import os
 import sys
-
 import requests
 from colorama import Fore
-
 from scripts.logManager import LogManager
-from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
@@ -46,6 +43,14 @@ def myCheckArg(args=None):
                         default='false', action='store_true')
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
+def getManagerHostFromEnv():
+    logger.info("getManagerHostFromEnv()")
+    hosts = ''
+    managerNodes = config_get_manager_node()
+    for node in managerNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
 
 def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     headers = [Fore.YELLOW + "SrNo." + Fore.RESET,

@@ -239,7 +239,7 @@ def main(**args):
                     menu = str(menu).strip()
                     if not(initialFileName.__contains__('retentionmanager')) and initialFileName.__contains__(menu):
                         initialFileName = initialFileName.replace('odsx','odsx_security')
-            print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
+            #print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
             try:
                 if(path.exists(scriptsFolder+'/'+initialFileName)):
                     #print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)

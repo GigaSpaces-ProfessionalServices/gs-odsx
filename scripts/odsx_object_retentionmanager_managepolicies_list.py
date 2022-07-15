@@ -21,8 +21,8 @@ logger = verboseHandle.logger
 def listAllRetentionPolicies():
     
     logger.info("listAllRetentionPolicies()")
-    hostname = getLocalHostName()
-    
+    #hostname = getLocalHostName()
+    hostname = os.getenv("pivot1")
     response = requests.get('http://' + hostname + ':3210/retention/policies')
     
     if response.status_code == 200:
@@ -53,7 +53,7 @@ def listAllRetentionPolicies():
                              Fore.GREEN + str(record["objectType"]) + Fore.RESET,
                              Fore.GREEN + retentionPeriod + Fore.RESET,
                              Fore.GREEN + constraintField+ Fore.RESET,
-                             Fore.GREEN + active + Fore.RESET
+                             Fore.GREEN+"Yes"+Fore.RESET if(active=='True') else Fore.RED+"No"+Fore.RESET,
                              ]
                 
                 data.append(dataArray)

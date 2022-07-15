@@ -59,7 +59,8 @@ def addRetentionPolicy():
         logger.info("Exiting without registering policy")
         exit(0)
 
-    hostname =getLocalHostName()
+    #hostname =getLocalHostName()
+    hostname = os.getenv("pivot1")
     logger.info("hostip:->"+hostname)
     verboseHandle.printConsoleWarning('');
     
