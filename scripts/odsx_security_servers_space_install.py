@@ -7,14 +7,16 @@ from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_f
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder
 from colorama import Fore
+
+from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
-    executeRemoteCommandAndGetOutputPython36
-from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion
-from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
+    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput
+from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts, \
+    isInstalledAndGetVersion, config_get_manager_node
 from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload,scp_upload_specific_extension
-from scripts.odsx_servers_manager_install import getManagerHostFromEnv
+#from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -104,17 +106,6 @@ def getHostConfiguration():
         #else:
         #    verboseHandle.printConsoleError("No manager configuration found:")
         return hostsConfig
-    except Exception as e:
-        handleException(e)
-
-def configureMetricsXML(host):
-    logger.info("configureMetricsXML()")
-    try:
-        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" /dbagiga/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" /dbagiga/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" /dbagiga/gs_config/metrics.xml'
-        logger.info(cmd)
-        user = 'root'
-        with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
     except Exception as e:
         handleException(e)
 

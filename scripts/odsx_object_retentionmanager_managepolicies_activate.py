@@ -19,7 +19,8 @@ logger = verboseHandle.logger
 def listAllRetentionPolicies():
     
     logger.info("listAllRetentionPolicies()")
-    hostname = getLocalHostName()
+    #hostname = getLocalHostName()
+    hostname = os.getenv("pivot1")
     global retentionPolicyListJSON;
     response = requests.get('http://' + hostname + ':3210/retention/policies')
     
@@ -105,7 +106,8 @@ def deactivatePolicy():
         verboseHandle.printConsoleError("Id does not exists. Please enter valid id from list.")
         exit(0)  
 
-    hostname = getLocalHostName()
+    #hostname = getLocalHostName()
+    hostname = os.getenv("pivot1")
     verboseHandle.printConsoleWarning('');
     data = {
         "id":id,

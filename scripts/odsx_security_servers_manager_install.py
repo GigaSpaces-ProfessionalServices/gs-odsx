@@ -9,6 +9,7 @@ from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_f
 from colorama import Fore
 
 from utils.ods_cleanup import signal_handler
+from utils.ods_list import validateRPMS
 from utils.ods_scp import scp_upload,scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput,connectExecuteSSH
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
@@ -485,48 +486,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             logger.info("menudriven")
             return
 
-    except Exception as e:
-        handleException(e)
-
-def getPlainOutput(input):
-    input = str(input).replace('\\n','').replace("b'","").replace("'","").replace('"','')
-    return input
-
-def validateRPMS():
-    logger.info("validateRPM()")
-    try:
-        installerArray = []
-        cmd = "pwd"
-        home = executeLocalCommandAndGetOutput(cmd)
-        home = getPlainOutput(home)
-        logger.info("home dir : " + str(home))
-        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-        cmd = 'find ' + str(sourceInstallerDirectory) + '/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-        javaRpm = executeLocalCommandAndGetOutput(cmd)
-        javaRpm = getPlainOutput(javaRpm)
-        logger.info("javaRpm found :" + str(javaRpm))
-
-        cmd = 'find ' + str(sourceInstallerDirectory)  + '/unzip/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-        unZip = executeLocalCommandAndGetOutput(cmd)
-        unZip = getPlainOutput(unZip)
-        logger.info("unZip found :" + str(unZip))
-
-        cmd = 'find ' + str(sourceInstallerDirectory) + '/gs/ -name *.zip -printf "%f\n"'  # Checking .zip file on Pivot machine
-        gsZip = executeLocalCommandAndGetOutput(cmd)
-        gsZip = getPlainOutput(gsZip)
-        logger.info("Gigaspace Zip found :" + str(gsZip))
-
-        di_installer_dict = obj_type_dictionary()
-        di_installer_dict.add('Java', javaRpm)
-        di_installer_dict.add('unZip', unZip)
-        di_installer_dict.add('gsZip', gsZip)
-
-        for name, installer in di_installer_dict.items():
-            if (len(str(installer)) == 0):
-                verboseHandle.printConsoleInfo(
-                    "Pre-requisite installer " + str(home) + "/install/" + str(name) + " not found")
-                return False
-        return True
     except Exception as e:
         handleException(e)
 
