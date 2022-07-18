@@ -151,6 +151,7 @@ def validateServer(host):
 if __name__ == '__main__':
     logger.info("Menu -> Security -> Servers - Manager - upgrade - manual ")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Upgrade -> Automatic')
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     username = ""
     password = ""
     appId=""
@@ -182,11 +183,12 @@ if __name__ == '__main__':
             args.append(menuDrivenFlag)
             # if managerDict.get(int(hostConfiguration)) is not None:
             #    managerUpgrade = managerDict.get(int(hostConfiguration))
-            sourcePath = str(input(Fore.YELLOW + "Enter source directory for new GS build : " + Fore.RESET))
-            destPath = str(input(
-                Fore.YELLOW + "Enter destination directory to install new GS build [/dbagiga] : " + Fore.RESET))
-            if len(str(destPath)) == 0:
-                destPath = "/dbagiga"
+            sourcePath= sourceInstallerDirectory+"/gs/upgrade"
+            destPath="/dbagiga"
+            verboseHandle.printConsoleWarning("------------------Summary-----------------")
+            verboseHandle.printConsoleWarning("Enter source directory for new GS build : "+sourcePath)
+            verboseHandle.printConsoleWarning("Enter destination directory to install new GS build : "+str(destPath))
+
             if os.path.isdir(sourcePath):
                 dir_list = os.listdir(sourcePath)
                 if (len(dir_list) > 1):
@@ -216,7 +218,7 @@ if __name__ == '__main__':
                             managerRunningStatusDict.update({os.getenv(node.ip): "OFF"})
 
                     # print("freeStoragePerc: " + str(freeStoragePerc) + ", managerCount: " + str(managerCount))
-                    verboseHandle.printConsoleWarning("***Summary***")
+
                     verboseHandle.printConsoleInfo("1. Enough manager are available : " + str(managerCount))
                     verboseHandle.printConsoleInfo(
                         "2. Source path is proper. New package to upload : " + str(dir_list))
@@ -232,13 +234,14 @@ if __name__ == '__main__':
                             verboseHandle.printConsoleError(
                                 str(managerCountStorage) + ". Enough storage space is not available in [" + managerIp + "] : " + str(
                                     managerStorageSpace) + " % free")
+                    verboseHandle.printConsoleWarning("------------------------------------------")
                     confirm = str(input(
-                        Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
+                        Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
 
                     if managerCount >= 2:
                         while (len(str(confirm)) == 0):
                             confirm = str(input(
-                                Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
+                                Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
                         logger.info("confirm :" + str(confirm))
                         if confirm == 'yes' or confirm == 'y':
                             for managerStatusIP, managerStatus in managerRunningStatusDict.items():

@@ -158,7 +158,7 @@ def listSpaceServer():
             installStatus='No'
             install = isInstalledAndGetVersion(os.getenv(str(server.ip)))
             logger.info("install : "+str(install))
-            if(len(str(install))>0):
+            if(len(str(install))>8):
                 installStatus='Yes'
             if (port_check_config(host,22)):
                 status = getStatusOfSpaceHost(str(host))

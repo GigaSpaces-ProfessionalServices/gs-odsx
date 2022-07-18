@@ -34,6 +34,7 @@ current:
           previousTs: null
         criteria: TieredCriteria.tab
         spaceproperty: spaceproperty.properties
+      upgrade:
     jars:
       ts:
         tieredStorageBuild: bll-0.1.jar

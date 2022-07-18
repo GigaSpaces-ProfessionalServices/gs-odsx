@@ -52,7 +52,10 @@ sleep 30
 source setenv.sh
 cd -P $GS_HOME
 currentGSPath=$(pwd)
+#echo "currentGSPath "$currentGSPath
 currentGSName=$(basename $currentGSPath)
+#echo "currentGSName "$currentGSName
+ln -s $currentGSName gigaspaces-smart-ods-old
 # mkdir -p /dbagiga/rollback/$currentGSName
 # cp -r $currentGSPath/ /dbagiga/rollback/
 cd ..
@@ -63,10 +66,14 @@ unzip -q install/gs/upgrade/$newPackagename -d $parentPathGS
 cd -P $parentPathGS
 rm gigaspaces-smart-ods
 info "changing version to $newPackagenameWithoutExt\n"
+#echo "newPackagenameWithoutExt"$newPackagenameWithoutExt
 ln -s $newPackagenameWithoutExt gigaspaces-smart-ods
 cd -P $GS_HOME
+#echo ""$(pwd)
 cp $currentGSPath/bin/setenv-overrides.sh bin/
-cp -r $currentGSPath/work .
+#cp -r $currentGSPath/work .
+#echo "GS_HOME"$GS_HOME" "$currentGSPath
+cp $currentGSPath/gs-license.txt .
 chown -R $applicativeUser:$applicativeUser *
 sleep 10
 info "starting gs...\n"
