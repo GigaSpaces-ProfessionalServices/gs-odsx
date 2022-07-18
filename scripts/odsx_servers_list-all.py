@@ -134,7 +134,8 @@ def getConsolidatedStatus(node,role):
 
 def isInstalledAndGetVersionManagerSpace(host):
     logger.info("isInstalledAndGetVersion")
-    commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
+    #commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
+    commandToExecute='cd /dbagiga;cd -P gigaspaces-smart-ods;echo ""$(basename $(pwd))'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','').replace('/dbagiga/','')
@@ -157,7 +158,7 @@ def listAllServers():
         installStatus='No'
         install = isInstalledAndGetVersionManagerSpace(os.getenv(str(node.ip)))
         logger.info("install : "+str(install))
-        if(len(str(install))>0):
+        if(len(str(install))>8):
             installStatus='Yes'
         dataArray=[Fore.GREEN+str(count)+Fore.RESET,
                    Fore.GREEN+"Manager"+Fore.RESET,
@@ -186,7 +187,7 @@ def listAllServers():
         install = isInstalledAndGetVersionManagerSpace(os.getenv(str(server.ip)))
         logger.info("install : "+str(install))
         logger.info("install : "+str(install))
-        if(len(str(install))>0):
+        if(len(str(install))>8):
             installStatus='Yes'
         dataArray=[Fore.GREEN+str(count)+Fore.RESET,
                    Fore.GREEN+"Space"+Fore.RESET,

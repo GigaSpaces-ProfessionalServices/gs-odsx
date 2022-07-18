@@ -113,7 +113,7 @@ def listFileFromDirectory():
                 logger.info("install : "+str(install))
                 influx = validateMetricsXmlInflux(os.getenv(str(node.ip)))
                 grafana = validateMetricsXmlGrafana(os.getenv(str(node.ip)))
-                if(len(str(install))>0):
+                if(len(str(install))>8):
                     installStatus='Yes'
                 dataArray=[Fore.GREEN+os.getenv(str(node.ip))+Fore.RESET,
                            Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,

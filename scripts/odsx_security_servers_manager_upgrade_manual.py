@@ -138,7 +138,7 @@ if __name__ == '__main__':
     args.append(sys.argv[0])
 
     managerDict = config_get_manager_listWithStatus()
-
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     hostsConfig = ''
     hostsConfig = getManagerHostFromEnv()
     logger.info("hostConfig:" + str(hostsConfig))
@@ -154,9 +154,11 @@ if __name__ == '__main__':
             args.append(menuDrivenFlag)
             if managerDict.get(int(hostConfiguration)) is not None:
                 managerUpgrade = managerDict.get(int(hostConfiguration))
-                sourcePath = str(input(Fore.YELLOW + "Enter source directory for new GS build : " + Fore.RESET))
-                destPath = str(input(
-                    Fore.YELLOW + "Enter destination directory to install new GS build [/dbagiga] : " + Fore.RESET))
+                sourcePath= sourceInstallerDirectory+"/gs/upgrade"
+                destPath="/dbagiga"
+                verboseHandle.printConsoleWarning("------------------Summary-----------------")
+                verboseHandle.printConsoleWarning("Enter source directory for new GS build : "+sourcePath)
+                verboseHandle.printConsoleWarning("Enter destination directory to install new GS build : "+str(destPath))
                 if len(str(destPath)) == 0:
                     destPath = "/dbagiga"
                 if os.path.isdir(sourcePath):
