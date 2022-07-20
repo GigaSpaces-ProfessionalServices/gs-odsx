@@ -12,7 +12,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetVersionOldGS
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
@@ -97,15 +97,17 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     global password
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        username = "gs-admin"#str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
-        password = "gs-admin"#str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
         status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})
         currentVersion = "NA"
         previousVersion = "NA"
-        if os.getenv(node.ip) in upgradedManagerDict:
-            previousVersion = managerOldVersionDict.get(os.getenv(node.ip))
+        oldVersion = isInstalledAndGetVersionOldGS(os.getenv(node.ip))
+        if(len(str(oldVersion))>8):
+            #if os.getenv(node.ip) in upgradedManagerDict:
+            previousVersion = oldVersion
         try:
             managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
                                                headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))

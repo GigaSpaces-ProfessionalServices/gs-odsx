@@ -522,6 +522,16 @@ def isInstalledAndGetVersion(host):
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 
+def isInstalledAndGetVersionOldGS(host):
+    logger.info("isInstalledAndGetVersion")
+    #commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
+    commandToExecute='cd /dbagiga;cd -P gigaspaces-smart-ods-old;echo ""$(basename $(pwd))'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','').replace('/dbagiga/','')
+    logger.info("outputShFile :"+str(outputShFile))
+    return str(outputShFile)
+
 def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     with Spinner():
         try:
