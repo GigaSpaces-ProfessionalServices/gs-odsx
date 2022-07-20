@@ -481,6 +481,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     #print("cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
                     executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
                     #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
+                    #print("cp "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+"/dbagiga/gs_jars")
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+"/dbagiga/gs_jars;chown "+applicativeUser+":"+applicativeUser+" /dbagiga/gs_jars")
                     configureMetricsXML(host)
                 serverHost=''
                 try:

@@ -176,6 +176,7 @@ function installAirGapGS {
    cd
    #sudo -s
    targetConfigDir="$targetDir/gs_config/"
+   targetJarsDir="$targetDir/gs_jars"
    if [ ! -d "$dir" ]; then
      mkdir /$dir
      chmod 777 /$dir
@@ -194,6 +195,11 @@ function installAirGapGS {
      mkdir $targetConfigDir
      echo "Not Exit created"
      chmod 777 $targetConfigDir
+   fi
+   if [ ! -d "$targetJarsDir" ]; then
+     mkdir $targetJarsDir
+     echo "Not Exit created"
+     chmod 777 $targetJarsDir
    fi
    if [ ! -d "/$logDir" ]; then
      mkdir /$logDir
@@ -331,6 +337,7 @@ function installAirGapGS {
    cd $targetDir
    ln -s $extracted_folder gigaspaces-smart-ods
    sed -i -e 's|../config/security/security-config.xml|../config/security/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
+   cp gigaspaces-smart-ods/config/security/security.properties /dbagiga/gs_config/
    echo "Installation & configuration Gigaspace  -Done!"
 }
 function loadEnv {
