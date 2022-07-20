@@ -46,23 +46,27 @@ printNoColor() {
 destinationPath=$1
 newPackagename=$2
 applicativeUser=$3
+sourcePath=$4
 info "stopping gs...\n"
 systemctl stop gsa
 sleep 30
+#echo "path:"$(pwd)
 source setenv.sh
 cd -P $GS_HOME
 currentGSPath=$(pwd)
 #echo "currentGSPath "$currentGSPath
 currentGSName=$(basename $currentGSPath)
 #echo "currentGSName "$currentGSName
-ln -s $currentGSName gigaspaces-smart-ods-old
 # mkdir -p /dbagiga/rollback/$currentGSName
 # cp -r $currentGSPath/ /dbagiga/rollback/
 cd ..
 parentPathGS=$(pwd)
+#echo "dir"$(pwd)
+ln -s $currentGSName gigaspaces-smart-ods-old
 newPackagenameWithoutExt="${newPackagename%.*}"
 cd
-unzip -q install/gs/upgrade/$newPackagename -d $parentPathGS
+#echo "parentPathGS:"$parentPathGS
+unzip -q $sourcePath -d $parentPathGS
 cd -P $parentPathGS
 rm gigaspaces-smart-ods
 info "changing version to $newPackagenameWithoutExt\n"

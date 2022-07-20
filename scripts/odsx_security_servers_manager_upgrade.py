@@ -87,7 +87,6 @@ managerOldVersionDict = {}
 def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     headers = [Fore.YELLOW + "SrNo." + Fore.RESET,
                Fore.YELLOW + "Manager Name" + Fore.RESET,
-               Fore.YELLOW + "IP" + Fore.RESET,
                Fore.YELLOW + "Current Version" + Fore.RESET,
                Fore.YELLOW + "Previous Version" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
@@ -105,7 +104,7 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
         managerDict.update({counter: node})
         currentVersion = "NA"
         previousVersion = "NA"
-        if os.getenv(node.ip) in managerOldVersionDict:
+        if os.getenv(node.ip) in upgradedManagerDict:
             previousVersion = managerOldVersionDict.get(os.getenv(node.ip))
         try:
             managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
@@ -122,13 +121,11 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
         if (status == "ON"):
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
                          Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
-                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
                          Fore.GREEN + currentVersion + Fore.RESET,
                          Fore.GREEN + previousVersion + Fore.RESET,
                          Fore.GREEN + status + Fore.RESET]
         else:
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
                          Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
                          Fore.GREEN + currentVersion + Fore.RESET,
                          Fore.GREEN + previousVersion + Fore.RESET,
@@ -148,9 +145,44 @@ def validateServer(host):
     return False
 
 
+def proceedForManagerUpgrade(managerStatusIP, managerStatus):
+    upgradedManagerDict.update({managerStatusIP:"N/A"})
+    managerStatusIP = str(managerStatusIP)
+    if managerStatus == "OFF":
+        verboseHandle.printConsoleError(
+            "manager is not running, upgrade will not be performed")
+    else:
+        verboseHandle.printConsoleInfo(
+            "Starting upgradation for manager " + managerStatusIP)
+        #scp_upload(managerStatusIP, user, sourcePath + "/" + packageName,
+        #           "install/gs/upgrade/")
+        commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
+        applicativeUserFile = readValuefromAppConfig("app.server.user")
+        additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName
+        #print(additionalParam)
+        isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
+        pemFileName = readValuefromAppConfig("cluster.pemFile")
+        ssh = ""
+        if isConnectUsingPem == 'True':
+            ssh = ''.join(
+                ['ssh', ' -i ', pemFileName, ' ', user, '@', str(managerStatusIP), ' '])
+        else:
+            ssh = ''.join(['ssh', ' ', str(managerStatusIP), ' '])
+        cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_manual.sh'
+        with Spinner():
+            os.system(cmd)
+            pass
+        verboseHandle.printConsoleInfo("Done upgradation for manager " + managerStatusIP)
+        if validateServer(managerStatusIP)==True:
+            verboseHandle.printConsoleInfo("Validation successful manager is started " + managerStatusIP)
+        else:
+            verboseHandle.printConsoleError("Validation failed, manager is not started " + managerStatusIP)
+        config_get_manager_listWithStatus()
+
+
 if __name__ == '__main__':
     logger.info("Menu -> Security -> Servers - Manager - upgrade - manual ")
-    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Upgrade -> Automatic')
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Upgrade')
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     username = ""
     password = ""
@@ -165,6 +197,7 @@ if __name__ == '__main__':
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
+    upgradedManagerDict = {}
 
     managerDict = config_get_manager_listWithStatus()
 
@@ -205,8 +238,6 @@ if __name__ == '__main__':
                     managerRunningStatusDict = {}
                     for node in config_get_manager_node():
                         status = getSpaceServerStatus(os.getenv(node.ip))
-                        executeRemoteCommandAndGetOutputValuePython36(os.getenv(node.ip), user,
-                                                                      "mkdir -p install/gs/upgrade/")
                         freeStoragePerc = executeRemoteCommandAndGetOutputValuePython36(os.getenv(node.ip), user,
                                                                                         cmd)
                         freeStoragePerc = str(freeStoragePerc).replace("\n", "")
@@ -235,54 +266,33 @@ if __name__ == '__main__':
                                 str(managerCountStorage) + ". Enough storage space is not available in [" + managerIp + "] : " + str(
                                     managerStorageSpace) + " % free")
                     verboseHandle.printConsoleWarning("------------------------------------------")
-                    confirm = str(input(
-                        Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
-
-                    if managerCount >= 2:
-                        while (len(str(confirm)) == 0):
-                            confirm = str(input(
-                                Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
-                        logger.info("confirm :" + str(confirm))
+                    inputChoice = str(input(Fore.YELLOW+"[1] For individual\n[Enter] For all. \n[99] For exit. :"+Fore.RESET))
+                    if inputChoice=='99':
+                        quit(0)
+                    if inputChoice=='1':
+                        inputHostNuber = str(input(Fore.YELLOW+"Enter host number to upgrade. :"+Fore.RESET))
+                        managerIP = managerDict.get(int(inputHostNuber))
+                        managerIP = os.getenv(managerIP.ip)
+                        managerStatus = managerRunningStatusDict.get(managerIP)
+                        confirm = str(input(Fore.YELLOW + "Are you sure want to continue gs manager upgradation upgrade? [yes (y)] / [no (n)] : " + Fore.RESET))
                         if confirm == 'yes' or confirm == 'y':
-                            for managerStatusIP, managerStatus in managerRunningStatusDict.items():
-                                managerStatusIP = str(managerStatusIP)
-                                if managerStatus == "OFF":
-                                    verboseHandle.printConsoleError(
-                                        "manager is not running, upgrade will not be performed")
-                                else:
-                                    verboseHandle.printConsoleInfo(
-                                        "Starting upgradation for manager " + managerStatusIP)
-                                    #scp_upload(managerStatusIP, user, sourcePath + "/" + packageName,
-                                    #           "install/gs/upgrade/")
-                                    commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
-                                    applicativeUserFile = readValuefromAppConfig("app.server.user")
-                                    additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName
-                                    #print(additionalParam)
-                                    isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
-                                    pemFileName = readValuefromAppConfig("cluster.pemFile")
-                                    ssh = ""
-                                    if isConnectUsingPem == 'True':
-                                        ssh = ''.join(
-                                            ['ssh', ' -i ', pemFileName, ' ', user, '@', str(managerStatusIP), ' '])
-                                    else:
-                                        ssh = ''.join(['ssh', ' ', str(managerStatusIP), ' '])
-                                    cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_manual.sh'
-                                    with Spinner():
-                                        os.system(cmd)
-                                        pass
-                                    verboseHandle.printConsoleInfo("Done upgradation for manager " + managerStatusIP)
-                                    if validateServer(managerStatusIP)==True:
-                                        verboseHandle.printConsoleInfo("Validation successful manager is started " + managerStatusIP)
-                                    else:
-                                        verboseHandle.printConsoleError("Validation failed, manager is not started " + managerStatusIP)
-                                    config_get_manager_listWithStatus()
-                    else:
-                        if managerCount < 2:
-                            verboseHandle.printConsoleError(
-                                "Minimum manager required : 2, currently running manager count : " + str(
-                                    managerCount))
+                            proceedForManagerUpgrade(managerIP,managerStatus)
+                    if inputChoice=='':
+                        confirm = str(input(Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
+                        if managerCount >= 2:
+                            while (len(str(confirm)) == 0):
+                                confirm = str(input(Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
+                            logger.info("confirm :" + str(confirm))
+                            if confirm == 'yes' or confirm == 'y':
+                                for managerStatusIP, managerStatus in managerRunningStatusDict.items():
+                                    proceedForManagerUpgrade(managerStatusIP,managerStatus)
                         else:
-                            verboseHandle.printConsoleError("Not enough storage space")
+                            if managerCount < 2:
+                                verboseHandle.printConsoleError(
+                                    "Minimum manager required : 2, currently running manager count : " + str(
+                                        managerCount))
+                            else:
+                                verboseHandle.printConsoleError("Not enough storage space")
 
             else:
                 verboseHandle.printConsoleError("source path is not proper")

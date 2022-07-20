@@ -2,7 +2,7 @@
 import os
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
 from scripts.spinner import Spinner
 from colorama import Fore
 from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
@@ -18,60 +18,111 @@ class bcolors:
     WARNING = '\033[93m' #YELLOW
     FAIL = '\033[91m' #RED
     RESET = '\033[0m' #RESET COLOR
+#!/usr/bin/env python3
+import os
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj, getYamlFilePathInsideFolder
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
+from scripts.spinner import Spinner
+from colorama import Fore
+from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
+from scripts.odsx_servers_influxdb_stop import getInfluxdbServerHostList
+from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
+from scripts.odsx_servers_space_install import getSpaceHostFromEnv
 
+verboseHandle = LogManager(os.path.basename(__file__))
+logger = verboseHandle.logger
 
-def configureHoststoMetricsxml(grafanaHosts, influxdbHosts, host):
-    commandToExecute="scripts/utilities_metrics.sh"
-    additionalParam = grafanaHosts+' '+influxdbHosts
-    verboseHandle.printConsoleInfo("Configuring metrics.xmsl for host:"+host)
-    logger.info("Configuring metrics.xmsl for host:"+host)
-    with Spinner():
-        outputShFile= connectExecuteSSH(host, 'root',commandToExecute,additionalParam)
-    logger.info("Configuring metrics.xml for host:"+host+" completed.")
-    verboseHandle.printConsoleInfo("Configuring metrics.xml for host:"+host+" completed.")
+class bcolors:
+    OK = '\033[92m' #GREEN
+    WARNING = '\033[93m' #YELLOW
+    FAIL = '\033[91m' #RED
+    RESET = '\033[0m' #RESET COLOR
 
-def validateGrafanaInfluxdb():
-    logger.info("validateGrafanaInfluxdb()")
-    grafanaHosts = str(getGrafanaServerHostList()).replace('"','')
-    influxdbHosts = str(getInfluxdbServerHostList()).replace('"','')
-    managerHostConfig = str(getManagerHostFromEnv()).replace('"','')
-    managerHosts = managerHostConfig.split(',')
-    spaceHostConfig = str(getSpaceHostFromEnv()).replace('"','')
-    spaceHosts = spaceHostConfig.split(',')
-    if(len(grafanaHosts)==0):
-        verboseHandle.printConsoleInfo("Grafana host not found.")
-    if(len(influxdbHosts)==0):
-        verboseHandle.printConsoleInfo("Influxdb host not found.")
-    if(len(managerHosts)==0):
-        verboseHandle.printConsoleInfo("Manager host not found.")
-    logger.info("grafanahosts :"+str(grafanaHosts)+" influxdbhosts:"+str(influxdbHosts))
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
 
-    if(len(grafanaHosts)>0 and len(influxdbHosts)>0 and len(managerHosts)>0):
-        logger.info("Manager configuration")
-        verboseHandle.printConsoleInfo("Grafana host :"+grafanaHosts)
-        verboseHandle.printConsoleInfo("Influxdb host :"+influxdbHosts)
-        confirmManagerHostConfig = str(input(Fore.YELLOW+"Do you want to configure for manager hosts ? ["+managerHostConfig+"] (y/n) [y] : "+Fore.RESET))
-        if(len(confirmManagerHostConfig)==0):
-            confirmManagerHostConfig='y'
-        logger.info("confirmManagerHostConfig :"+str(confirmManagerHostConfig))
-        if(confirmManagerHostConfig=='y'):
-            for host in managerHosts:
-                configureHoststoMetricsxml(grafanaHosts,influxdbHosts,host)
-    if(len(grafanaHosts)>0 and len(influxdbHosts)>0 and len(spaceHosts)>0):
-        logger.info("Space configuration")
-        confirmSpaceHostConfig = str(input(Fore.YELLOW+"Do you want to configure for space hosts ? ["+spaceHostConfig+"] (y/n) [y] : "+Fore.RESET))
-        if(len(confirmSpaceHostConfig)==0):
-            confirmSpaceHostConfig='y'
-        if(confirmSpaceHostConfig=='y'):
-            for host in spaceHosts:
-                configureHoststoMetricsxml(grafanaHosts,influxdbHosts,host)
+def getSpaceHostFromEnv():
+    logger.info("getSpaceHostFromEnv()")
+    hosts = ''
+    spaceNodes = config_get_space_hosts()
+    for node in spaceNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
+def getManagerHostFromEnv():
+    logger.info("getManagerHostFromEnv()")
+    hosts = ''
+    managerNodes = config_get_manager_node()
+    for node in managerNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
+def configureMetricsXML(host):
+    logger.info("configureMetricsXML()")
+    try:
+        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" /dbagiga/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" /dbagiga/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" /dbagiga/gs_config/metrics.xml'
+        logger.info(cmd)
+        user = 'root'
+        with Spinner():
+            output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+    except Exception as e:
+        handleException(e)
+
+def configureLicenseManagerAndSpace():
+    managerHosts = getManagerHostFromEnv()
+    spaceHosts = getSpaceHostFromEnv()
+    sourceGSmetrics = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsxml"))
+    targetGSmetrics = "/dbagiga/gs_config/"
+    verboseHandle.printConsoleWarning("-------------------Summary-----------------")
+    verboseHandle.printConsoleInfo("metrics.xml.template source file :"+str(sourceGSmetrics))
+    verboseHandle.printConsoleInfo("metrics.xml target : "+str(targetGSmetrics))
+    verboseHandle.printConsoleInfo("Manager hosts : "+managerHosts)
+    verboseHandle.printConsoleInfo("Space hosts : "+spaceHosts)
+    verboseHandle.printConsoleInfo("Influxdb hosts : "+getInfluxdbServerHostList())
+    verboseHandle.printConsoleInfo("Grafana hosts : "+getGrafanaServerHostList())
+    verboseHandle.printConsoleWarning("-------------------------------------------")
+    #licenseConfig='"\\"{}\\""'.format(licenseConfig)
+    confirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
+    if confirm=='y' or confirm=='':
+        #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  /dbagiga/gigaspaces-smart-ods/bin/setenv-overrides.sh"
+
+        commandToExecute = "cp "+sourceGSmetrics+" "+targetGSmetrics
+        logger.info("commandToExecute:"+commandToExecute)
+
+        for host in managerHosts.split(','):
+            configureMetricsXML(host)
+            verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
+
+        for host in spaceHosts.split(','):
+            configureMetricsXML(host)
+            verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Utilities -> Metrics")
     logger.info("Utilities - Metrics")
-    verboseHandle.printConsoleInfo("Validating Grafana and Influxdb hosts.")
     try:
-        validateGrafanaInfluxdb()
+        configureLicenseManagerAndSpace()
     except Exception as e:
-        logger.error("Exception in Utilities - Metrics."+str(e))
-        verboseHandle.printConsoleError(str(e))
+        handleException(e)

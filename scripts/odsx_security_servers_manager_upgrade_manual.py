@@ -8,6 +8,7 @@ import sys
 import requests
 from colorama import Fore
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
@@ -65,8 +66,8 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     global password
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
-        password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        username = "gs-admin"#str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        password = "gs-admin"#str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
         status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})
@@ -197,11 +198,11 @@ if __name__ == '__main__':
                                     Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
                             logger.info("confirm :" + str(confirm))
                             if confirm == 'yes' or confirm == 'y':
-                                scp_upload(os.getenv(managerUpgrade.ip), user, sourcePath + "/" + packageName,
-                                           "install/gs/upgrade/")
+                                #scp_upload(os.getenv(managerUpgrade.ip), user, sourcePath + "/" + packageName,
+                                #           "install/gs/upgrade/")
                                 commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
                                 applicativeUserFile = readValuefromAppConfig("app.server.user")
-                                additionalParam = destPath + " " + packageName + " " + applicativeUserFile
+                                additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName
                                 isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
                                 pemFileName = readValuefromAppConfig("cluster.pemFile")
                                 ssh = ""
@@ -211,7 +212,8 @@ if __name__ == '__main__':
                                 else:
                                     ssh = ''.join(['ssh', ' ', str(os.getenv(managerUpgrade.ip)), ' '])
                                 cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_manual.sh'
-                                os.system(cmd)
+                                with Spinner():
+                                    os.system(cmd)
                                 config_get_manager_listWithStatus()
                         else:
                             if managerCount < 2:
