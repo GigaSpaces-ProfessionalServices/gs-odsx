@@ -34,7 +34,6 @@ current:
           previousTs: null
         criteria: TieredCriteria.tab
         spaceproperty: spaceproperty.properties
-      upgrade:
     jars:
       ts:
         tieredStorageBuild: bll-0.1.jar
@@ -42,6 +41,7 @@ current:
         retentionjar: retention-manager.jar
       space:
         spacejar: space-0.1.jar
+    upgrade:
   kafka:
     jolokiaJar: jolokia-agent.jar
   mq-connector:

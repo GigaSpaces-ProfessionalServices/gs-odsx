@@ -11,7 +11,8 @@ from colorama import Fore
 from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
-    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput
+    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
+    executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts, \
     isInstalledAndGetVersion, config_get_manager_node
 from scripts.spinner import Spinner
@@ -382,7 +383,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 installStatus='No'
                 install = isInstalledAndGetVersion(host)
                 logger.info("install : "+str(install))
-                if(len(str(install))>0):
+                if(len(str(install))>8):
                     installStatus='Yes'
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
@@ -423,17 +424,20 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         logger.debug("script output"+str(outputShFile))
                         #print(outputShFile)
                         #Upload CEF logging jar
-                        scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-                        #UPLOAD DB2FEEDER JAR
-                        #if(confirmDb2FeederJar=='y'):
-                        #print("source :"+db2jccJarInput)
-                        scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
-                        #print("source2 :"+db2jccJarLicenseInput)
-                        scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
-                        scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
-                        scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
+                        #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
+                        #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*keytab "+msSqlFeederFileTarget)
+                        #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*conf "+msSqlFeederFileTarget)
+                        #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
+                        #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+                        #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/gs_config/* ")
                         configureMetricsXML(host)
                     serverHost=''
                     try:

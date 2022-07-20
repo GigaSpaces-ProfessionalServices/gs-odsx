@@ -391,6 +391,8 @@ def proceedToDeployPU():
             print("deployResponseCode : "+str(deployResponseCode))
             logger.info("deployResponseCode :"+str(deployResponseCode))
 
+            createMSSQLEntryInSqlLite(puName,file,restPort)
+
             status = validateResponseGetDescription(deployResponseCode)
             logger.info("response.status_code :"+str(response.status_code))
             logger.info("response.content :"+str(response.content) )
@@ -405,7 +407,7 @@ def proceedToDeployPU():
                         time.sleep(2)
                         if(str(status).casefold().__contains__('successful')):
                             time.sleep(2)
-                            createMSSQLEntryInSqlLite(puName,file,restPort)
+                            #createMSSQLEntryInSqlLite(puName,file,restPort)
                             verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
                             userCMD = os.getlogin()
                             if userCMD == 'ec2-user':

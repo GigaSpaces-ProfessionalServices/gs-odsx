@@ -53,11 +53,12 @@ def getManagerHostFromEnv():
     hosts=hosts[:-1]
     return hosts
 
+managerOldVersionDict = {}
 def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     headers = [Fore.YELLOW + "SrNo." + Fore.RESET,
                Fore.YELLOW + "Manager Name" + Fore.RESET,
-               Fore.YELLOW + "IP" + Fore.RESET,
-               Fore.YELLOW + "Version" + Fore.RESET,
+               Fore.YELLOW + "Current Version" + Fore.RESET,
+               Fore.YELLOW + "Previous Version" + Fore.RESET,
                Fore.YELLOW + "Status" + Fore.RESET]
     data = []
     managerDict = {}
@@ -71,27 +72,33 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
         status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})
-        version = "NA"
+        currentVersion = "NA"
+        previousVersion = "NA"
+        if os.getenv(node.ip) in upgradedManagerDict:
+            previousVersion = managerOldVersionDict.get(os.getenv(node.ip))
         try:
             managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
                                                headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
             output = managerInfoResponse.content.decode("utf-8")
             logger.info("Json Response container:" + str(output))
             managerInfo = json.loads(managerInfoResponse.text)
-            version = str(managerInfo["revision"])
+            currentVersion = str(managerInfo["revision"])
+            if os.getenv(node.ip) not in managerOldVersionDict:
+                managerOldVersionDict.update({os.getenv(node.ip): currentVersion})
         except Exception as e:
-            version = "NA"
+            currentVersion = "NA"
+            managerOldVersionDict.update({os.getenv(node.ip): currentVersion})
         if (status == "ON"):
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
                          Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
-                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
-                         Fore.GREEN + version + Fore.RESET,
+                         Fore.GREEN + currentVersion + Fore.RESET,
+                         Fore.GREEN + previousVersion + Fore.RESET,
                          Fore.GREEN + status + Fore.RESET]
         else:
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
                          Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
-                         Fore.GREEN + os.getenv(node.ip) + Fore.RESET,
-                         Fore.GREEN + version + Fore.RESET,
+                         Fore.GREEN + currentVersion + Fore.RESET,
+                         Fore.GREEN + previousVersion + Fore.RESET,
                          Fore.RED + status + Fore.RESET]
         data.append(dataArray)
     printTabular(None, headers, data)
@@ -124,22 +131,25 @@ def handleException(e):
 
 def proceedForRollback(host):
     logger.info("proceedForRollback")
-    cmdList = ["systemctl stop gsa","cd /dbagiga;rm -f gigaspaces-smart-ods;mv /dbagiga/gigaspaces-smart-ods-old /dbagiga/gigaspaces-smart-ods","systemctl start gsa"]
-    for cmd in cmdList:
-        print("Executing "+str(cmd)+" : "+str(host))
-        logger.info("Getting status.. odsxgs :"+str(cmd))
-        user = 'root'
-        with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
-            if (output == 0):
-                verboseHandle.printConsoleInfo("Server rollback successfully on "+str(host))
-            else:
-                verboseHandle.printConsoleError("Server not able to rollback on "+str(host))
-
+    upgradedManagerDict.update({host:"N/A"})
+    user = 'root'
+    isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
+    pemFileName = readValuefromAppConfig("cluster.pemFile")
+    ssh = ""
+    additionalParam=""
+    if isConnectUsingPem == 'True':
+        ssh = ''.join(
+            ['ssh', ' -i ', pemFileName, ' ', user, '@', str(host), ' '])
+    else:
+        ssh = ''.join(['ssh', ' ', str(host), ' '])
+    cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_rollback.sh'
+    with Spinner():
+        os.system(cmd)
+        pass
 
 if __name__ == '__main__':
-    logger.info("Menu -> Security ->servers - manager - upgrade - manual ")
-    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Upgrade -> Rollback')
+    logger.info("Menu -> Security ->servers - manager - rollback ")
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Manager ->  Rollback')
     username = ""
     password = ""
     appId=""
@@ -152,6 +162,7 @@ if __name__ == '__main__':
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
+    upgradedManagerDict = {}
 
     managerDict = config_get_manager_listWithStatus()
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
@@ -162,11 +173,11 @@ if __name__ == '__main__':
     if inputChoice=='99':
         quit(0)
     if inputChoice=='1':
+        inputHostNuber = str(input(Fore.YELLOW+"Enter host number to rollback. :"+Fore.RESET))
+        host = managerDict.get(int(inputHostNuber))
+        host = os.getenv(host.ip)
         confirm = str(input(Fore.YELLOW + "Are you sure want to continue gs manager upgradation rollback? [yes (y)] / [no (n)] : " + Fore.RESET))
         if confirm == 'yes' or confirm == 'y':
-            inputHostNuber = str(input(Fore.YELLOW+"Enter host number to rollback. :"+Fore.RESET))
-            host = managerDict.get(int(inputHostNuber))
-            host = os.getenv(host.ip)
             proceedForRollback(host)
     if inputChoice=='':
      try:

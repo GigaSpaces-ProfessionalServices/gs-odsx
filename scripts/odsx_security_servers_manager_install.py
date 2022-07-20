@@ -11,7 +11,9 @@ from colorama import Fore
 from utils.ods_cleanup import signal_handler
 from utils.ods_list import validateRPMS
 from utils.ods_scp import scp_upload,scp_upload_multiple
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput,connectExecuteSSH
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
+    executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
+    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
@@ -470,9 +472,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     #print(outputShFile)
                     #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
                     #Upload CEF logging jar
-                    scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-                    scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
-                    scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
+                    #print("cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                    #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                    #print("cp "+sourceJar+" "+springTargetJarInput)
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
+                    #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
+                    #print("cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+                    #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
                     configureMetricsXML(host)
                 serverHost=''
                 try:
