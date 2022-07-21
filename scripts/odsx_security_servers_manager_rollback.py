@@ -63,12 +63,12 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     data = []
     managerDict = {}
     counter = 0
-    global username
-    global password
+    #global username
+    #global password
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
-        password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        #username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        #password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
         status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})
@@ -80,7 +80,7 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
             previousVersion = oldVersion
         try:
             managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
-                                               headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
+                                               headers={'Accept': 'application/json'})
             output = managerInfoResponse.content.decode("utf-8")
             logger.info("Json Response container:" + str(output))
             managerInfo = json.loads(managerInfoResponse.text)
@@ -153,6 +153,7 @@ def proceedForRollback(host):
 if __name__ == '__main__':
     logger.info("Menu -> Security ->servers - manager - rollback ")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Manager ->  Rollback')
+    '''
     username = ""
     password = ""
     appId=""
@@ -162,6 +163,7 @@ if __name__ == '__main__':
     safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
     objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
     logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+    '''
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])

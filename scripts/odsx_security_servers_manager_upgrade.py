@@ -11,7 +11,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetVersionOldGS
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
@@ -72,9 +72,11 @@ def handleException(e):
 
 
 def getGSVersion(host):
+    #print('http://' + str(host) + ':8090/v2/info')
     managerInfoResponse = requests.get(('http://' + str(host) + ':8090/v2/info'),
-                                       headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
+                                       headers={'Accept': 'application/json'})
     output = managerInfoResponse.content.decode("utf-8")
+    #print(output)
     logger.info("Json Response container:" + str(output))
     try:
         managerInfo = json.loads(managerInfoResponse.text)
@@ -97,8 +99,8 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     global password
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
-        password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        #username = "gs-admin"#str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        #password = "gs-admin"#str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
         status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})
@@ -109,9 +111,11 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
             #if os.getenv(node.ip) in upgradedManagerDict:
             previousVersion = oldVersion
         try:
+            #print('http://' + str(os.getenv(node.ip)) + ':8090/v2/info')
             managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
-                                               headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username, password))
+                                               headers={'Accept': 'application/json'})
             output = managerInfoResponse.content.decode("utf-8")
+            #print(output)
             logger.info("Json Response container:" + str(output))
             managerInfo = json.loads(managerInfoResponse.text)
             currentVersion = str(managerInfo["revision"])
@@ -141,6 +145,7 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
 
 def validateServer(host):
     status = getSpaceServerStatus(host)
+    #print(status)
     version = getGSVersion(host)
     if status == "ON" and version != "NA":
         return True
@@ -158,9 +163,13 @@ def proceedForManagerUpgrade(managerStatusIP, managerStatus):
             "Starting upgradation for manager " + managerStatusIP)
         #scp_upload(managerStatusIP, user, sourcePath + "/" + packageName,
         #           "install/gs/upgrade/")
+        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar.target2"))
+
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+
         commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName
+        additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName+" "+cefLoggingJarInput+" "+cefLoggingJarInputTarget
         #print(additionalParam)
         isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
         pemFileName = readValuefromAppConfig("cluster.pemFile")
@@ -186,6 +195,7 @@ if __name__ == '__main__':
     logger.info("Menu -> Security -> Servers - Manager - upgrade - manual ")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Upgrade')
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    '''
     username = ""
     password = ""
     appId=""
@@ -195,7 +205,7 @@ if __name__ == '__main__':
     safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
     objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
     logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-
+    '''
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
@@ -218,6 +228,7 @@ if __name__ == '__main__':
             args.append(menuDrivenFlag)
             # if managerDict.get(int(hostConfiguration)) is not None:
             #    managerUpgrade = managerDict.get(int(hostConfiguration))
+            #/dbagiga/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
             sourcePath= sourceInstallerDirectory+"/gs/upgrade"
             destPath="/dbagiga"
             verboseHandle.printConsoleWarning("------------------Summary-----------------")

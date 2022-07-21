@@ -402,6 +402,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"11. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"11A. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
+              Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
         print(Fore.GREEN+"12. "+
               Fore.GREEN+"spring-ldap-core-2.3.3.RELEASE.jar source : "+Fore.RESET,
               Fore.GREEN+str(springLdapCoreJarInput).replace('"','')+Fore.RESET)
@@ -468,21 +471,16 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
                 with Spinner():
                     outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-                    #print(outputShFile)
-                    #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
-                    #Upload CEF logging jar
-                    #print("cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+
                     executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-                    #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-                    #print("cp "+sourceJar+" "+springTargetJarInput)
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+                    #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
                     executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
-                    #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
-                    #print("cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
                     executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
-                    #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-                    #print("cp "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+"/dbagiga/gs_jars")
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+"/dbagiga/gs_jars;chown "+applicativeUser+":"+applicativeUser+" /dbagiga/gs_jars")
+                    #print("cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
+                    #print("chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
                     configureMetricsXML(host)
                 serverHost=''
                 try:

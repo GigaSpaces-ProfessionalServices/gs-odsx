@@ -47,6 +47,8 @@ destinationPath=$1
 newPackagename=$2
 applicativeUser=$3
 sourcePath=$4
+cefLoggingJarInput=$5
+cefLoggingJarInputTarget=$6
 info "stopping gs...\n"
 systemctl stop gsa
 sleep 30
@@ -78,7 +80,10 @@ cp $currentGSPath/bin/setenv-overrides.sh bin/
 #cp -r $currentGSPath/work .
 #echo "GS_HOME"$GS_HOME" "$currentGSPath
 cp $currentGSPath/gs-license.txt .
-chown -R $applicativeUser:$applicativeUser *
+#cd
+#echo ""$cefLoggingJarInput $cefLoggingJarInputTarget
+cp $cefLoggingJarInput $cefLoggingJarInputTarget
+chown -R $applicativeUser:$applicativeUser /dbagiga/*
 sleep 10
 info "starting gs...\n"
 systemctl start gsa

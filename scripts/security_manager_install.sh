@@ -336,7 +336,7 @@ function installAirGapGS {
 
    cd $targetDir
    ln -s $extracted_folder gigaspaces-smart-ods
-   sed -i -e 's|../config/security/security-config.xml|../config/security/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
+   sed -i -e 's|../config/security/security-config.xml|//dbagiga/gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
    cp gigaspaces-smart-ods/config/security/security.properties /dbagiga/gs_config/
    echo "Installation & configuration Gigaspace  -Done!"
 }
