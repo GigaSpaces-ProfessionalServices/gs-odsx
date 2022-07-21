@@ -333,6 +333,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"15. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"15A. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
+              Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
         print(Fore.GREEN+"16. "+
               Fore.GREEN+"db2jcc-4.26.14.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarInput).replace('"','')+Fore.RESET)
@@ -425,6 +428,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         #print(outputShFile)
                         #Upload CEF logging jar
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
                         #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
@@ -437,7 +442,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
                         #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/gs_config/* ")
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                         configureMetricsXML(host)
                     serverHost=''
                     try:
