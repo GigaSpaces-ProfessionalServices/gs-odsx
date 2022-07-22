@@ -589,29 +589,24 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
             deployResponseCode = str(response.content.decode('utf-8'))
             print("deployResponseCode : "+str(deployResponseCode))
             logger.info("deployResponseCode :"+str(deployResponseCode))
-            if(deployResponseCode.isdigit()):
-                status = validateResponseGetDescription(deployResponseCode)
-                logger.info("response.status_code :"+str(response.status_code))
-                logger.info("response.content :"+str(response.content) )
-                if(response.status_code==202):
-                    logger.info("Response :"+str(status))
-                    retryCount=5
-                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                        status = validateResponseGetDescription(deployResponseCode)
-                        verboseHandle.printConsoleInfo("Response :"+str(status))
-                        retryCount = retryCount-1
-                        time.sleep(2)
-                        if(str(status).casefold().__contains__('successful')):
-                            return
-                        elif(str(status).casefold().__contains__('failed')):
-                            return
-                else:
-                    logger.info("Unable to deploy :"+str(status))
-                    verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
+            status = validateResponseGetDescription(deployResponseCode)
+            logger.info("response.status_code :"+str(response.status_code))
+            logger.info("response.content :"+str(response.content) )
+            if(response.status_code==202):
+                logger.info("Response :"+str(status))
+                retryCount=5
+                while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                    status = validateResponseGetDescription(deployResponseCode)
+                    verboseHandle.printConsoleInfo("Response :"+str(status))
+                    retryCount = retryCount-1
+                    time.sleep(2)
+                    if(str(status).casefold().__contains__('successful')):
+                        return
+                    elif(str(status).casefold().__contains__('failed')):
+                        return
             else:
-                logger.info("Unable to deploy :"+str(deployResponseCode))
-                verboseHandle.printConsoleInfo("Unable to deploy : "+str(deployResponseCode))
-
+                logger.info("Unable to deploy :"+str(status))
+                verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
         else:
             return
         #logger.info("GSC "+str(managerHostConfig)+" response_status_code:"+str(response.status_code))
@@ -654,8 +649,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : main"+str(managerHost))
             if(len(str(managerHost))>0):
-                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 managerHostConfig = managerHost
                 logger.info("managerHostConfig : "+str(managerHost))
                 listSpacesOnServer(managerNodes)

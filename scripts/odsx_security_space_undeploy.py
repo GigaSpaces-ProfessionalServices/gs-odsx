@@ -251,20 +251,16 @@ def proceedToUndeployPU(managerHost):
                 if(response.status_code==202):
                     undeployResponseCode = str(response.content.decode('utf-8'))
                     logger.info("backUPResponseCode : "+str(undeployResponseCode))
-                    if(undeployResponseCode.isdigit()):
-                        status = validateResponse(undeployResponseCode)
-                        with Spinner():
-                            while(status.casefold() != 'successful'):
-                                time.sleep(2)
-                                status = validateResponse(undeployResponseCode)
-                                logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
-                                #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                                verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                        verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                    else:
-                        logger.info("Undeploy  :"+str(spaceTobeUndeploy)+"   status :"+str(undeployResponseCode))
-                        verboseHandle.printConsoleInfo("Undeploy  :"+str(spaceTobeUndeploy)+"   Status : "+str(undeployResponseCode))
 
+                    status = validateResponse(undeployResponseCode)
+                    with Spinner():
+                        while(status.casefold() != 'successful'):
+                            time.sleep(2)
+                            status = validateResponse(undeployResponseCode)
+                            logger.info("Undeploy :"+str(spaceTobeUndeploy)+"   Status :"+str(status))
+                            #verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                            verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
+                    verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
             else:
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
                 verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
@@ -382,8 +378,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
-                username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 managerHostConfig = str(input(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
                 if(len(str(managerHostConfig))>0):
                     managerHost = managerHostConfig
