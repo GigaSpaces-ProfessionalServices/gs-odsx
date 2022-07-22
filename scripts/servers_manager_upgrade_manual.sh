@@ -49,6 +49,11 @@ applicativeUser=$3
 sourcePath=$4
 cefLoggingJarInput=$5
 cefLoggingJarInputTarget=$6
+springLdapCoreJarInput=$7
+springLdapJarInput=$8
+vaultSupportJarInput=$9
+javaPasswordJarInput=${10}
+springTargetJarInput=${11}
 info "stopping gs...\n"
 systemctl stop gsa
 sleep 30
@@ -73,6 +78,7 @@ cd -P $parentPathGS
 rm gigaspaces-smart-ods
 info "changing version to $newPackagenameWithoutExt\n"
 #echo "newPackagenameWithoutExt"$newPackagenameWithoutExt
+info "creating symlink \n"
 ln -s $newPackagenameWithoutExt gigaspaces-smart-ods
 cd -P $GS_HOME
 #echo ""$(pwd)
@@ -82,7 +88,14 @@ cp $currentGSPath/bin/setenv-overrides.sh bin/
 cp $currentGSPath/gs-license.txt .
 #cd
 #echo ""$cefLoggingJarInput $cefLoggingJarInputTarget
+info "copying required jars...\n"
 cp $cefLoggingJarInput $cefLoggingJarInputTarget
+cd
+rm -f /dbagiga/gs_jars/*
+#echo ""$springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
+cp $springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
+#echo ""/dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
+cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
 chown -R $applicativeUser:$applicativeUser /dbagiga/*
 sleep 10
 info "starting gs...\n"

@@ -115,7 +115,7 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
             managerInfoResponse = requests.get(('http://' + str(os.getenv(node.ip)) + ':8090/v2/info'),
                                                headers={'Accept': 'application/json'})
             output = managerInfoResponse.content.decode("utf-8")
-            #print(output)
+            print(output)
             logger.info("Json Response container:" + str(output))
             managerInfo = json.loads(managerInfoResponse.text)
             currentVersion = str(managerInfo["revision"])
@@ -163,13 +163,18 @@ def proceedForManagerUpgrade(managerStatusIP, managerStatus):
             "Starting upgradation for manager " + managerStatusIP)
         #scp_upload(managerStatusIP, user, sourcePath + "/" + packageName,
         #           "install/gs/upgrade/")
-        cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar.target2"))
-
+        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
+        springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
+        vaultSupportJarInput = str(getYamlFilePathInsideFolder(".security.jars.vaultsupportjar")).replace('[','').replace(']','')
+        javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
+        springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
 
         commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName+" "+cefLoggingJarInput+" "+cefLoggingJarInputTarget
+        additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName+" " \
+           ""+cefLoggingJarInput+" "+cefLoggingJarInputTarget+" "+springLdapCoreJarInput+" "+springLdapJarInput+" "+vaultSupportJarInput+" "+javaPasswordJarInput+" "+springTargetJarInput
         #print(additionalParam)
         isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
         pemFileName = readValuefromAppConfig("cluster.pemFile")

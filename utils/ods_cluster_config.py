@@ -537,7 +537,7 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
         try:
             headers = [Fore.YELLOW+"SrNo."+Fore.RESET,
                        Fore.YELLOW+"Manager Name"+Fore.RESET,
-                       Fore.YELLOW+"IP"+Fore.RESET,
+                       #Fore.YELLOW+"IP"+Fore.RESET,
                        Fore.YELLOW+"Install"+Fore.RESET,
                        Fore.YELLOW+"Status"+Fore.RESET]
             data=[]
@@ -555,7 +555,7 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
                     installStatus='Yes'
                 dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                            Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                           Fore.GREEN+os.getenv(node.ip)+Fore.RESET,
+                           #Fore.GREEN+os.getenv(node.ip)+Fore.RESET,
                            Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                            Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
                 data.append(dataArray)

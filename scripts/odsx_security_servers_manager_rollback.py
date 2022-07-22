@@ -9,7 +9,7 @@ import requests
 from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetVersionOldGS
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutputPython36
@@ -130,6 +130,25 @@ def handleException(e):
         'trace': trace
     })))
 
+def validateServer(host):
+    status = getSpaceServerStatus(host)
+    #print(status)
+    version = getGSVersion(host)
+    if status == "ON" and version != "NA":
+        return True
+
+def getGSVersion(host):
+    #print('http://' + str(host) + ':8090/v2/info')
+    managerInfoResponse = requests.get(('http://' + str(host) + ':8090/v2/info'),
+                                       headers={'Accept': 'application/json'})
+    output = managerInfoResponse.content.decode("utf-8")
+    #print(output)
+    logger.info("Json Response container:" + str(output))
+    try:
+        managerInfo = json.loads(managerInfoResponse.text)
+        return str(managerInfo["revision"])
+    except Exception as e:
+        return "NA"
 
 def proceedForRollback(host):
     logger.info("proceedForRollback")
@@ -138,7 +157,18 @@ def proceedForRollback(host):
     isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
     pemFileName = readValuefromAppConfig("cluster.pemFile")
     ssh = ""
-    additionalParam=""
+
+    cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
+    cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+    springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
+    springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
+    vaultSupportJarInput = str(getYamlFilePathInsideFolder(".security.jars.vaultsupportjar")).replace('[','').replace(']','')
+    javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
+
+    springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
+
+    additionalParam=cefLoggingJarInput+" "+cefLoggingJarInputTarget+" "+springLdapCoreJarInput+" "+springLdapJarInput+" "+vaultSupportJarInput+" "+javaPasswordJarInput+" "+springTargetJarInput
+
     if isConnectUsingPem == 'True':
         ssh = ''.join(
             ['ssh', ' -i ', pemFileName, ' ', user, '@', str(host), ' '])
@@ -148,6 +178,10 @@ def proceedForRollback(host):
     with Spinner():
         os.system(cmd)
         pass
+    if validateServer(host)==True:
+        verboseHandle.printConsoleInfo("Validation successful manager is started " + host)
+    else:
+        verboseHandle.printConsoleError("Validation failed, manager is not started " + host)
     config_get_manager_listWithStatus()
 
 if __name__ == '__main__':
