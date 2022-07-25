@@ -63,12 +63,24 @@ cd -P $GS_HOME
 currentGSPath=$(pwd)
 #echo "currentGSPath "$currentGSPath
 currentGSName=$(basename $currentGSPath)
-#echo "currentGSName "$currentGSName
+info "currentGSName "$currentGSName
 # mkdir -p /dbagiga/rollback/$currentGSName
 # cp -r $currentGSPath/ /dbagiga/rollback/
 cd ..
 parentPathGS=$(pwd)
+#echo "parentPathGS: "$parentPathGS
+if [ -d "gigaspaces-smart-ods-old" ]; then
+  cd -P /dbagiga/gigaspaces-smart-ods-old
+  previousGSPath=$(pwd)
+  previousGSName=$(basename $previousGSPath)
+  cd /dbagiga
+  info "previousGSPath "$previousGSName
+  rm -f gigaspaces-smart-ods-old
+  rm -rf $previousGSName
+fi
 #echo "dir"$(pwd)
+rm -f gigaspaces-smart-ods-old
+#echo ""$currentGSName "gigaspaces-smart-ods-old"
 ln -s $currentGSName gigaspaces-smart-ods-old
 newPackagenameWithoutExt="${newPackagename%.*}"
 cd
