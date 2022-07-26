@@ -498,7 +498,7 @@ def config_get_space_list_with_status(user,filePath='config/cluster.config'):
         installStatus='No'
         install = isInstalledAndGetVersion(spaceHost)
         logger.info("install : "+str(install))
-        if(len(str(install))>0):
+        if(len(str(install))>8):
             installStatus='Yes'
         status = host_nic_dict_obj.get(spaceHost)
         dataArray=[Fore.GREEN+str(counter)+Fore.RESET,

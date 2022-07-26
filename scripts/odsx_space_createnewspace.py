@@ -306,27 +306,27 @@ def proceedForValidateResponse(response):
 
 def createNewSpaceREST(managerHostConfig):
     logger.info("createNewSpaceREST() : managerHostConfig:"+str(managerHostConfig))
-    confirmCreateSpace = str(input("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
-    if(len(confirmCreateSpace)==0):
-        confirmCreateSpace='y'
+    #confirmCreateSpace = #str(input("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
+    #if(len(confirmCreateSpace)==0):
+    confirmCreateSpace='y'
     if(confirmCreateSpace=='y'):
         global spaceName
-        spaceName = str(input("Enter space name  [mySpace] :"+Fore.RESET))
-        if(len(str(spaceName))==0):
-            spaceName="mySpace"
+        spaceName = str(readValuefromAppConfig("app.newspace.name"))#str(input("Enter space name  [mySpace] :"+Fore.RESET))
+        #if(len(str(spaceName))==0):
+        #    spaceName="mySpace"
 
         global isBuildGlobally
-        isBuildGlobally = str(input("Build globally over the cluster (y/n) [y] :"+Fore.RESET))
-        if(len(str(isBuildGlobally))==0):
-            isBuildGlobally='y'
+        isBuildGlobally = str(readValuefromAppConfig("app.newspace.createglobally"))#str(input("Build globally over the cluster (y/n) [y] :"+Fore.RESET))
+        #if(len(str(isBuildGlobally))==0):
+        #    isBuildGlobally='y'
 
         global partitions
-        partitions = str(input("Enter partitions [1] :"+Fore.RESET))
-        if(len(str(partitions))==0):
-            partitions="1"
+        partitions = str(readValuefromAppConfig("app.newspace.partitions"))#str(input("Enter partitions [1] :"+Fore.RESET))
+        #if(len(str(partitions))==0):
+        #    partitions="1"
 
         global backUpRequired
-        backUpRequired = str(input("SLA [HA] ? (y/n) [y] :"+Fore.RESET))
+        backUpRequired = str(readValuefromAppConfig("app.newspace.ha"))#str(input("SLA [HA] ? (y/n) [y] :"+Fore.RESET))
         if(len(str(backUpRequired))==0 or backUpRequired=='y'):
             backUpRequired='true'
         if(str(backUpRequired)=='n'):
@@ -343,7 +343,7 @@ def createNewSpaceREST(managerHostConfig):
             #for i in range(1,len(space_dict_obj)+1):
             #    host = space_dict_obj.get(str(i))
             logger.info("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
-            print("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
+            #print("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
             response = requests.post("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
             proceedForValidateResponse(response)
         elif(isBuildGlobally=='n'):

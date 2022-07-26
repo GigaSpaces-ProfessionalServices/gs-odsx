@@ -10,7 +10,9 @@ from colorama import Fore
 
 from utils.ods_list import configureMetricsXML
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,executeLocalCommandAndGetOutput,connectExecuteSSH
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
+    executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
+    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
@@ -438,7 +440,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     #print(outputShFile)
                     #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
                     #Upload CEF logging jar
-                    scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                    #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                    verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
                     configureMetricsXML(host)
                 serverHost=''
                 try:
@@ -505,38 +509,17 @@ if __name__ == '__main__':
     try:
         isValidRPMs = validateRPMS()
         if(isValidRPMs):
-            if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-                arguments = myCheckArg(sys.argv[1:])
-                if(arguments.dryrun==True):
-                    current_os = platform.system().lower()
-                    logger.debug("Current OS:"+str(current_os))
-                    if current_os == "windows":
-                        parameter = "-n"
-                    else:
-                        parameter = "-c"
-                    exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                    if(exit_code == 0):
-                        verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                        logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                    else:
-                        verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                        logger.debug("Unable to connect to server.:"+arguments.host)
-                    quit()
-                for arg in sys.argv[1:]:
-                    args.append(arg)
-               # print('install :',args)
-            elif(sys.argv[1]==menuDrivenFlag):
-                args.append(menuDrivenFlag)
-                #host = str(input("Enter your host: "))
-                #args.append('--host')
-                #args.append(host)
-                #user = readValuefromAppConfig("app.server.user")
-                #user = str(input("Enter your user [root]: "))
-                user='root'
-                if(len(str(user))==0):
-                    user="root"
-                args.append('-u')
-                args.append(user)
+            args.append(menuDrivenFlag)
+            #host = str(input("Enter your host: "))
+            #args.append('--host')
+            #args.append(host)
+            #user = readValuefromAppConfig("app.server.user")
+            #user = str(input("Enter your user [root]: "))
+            user='root'
+            if(len(str(user))==0):
+                user="root"
+            args.append('-u')
+            args.append(user)
             hostsConfig = readValuefromAppConfig("app.manager.hosts")
             args.append('--id')
             hostsConfig=getHostConfiguration()
