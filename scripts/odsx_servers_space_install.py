@@ -10,7 +10,8 @@ from colorama import Fore
 
 from utils.ods_list import getManagerHostFromEnv, configureMetricsXML
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
+    executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion
 from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
 from scripts.spinner import Spinner
@@ -347,7 +348,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 installStatus='No'
                 install = isInstalledAndGetVersion(host)
                 logger.info("install : "+str(install))
-                if(len(str(install))>0):
+                if(len(str(install))>8):
                     installStatus='Yes'
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
@@ -388,15 +389,25 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         logger.debug("script output"+str(outputShFile))
                         #print(outputShFile)
                         #Upload CEF logging jar
-                        scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                        #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+                        verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
                         #UPLOAD DB2FEEDER JAR
                         #if(confirmDb2FeederJar=='y'):
                         #print("source :"+db2jccJarInput)
-                        scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                        #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                        verboseHandle.printConsoleInfo(db2jccJarInput+" -> "+db2FeederJarTargetInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
                         #print("source2 :"+db2jccJarLicenseInput)
-                        scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-                        scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                        #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+                        verboseHandle.printConsoleInfo(db2jccJarLicenseInput+" -> "+db2FeederJarTargetInput)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
+                        #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
+                        verboseHandle.printConsoleInfo(msSqlFeederFileSource+"/*keytab -> "+msSqlFeederFileTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*keytab "+msSqlFeederFileTarget)
+                        #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                        verboseHandle.printConsoleInfo(msSqlFeederFileSource+"/*conf ->"+msSqlFeederFileTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*conf "+msSqlFeederFileTarget)
                         configureMetricsXML(host)
                     serverHost=''
                     try:
@@ -426,37 +437,16 @@ if __name__ == '__main__':
     try:
         isValidRPMs = validateRPMS()
         if(isValidRPMs):
-            if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
-                arguments = myCheckArg(sys.argv[1:])
-                if(arguments.dryrun==True):
-                    current_os = platform.system().lower()
-                    logger.debug("Current OS:"+str(current_os))
-                    if current_os == "windows":
-                        parameter = "-n"
-                    else:
-                        parameter = "-c"
-                    exit_code = os.system(f"ping {parameter} 1 -w2 {arguments.host} > /dev/null 2>&1")
-                    if(exit_code == 0):
-                        verboseHandle.printConsoleInfo("Connected to server with dryrun mode.!"+arguments.host)
-                        logger.debug("Connected to server with dryrun mode.!"+arguments.host)
-                    else:
-                        verboseHandle.printConsoleInfo("Unable to connect to server."+arguments.host)
-                        logger.debug("Unable to connect to server.:"+arguments.host)
-                    quit()
-                for arg in sys.argv[1:]:
-                    args.append(arg)
-            # print('install :',args)
-            elif(sys.argv[1]==menuDrivenFlag):
-                args.append(menuDrivenFlag)
-                #host = str(input("Enter your host: "))
-                #args.append('--host')
-                #args.append(host)
-                #user = readValuefromAppConfig("app.server.user")
-                #user = str(input("Enter your user [root]: "))
-                #if(len(str(user))==0):
-                user="root"
-                args.append('-u')
-                args.append(user)
+            args.append(menuDrivenFlag)
+            #host = str(input("Enter your host: "))
+            #args.append('--host')
+            #args.append(host)
+            #user = readValuefromAppConfig("app.server.user")
+            #user = str(input("Enter your user [root]: "))
+            #if(len(str(user))==0):
+            user="root"
+            args.append('-u')
+            args.append(user)
             hostsConfig = readValuefromAppConfig("app.manager.hosts")
             args.append('--id')
             hostsConfig=getHostConfiguration()

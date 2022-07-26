@@ -235,7 +235,7 @@ function installAirGapGS {
    echo "homedir: "$home_dir
    installation_path=$sourceInstallerDirectory/gs
    #installation_file=$(find $installation_path -name *.zip -printf "%f\n")
-   installation_file=$(ls -1 /dbagigashare/current/gs/*.zip)
+   installation_file=$(ls -1 $sourceInstallerDirectory/gs/*.zip)
    installation_file=$(basename $installation_file)
    echo $installation_path"/"$installation_file
    pwd

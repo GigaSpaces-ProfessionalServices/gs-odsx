@@ -5,7 +5,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
@@ -230,15 +230,16 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global specificHost
     global individualHostConfirm
     try:
-        confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
-        if(len(confirmCreateGSC)==0):
-            confirmCreateGSC='y'
+
+        confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc"))#str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+        #if(len(confirmCreateGSC)==0):
+        #    confirmCreateGSC='y'
         if(confirmCreateGSC=='y'):
             #global space_dict_obj
             #space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
-            individualHostConfirm = str(input(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
-            if(len(str(individualHostConfirm))==0):
-                individualHostConfirm = 'n'
+            individualHostConfirm = str(readValuefromAppConfig("app.spacejar.creategsc.specifichost"))#str(input(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
+            #if(len(str(individualHostConfirm))==0):
+            #    individualHostConfirm = 'n'
             if(individualHostConfirm=='y'):
                 hostToCreateGSC = str(input("Enter space host serial number to create gsc [1] :"+Fore.RESET))
                 if(len(hostToCreateGSC)==0):
@@ -247,18 +248,18 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
                 verboseHandle.printConsoleInfo("GSC will be created on :"+str(specificHost))
             logger.info("individualHostConfirm : "+str(individualHostConfirm))
 
-            numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSC per host [2] :"+Fore.RESET))
-            if(len(str(numberOfGSC))==0):
-                numberOfGSC=2
+            numberOfGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscperhost"))#str(input(Fore.YELLOW+"Enter number of GSC per host  :"+Fore.RESET))
+            #if(len(str(numberOfGSC))==0):
+            #    numberOfGSC=2
             logger.info("numberofGSC :"+str(numberOfGSC))
 
-            memoryGSC = str(input(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
-            if(len(memoryGSC)==0):
-                memoryGSC="12g"
+            memoryGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory"))#str(input(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
+            #if(len(memoryGSC)==0):
+            #    memoryGSC="12g"
 
-            zoneGSC = str(input(Fore.YELLOW+"Enter zone :"+Fore.RESET))
-            while(len(str(zoneGSC))==0):
-                zoneGSC = str(input("Enter zone :"+Fore.RESET))
+            zoneGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone"))#str(input(Fore.YELLOW+"Enter zone :"+Fore.RESET))
+            #while(len(str(zoneGSC))==0):
+            #    zoneGSC = str(input("Enter zone :"+Fore.RESET))
 
             size = 1024
             type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
@@ -363,15 +364,13 @@ def uploadFileRest(managerHostConfig):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
-        global pathOfSourcePU
-        pathOfSourcePU = str(readValuefromAppConfig("app.tieredstorage.pu.filepath")).replace('"','')
-        pathOfSourcePUInput = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
-        if(len(str(pathOfSourcePUInput))>0):
-            pathOfSourcePU = pathOfSourcePUInput
-        while(len(str(pathOfSourcePU))==0):
-            pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+        # pathOfSourcePUInput = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
+       # if(len(str(pathOfSourcePUInput))>0):
+       #     pathOfSourcePU = pathOfSourcePUInput
+       # while(len(str(pathOfSourcePU))==0):
+       #     pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
-        set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
+        #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
 
         logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
@@ -382,69 +381,42 @@ def uploadFileRest(managerHostConfig):
 def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backUpRequired):
     logger.info("dataPuREST()")
     try:
-        '''
-        global slaProperties
-        slaProperties = str(input(Fore.YELLOW+"Enter pu.autogenerated-instance-sla value [true] :"+Fore.RESET))
-        if(len(str(slaProperties))==0):
-            slaProperties="true"
-        logger.info("slaProperties :"+str(slaProperties))
-        
-        global tieredCriteriaConfigFilePath
-        tieredCriteriaConfigFilePath = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath")).replace('"','')
-        tieredCriteriaConfigFilePathInput = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath ["+str(tieredCriteriaConfigFilePath)+"]: "+Fore.RESET))
-        if(len(str(tieredCriteriaConfigFilePathInput))>0):
-            tieredCriteriaConfigFilePath = tieredCriteriaConfigFilePathInput
-        while(len(str(tieredCriteriaConfigFilePath))==0):
-            tieredCriteriaConfigFilePath = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath : "+Fore.RESET))
-        logger.info("filePath :"+str(tieredCriteriaConfigFilePath))
-        set_value_in_property_file('app.tieredstorage.criteria.filepath',str(tieredCriteriaConfigFilePath))
-        
-        global tieredCriteriaConfigFilePathTarget
-        tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','')
-        tieredCriteriaConfigFilePathTargetInput = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath.target ["+str(tieredCriteriaConfigFilePathTarget)+"]: "+Fore.RESET))
-        if(len(str(tieredCriteriaConfigFilePathTargetInput))>0):
-            tieredCriteriaConfigFilePathTarget = tieredCriteriaConfigFilePathTargetInput
-        while(len(str(tieredCriteriaConfigFilePathTarget))==0):
-            tieredCriteriaConfigFilePathTarget = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath.target : "+Fore.RESET))
-        logger.info("filePath.target :"+str(tieredCriteriaConfigFilePathTarget))
-        set_value_in_property_file('app.tieredstorage.criteria.filepath.target',str(tieredCriteriaConfigFilePathTarget))
-        '''
         global isSpacePropertyRequired
-        isSpacePropertyRequired = str(input(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
-        if(len(isSpacePropertyRequired)==0):
-            isSpacePropertyRequired='y'
+        isSpacePropertyRequired = str(readValuefromAppConfig("app.spacejar.wantspaceproperty"))#str(input(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
+        #if(len(isSpacePropertyRequired)==0):
+        #    isSpacePropertyRequired='y'
         logger.info("isSpacePropertyRequired : "+str(isSpacePropertyRequired))
         global spacePropertyConfigFilePath
         global spacePropertyConfigFilePathTarget
         spacePropertyConfigFilePath=''
         spacePropertyConfigFilePathTarget=''
         if(isSpacePropertyRequired=='y'):
-            spacePropertyConfigFilePath = str(readValuefromAppConfig("app.space.property.filePath")).replace('"','')
-            logger.info("app.space.property.filePath :"+str(spacePropertyConfigFilePath))
-            spacePropertyConfigFilePathInput = str(input(Fore.YELLOW+"Enter space.property.filePath ["+str(spacePropertyConfigFilePath)+"]: "+Fore.RESET))
-            if(len(str(spacePropertyConfigFilePathInput))>0):
-                spacePropertyConfigFilePath = spacePropertyConfigFilePathInput
-            while(len(str(spacePropertyConfigFilePath))==0):
-                spacePropertyConfigFilePath = str(input(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
+            spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.space.spacepropertyfile"))
+            logger.info("gs.config.ts.spaceproperty :"+str(spacePropertyConfigFilePath))
+            #spacePropertyConfigFilePathInput = str(input(Fore.YELLOW+"Enter space.property.filePath ["+str(spacePropertyConfigFilePath)+"]: "+Fore.RESET))
+            #if(len(str(spacePropertyConfigFilePathInput))>0):
+            #    spacePropertyConfigFilePath = spacePropertyConfigFilePathInput
+            #while(len(str(spacePropertyConfigFilePath))==0):
+            #    spacePropertyConfigFilePath = str(input(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
             logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
-            set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
+            #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
 
-            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.space.property.filePath.target")).replace('"','')
-            logger.info("app.space.property.filePath.target :"+str(spacePropertyConfigFilePathTarget))
-            spacePropertyConfigFilePathTargetInput = str(input(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
-            if(len(str(spacePropertyConfigFilePathTargetInput))>0):
-                spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
-            while(len(str(spacePropertyConfigFilePathTarget))==0):
-                spacePropertyConfigFilePathTarget = str(input(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
+            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.spacejar.spaceproperty.filepath.target")).replace('"','')
+            logger.info("app.spacejar.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
+            #spacePropertyConfigFilePathTargetInput = str(input(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
+            #if(len(str(spacePropertyConfigFilePathTargetInput))>0):
+            #    spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
+            #while(len(str(spacePropertyConfigFilePathTarget))==0):
+            #    spacePropertyConfigFilePathTarget = str(input(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
             logger.info("spacePropertyConfigFilePathTarget :"+str(spacePropertyConfigFilePathTarget))
-            set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
+            #set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
         else:
             logger.info("Skipping space property configure.")
 
         global spaceNameCfg
-        spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
-        while(len(str(spaceNameCfg))==0):
-            spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
+        spaceNameCfg = str(readValuefromAppConfig("app.spacejar.space.name"))#str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
+        #while(len(str(spaceNameCfg))==0):
+        #    spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
         logger.info("space.name :"+str(spaceNameCfg))
 
         data={
@@ -463,7 +435,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
                     "maxInstancesPerVM": 0
                 },
                 "contextProperties": {#"pu.autogenerated-instance-sla" :""+slaProperties+"",
-                                      #"tieredCriteriaConfig.filePath" : ""+tieredCriteriaConfigFilePathTarget+"",
+                                      "tieredCriteriaConfig.filePath" : "",
                                       "space.propertyFilePath" : ""+spacePropertyConfigFilePathTarget+"",
                                       "space.name" : ""+spaceNameCfg+""
                                       }
@@ -477,25 +449,26 @@ def displaySummaryOfInputParam(confirmCreateGSC):
     try:
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
-        verboseHandle.printConsoleWarning("Want to create GSC :"+str(confirmCreateGSC))
+        verboseHandle.printConsoleInfo("Want to create GSC :"+str(confirmCreateGSC))
         if(confirmCreateGSC=='y'):
-            verboseHandle.printConsoleWarning("Number of GSC per host :"+str(numberOfGSC))
-            verboseHandle.printConsoleWarning("Enter memory to create gsc :"+str(memoryGSC))
-            verboseHandle.printConsoleWarning("Enter zone :"+str(zoneGSC))
-        verboseHandle.printConsoleWarning("Enter path of resource :"+str(pathOfSourcePU))
-        verboseHandle.printConsoleWarning("Enter name of resource :"+str(resource))
-        verboseHandle.printConsoleWarning("Enter name of PU to deploy :"+str(resourceName))
-        verboseHandle.printConsoleWarning("Build zone of resource to deploy :"+str(zoneOfPU))
-        verboseHandle.printConsoleWarning("Enter partitions :"+str(partition))
-        verboseHandle.printConsoleWarning("Enter maxInstancePerVM :"+str(maxInstancesPerMachine))
-        verboseHandle.printConsoleWarning("SLA [HA] ? (y/n) :"+str(str(backUpRequired)))
-        #verboseHandle.printConsoleWarning("Enter pu.autogenerated-instance-sla value :"+str(slaProperties))
-        #verboseHandle.printConsoleWarning("Enter tieredCriteriaConfig.filePath :"+str(tieredCriteriaConfigFilePath))
-        #verboseHandle.printConsoleWarning("Enter tieredCriteriaConfig.filePath.target :"+str(tieredCriteriaConfigFilePathTarget))
+            verboseHandle.printConsoleInfo("Number of GSC per host :"+str(numberOfGSC))
+            verboseHandle.printConsoleInfo("Enter memory to create gsc :"+str(memoryGSC))
+            verboseHandle.printConsoleInfo("Enter zone :"+str(zoneGSC))
+        verboseHandle.printConsoleInfo("Enter path of resource :"+str(pathOfSourcePU))
+        verboseHandle.printConsoleInfo("Enter name of resource :"+str(resource))
+        verboseHandle.printConsoleInfo("Enter name of PU to deploy :"+str(resourceName))
+        verboseHandle.printConsoleInfo("Build zone of resource to deploy :"+str(zoneOfPU))
+        verboseHandle.printConsoleInfo("Enter partitions :"+str(partition))
+        verboseHandle.printConsoleInfo("Enter maxInstancePerVM :"+str(maxInstancesPerMachine))
+        verboseHandle.printConsoleInfo("SLA [HA] ? (y/n) :"+str(str(backUpRequiredStr)))
+        #verboseHandle.printConsoleInfo("Enter pu.autogenerated-instance-sla value :"+str(slaProperties))
+        #verboseHandle.printConsoleInfo("Enter tieredCriteriaConfig.filePath :"+str(tieredCriteriaConfigFilePath))
+        #verboseHandle.printConsoleInfo("Enter tieredCriteriaConfig.filePath.target :"+str(tieredCriteriaConfigFilePathTarget))
         if(isSpacePropertyRequired=='y'):
-            verboseHandle.printConsoleWarning("Enter space.property.filePath : "+str(spacePropertyConfigFilePath))
-            verboseHandle.printConsoleWarning("Enter space.property.filePath.target : "+str(spacePropertyConfigFilePathTarget))
-        verboseHandle.printConsoleWarning("Enter space name to set space.name : "+str(spaceNameCfg))
+            verboseHandle.printConsoleInfo("Enter space.property.filePath : "+str(spacePropertyConfigFilePath))
+            verboseHandle.printConsoleInfo("Enter space.property.filePath.target : "+str(spacePropertyConfigFilePathTarget))
+        verboseHandle.printConsoleInfo("Enter space name to set space.name : "+str(spaceNameCfg))
+        verboseHandle.printConsoleWarning("------------------------------------------------------------")
     except Exception as e:
         handleException(e)
 
@@ -543,45 +516,50 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
     logger.info("proceedForTieredStorageDeployment()")
     try:
         print("\n")
+        global pathOfSourcePU
+        pathOfSourcePU =  str(getYamlFilePathInsideFolder(".gs.jars.space.spacejar"))
+
         head , tail = os.path.split(pathOfSourcePU)
         logger.info("tail :"+str(tail))
         global resource
         resource = str(tail)
-        print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
+        #print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
         #while(len(str(resource))==0):
         #    resource = tail
         logger.info("resource :"+str(resource))
 
         global resourceName
-        resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
-        while(len(str(resourceName))==0):
-            resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
-        logger.info("nameOfPU :"+str(resourceName))
+        resourceName = str(readValuefromAppConfig("app.spacejar.pu.name"))#str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
+        #while(len(str(resourceName))==0):
+        #    resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
+        #logger.info("nameOfPU :"+str(resourceName))
 
         global partition
-        partition = str(input(Fore.YELLOW+"Enter partition required [1] :"+Fore.RESET))
-        if(len(str(partition))==0):
-            partition='1'
-        while( not partition.isdigit()):
-            partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
+        partition = str(readValuefromAppConfig("app.spacejar.pu.partitions"))#str(input(Fore.YELLOW+"Enter partition required [1] :"+Fore.RESET))
+        #if(len(str(partition))==0):
+        #    partition='1'
+        #while( not partition.isdigit()):
+        #    partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
         logger.info("Enter partition required :"+str(partition))
 
         global zoneOfPU
-        zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
-        while(len(str(zoneOfPU))==0):
-            zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
+        zoneOfPU = str(readValuefromAppConfig("app.spacejar.pu.zone"))#str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
+        #while(len(str(zoneOfPU))==0):
+        #    zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
         logger.info("Zone Of PU :"+str(zoneOfPU))
 
         global maxInstancesPerMachine
-        maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1] :"+Fore.RESET))
-        if(len(str(maxInstancesPerMachine))==0):
-            maxInstancesPerMachine = '1'
-        while(not maxInstancesPerMachine.isdigit()):
-            maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
+        maxInstancesPerMachine = str(readValuefromAppConfig("app.spacejar.pu.maxinstancepermachine"))#str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1] :"+Fore.RESET))
+        #if(len(str(maxInstancesPerMachine))==0):
+        #    maxInstancesPerMachine = '1'
+        #while(not maxInstancesPerMachine.isdigit()):
+        #    maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
         logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
         global backUpRequired
-        backUpRequired = str(input(Fore.YELLOW+"SLA [HA] ? (y/n) [y] :"+Fore.RESET))
+        global backUpRequiredStr
+        backUpRequired = str(readValuefromAppConfig("app.spacejar.pu.backuprequired"))#str(input(Fore.YELLOW+"SLA [HA] ? (y/n) [y] :"+Fore.RESET))
+        backUpRequiredStr = backUpRequired
         if(len(str(backUpRequired))==0 or backUpRequired=='y'):
             backUpRequired=1
         if(str(backUpRequired)=='n'):
@@ -594,6 +572,8 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         if(len(str(finalConfirm))==0):
             finalConfirm='y'
         if(finalConfirm=='y'):
+            uploadFileRest(managerHostConfig)
+            print("\n")
             if(confirmCreateGSC=='y'):
                 logger.info("Creating GSC :")
                 createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
@@ -607,29 +587,24 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
             deployResponseCode = str(response.content.decode('utf-8'))
             print("deployResponseCode : "+str(deployResponseCode))
             logger.info("deployResponseCode :"+str(deployResponseCode))
-            if(deployResponseCode.isdigit()):
-                status = validateResponseGetDescription(deployResponseCode)
-                logger.info("response.status_code :"+str(response.status_code))
-                logger.info("response.content :"+str(response.content) )
-                if(response.status_code==202):
-                    logger.info("Response :"+str(status))
-                    retryCount=5
-                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                        status = validateResponseGetDescription(deployResponseCode)
-                        verboseHandle.printConsoleInfo("Response :"+str(status))
-                        retryCount = retryCount-1
-                        time.sleep(2)
-                        if(str(status).casefold().__contains__('successful')):
-                            return
-                        elif(str(status).casefold().__contains__('failed')):
-                            return
-                else:
-                    logger.info("Unable to deploy :"+str(status))
-                    verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
+            status = validateResponseGetDescription(deployResponseCode)
+            logger.info("response.status_code :"+str(response.status_code))
+            logger.info("response.content :"+str(response.content) )
+            if(response.status_code==202):
+                logger.info("Response :"+str(status))
+                retryCount=5
+                while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                    status = validateResponseGetDescription(deployResponseCode)
+                    verboseHandle.printConsoleInfo("Response :"+str(status))
+                    retryCount = retryCount-1
+                    time.sleep(2)
+                    if(str(status).casefold().__contains__('successful')):
+                        return
+                    elif(str(status).casefold().__contains__('failed')):
+                        return
             else:
-                logger.info("Unable to deploy :"+str(deployResponseCode))
-                verboseHandle.printConsoleInfo("Unable to deploy : "+str(deployResponseCode))
-
+                logger.info("Unable to deploy :"+str(status))
+                verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
         else:
             return
         #logger.info("GSC "+str(managerHostConfig)+" response_status_code:"+str(response.status_code))
@@ -672,12 +647,10 @@ if __name__ == '__main__':
                 logger.info("confirmCreateGSC : "+str(confirmCreateGSC))
                 if(confirmCreateGSC=='y'):
                     if(isMemoryAvailable):
-                        uploadFileRest(managerHostConfig)
                         proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
                     else:
                         logger.info("No memeory available double check.")
                 if(confirmCreateGSC=='n'):
-                    uploadFileRest(managerHostConfig)
                     proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
             else:
                 logger.info("Please check manager server status.")
