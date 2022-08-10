@@ -610,11 +610,13 @@ def checkSpacePrimaryStatus(managerHost,isSecure=False,username=None,password=No
         while(isAllTierPrimariesUp == False):
             isAllTierPrimariesUp = checkSpacePrimaryParitions(managerHost,tierStorageSpace,tierSpaceMaxPartitions,isSecure, username,password)
     
+    """
     with Spinner():
         verboseHandle.printConsoleInfo("waiting for all primary partitions of space..")
         while(isAllSpacePrimariesUp == False):
             isAllSpacePrimariesUp = checkSpacePrimaryParitions(managerHost,spaceName,spaceMaxPartitions,isSecure, username,password)
-
+    """
+    
     print(bcolors.BLUE + bcolors.BOLD + "All primary partitions of space are up!"+bcolors.RESET)
     
 def checkSpacePrimaryParitions(managerHost,spaceName, maxPartitions,isSecure=False,username=None,password=None):
