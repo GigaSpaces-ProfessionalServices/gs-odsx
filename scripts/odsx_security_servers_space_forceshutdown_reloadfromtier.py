@@ -5,6 +5,7 @@ from logging import exception
 import os
 import re
 from shutil import ExecError
+from time import time
 import pexpect
 import sys
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig
@@ -69,7 +70,8 @@ def reloadSpaces(username,password):
     
     managerHost = getManagerHost()
     startSpaceServers(user,True)
-
+    verboseHandle.printConsoleInfo("Waiting for all GSCs to be up")
+    time.sleep(60)
     #python_code = __import__('odsx_dataengine_db2-feeder_install-deploy')
     #python_code.installFeeder(True)
     #os.system("python3 scripts/odsx_dataengine_db2-feeder_install-deploy.py")

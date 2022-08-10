@@ -80,12 +80,13 @@ def shutdownServers(username,password):
     #print("managerHost=>"+str(managerHost))
     puList = getProcessingUnitList(managerHost,True,username,password)
 
-    
+    """
     for pu in puList:
         spacePU = str(pu['name'])
         if((spacePU == spacePUName or spacePU == tierSpacePUName) and spaceList.__contains__(spacePU)==False ):
             spaceList.append(spacePU)
-        
+    """
+    spaceList.append(tierSpacePUName) 
     #try:
     #verboseHandle.printConsoleInfo("Validating .......")
     validationMsg = validateBeforeShutdown(managerHost, puList,tierSpace,True,username,password)
@@ -102,7 +103,7 @@ def shutdownServers(username,password):
                 verboseHandle.printConsoleError(tierSpaceValidation)
                 exit(0)
         else:
-            verboseHandle.printConsoleWarning("Validation for Tier Space paritions is disabled.")
+            verboseHandle.printConsoleWarning("Validation for Tier Space partitions is disabled.")
 
         printSuccessSummary(puList)
         confirmMsg = Fore.YELLOW + "Do you really want to shutdown ? (Yes(y)/No(n)):" + Fore.RESET
@@ -133,7 +134,7 @@ def shutdownServers(username,password):
     statefulPUMsg = undeploySpace(managerHost, spaceList,True,username,password)
     verboseHandle.printConsoleInfo(statefulPUMsg)
 
-    #shutdownSpaceServers(user,True)
+    shutdownSpaceServers(user,True)
     
     logger.info("shutdownServers() : end")
     #except Exception as e:
