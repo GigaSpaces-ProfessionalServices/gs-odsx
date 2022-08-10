@@ -96,17 +96,17 @@ def undeployProcessingUnit(managerHost, puId,isSpace,isSecure=False,username=Non
         undeployURL+="&drainMode="+strDrainMode+"&drainTimeout="+strDrainTimeout
 
     if(isSecure==True and username is not None and password is not None):
-        print("in if")
-        print("undeployURL ->"+str(undeployURL))
+        #print("in if")
+        #print("undeployURL ->"+str(undeployURL))
         response = requests.delete(undeployURL,auth = HTTPBasicAuth(username, password))
     else:
-        print("in else")
+        #print("in else")
         response = requests.delete(undeployURL)
     logger.info("undeployProcessingUnit() response : "+str(response))
     
-    print("response.status_code ------------undeployProcessingUnit=>"+str(response.status_code))
+    #print("response.status_code ------------undeployProcessingUnit=>"+str(response.status_code))
     if(response.status_code==202):
-        """
+        
         undeployResponseCode = str(response.content.decode('utf-8'))
         status = validateResponse(managerHost,undeployResponseCode,isSecure,username,password)
         with Spinner():
@@ -115,7 +115,7 @@ def undeployProcessingUnit(managerHost, puId,isSpace,isSecure=False,username=Non
                 status = validateResponse(managerHost,undeployResponseCode,isSecure,username,password)
                 verboseHandle.printConsoleInfo("Undeploy  : "+str(puId)+"   Status : "+str(status))
         verboseHandle.printConsoleInfo(" Undeploy  : "+str(puId)+"   Status : "+str(status))
-        """
+        
         logger.info("undeployProcessingUnit() : end")
         return True
     logger.info("undeployProcessingUnit() : end")
@@ -140,7 +140,7 @@ def undeploySpace(managerHost, statefulPUList,isSecure=False,username=None,passw
     statefulPUMsg = ''
     logger.info("statefulPUList => "+str(statefulPUList))
     for name in statefulPUList:
-        isUndeployed = undeployProcessingUnit(managerHost, name,isSecure,username,password)
+        isUndeployed = undeployProcessingUnit(managerHost,name,True,isSecure,username,password)
         if(isUndeployed==True):
             statefulPUMsg+= "Space '"+str(name)+"' is undeployed successfully!\n"
     
