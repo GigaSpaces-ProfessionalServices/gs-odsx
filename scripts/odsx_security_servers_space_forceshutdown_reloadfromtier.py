@@ -5,7 +5,7 @@ from logging import exception
 import os
 import re
 from shutil import ExecError
-from time import time
+import time
 import pexpect
 import sys
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig
