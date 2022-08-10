@@ -6,7 +6,7 @@ from logging import exception
 import os
 from shutil import ExecError
 import sys
-
+import time
 import pexpect
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig
 from utils.odsx_print_tabular_data import printTabular
@@ -69,9 +69,10 @@ def reloadSpaces():
 
     managerHost = getManagerHost()
     startSpaceServers(user)
-
+    verboseHandle.printConsoleInfo("Waiting for all GSCs to be up")
+    time.sleep(60)
     deployTierSpace()
-    deploySpace()
+    #deploySpace()
 
     checkSpacePrimaryStatus(managerHost)
     
