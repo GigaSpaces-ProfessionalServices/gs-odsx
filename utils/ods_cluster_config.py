@@ -1277,6 +1277,37 @@ def cleanDIHostFronConfig():
             config_remove_dataEngine_byNameIP(host,host)
     logger.info("Clean DI host completed.")
 
+def cleanSpaceHostFronConfig():
+    logger.info("cleanSpaceHost")
+    nodeList = config_get_space_hosts()
+    nodes = ""
+    for node in nodeList:
+        if (len(nodeList) == 1):
+            nodes = node.ip
+        else:
+            nodes = nodes + ',' + node.ip
+    logger.info("nodes :"+str(nodes))
+    with Spinner():
+        for host in nodes.split(','):
+            config_remove_space_nodeById(host,host)
+    logger.info("Clean space host completed.")
+
+def cleanManagerHostFronConfig():
+    logger.info("cleanManagerHostFronConfig")
+    nodeList = config_get_manager_node()
+    nodes = ""
+    for node in nodeList:
+        if (len(nodeList) == 1):
+            nodes = node.ip
+        else:
+            nodes = nodes + ',' + node.ip
+    logger.info("nodes :"+str(nodes))
+    with Spinner():
+        for host in nodes.split(','):
+            config_remove_manager_nodeByIP(host)
+    logger.info("Clean DI host completed.")
+
+
 def discoverHostConfig():
     try:
         #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/filename.yaml'
@@ -1288,6 +1319,7 @@ def discoverHostConfig():
 
         managerHostCount=1
         if 'manager' in content['servers']:
+            cleanManagerHostFronConfig()
             for k,v in content['servers']['manager'].items():
                 host = 'mgr'+str(managerHostCount)+""
                 os.environ[host] = str(v)
@@ -1296,6 +1328,7 @@ def discoverHostConfig():
         #status = os.system('bash')
         spaceHostCount=1
         if 'space' in content['servers']:
+            cleanSpaceHostFronConfig()
             for k,v in content['servers']['space'].items():
                 host = 'space'+str(spaceHostCount)+""
                 os.environ[host] = str(v)
