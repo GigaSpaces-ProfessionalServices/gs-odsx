@@ -1,14 +1,7 @@
 1. app.config 
-    app.manager.security.gsOptionExt="-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.system.registryRetries=30 -Dcom.gigaspaces.lib.opt.security=/dbagiga/gs_jars -Dcom.gs.security.properties-file=/dbagiga/gs_config/security.properties -Dcom.gigaspaces.metrics.config=/dbagiga/gs_config/metrics.xml -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=/dbagigalogs -Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 -Dcom.gs.manager.leader-election.zookeeper.connection-timeout=10000 -Dspace-config.leader-election.zookeeper.session-timeout=60000 -Dspace-config.leader-election.zookeeper.connection-timeout=10000 -Dcom.gs.transport_protocol.lrmi.max-threads=1024 -Dcom.gs.transport_protocol.lrmi.threshold-check-interval=500 -Dgs.gc.collectionTimeThresholdWarning=300 -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=50 -Xlog:gc*:file=/dbagigalogs/gc_%p.log:time,level -XX:+DisableExplicitGC -Dcom.gs.expose.internal.api=true -Dcom.gs.ops-ui.dev-mode=true -Dcom.gs.dih.kafka.url=<DI servers>:9092 -Dcom.gs.ui.metrics.db.retention.retain-duration=PT1M -Dcom.gs.ui.metrics.db.retention.delay-duration=PT30S -Dcom.gs.ui.metrics.db.retention.batch-size=70000 -Dcom.gs.replication.replicaProgressTimeout=400000 -Dcom.gs.manager.rest.ssl.enabled=false -Dcom.gs.security.enabled=true -Dcom.gigaspaces.security.audit.enabled=true -Dcom.gigaspaces.security.audit.level=ALL -Dcom.gigaspaces.security.audit.AuditHandler.filename-pattern=/dbagigalogs/gigaspaces-security-audit-{service}-{host}-{pid}.log -Dcom.gs.web-ui.idle-session-timeout=3600 -Dcom.gs.expose.internal.api=true"
-    app.manager.security.spring.jar.target=/dbagiga/gs_jars/
-    app.manager.security.config.target=/dbagiga/gs_config/
-    app.manager.security.config.ldap.target.file=/dbagiga/gs_config/ldap-security-config.xml
+    Added : 
+    app.kapacitor.port=9092
+    app.alert.telegraf.custommetrics=/usr/local/bin
+2. kapacitor.conf.template added
+    Need to move inside /dbagigashare/current/kapacitor/config
     
-    below : app.manager.cefLogging.jar.target=/dbagiga/gigaspaces-smart-ods/lib/required/
-     Add : app.manager.cefLogging.jar.target2=/dbagiga/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
-    
-    updated : app.space.security.gsOptionExt=  -Dcom.gigaspaces.lib.opt.security=/dbagiga/gs_jars -Dcom.gs.security.properties-file=/dbagiga/gs_config/security.properties 
-    app.space.security.gsOptionExt="-Dcom.gs.work=/dbagigadata -Dcom.gigaspaces.system.registryRetries=30 -Dcom.gigaspaces.lib.opt.security=/dbagiga/gs_jars -Dcom.gs.security.properties-file=/dbagiga/gs_config/security.properties -Dcom.gigaspaces.metrics.config=/dbagiga/gs_config/metrics.xml -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=/dbagigalogs -Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 -Dcom.gs.manager.leader-election.zookeeper.connection-timeout=10000 -Dspace-config.leader-election.zookeeper.session-timeout=60000 -Dspace-config.leader-election.zookeeper.connection-timeout=10000 -Dcom.gs.transport_protocol.lrmi.max-threads=1024 -Dcom.gs.transport_protocol.lrmi.threshold-check-interval=500 -Dgs.gc.collectionTimeThresholdWarning=300 -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=50 -Xlog:gc*:file=/dbagigalogs/gc_%p.log:time,level -XX:+DisableExplicitGC -Dcom.gs.replication.replicaProgressTimeout=400000 -Dcom.gs.security.enabled=true"
-    
-    
-            
