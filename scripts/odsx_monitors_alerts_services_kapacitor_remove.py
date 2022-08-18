@@ -4,6 +4,8 @@ import os
 import platform
 from os import path
 from colorama import Fore
+
+from scripts.odsx_monitors_alerts_services_kapacitor_list import listKapacitor
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
@@ -59,6 +61,7 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Monitors -> Alerts -> Services -> Kapacitor -> Remove')
     try:
         host = os.getenv("pivot1")
+        listKapacitor()
         confirmInstall = str(input(Fore.YELLOW+"Are you sure want to remove Kapacitor (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
             confirmInstall='y'

@@ -2,12 +2,11 @@
 
 import os
 
-from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
+from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers, getStatusOfTelegraf
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
-from odsx_monitors_alerts_service_telegraf_list import listAllTelegrafServers, isInstalledATelegraf, getStatusOfTelegraf
 from colorama import Fore
 
 verboseHandle = LogManager(os.path.basename(__file__))

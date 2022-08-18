@@ -3,7 +3,7 @@
 import os
 from colorama import Fore
 
-from scripts.odsx_monitors_alerts_service_telegraf_list import  listAllTelegrafServers
+from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
@@ -182,6 +182,5 @@ if __name__ == '__main__':
                     os.system('python3 scripts/odsx_monitors_alerts_service_telegraf_remove.py'+' '+isMenuDriven)
 
     except Exception as e:
-        logger.error("Invalid argument space remove :"+str(e))
-        verboseHandle.printConsoleError("Invalid argument")
+        handleException(e)
 
