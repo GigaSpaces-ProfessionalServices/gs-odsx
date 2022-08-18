@@ -130,7 +130,8 @@ def displayMainMenu(menu,currentMenu):
                 menu = str(menu).strip()
                 if not(defaultMenu.__contains__('retentionmanager')) and defaultMenu.__contains__(menu):
                     scriptMenu = defaultMenu.replace('menu','odsx_security')
-
+        if scriptMenu.endswith('monitors_spaceboard_reload'):
+            scriptMenu = defaultMenu.replace('menu','odsx')
         #print(scriptsFolder+'/'+scriptMenu+'.py')
         logger.info("Finding file to execute selected command: "+scriptsFolder+'/'+scriptMenu+'.py')
         menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
