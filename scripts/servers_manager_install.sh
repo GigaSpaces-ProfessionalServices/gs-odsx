@@ -337,6 +337,16 @@ function loadEnv {
   source $home_dir/setenv.sh
 }
 
+function installTelegraf {
+    echo "Starting Telegraf Installation."
+    installation_path=$sourceInstallerDirectory/telegraf
+    echo "InstallationPath="$installation_path
+    installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
+    echo "InstallationFile:"$installation_file
+    yum install -y $installation_path/$installation_file
+    echo "Telegraf installed"
+}
+
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
@@ -475,3 +485,4 @@ else
   echo "Set GS Home"
   setGSHome $targetDir
 fi
+installTelegraf
