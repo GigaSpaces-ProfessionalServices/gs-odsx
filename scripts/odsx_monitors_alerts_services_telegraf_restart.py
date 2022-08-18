@@ -4,7 +4,7 @@ import os
 
 from colorama import Fore
 
-from scripts.odsx_monitors_alerts_service_telegraf_list import listAllTelegrafServers
+from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, connectExecuteSSH
@@ -80,7 +80,7 @@ if __name__ == '__main__':
         user='root'
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
-        serverRestartType = str(input(Fore.YELLOW+"press [1] if you want to restart individual server. \nPress [Enter] to restart all. \nPress [99] for exit.: "+Fore.RESET))
+        serverRestartType = str(input(Fore.YELLOW+"press [1] if you want to restart individual service. \nPress [Enter] to restart all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverRestartType:"+str(serverRestartType))
         if(serverRestartType=='1'):
             optionMainMenu = int(input("Enter your host number to restart: "))
@@ -89,9 +89,9 @@ if __name__ == '__main__':
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     host = streamDict.get(optionMainMenu)
-                    choice = str(input(Fore.YELLOW+"Are you sure want to restart server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(input(Fore.YELLOW+"Are you sure want to restart service ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to restart server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(input(Fore.YELLOW+"Are you sure want to restart service ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
                         if(isMenuDriven=='m'):
@@ -119,7 +119,5 @@ if __name__ == '__main__':
                     logger.info("menudriven")
                     os.system('python3 scripts/odsx_monitors_alerts_service_telegraf_restart.py'+' '+isMenuDriven)
     except Exception as e:
-        logger.error("Invalid argument space remove :"+str(e))
-        verboseHandle.printConsoleError("Invalid argument")
-
+        handleException(e)
 

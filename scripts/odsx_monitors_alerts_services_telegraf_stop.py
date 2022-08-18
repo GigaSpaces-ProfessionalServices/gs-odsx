@@ -5,7 +5,7 @@ import sys
 
 from colorama import Fore
 
-from scripts.odsx_monitors_alerts_service_telegraf_list import listAllTelegrafServers
+from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
