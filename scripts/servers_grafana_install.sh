@@ -1,6 +1,7 @@
 echo "Starting Grafana Installation."
 #echo "Extracting install.tar to "$targetDir
 sourceInstallerDirectory=$1
+additionalParamTarget=$2
 echo "sourceInstallerDirectory: "$sourceInstallerDirectory
 tar -xvf install.tar
 home_dir=$(pwd)
@@ -12,3 +13,13 @@ yum install -y $installation_path/$installation_file
 cp $installation_path/gs_config.yaml /etc/grafana/provisioning/dashboards/
 sed -i -e 's|;disable_sanitize_html = false|disable_sanitize_html = true|g' /etc/grafana/grafana.ini
 sleep 5
+
+cp -r $installation_path/dashboards/*.json  /usr/share/grafana/conf/provisioning/dashboards/
+
+#Added
+systemctl daemon-reload
+sleep 5
+printf "\n"
+echo " Starting service"
+systemctl start grafana-server.service
+printf "\n"

@@ -44,6 +44,11 @@ current:
     upgrade:
   kafka:
     jolokiaJar: jolokia-agent.jar
+  kapacitor:
+    alert:
+    config:
+      kapacitorconfigfile: kapacitor.conf.template
+    templates:
   mq-connector:
     adabas:
       config:
@@ -75,3 +80,14 @@ current:
       springldapcore: spring-ldap-core-2.3.3.RELEASE.jar
       springldapjar: spring-security-ldap-5.1.7.RELEASE.jar
       vaultsupportjar: VaultSupport-1.0-SNAPSHOT.jar
+  telegraf:
+    config:
+      pivot:
+        pivotconf: pivot.telegraf.conf
+      space:
+        spaceconf: agents.telegraf.conf
+    scripts:
+      pivot:
+      scripts:
+    jars:
+      readfromshobjar: readFromShob-1.0.0.jar
