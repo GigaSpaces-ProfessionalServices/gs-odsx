@@ -96,6 +96,52 @@
                                             https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/security/VaultSupport-1.0-SNAPSHOT.jar
     -/dbagigashare/current/security/cef/jars : https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/security/CEFLogger-1.0-SNAPSHOT.jar
                                                 
+  ### You can also use wget to dowanlod each file to the its place:
+  
+  wget -P /dbagigashare/current/unzip -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/unzip/unzip-6.0-21.el7.x86_64.rpm 
+
+wget -P /dbagigashare/current/gs -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/gs/gigaspaces-smart-ods-enterprise-16.0.0.zip
+wget -P /dbagigashare/current/gs/config -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/gs/xap_logging.properties
+
+wget -P /dbagigashare/current/config -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/gs/space.properties 
+wget -P /dbagigashare/current/config -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/gs/spaceproperty.properties 
+wget -P /dbagigashare/current/config -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/gs/TieredCriteria.tab
+
+wget -P /dbagigashare/current/db2/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/db2/db2jcc_license_cu-4.16.53.jar 
+wget -P /dbagigashare/current/db2/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/db2/db2jcc-4.26.14.jar
+wget -P /dbagigashare/current/db2/scripts -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/db2/load_JOTBMF11_MATI_ISKY.sh
+
+wget -P /dbagigashare/current/mssql/files -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/mssql/SQLJDBCDriver.conf 
+wget -P /dbagigashare/current/mssql/files -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/mssql/udkods2.keytab
+wget -P /dbagigashare/current/mssql/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/mssql/mssqlFeeder-1.0.0.jar
+wget -P /dbagigashare/current/mssql/scripts -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/mssql/load_JOTBMF01_TN_MATI.sh
+
+wget -P /dbagigashare/current/nb -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/nb/nb-infra-0.0.21.tar.gz
+wget -P /dbagigashare/current/nb/applicative -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/nb/nb.conf.template
+wget -P /dbagigashare/current/nb/management -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/nb/nb.conf.template
+
+wget -P /dbagigashare/current/grafana -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/grafana/grafana-7.3.7-1.x86_64.rpm 
+wget -P /dbagigashare/current/grafana -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/grafana/gs_config.yaml
+wget -P /dbagigashare/current/grafana/catalog/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/grafana/catalogue-service.jar
+wget -P /dbagigashare/current/influx -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/influxdb/influxdb-1.8.4.x86_64.rpm
+
+wget -P /dbagigashare/current/kafka -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/kafka/kafka_2.13-2.8.1.tgz
+wget -P /dbagigashare/current/zk -N https://dlcdn.apache.org/zookeeper/zookeeper-3.6.3/apache-zookeeper-3.6.3-bin.tar.gz
+wget -P /dbagigashare/current/kafka -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/jolokia/jolokia-agent.jar
+
+wget -P /dbagigashare/current/telegraf -N https://dl.influxdata.com/telegraf/releases/telegraf-1.19.3-1.x86_64.rpm
+wget -P /dbagigashare/current/telegraf -N https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/master/alerts/telegraf
+
+wget -P /dbagigashare/current/kapacitor -N https://repos.influxdata.com/rhel/8/x86_64/stable/kapacitor-1.6.2-1.x86_64.rpm
+wget -P /dbagigashare/current/kapacitor -N http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/jq-1.6-2.el7.x86_64.rpm
+wget -P /dbagigashare/current/kapacitor -N http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/oniguruma-6.8.2-1.el7.x86_64.rpm
+
+wget -P /dbagigashare/current/security/config -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/security/ldap-security-config.xml
+wget -P /dbagigashare/current/security/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/security/spring-ldap-core-2.3.3.RELEASE.jar
+wget -P /dbagigashare/current/security/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/security/spring-security-ldap-5.1.7.RELEASE.jar
+wget -P /dbagigashare/current/security/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/security/VaultSupport-1.0-SNAPSHOT.jar
+wget -P /dbagigashare/current/security/cef/jars -N https://tapangigaspaces.s3.us-east-2.amazonaws.com/odsx/install/security/CEFLogger-1.0-SNAPSHOT.jar
+  
     -/dbagigashare/current/gs/config/license/gs-license.txt write tryme or if you have valid license then put it.
     -Copy <odsx>/config/metrics.xml.template /dbagigashare/current/gs/config/metrics/
     
