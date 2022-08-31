@@ -6,6 +6,7 @@ import sys
 
 from utils.ods_cleanup import signal_handler
 from utils.ods_scp import scp_upload
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_retentionmanager_utilities import isTimeFormat, setupOrReloadService,getManagerHost
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner

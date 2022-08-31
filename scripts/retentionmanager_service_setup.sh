@@ -12,6 +12,7 @@ scheduler_interval=$6
 scheduler_minute=$7
 scheduler_hour=$8
 retentionJar=$9
+lookup_group=${10}
 
 if [ ! -d "$log_location" ]; then
   mkdir $log_location
@@ -25,7 +26,7 @@ fi
 
 serviceJar=$retentionJar
 
-cp $home_dir_sh/systemServices/retentionManager/$service_name /tmp/$service_name
+cp $home_dir_sh/install/$service_name /tmp/$service_name
 cp $serviceJar /dbagiga/
 
 #echo "serviceJar: "$serviceJar
@@ -43,6 +44,7 @@ sed -i 's,$scheduler_minute,'$scheduler_minute',g' /tmp/$service_name
 sed -i 's,$scheduler_hour,'$scheduler_hour',g' /tmp/$service_name
 sed -i 's,$scheduler_config,'$scheduler_config',g' /tmp/$service_name
 sed -i 's,$scheduler_interval,'$scheduler_interval',g' /tmp/$service_name
+sed -i 's,$lookup_group,'$lookup_group',g' /tmp/$service_name
 
 sudo mv -f /tmp/$service_name /etc/systemd/system/
 sudo systemctl daemon-reload
