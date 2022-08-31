@@ -4,10 +4,13 @@ import os, subprocess, sqlite3, json, requests
 from datetime import datetime
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValueByConfigObj, set_value_in_property_file
+from utils.ods_app_config import readValueByConfigObj, readValuefromAppConfig, set_value_in_property_file
 from utils.ods_cluster_config import config_get_manager_node, config_get_influxdb_node
+from utils.ods_manager import getManagerInfo
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeLocalCommandAndGetOutput
 import re
+
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 app_config_interval_key = 'app.retentionmanager.scheduler.interval'
 app_config_time_key = 'app.retentionmanager.scheduler.time'
@@ -95,6 +98,26 @@ def setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,re
     scheduler_config = ''
     scheduler_interval = 600000
     
+    appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+    safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+    objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+    logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+
+    profile = str(readValuefromAppConfig("app.setup.profile"))
+    if(profile is not None and len(profile)>0 and profile.casefold=="security"):
+        username = str(getUsernameByHost(managerServer,appId,safeId,objectId))
+        password = str(getPasswordByHost(managerServer,appId,safeId,objectId))
+
+
+        managerInfo = getManagerInfo(True,username,password)
+        lookupGroup = str(managerInfo['lookupGroups'])
+        
+    else:
+        managerInfo = getManagerInfo()
+        lookupGroup = str(managerInfo['lookupGroups'])
+        
+
+
     isSchedulerTimeBase = ":" in schedulerInterval
     if(isSchedulerTimeBase==True):
         scheduler_minute=schedulerInterval.split(":")[1]
@@ -110,7 +133,7 @@ def setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,re
         set_value_in_property_file(app_config_time_key,'')
 
     args = spaceName+" "+managerServer+" "+dbLocation+" "+influxHost
-    args+= " "+scheduler_config+" "+str(scheduler_interval)+" "+scheduler_minute+" "+scheduler_hour+" "+retentionJar
+    args+= " "+scheduler_config+" "+str(scheduler_interval)+" "+scheduler_minute+" "+scheduler_hour+" "+retentionJar+" "+lookupGroup
     commandToExecute = "scripts/retentionmanager_service_setup.sh "+args
     logger.info("Command "+commandToExecute)
     try:
