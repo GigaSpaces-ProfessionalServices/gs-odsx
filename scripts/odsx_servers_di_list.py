@@ -4,6 +4,7 @@ import os
 import sys
 
 from scripts.odsx_servers_di_install import getDIServerHostList
+from utils.ods_validation import isValidHost, port_check
 from utils.odsx_print_tabular_data import printTabular
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
@@ -161,6 +162,75 @@ def isKafkaInstalledNot(host,role):
         return "No"
     return isInstalled
 
+def isMDMInstalled(host):
+    logger.info("isMDMInstalled"+str(host))
+    isInstalled = "Yes"
+    commandToExecute='ls /etc/systemd/system/di-mdm.service'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    if len(str(outputShFile))==0:
+        return Fore.RED+"NO"+Fore.RESET
+    return Fore.GREEN+"Yes"+Fore.RESET
+
+def getMDMStatus(host):
+    cmd = "systemctl status di-mdm.service"
+    with Spinner():
+        user='root'
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        logger.info("output1 : "+str(output))
+        if(output!=0):
+            logger.info(" Service :"+str(cmd)+" not started."+str(host))
+            return Fore.RED+"OFF"+Fore.RESET
+        return Fore.GREEN+"ON"+Fore.RESET
+
+def isDIMInstalled(host):
+    logger.info("isDIMInstalled"+str(host))
+    isInstalled = "Yes"
+    commandToExecute='ls /etc/systemd/system/di-manager.service'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    if len(str(outputShFile))==0:
+        return Fore.RED+"NO"+Fore.RESET
+    return Fore.GREEN+"Yes"+Fore.RESET
+
+def getDIMStatus(host):
+    cmd = "systemctl status di-manager.service"
+    with Spinner():
+        user='root'
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        logger.info("output1 : "+str(output))
+        if(output!=0):
+            logger.info(" Service :"+str(cmd)+" not started."+str(host))
+            return Fore.RED+"OFF"+Fore.RESET
+        return Fore.GREEN+"ON"+Fore.RESET
+
+def isFLinkInstalled(host):
+    logger.info("isDIMInstalled"+str(host))
+    isInstalled = "Yes"
+    commandToExecute='ls /dbagiga/di-flink/latest-flink/bin/start-cluster.sh'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    if len(str(outputShFile))==0:
+        return Fore.RED+"NO"+Fore.RESET
+    return Fore.GREEN+"Yes"+Fore.RESET
+
+def getFlinkStatus(host):
+    cmd = ""
+
+    with Spinner():
+        if(isValidHost(host)):
+            status = port_check(host,8081)
+            if(status==False):
+                logger.info(" Service :di-flink not started."+str(host))
+                return Fore.RED+"OFF"+Fore.RESET
+        return Fore.GREEN+"ON"+Fore.RESET
+
 #For all combinations
 def isInstalledNot(host,role):
     logger.info("isInstalledNot"+str(host)+" : "+str(role))
@@ -231,14 +301,17 @@ def listDIServers():
     logger.info("listDIServers()")
     host_dict_obj = obj_type_dictionary()
     dIServers = config_get_dataIntegration_nodes("config/cluster.config")
-    headers = [Fore.YELLOW+"Sr Num"+Fore.RESET,
+    headers = [Fore.YELLOW+"Id"+Fore.RESET,
                Fore.YELLOW+"Host"+Fore.RESET,
                Fore.YELLOW+"Type"+Fore.RESET,
-               Fore.YELLOW+"Kafka Installed"+Fore.RESET,
-               Fore.YELLOW+"ZK Installed"+Fore.RESET,
-               Fore.YELLOW+"Status"+Fore.RESET,
-               Fore.YELLOW+"Kafka Status"+Fore.RESET,
-               Fore.YELLOW+"Zookeeper Status"+Fore.RESET]
+               Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Inst."+Fore.RESET,
+               Fore.YELLOW+"ZK\n"+Fore.YELLOW+"Inst."+Fore.RESET,
+               Fore.YELLOW+"Status\n"+Fore.YELLOW+"Infra"+Fore.RESET,
+               Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Status"+Fore.RESET,
+               Fore.YELLOW+"ZK\n"+Fore.YELLOW+"Status"+Fore.RESET,
+               Fore.YELLOW+"MDM\n"+Fore.YELLOW+"Inst./Status"+Fore.RESET,
+               Fore.YELLOW+"DIM\n"+Fore.YELLOW+"Inst./Status"+Fore.RESET,
+               Fore.YELLOW+"FLink\n"+Fore.YELLOW+"Inst./Status"+Fore.RESET]
     data=[]
     counter=1
     for node in dIServers:
@@ -253,6 +326,12 @@ def listDIServers():
         installStatusZk = isZkInstalledNot(os.getenv(node.ip),str(node.type))
         logger.info("Install status Zk: "+str(installStatusZk)+"Install status kafka: "+str(installStatusKafka)+" : "+str(os.getenv(node.ip))+" : "+str(node.type))
         nodeListSize = len(str((getDIServerHostList())).split(','))
+        installStatusMDM=isMDMInstalled(os.getenv(node.ip))
+        installStatusDIM=isDIMInstalled(os.getenv(node.ip))
+        installStatusFLink=isFLinkInstalled(os.getenv(node.ip))
+        serviceStatusMDM=getMDMStatus(os.getenv(node.ip))
+        serviceStatusDIM=getDIMStatus(os.getenv(node.ip))
+        serviceStatusFLink=getFlinkStatus(os.getenv(node.ip))
         if(nodeListSize==4):
             if(kafkaOutput==0 and zkOutput==0 and output==0):
                 dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
@@ -262,7 +341,10 @@ def listDIServers():
                            Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
                            Fore.GREEN+"ON"+Fore.RESET,
                            Fore.GREEN+"ON"+Fore.RESET,
-                           Fore.GREEN+"ON"+Fore.RESET]
+                           Fore.GREEN+"ON"+Fore.RESET,
+                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
+                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
+                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
             elif(kafkaOutput==0 and zkOutput==0 and output!=0):
                 dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                            Fore.GREEN+os.getenv(node.name)+Fore.RESET,
@@ -271,7 +353,10 @@ def listDIServers():
                            Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
                            Fore.RED+"OFF"+Fore.RESET,
                            Fore.GREEN+"ON"+Fore.RESET,
-                           Fore.GREEN+"ON"+Fore.RESET]
+                           Fore.GREEN+"ON"+Fore.RESET,
+                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
+                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
+                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
             elif(kafkaOutput!=0 and zkOutput==0 and output!=0):
                 dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                            Fore.GREEN+os.getenv(node.name)+Fore.RESET,
@@ -280,7 +365,10 @@ def listDIServers():
                            Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
                            Fore.RED+"OFF"+Fore.RESET,
                            Fore.RED+"OFF"+Fore.RESET,
-                           Fore.GREEN+"NA"+Fore.RESET]
+                           Fore.GREEN+"NA"+Fore.RESET,
+                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
+                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
+                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
             elif(kafkaOutput==0 and zkOutput!=0 and output!=0):
                 dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                            Fore.GREEN+os.getenv(node.name)+Fore.RESET,
@@ -289,7 +377,10 @@ def listDIServers():
                            Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
                            Fore.RED+"OFF"+Fore.RESET,
                            Fore.GREEN+"NA"+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET]
+                           Fore.RED+"OFF"+Fore.RESET,
+                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
+                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
+                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
             else:
                 dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                            Fore.GREEN+os.getenv(node.name)+Fore.RESET,
@@ -298,7 +389,10 @@ def listDIServers():
                            Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
                            Fore.RED+"OFF"+Fore.RESET,
                            Fore.RED+"OFF"+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET]
+                           Fore.RED+"OFF"+Fore.RESET,
+                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
+                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
+                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
         else:
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+os.getenv(node.name)+Fore.RESET,
@@ -307,7 +401,10 @@ def listDIServers():
                        Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
                        Fore.GREEN+"ON"+Fore.RESET if(getSingleConsolidatedStatus(node)==0) else Fore.RED+"OFF"+Fore.RESET,
                        Fore.GREEN+"ON"+Fore.RESET if(getSingleKafkaStatus(node)==0) else Fore.RED+"OFF"+Fore.RESET,
-                       Fore.GREEN+"ON"+Fore.RESET if(getSingleZkStatus(node)==0) else Fore.RED+"OFF"+Fore.RESET]
+                       Fore.GREEN+"ON"+Fore.RESET if(getSingleZkStatus(node)==0) else Fore.RED+"OFF"+Fore.RESET,
+                       Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
+                       Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
+                       Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
         data.append(dataArray)
         counter=counter+1
     printTabular(None,headers,data)

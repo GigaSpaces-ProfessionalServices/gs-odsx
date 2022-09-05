@@ -1,7 +1,38 @@
 #!/bin/bash
-echo "Starting DI Installation."
-#echo "Extracting install.tar to "$targetDir
-#echo " installtelegrafFlag "$1
+print_style () {
+    if [ "$2" == "debug" ] ; then
+        COLOR="96m";
+    elif [ "$2" == "info" ] ; then
+        COLOR="92m";
+    elif [ "$2" == "warning" ] ; then
+        COLOR="93m";
+    elif [ "$2" == "error" ] ; then
+        COLOR="91m";
+    else #default color
+        COLOR="0m";
+    fi
+
+    STARTCOLOR="\e[$COLOR";
+    ENDCOLOR="\e[0m";
+
+    printf "$STARTCOLOR%b$ENDCOLOR" "$1";
+}
+debug() {
+    print_style "$1" "debug";
+}
+info() {
+    print_style "$1" "info";
+}
+warning() {
+    print_style "$1" "warning";
+}
+error() {
+    print_style "$1" "error";
+}
+printNoColor() {
+    print_style "$1" "error";
+}
+info "Starting DI Installation.\n"
 
 function installAirGapJava {
   installation_path=$sourceInstallerDirectory/jdk
@@ -16,6 +47,89 @@ function installAirGapJava {
   echo "installAirGapJava -Done!"
 }
 
+function installFlink() {
+  info "\nInstalling Flink\n"
+  installation_path_flink=$sourceInstallerDirectory/data-integration/di-flink
+  installation_file_flink=$(find $installation_path_flink -name "flink*.tgz" -printf "%f\n")
+  info "InstallationFile:"$installation_file_flink"\n"
+  mkdir -p /dbagiga/di-flink
+  mkdir -p /dbagigalogs/di-flink
+  info "Copying file from "$installation_path_flink/$installation_file_flink +" to /dbagiga/di-flink \n"
+  cp $installation_path_flink/$installation_file_flink /dbagiga/di-flink
+  info "\nExtracting zip file...\n"
+  tar -xzf /dbagiga/di-flink/$installation_file_flink --directory /dbagiga/di-flink/
+  extracted_folder_flink=$(ls -I "*.tgz" /dbagiga/di-flink/)
+  cd /dbagiga/di-flink/
+  ln -s $extracted_folder_flink latest-flink
+  cd
+  sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  sed -i -e 's|taskmanager.numberOfTaskSlots: 1|taskmanager.numberOfTaskSlots: 10|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  cat "jobmanager.memory.jvm-metaspace.size: 1500m">> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  sed -i -e 's|jobmanager.memory.process.size: 1600m|jobmanager.memory.process.size: 4000m|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+
+
+
+  info "\n Installation Flink completed."
+}
+
+function installDIMatadata {
+  info "\n Installing DI-MDM\n"
+  installation_path_mdm=$sourceInstallerDirectory/data-integration/di-mdm
+  installation_file_mdm=$(find $installation_path_mdm -name "di-mdm*.gz" -printf "%f\n")
+  info "InstallationFile:"$installation_file_mdm"\n"
+  mkdir -p /dbagiga/di-mdm
+  mkdir -p /dbagigalogs/di-mdm
+  chown gsods:gsods /dbagigalogs/di-mdm
+  info "Copying file from "$installation_path_mdm/$installation_file_mdm +" to /dbagiga/di-mdm \n"
+  cp $installation_path_mdm/$installation_file_mdm /dbagiga/di-mdm
+  info "\nExtracting zip file...\n"
+  tar -xzf /dbagiga/di-mdm/$installation_file_mdm --directory /dbagiga/di-mdm/
+  extracted_folder_mdm=$(ls -I "*.gz" /dbagiga/di-mdm/)
+  cd /dbagiga/di-mdm/
+  info "Creating symlink for :"$extracted_folder_mdm
+  ln -s $extracted_folder_mdm latest-di-mdm
+  cd latest-di-mdm
+  sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|/dbagigalogs/di-mdm|g' config/di-mdm.service
+  sed -i -e 's|/home/gsods|/dbagiga|g' config/di-mdm.service
+  cd
+  info "\nCopying service file\n"
+  cp /dbagiga/di-mdm/latest-di-mdm/config/di-mdm.service /etc/systemd/system/
+  systemctl daemon-reload
+  systemctl enable di-mdm
+  #systemctl start di-mdm
+  info "\n Installation DI-MDM completed."
+}
+
+function installDIManager {
+  info "\n Installing DI-Manager\n"
+  installation_path_manager=$sourceInstallerDirectory/data-integration/di-manager
+  installation_file_manager=$(find $installation_path_manager -name "di-manager*.gz" -printf "%f\n")
+  info "InstallationFile:"$installation_file_manager"\n"
+  mkdir -p /dbagiga/di-manager
+  mkdir -p /dbagigalogs/di-manager
+  chown gsods:gsods /dbagigalogs/di-manager
+  info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-manager \n"
+  cp $installation_path_manager/$installation_file_manager /dbagiga/di-manager
+  info "\nExtracting zip file...\n"
+  tar -xzf /dbagiga/di-manager/$installation_file_manager --directory /dbagiga/di-manager/
+  extracted_folder_manager=$(ls -I "*.gz" /dbagiga/di-manager/)
+  cd /dbagiga/di-manager/
+  info "Creating symlink for :"$extracted_folder_manager
+  ln -s $extracted_folder_manager latest-di-manager
+  cd latest-di-manager
+  sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|/dbagigalogs/di-manager|g' config/di-manager.service
+  sed -i -e 's|/home/gsods|/dbagiga|g' config/di-manager.service
+  info "\ncurrentHost::"$currentHost
+  sed -i -e 's|localhost:6081|'$currentHost':6081|g' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  cd
+  info "\nCopying service file\n"
+  cp /dbagiga/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/
+  systemctl daemon-reload
+  systemctl enable di-manager
+  #systemctl start di-manager
+  info "\n Installation DI-Manager completed.\n"
+}
 
 echo " kafkaBrokerHost1 "$2" kafkaBrokerHost2 "$3" kafkaBrokerHost3 "$4" witnessHost "$5" counter ID "$6" installtelegrafFlag "$1" baseFolderLocation "$7
 installtelegrafFlag=$1
@@ -158,6 +272,10 @@ if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
     echo "export RMI_HOSTNAME=127.0.0.1" >> $KAFKAPATH/bin/kafka-server-start.sh
     echo 'export KAFKA_JMX_OPTS="-javaagent:'$KAFKAPATH'/libs/jolokia-agent.jar=port=8778,host=$RMI_HOSTNAME -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$RMI_HOSTNAME -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT"' >> $KAFKAPATH/bin/kafka-server-start.sh
     echo 'exec $base_dir/kafka-run-class.sh $EXTRA_ARGS kafka.Kafka "$@"' >> $KAFKAPATH/bin/kafka-server-start.sh
+
+    installFlink
+    installDIMatadata
+    installDIManager
   fi
   if [[ $id == 1 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$kafkaBrokerHost1':9092|g' $KAFKAPATH/config/server.properties
