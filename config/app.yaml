@@ -6,6 +6,10 @@ current:
       db2ccjar: db2jcc-4.26.14.jar
       db2feederJar: db2feeder-1.0.0.jar
     scripts: null
+  data-integration:
+    dim:
+    mdm:
+    flink:
   data-validator:
     files:
       dvkeytab: UTKA02E.keytab
