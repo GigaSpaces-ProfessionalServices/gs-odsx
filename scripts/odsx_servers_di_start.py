@@ -90,7 +90,7 @@ def startZookeeperServiceByHost(host):
 
 def startKafkaServiceByHost(host):
     logger.info("startKafkaServiceByHost()")
-    cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service"
+    cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service;/dbagiga/di-flink/latest-flink/bin/start-cluster.sh"
     logger.info("Getting status.. odsxkafka :"+str(cmd))
     user = 'root'
     with Spinner():
@@ -113,6 +113,20 @@ def startTelegrafServiceByHost(host):
         else:
             verboseHandle.printConsoleError("Service telegraf failed to start on "+str(host))
 
+
+def startDIMServices(host):
+    logger.info("startTelegrafServiceByHost()")
+    cmd = "systemctl start di-manager;sleep 3;systemctl start di-mdm;sleep 3;"
+    logger.info("Getting status.. telegraf :"+str(cmd))
+    user = 'root'
+    with Spinner():
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        if (output == 0):
+            verboseHandle.printConsoleInfo("Services di-manager/di-mdm/di-flink started successfully on "+str(host))
+        else:
+            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink telegraf failed to start on "+str(host))
+
+
 def startKafkaService(args):
     try:
 
@@ -133,6 +147,7 @@ def startKafkaService(args):
                 elif nodeListSize<4:
                     startKafkaService(str(host_dict_obj.get(hostNumber)))
                 startTelegrafServiceByHost(str(host_dict_obj.get(hostNumber)))
+                startDIMServices(str(host_dict_obj.get(hostNumber)))
             else:
                 exit(0)
 
@@ -153,6 +168,7 @@ def startKafkaService(args):
                     startKafkaService(os.getenv(node.ip))
             for node in config_get_dataIntegration_nodes():
                 startTelegrafServiceByHost(os.getenv(node.ip))
+                startDIMServices(os.getenv(node.ip))
     except Exception as e:
         handleException(e)
 
