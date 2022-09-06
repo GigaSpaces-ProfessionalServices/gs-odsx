@@ -84,12 +84,12 @@ def configureLicenseManagerAndSpace():
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Files *.timer copied for for host:"+watchdogHost)
 
-        commandToExecute = "cp "+sourcePath+"*.sh "+targetPathService
+        commandToExecute = "cp "+sourcePath+"*.sh "+targetPathScripts
         logger.info("commandToExecute:"+commandToExecute)
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Files *.sh copied for for host:"+watchdogHost)
 
-        commandToExecute = "cp "+sourcePath+"*.txt "+targetPathService
+        commandToExecute = "cp "+sourcePath+"*.txt "+targetPathScripts
         logger.info("commandToExecute:"+commandToExecute)
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Files *.txt copied for for host:"+watchdogHost)
