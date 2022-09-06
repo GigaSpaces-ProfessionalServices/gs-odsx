@@ -97,7 +97,10 @@ def setUserInputs():
     lookupLocator = str(managerHost)+":4174"
     objectMgmtHost = getPivotHost()
 
-    ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
+
+    #ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
      
 
     tableListfilePath = ddlAndPropertiesBasePath+"/tableList.txt"

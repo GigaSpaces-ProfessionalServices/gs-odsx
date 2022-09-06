@@ -33,7 +33,7 @@ def setupService():
 #    ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
 #    ddlAndPropertiesBasePath = ddlAndPropertiesBasePath+"/"
     tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
-    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath)
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")

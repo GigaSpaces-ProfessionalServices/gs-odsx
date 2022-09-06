@@ -69,8 +69,10 @@ def setUserInputs1():
     global ddlAndPropertiesBasePath
     global tableNameFromddlFileName
 
-    
-    ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
+
+# ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
     global ddlfileOptions
     ddlfileOptions = {}
     counter = 1
@@ -258,9 +260,11 @@ def setInputs(isSandbox):
     if(sandboxSpaceName is None or sandboxSpaceName=="" or len(str(sandboxSpaceName))<0):
         sandboxSpaceName = "demo"
         config_set_value_in_property_file("app.objectmanagement.sandboxspace",sandboxSpaceName)
-    
 
-    ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
+
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
+#ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
     tableNameFromddlFileName = ''
     objectMgmtHost = getPivotHost()
     
