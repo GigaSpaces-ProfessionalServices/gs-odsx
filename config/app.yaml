@@ -67,9 +67,10 @@ current:
     scripts: null
   object:
     config:
-      ddlparser: tableList.txt
+      ddlparser:
+        ddlBatchFileName: tableList.txt
     jars:
-      objectmanagementjar:
+      objectmanagementjar: objectManagement.jar
   security:
     config:
       ldapsourcefile: ldap-security-config.xml

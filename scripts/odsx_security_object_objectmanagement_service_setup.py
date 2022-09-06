@@ -30,10 +30,11 @@ def setupService():
 
     managerServer=defaultManagerServer
 
-   
-    ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
-    ddlAndPropertiesBasePath = ddlAndPropertiesBasePath+"/"
-    tableListfilePath = ddlAndPropertiesBasePath+"/tableList.txt"
+
+#    ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
+#    ddlAndPropertiesBasePath = ddlAndPropertiesBasePath+"/"
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath)
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
@@ -99,7 +100,7 @@ def setupService():
 
 def displaySummary(managerServer,spaceName,ddlAndPropertiesBasePath,tableListfilePath):
     global serviceJar
-    serviceJar = str(getYamlFilePathInsideFolder(".object.jars.objectmanagementjar"))
+    serviceJar = str(getYamlFilePathInsideFolder(".object.jars.objectmanagementjar")).replace("//","/")
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
     print(Fore.GREEN+"1. "+
