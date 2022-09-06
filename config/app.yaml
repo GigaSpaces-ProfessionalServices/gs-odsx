@@ -46,6 +46,8 @@ current:
       space:
         spacejar: space-0.1.jar
     upgrade:
+  iidr:
+    watchdog:
   kafka:
     jolokiaJar: jolokia-agent.jar
   kapacitor:
