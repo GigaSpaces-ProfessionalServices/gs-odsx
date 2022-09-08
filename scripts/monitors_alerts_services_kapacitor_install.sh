@@ -61,7 +61,6 @@ sed -i '/export KAPACITOR_URL/d' ~/.bash_profile
 echo "kapacitor_url:"$kapacitor_url
 echo "$kapacitor_url" >> ~/.bash_profile
 source ~/.bash_profile
-source .bash_profile
 systemctl daemon-reload
 sleep 2
 #For debug
