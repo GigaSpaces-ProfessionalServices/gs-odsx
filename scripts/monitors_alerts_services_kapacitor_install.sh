@@ -76,5 +76,4 @@ ex /etc/kapacitor/kapacitor.conf <<-EOF
    s/= false/= true/
    wq
 EOF
-
 sleep 5
