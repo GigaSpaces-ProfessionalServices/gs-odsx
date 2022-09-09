@@ -13,7 +13,7 @@ cp $sourceInstallerDirectory/telegraf/scripts/pivot/space-status.gc-state.sh /us
 cp $sourceInstallerDirectory/telegraf/scripts/pivot/pipeline-state.sh /usr/local/bin/
 
 cp $sourceInstallerDirectory/telegraf/scripts/pivot/test.sh /usr/local/bin/
-chmod +x /usr/local/bin/test.sh
+chmod +x /usr/local/bin/*.sh
 sed -i -e 's|mgr1,mgr2,mgr3|'$managerHost'|g' /usr/local/bin/test.sh
 cp $sourceInstallerDirectory/telegraf/jars/readFromShob-1.0.0.jar /usr/local/bin/
 
