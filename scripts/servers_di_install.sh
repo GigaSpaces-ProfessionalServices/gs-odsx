@@ -65,7 +65,7 @@ function installFlink() {
   sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|taskmanager.numberOfTaskSlots: 1|taskmanager.numberOfTaskSlots: 10|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  cat "jobmanager.memory.jvm-metaspace.size: 1500m">> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  echo "jobmanager.memory.jvm-metaspace.size: 1500m" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|jobmanager.memory.process.size: 1600m|jobmanager.memory.process.size: 4000m|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
 
 
