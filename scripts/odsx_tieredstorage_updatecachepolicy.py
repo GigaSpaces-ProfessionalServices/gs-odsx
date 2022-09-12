@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
-
+import concurrent
 import os, time
+import re
 import signal
+from concurrent.futures.thread import ThreadPoolExecutor
 
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -22,6 +24,8 @@ from datetime import datetime as dt
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+
+ll = []
 
 class bcolors:
     OK = '[92m'  # GREEN
@@ -108,6 +112,17 @@ def getTieredStorageSpaces():
         handleException(e)
     return tieredSpace
 
+class my_dictionary(dict):
+
+    # __init__ function
+    def __init__(self):
+        self = dict()
+
+    # Function to add key:value
+    def add(self, key, value):
+        self[key] = value
+
+
 def listSpacesOnServer(managerHost):
     logger.info("listSpacesOnServer : managerNodes :"+str(managerHost))
     global gs_space_host_dictionary_obj
@@ -188,11 +203,11 @@ def displayOnlyGSC():
         for data in jsonArray:
             if((counter+1)%2==0): # To display containers based on couple instead of each incremental
                 dataArray = [
-                             Fore.GREEN+str('')+Fore.RESET,
-                             Fore.GREEN+str(data["id"])+Fore.RESET,
-                             Fore.GREEN+str(data["containerId"])+Fore.RESET,
-                             Fore.GREEN+str(data["mode"])+Fore.RESET
-                             ]
+                    Fore.GREEN+str('')+Fore.RESET,
+                    Fore.GREEN+str(data["id"])+Fore.RESET,
+                    Fore.GREEN+str(data["containerId"])+Fore.RESET,
+                    Fore.GREEN+str(data["mode"])+Fore.RESET
+                ]
 
             else:
                 coupleNumber = coupleNumber+1
@@ -281,6 +296,67 @@ def listUpdatedGSCStatus(display):
     except Exception as e:
         handleException(e)
 
+def non_match_elements(list_a, list_b):
+    non_match = []
+    for i in list_a:
+        if i not in list_b:
+            non_match.append(i)
+    return non_match
+
+def getNumberOfSpaceInstances():
+    spaceInstanceNumber = len(config_get_space_hosts());
+    return spaceInstanceNumber
+
+# def primaryContainerIDList():
+#     logger.info("updateSpaceIdContainerID()")
+#     try:
+#         # backupCounter=0
+#         primaryCounter=0
+#         primaryContainerDict = host_dictionary_obj()
+#         primarySpaceIdDict = host_dictionary_obj()
+#         response = requests.get("http://"+managerHost+":8090/v2/spaces/"+str(spaceName)+"/instances")
+#         logger.info("response.text : "+str(response.text))
+#         jsonArray = json.loads(response.text)
+#         for data in jsonArray:
+#             spaceIdContainerIdDict[str(data["id"])]=str(data["containerId"])
+#             # if(str(data["mode"]).__contains__("BACKUP")):
+#             #     backupCounter=backupCounter+1
+#             #     backupSpaceIdDict[(str(backupCounter))]=str(data["id"])
+#             if(str(data["mode"]).__contains__("PRIMARY")):
+#                 primaryCounter=primaryCounter+1
+#                 primaryContainerDict.add(str(primaryCounter),str(data["containerId"]))
+#                 primarySpaceIdDict.add(str(primaryCounter),str(data["id"]))
+#         # print(" primary container dictonory "+ str(primaryContainerDict))
+#         # print(" primary space dictonory "+ str(primarySpaceIdDict))
+#         return primarySpaceIdDict
+#     except Exception as e:
+#         handleException(e)
+#
+# def backupContainerIDList():
+#     logger.info("updateSpaceIdContainerID()")
+#     try:
+#         # backupCounter=0
+#         primaryCounter=0
+#         primaryContainerDict = host_dictionary_obj()
+#         primarySpaceIdDict = host_dictionary_obj()
+#         response = requests.get("http://"+managerHost+":8090/v2/spaces/"+str(spaceName)+"/instances")
+#         logger.info("response.text : "+str(response.text))
+#         jsonArray = json.loads(response.text)
+#         for data in jsonArray:
+#             spaceIdContainerIdDict[str(data["id"])]=str(data["containerId"])
+#             # if(str(data["mode"]).__contains__("BACKUP")):
+#             #     backupCounter=backupCounter+1
+#             #     backupSpaceIdDict[(str(backupCounter))]=str(data["id"])
+#             if(str(data["mode"]).__contains__("BACKUP")):
+#                 primaryCounter=primaryCounter+1
+#                 primaryContainerDict.add(str(primaryCounter),str(data["containerId"]))
+#                 primarySpaceIdDict.add(str(primaryCounter),str(data["id"]))
+#         # print(" primary container dictonory "+ str(primaryContainerDict))
+#         # print(" primary space dictonory "+ str(primarySpaceIdDict))
+#         return primarySpaceIdDict
+#     except Exception as e:
+#         handleException(e)
+
 
 def confirmAndProceedForAll():
     logger.info("confirmAndProceedForAll()")
@@ -289,14 +365,75 @@ def confirmAndProceedForAll():
         if(len(str(confirmRollingUpdate))==0 ):
             confirmRollingUpdate = 'y'
         logger.info("confirmRollingUpdate : "+str(confirmRollingUpdate)) # instead of serial number couple need to be restarted.
-        logger.info("confirmAndProceedForAll() :backupContainerDict :"+str(backupContainerDict))
+        logger.info("confirmAndProceedForAll() :backupContainerDict :"+str(primaryContainerDict))
         if(confirmRollingUpdate=='y'):
             copyFilesFromODSXToSpaceServer()
-            for srno,containerID in backupContainerDict.items():
-                print("Procceed for SrNo : "+srno)
-                proceedForBackupRollingUpdate(srno)
+            start_time = time.time()
+            # newList = primaryContainerIDList()
+            label = True
+            global  ll
+            for partitionId in range(1,len(primaryContainerDict)+1):
+                ll.append(partitionId)
+            while label == True:
+                dict_obj = my_dictionary()
+                for  partitionId in ll:
+                    primarySpaceId = primarySpaceIdDict.get(str(partitionId))
+                    # print("   back up space id     "+str(primarySpaceId))
+                    primaryContainerId = spaceIdContainerIdDict.get(str(primarySpaceId))
+                    dict_obj.add(partitionId, primaryContainerId)
+                # print(" dict object    "+str(dict_obj))
+                new_list = my_dictionary()
+                for item in dict_obj:
+                    stripped = dict_obj.get(item).split('~', 1)[0]
+                    if not stripped in list(new_list.values()):
+                        new_list.add(item, stripped)
+                partitionIdList = list(new_list.keys())
+                # print(" Partition for update     "+str(partitionIdList))
+                numberOfSpaceInstances = getNumberOfSpaceInstances()
+                with ThreadPoolExecutor(numberOfSpaceInstances) as executor:
+                    for partitionId in range(1,len(primaryContainerDict)+1):
+                        if partitionId in partitionIdList:
+                            ll.remove(partitionId)
+                            executor.submit(proceedForBackupRollingUpdate, str(partitionId))
+                if(len(ll) == 0):
+                    label = False
+            end_time = time.time()
+
+            # print(f'Total time to run multithreads: {end_time - start_time:2f}s')
+
+    except Exception as e:
+
+        handleException(e)
+
+
+def confirmAndProceedForAllWithBatch():
+    logger.info("confirmAndProceedForAll()")
+    try:
+        confirmRollingUpdate = str(input(Fore.YELLOW+"Are you sure want to proceed for rolling update all SrNo ? (y/n) [y]: "+Fore.RESET))
+        if(len(str(confirmRollingUpdate))==0 ):
+            confirmRollingUpdate = 'y'
+        logger.info("confirmRollingUpdate : "+str(confirmRollingUpdate)) # instead of serial number couple need to be restarted.
+        logger.info("confirmAndProceedForAll() :primaryContainerDict :"+str(primaryContainerDict))
+        if(confirmRollingUpdate=='y'):
+            copyFilesFromODSXToSpaceServer()
+            start_time = time.time()
+
+
+            # executor = ThreadPoolExecutor(4)
+            # print("proceed for multithred : "+str(len(primaryContainerDict)))
+            numberOfSpaceInstances = str(readValuefromAppConfig("app.update.cache.policy.max.worker"))
+            executor = ThreadPoolExecutor(int(numberOfSpaceInstances))
+            with ThreadPoolExecutor(int(numberOfSpaceInstances)) as executor:
+                for partitionId in range(1,len(primaryContainerDict)+1):
+                    executor.submit(proceedForBackupRollingUpdate, str(partitionId))
+
+            end_time = time.time()
+
+            # print(f'Total time to run : {end_time - start_time:2f}s')
+
     except Exception as e:
         handleException(e)
+
 
 def validateResponse(responseCode):
     logger.info("validateResponse() "+str(responseCode))
@@ -414,7 +551,7 @@ def proceedForDemotePrimaryContainer(gscNumberToBeRollingUpdate):
         primaryDemoteResponse = requests.post("http://"+str(managerHostConfig)+":8090/v2/spaces/"+str(spaceName)+"/instances/"+str(spaceIdToBeDemoted)+"/demote?maxSuspendTime="+str(maxSuspendTime),headers=requestHeader)
         primaryDemoteResponseCode = str(primaryDemoteResponse.content.decode('utf-8'))
         with Spinner():
-            time.sleep(5)
+            time.sleep(10)
 
         status = validateResponse(primaryDemoteResponseCode)
         verboseHandle.printConsoleInfo("primaryDemoteResponseCode :"+str(primaryDemoteResponseCode))
@@ -650,9 +787,18 @@ def listGSC(managerHost):
             typeOfRestart = str(input(Fore.YELLOW+"[1] For List \n[2] For SrNo rolling update \n[Enter] For rolling update all \n[99] For Exit. \nEnter your choice : "+Fore.RESET))
             logger.info("typeOfRestart : "+str(typeOfRestart))
             if(len(str(typeOfRestart))==0):
-                #confirmParamAndRestartGSC()
-                inputParams()
-                confirmAndProceedForAll()
+                menuOfRestart = ''
+                while(str(menuOfRestart)!='99'):
+                    menuOfRestart = str(input(Fore.YELLOW+"[1] General Partitions \n[Enter] Batch Partitions \n[99] For Exit. \nEnter your choice : "+Fore.RESET))
+                    #confirmParamAndRestartGSC()
+
+                    if(str(menuOfRestart)=='1'):
+                        inputParams()
+                        confirmAndProceedForAll()
+                    if(len(str(menuOfRestart))==0):
+                        inputParams()
+                        confirmAndProceedForAllWithBatch()
+
             elif(str(typeOfRestart)=='1'):
                 display='true'
                 listUpdatedGSCStatus(display)
