@@ -13,6 +13,9 @@ tier_criteria_file=$7
 odsx_profile=$8
 gs_username=$9
 gs_password=${10}
+appId=${11}
+safeId=${12}
+objectId=${13}
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -43,8 +46,11 @@ sed -i 's,$ddl_properties_file_path,'$ddl_properties_file_path',g' /tmp/$service
 sed -i 's,$table_batch_file_path,'$table_batch_file_path',g' /tmp/$service_name
 sed -i 's,$tier_criteria_file,'$tier_criteria_file',g' /tmp/$service_name
 sed -i 's,$odsx_profile,'$odsx_profile',g' /tmp/$service_name
-sed -i 's,$gs_username,'$gs_username',g' /tmp/$service_name
-sed -i 's,$gs_password,'$gs_password',g' /tmp/$service_name
+#sed -i 's,$gs_username,'$gs_username',g' /tmp/$service_name
+#sed -i 's,$gs_password,'$gs_password',g' /tmp/$service_name
+sed -i 's,$app_id,'$appId',g' /tmp/$service_name
+sed -i 's,$safe_id,'$safeId',g' /tmp/$service_name
+sed -i 's,$object_id,'$objectId',g' /tmp/$service_name
 
 sudo mv -f /tmp/$service_name /etc/systemd/system/
 sudo systemctl daemon-reload

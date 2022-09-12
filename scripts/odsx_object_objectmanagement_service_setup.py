@@ -41,7 +41,11 @@ def setupService():
 
     managerInfo = getManagerInfo()
     lookupGroup = str(managerInfo['lookupGroups'])
-    lookupLocator = str(managerServer)+":4174"
+    for lookupManager in managerInfo['managers']:
+        lookupLocator = str(lookupManager)+":4174,"
+    if lookupLocator.endswith(","):
+        lookupLocator = lookupLocator[:-1]
+    #lookupLocator = str(managerServer)+":4174"
     displaySummary(managerServer,spaceName,ddlAndPropertiesBasePath,tableListfilePath)
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Object Management service ? (Yes/No) [Yes]:" + Fore.RESET
