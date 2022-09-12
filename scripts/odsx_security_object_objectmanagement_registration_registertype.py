@@ -365,6 +365,8 @@ def registerInSingle():
                              headers={'Accept': 'application/json'})
     if(response.text=="success"):
         verboseHandle.printConsoleInfo("Object is registered successfully!!")
+    elif(response.text=="duplicate"):
+        verboseHandle.printConsoleError("Object is already registered.")
     else:
         verboseHandle.printConsoleError("Error in registering object.")
 

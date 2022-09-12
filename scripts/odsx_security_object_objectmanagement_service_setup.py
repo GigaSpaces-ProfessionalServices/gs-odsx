@@ -59,7 +59,12 @@ def setupService():
 
     managerInfo = getManagerInfo(True,username,password)
     lookupGroup = str(managerInfo['lookupGroups'])
-    lookupLocator = str(managerServer)+":4174"
+    for lookupManager in managerInfo['managers']:
+        lookupLocator = str(lookupManager)+":4174,"
+    if lookupLocator.endswith(","):
+        lookupLocator = lookupLocator[:-1]
+#    lookupLocator = str(managerServer)+":4174"
+
     displaySummary(managerServer,spaceName,ddlAndPropertiesBasePath,tableListfilePath)
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Object Management service ? (Yes/No) [Yes]:" + Fore.RESET
@@ -79,7 +84,12 @@ def setupService():
 
     tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.ts.criteria")).replace('"','')
     odsx_profile=readValuefromAppConfig("app.setup.profile")
-    args = spaceName+" "+lookupLocator+" "+lookupGroup+" "+serviceJar+" "+ddlAndPropertiesBasePath+" "+tableListfilePath+" "+tieredCriteriaConfigFilePath+" "+odsx_profile+" "+username+" "+password
+
+    appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+    safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+    objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+
+    args = spaceName+" "+lookupLocator+" "+lookupGroup+" "+serviceJar+" "+ddlAndPropertiesBasePath+" "+tableListfilePath+" "+tieredCriteriaConfigFilePath+" "+odsx_profile+" "+username+" "+password + " " + appId + " " + safeId + " " + objectId
     commandToExecute = "scripts/objectmanagement_service_setup.sh "+args
     logger.info("Command "+commandToExecute)
     try:
