@@ -95,18 +95,24 @@ def executeCommandForUnInstall():
         nodes = getDIServerHostList()
         nodesCount = nodes.split(',')
         logger.info("nodesCount :"+str(len(nodesCount)))
+        wantToRemoveKafka = str(readValuefromAppConfig("app.di.base.kafka.wanttoremove"))
+        wantToRemoveZk = str(readValuefromAppConfig("app.di.base.zk.wanttoremove"))
+        wantToRemoveTelegraf = str(readValuefromAppConfig("app.di.base.telegraf.wanttoremove"))
         if(len(nodes)>0):
             removeType=''
             #if(len(nodesCount)>1):
                 #removeType = str(input(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
+                verboseHandle.printConsoleInfo("Want to remove kafka : "+str(wantToRemoveKafka))
+                verboseHandle.printConsoleInfo("Want to remove zookeeper : "+str(wantToRemoveZk))
+                verboseHandle.printConsoleInfo("Want to remove telegraf : "+str(wantToRemoveTelegraf))
                 confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
                     commandToExecute="scripts/servers_di_remove.sh"
-                    additionalParam=""
+                    additionalParam= wantToRemoveKafka+" "+wantToRemoveZk+" "+wantToRemoveTelegraf
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
                         for host in nodes.split(','):
