@@ -70,11 +70,11 @@ def configureLicenseManagerAndSpace():
     verboseHandle.printConsoleInfo("2. *.service target files : "+targetPathService)
     verboseHandle.printConsoleInfo("3. *.timer target files : "+targetPathService)
     verboseHandle.printConsoleInfo("4. *.sh target files : "+targetPathScripts)
-    verboseHandle.printConsoleInfo("5. *.txt target files : "+targetPathScripts)
+    verboseHandle.printConsoleInfo("5. *.chcclp target files : "+targetPathScripts)
     #licenseConfig='"\\"{}\\""'.format(licenseConfig)
     confirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
     if confirm=='y' or confirm=='':
-        commandToExecute = "cp "+sourcePath+"*.service "+targetPathService
+        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p /dbagigalogs/iidr;cp "+sourcePath+"*.service "+targetPathService
         logger.info("commandToExecute:"+commandToExecute)
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Files *.service copied for for host:"+watchdogHost)
@@ -89,10 +89,10 @@ def configureLicenseManagerAndSpace():
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Files *.sh copied for for host:"+watchdogHost)
 
-        commandToExecute = "cp "+sourcePath+"*.txt "+targetPathScripts
+        commandToExecute = "cp "+sourcePath+"*.chcclp "+targetPathScripts
         logger.info("commandToExecute:"+commandToExecute)
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
-        verboseHandle.printConsoleInfo("Files *.txt copied for for host:"+watchdogHost)
+        verboseHandle.printConsoleInfo("Files *.chcclp copied for for host:"+watchdogHost)
 
 
 if __name__ == '__main__':
