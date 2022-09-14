@@ -93,7 +93,7 @@ current:
       pivot:
         pivotconf: pivot.telegraf.conf
       space:
-        spaceconf: agents.telegraf.conf
+        spaceconf: space.telegraf.conf
     scripts:
       pivot:
       scripts:
