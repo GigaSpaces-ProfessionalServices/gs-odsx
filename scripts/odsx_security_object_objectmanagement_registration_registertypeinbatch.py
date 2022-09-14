@@ -103,7 +103,7 @@ def setUserInputs():
     #ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
      
 
-    tableListfilePath = ddlAndPropertiesBasePath+"/tableList.txt"
+    tableListfilePath = ddlAndPropertiesBasePath+"tableList.txt"
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
