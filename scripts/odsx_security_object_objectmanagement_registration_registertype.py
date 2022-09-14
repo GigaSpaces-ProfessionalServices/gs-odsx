@@ -176,7 +176,7 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
         routingValue = str(
             input(
                 Fore.YELLOW + "Routing Value [" + routingDefault + "] :" + Fore.RESET))
-    if (len(str(routingDefault)) == 0):
+    if (len(str(routingValue)) == 0):
         routingValue = routingDefault
 
     if indexDefault is None:
@@ -231,19 +231,17 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
         confirm = str(input(
             Fore.YELLOW + "Are you sure want to edit " + propertiesFileName + " ? [yes (y)] / [no (n)]" + Fore.RESET))
     print(confirm)
-    if confirm.lower() != "y" and confirm.lower() != "yes":
-        exit(0)
-
-    if len(spaceIdValue) > 0 and spaceIdValue != "":
-        set_value_in_property_file("spaceId", spaceIdValue)
-    if len(spaceIdTypeValue) > 0 and spaceIdTypeValue != "":
-        set_value_in_property_file("spaceIdType", spaceIdTypeValue)
-    if len(routingValue) > 0 and routingValue != "":
-        set_value_in_property_file("routing", routingValue)
-    if len(indexValue) > 0 and indexValue != "":
-        set_value_in_property_file("index", indexValue)
-    if len(indexTypeValue) > 0 and indexTypeValue != "":
-        set_value_in_property_file("indexType", indexTypeValue)
+    if confirm.lower() == "y" or confirm.lower() == "yes":
+        if len(spaceIdValue) > 0 and spaceIdValue != "":
+            set_value_in_property_file("spaceId", spaceIdValue)
+        if len(spaceIdTypeValue) > 0 and spaceIdTypeValue != "":
+            set_value_in_property_file("spaceIdType", spaceIdTypeValue)
+        if len(routingValue) > 0 and routingValue != "":
+            set_value_in_property_file("routing", routingValue)
+        if len(indexValue) > 0 and indexValue != "":
+            set_value_in_property_file("index", indexValue)
+        if len(indexTypeValue) > 0 and indexTypeValue != "":
+            set_value_in_property_file("indexType", indexTypeValue)
     #if len(supportDynamicProperties) > 0 and supportDynamicProperties != "":
     #    set_value_in_property_file("supportDynamicProperties", supportDynamicProperties)
 
@@ -418,7 +416,7 @@ if __name__ == '__main__':
         args.append(sys.argv[0])
         myCheckArg()
         showMenuOptions()
-        
+
         selectedOption = str(
             input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
 
@@ -429,14 +427,18 @@ if __name__ == '__main__':
                     exit(0)
                 if int(selectedOption) == 1:
                     setUserInputs1()
-                #if int(selectedOption) == 2:    
+                #if int(selectedOption) == 2:
                     setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath)
                 if int(selectedOption) == 2:
-                    setInputs(True)
-                    registerInSandbox()
+                    verboseHandle.printConsoleInfo("TBD")
+# uncomment when done with sandbox                    setInputs(True)
+# uncomment when done with sandbox                   registerInSandbox()
                 if int(selectedOption) == 3:
                     setInputs(False)
                     registerInSingle()
+                if int(selectedOption) == 99:
+                    print("aaaa")
+                    exit(0)
                 showMenuOptions()
                 selectedOption = str(
                     input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
