@@ -40,7 +40,7 @@ base_name=$(basename ${serviceJar})
 sed -i 's,$serviceJar,'/dbagiga/$base_name',g' /tmp/$service_name
 sed -i 's,$space_name,'$space_name',g' /tmp/$service_name
 sed -i 's,$log_location,'$log_location',g' /tmp/$service_name
-sed -i 's,$lookup_locator,'$lookup_locator',g' /tmp/$service_name
+sed -i 's/$lookup_locator/'$lookup_locator'/g' /tmp/$service_name
 sed -i 's,$lookup_group,'$lookup_group',g' /tmp/$service_name
 sed -i 's,$ddl_properties_file_path,'$ddl_properties_file_path',g' /tmp/$service_name
 sed -i 's,$table_batch_file_path,'$table_batch_file_path',g' /tmp/$service_name
