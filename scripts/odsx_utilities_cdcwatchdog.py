@@ -74,7 +74,7 @@ def configureLicenseManagerAndSpace():
     #licenseConfig='"\\"{}\\""'.format(licenseConfig)
     confirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
     if confirm=='y' or confirm=='':
-        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p /dbagigalogs/iidr;cp "+sourcePath+"*.service "+targetPathService
+        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p /dbagigalogs/iidr;chown -R gsods.gsods /dbagigalogs/iidr;cp "+sourcePath+"*.service "+targetPathService
         logger.info("commandToExecute:"+commandToExecute)
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Files *.service copied for for host:"+watchdogHost)

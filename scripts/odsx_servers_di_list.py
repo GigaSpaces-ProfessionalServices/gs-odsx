@@ -69,17 +69,18 @@ def getKafkaStatus(node):
         user = 'root'
         if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
             output=0
-            return output
+            return Fore.GREEN+"NA"+Fore.RESET
         if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
             output=0
-            return output
+            return Fore.GREEN+"NA"+Fore.RESET
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
             if(output!=0):
                 #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
                 logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
-            return output
+                return Fore.RED+"OFF"+Fore.RESET
+            return Fore.GREEN+"ON"+Fore.RESET
 
 def getZookeeperStatus(node):
     logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
@@ -90,17 +91,18 @@ def getZookeeperStatus(node):
         user = 'root'
         if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
             output=0
-            return output
+            return Fore.GREEN+"NA"+Fore.RESET
         if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
             output=0
-            return output
+            return Fore.GREEN+"NA"+Fore.RESET
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
             if(output!=0):
                 #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
                 logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
-            return output
+                return Fore.RED+"OFF"+Fore.RESET
+            return Fore.GREEN+"ON"+Fore.RESET
 
 
 def getConsolidatedStatus(node):
@@ -122,8 +124,10 @@ def getConsolidatedStatus(node):
                 if(output!=0):
                     #verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
                     logger.info(" Service :"+str(cmd)+" not started."+str(os.getenv(node.ip)))
-                    return output
-    return output
+                    return Fore.RED+"OFF"+Fore.RESET
+    if output==0:
+        return Fore.GREEN+"ON"+Fore.RESET
+    return Fore.RED+"OFF"+Fore.RESET
 
 def roleOfCurrentNode(ip):
     logger.info("isCurrentNodeLeaderNode(ip) "+str(ip))
@@ -139,6 +143,8 @@ def roleOfCurrentNode(ip):
     else:
         return "None"
 def isZkInstalledNot(host,role):
+    if(str(role)=='kafka Broker 1b'):
+        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isKafkaInstalledNot"+str(host)+" : "+str(role))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/odsxzookeeper.service'
@@ -147,10 +153,12 @@ def isZkInstalledNot(host,role):
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
-        return "No"
-    return isInstalled
+        return Fore.RED+"NO"+Fore.RESET
+    return Fore.GREEN+"Yes"+Fore.RESET
 
 def isKafkaInstalledNot(host,role):
+    if(str(role)=='Zookeeper Witness'):
+        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isKafkaInstalledNot"+str(host)+" : "+str(role))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/odsxkafka.service'
@@ -159,10 +167,12 @@ def isKafkaInstalledNot(host,role):
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
-        return "No"
-    return isInstalled
+        return Fore.RED+"NO"+Fore.RESET
+    return Fore.GREEN+"Yes"+Fore.RESET
 
-def isMDMInstalled(host):
+def isMDMInstalled(host,nodeType):
+    if(str(nodeType)=='Zookeeper Witness'):
+        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isMDMInstalled"+str(host))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/di-mdm.service'
@@ -174,7 +184,9 @@ def isMDMInstalled(host):
         return Fore.RED+"NO"+Fore.RESET
     return Fore.GREEN+"Yes"+Fore.RESET
 
-def getMDMStatus(host):
+def getMDMStatus(host,nodeType):
+    if(str(nodeType)=='Zookeeper Witness'):
+        return Fore.GREEN+"NA"+Fore.RESET
     cmd = "systemctl status di-mdm.service"
     with Spinner():
         user='root'
@@ -185,7 +197,9 @@ def getMDMStatus(host):
             return Fore.RED+"OFF"+Fore.RESET
         return Fore.GREEN+"ON"+Fore.RESET
 
-def isDIMInstalled(host):
+def isDIMInstalled(host,nodeType):
+    if(str(nodeType)=='Zookeeper Witness'):
+        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isDIMInstalled"+str(host))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/di-manager.service'
@@ -197,7 +211,9 @@ def isDIMInstalled(host):
         return Fore.RED+"NO"+Fore.RESET
     return Fore.GREEN+"Yes"+Fore.RESET
 
-def getDIMStatus(host):
+def getDIMStatus(host,nodeType):
+    if(str(nodeType)=='Zookeeper Witness'):
+        return Fore.GREEN+"NA"+Fore.RESET
     cmd = "systemctl status di-manager.service"
     with Spinner():
         user='root'
@@ -208,7 +224,9 @@ def getDIMStatus(host):
             return Fore.RED+"OFF"+Fore.RESET
         return Fore.GREEN+"ON"+Fore.RESET
 
-def isFLinkInstalled(host):
+def isFLinkInstalled(host,nodeType):
+    if(str(nodeType)=='Zookeeper Witness'):
+        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isDIMInstalled"+str(host))
     isInstalled = "Yes"
     commandToExecute='ls /dbagiga/di-flink/latest-flink/bin/start-cluster.sh'
@@ -220,9 +238,10 @@ def isFLinkInstalled(host):
         return Fore.RED+"NO"+Fore.RESET
     return Fore.GREEN+"Yes"+Fore.RESET
 
-def getFlinkStatus(host):
+def getFlinkStatus(host,nodeType):
+    if(str(nodeType)=='Zookeeper Witness'):
+        return Fore.GREEN+"NA"+Fore.RESET
     cmd = ""
-
     with Spinner():
         if(isValidHost(host)):
             status = port_check(host,8081)
@@ -242,7 +261,7 @@ def isInstalledNot(host,role):
         outputShFile=str(outputShFile).replace('\n','')
         logger.info("outputShFile :"+str(outputShFile))
         if len(str(outputShFile))==0:
-            return "No"
+            return Fore.GREEN+"NA"+Fore.RESET
     if role != "Zookeeper Witness":
         commandToExecute='ls /etc/systemd/system/odsxkafka.service'
         logger.info("commandToExecute :"+str(commandToExecute))
@@ -250,7 +269,7 @@ def isInstalledNot(host,role):
         outputShFile=str(outputShFile).replace('\n','')
         logger.info("outputShFile :"+str(outputShFile))
         if len(str(outputShFile))==0:
-            return "No"
+            return Fore.GREEN+"NA"+Fore.RESET
 
     commandToExecute='ls /usr/lib/systemd/system/telegraf.service'
     logger.info("commandToExecute :"+str(commandToExecute))
@@ -326,73 +345,25 @@ def listDIServers():
         installStatusZk = isZkInstalledNot(os.getenv(node.ip),str(node.type))
         logger.info("Install status Zk: "+str(installStatusZk)+"Install status kafka: "+str(installStatusKafka)+" : "+str(os.getenv(node.ip))+" : "+str(node.type))
         nodeListSize = len(str((getDIServerHostList())).split(','))
-        installStatusMDM=isMDMInstalled(os.getenv(node.ip))
-        installStatusDIM=isDIMInstalled(os.getenv(node.ip))
-        installStatusFLink=isFLinkInstalled(os.getenv(node.ip))
-        serviceStatusMDM=getMDMStatus(os.getenv(node.ip))
-        serviceStatusDIM=getDIMStatus(os.getenv(node.ip))
-        serviceStatusFLink=getFlinkStatus(os.getenv(node.ip))
+        installStatusMDM=isMDMInstalled(os.getenv(node.ip),str(node.type))
+        installStatusDIM=isDIMInstalled(os.getenv(node.ip),str(node.type))
+        installStatusFLink=isFLinkInstalled(os.getenv(node.ip),str(node.type))
+        serviceStatusMDM=getMDMStatus(os.getenv(node.ip),str(node.type))
+        serviceStatusDIM=getDIMStatus(os.getenv(node.ip),str(node.type))
+        serviceStatusFLink=getFlinkStatus(os.getenv(node.ip),str(node.type))
         if(nodeListSize==4):
-            if(kafkaOutput==0 and zkOutput==0 and output==0):
-                dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                           Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                           Fore.GREEN+node.type+Fore.RESET,
-                           Fore.GREEN+installStatusKafka+Fore.RESET if(installStatusKafka=='Yes') else Fore.RED+installStatusKafka+Fore.RESET,
-                           Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
-                           Fore.GREEN+"ON"+Fore.RESET,
-                           Fore.GREEN+"ON"+Fore.RESET,
-                           Fore.GREEN+"ON"+Fore.RESET,
-                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
-                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
-                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
-            elif(kafkaOutput==0 and zkOutput==0 and output!=0):
-                dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                           Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                           Fore.GREEN+node.type+Fore.RESET,
-                           Fore.GREEN+installStatusKafka+Fore.RESET if(installStatusKafka=='Yes') else Fore.RED+installStatusKafka+Fore.RESET,
-                           Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.GREEN+"ON"+Fore.RESET,
-                           Fore.GREEN+"ON"+Fore.RESET,
-                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
-                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
-                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
-            elif(kafkaOutput!=0 and zkOutput==0 and output!=0):
-                dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                           Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                           Fore.GREEN+node.type+Fore.RESET,
-                           Fore.GREEN+installStatusKafka+Fore.RESET if(installStatusKafka=='Yes') else Fore.RED+installStatusKafka+Fore.RESET,
-                           Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.GREEN+"NA"+Fore.RESET,
-                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
-                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
-                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
-            elif(kafkaOutput==0 and zkOutput!=0 and output!=0):
-                dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                           Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                           Fore.GREEN+node.type+Fore.RESET,
-                           Fore.GREEN+installStatusKafka+Fore.RESET if(installStatusKafka=='Yes') else Fore.RED+installStatusKafka+Fore.RESET,
-                           Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.GREEN+"NA"+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
-                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
-                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
-            else:
-                dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-                           Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-                           Fore.GREEN+node.type+Fore.RESET,
-                           Fore.GREEN+installStatusKafka+Fore.RESET if(installStatusKafka=='Yes') else Fore.RED+installStatusKafka+Fore.RESET,
-                           Fore.GREEN+installStatusZk+Fore.RESET if(installStatusZk=='Yes') else Fore.RED+installStatusZk+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.RED+"OFF"+Fore.RESET,
-                           Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
-                           Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
-                           Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
+            dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                       Fore.GREEN+os.getenv(node.name)+Fore.RESET,
+                       Fore.GREEN+node.type+Fore.RESET,
+                       installStatusKafka,
+                       installStatusZk,
+                       output,
+                       kafkaOutput,
+                       zkOutput,
+                       Fore.GREEN+installStatusMDM+"/"+serviceStatusMDM,
+                       Fore.GREEN+installStatusDIM+"/"+serviceStatusDIM,
+                       Fore.GREEN+installStatusFLink+"/"+serviceStatusFLink]
+
         else:
             dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
                        Fore.GREEN+os.getenv(node.name)+Fore.RESET,
