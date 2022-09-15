@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import sys
 
@@ -10,6 +11,7 @@ from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppCo
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.ods_manager import getManagerHost, getManagerInfo
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -156,10 +158,31 @@ def registerInBatch():
     # print(getData())
     response = requests.post('http://' + objectMgmtHost + ':7001/registertype/batch',
                              headers={'Accept': 'application/json'})
-    if(response.text=="success"):
-        verboseHandle.printConsoleInfo("All objects are registered successfully!!")
-    else:
-        verboseHandle.printConsoleError("Error in registering objects batch.")
+    objectJson = json.loads(response.text)
+    headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
+               Fore.YELLOW + "Object Name" + Fore.RESET,
+               Fore.YELLOW + "Registered or not" + Fore.RESET
+               ]
+    data = []
+    counter = 1
+    logger.info(objectJson)
+    for k,v in objectJson.items():
+        if v == "Already exist so not registered":
+            v = Fore.RED + v + Fore.RESET
+        else:
+            v =  Fore.GREEN + v + Fore.RESET
+
+        dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                     Fore.GREEN + k + Fore.RESET,
+                     Fore.GREEN + v + Fore.RESET
+                     ]
+        counter = counter+1
+        data.append(dataArray)
+    printTabular(None, headers, data)
+    #if(response.text=="success"):
+    #    verboseHandle.printConsoleInfo("All objects are registered successfully!!")
+    #else:
+    #    verboseHandle.printConsoleError("Error in registering objects batch.")
 
 
 if __name__ == '__main__':

@@ -64,12 +64,12 @@ def setupService():
     managerInfo = getManagerInfo(True, username, password)
     lookupGroup = str(managerInfo['lookupGroups'])
     managerServer = getManagerHostFromEnv()
-    lookupLocator = ""
-    for lookupManager in managerServer.split(","):
-        lookupLocator = lookupLocator + str(lookupManager) + ":4174,"
+    lookupLocator = managerServer
+   # for lookupManager in managerServer.split(","):
+   #     lookupLocator = lookupLocator + str(lookupManager) + ":4174,"
     #    managerServer = str(lookupManager)+","
-    if lookupLocator.endswith(","):
-        lookupLocator = lookupLocator[:-1]
+   # if lookupLocator.endswith(","):
+   #     lookupLocator = lookupLocator[:-1]
     #    managerServer = managerServer[:-1]
     #    lookupLocator = str(managerServer)+":4174"
 
