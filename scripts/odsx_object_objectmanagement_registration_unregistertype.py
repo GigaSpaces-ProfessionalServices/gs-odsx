@@ -76,9 +76,8 @@ def setUserInputs():
     managerInfo = getManagerInfo()
 
     lookupGroup = str(managerInfo['lookupGroups'])
-    lookupLocator = str(managerHost)+":4174"
+    lookupLocator = str(managerHost) + ":4174"
     objectMgmtHost = getPivotHost()
-    
 
 
 def validateUserInput():
@@ -88,47 +87,50 @@ def validateUserInput():
     isValid = False
     objectMgmtTableInput = str(
         input(Fore.YELLOW + "Select object to unregister type :" + Fore.RESET))
-    
-    if objectMgmtTableInput.isnumeric() ==True:
+
+    if objectMgmtTableInput.isnumeric() == True:
         objectMgmtTableInput = int(objectMgmtTableInput)
         if objectMgmtTableInput > 0 and objectMgmtTableInput in dataSpaceDict:
             isValid = True
             selectedSpace = dataSpaceDict.get(objectMgmtTableInput)
             selectedType = dataTableDict.get(objectMgmtTableInput)
             displaySummary()
-            summaryConfirm = str(input(Fore.YELLOW+"Do you want to unregister object with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
-            while(len(str(summaryConfirm))==0):
-                summaryConfirm = str(input(Fore.YELLOW+"Do you want to unregister object with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
-
-            if(str(summaryConfirm).casefold()=='n' or str(summaryConfirm).casefold()=='no'):
+            summaryConfirm = str(input(
+                Fore.YELLOW + "Do you want to unregister object with above inputs ? [Yes (y) / No (n)] [n]: " + Fore.RESET))
+            # while(len(str(summaryConfirm))==0):
+            #    summaryConfirm = str(input(Fore.YELLOW+"Do you want to unregister object with above inputs ? [Yes (y) / No (n)] [n]: "+Fore.RESET))
+            if len(str(summaryConfirm)) == 0:
+                summaryConfirm = "n"
+            if (str(summaryConfirm).casefold() == 'n' or str(summaryConfirm).casefold() == 'no'):
                 logger.info("Exiting without unregistering object")
                 exit(0)
-    
-    if(isValid == False):
+
+    if (isValid == False):
         verboseHandle.printConsoleError("Invalid option!")
         exit(0)
+
 
 def displaySummary():
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
-    print(Fore.GREEN+"1. "+
-            Fore.GREEN+"Lookup Manager = "+
-            Fore.GREEN+lookupLocator+Fore.RESET)
-    print(Fore.GREEN+"2. "+
-            Fore.GREEN+"Lookup Group = "+
-            Fore.GREEN+lookupGroup+Fore.RESET)
-    print(Fore.GREEN+"3. "+
-            Fore.GREEN+"Object Management Host = "+
-            Fore.GREEN+objectMgmtHost+Fore.RESET)
-    print(Fore.GREEN+"4. "+
-            Fore.GREEN+"Space Name = "+
-            Fore.GREEN+selectedSpace+Fore.RESET)
-    print(Fore.GREEN+"5. "+
-            Fore.GREEN+"Selected Object = "+
-            Fore.GREEN+selectedType+Fore.RESET)
-    
-    
+    print(Fore.GREEN + "1. " +
+          Fore.GREEN + "Lookup Manager = " +
+          Fore.GREEN + lookupLocator + Fore.RESET)
+    print(Fore.GREEN + "2. " +
+          Fore.GREEN + "Lookup Group = " +
+          Fore.GREEN + lookupGroup + Fore.RESET)
+    print(Fore.GREEN + "3. " +
+          Fore.GREEN + "Object Management Host = " +
+          Fore.GREEN + objectMgmtHost + Fore.RESET)
+    print(Fore.GREEN + "4. " +
+          Fore.GREEN + "Space Name = " +
+          Fore.GREEN + selectedSpace + Fore.RESET)
+    print(Fore.GREEN + "5. " +
+          Fore.GREEN + "Selected Object = " +
+          Fore.GREEN + selectedType + Fore.RESET)
+
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
+
 
 def getDataList():
     data = {
@@ -136,6 +138,7 @@ def getDataList():
         "lookupLocator": "" + lookupLocator + ""
     }
     return data
+
 
 def getData():
     data = {
@@ -179,7 +182,7 @@ def unregisterType():
     # print(getData())
     response = requests.post('http://' + objectMgmtHost + ':7001/unregistertype', data=getData(),
                              headers={'Accept': 'application/json'})
-    if(response.text=="success"):
+    if (response.text == "success"):
         verboseHandle.printConsoleInfo("Object is removed successfully!!")
     else:
         verboseHandle.printConsoleError("Error in removing object.")

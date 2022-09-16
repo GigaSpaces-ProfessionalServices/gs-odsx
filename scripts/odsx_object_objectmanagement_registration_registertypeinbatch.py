@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 import sys
 
@@ -9,6 +10,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, set_value_in_property_file
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.ods_manager import getManagerHost, getManagerInfo
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -86,7 +88,7 @@ def setUserInputs():
     #ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
      
 
-    tableListfilePath = ddlAndPropertiesBasePath+"/tableList.txt"
+    tableListfilePath = ddlAndPropertiesBasePath+"tableList.txt"
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
@@ -139,10 +141,31 @@ def registerInBatch():
     # print(getData())
     response = requests.post('http://' + objectMgmtHost + ':7001/registertype/batch',
                              headers={'Accept': 'application/json'})
-    if(response.text=="success"):
-        verboseHandle.printConsoleInfo("All objects are registered successfully!!")
-    else:
-        verboseHandle.printConsoleError("Error in registering objects batch.")
+    objectJson = json.loads(response.text)
+    headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
+               Fore.YELLOW + "Object Name" + Fore.RESET,
+               Fore.YELLOW + "Registered or not" + Fore.RESET
+               ]
+    data = []
+    counter = 1
+    logger.info(objectJson)
+    for k,v in objectJson.items():
+        if v == "Already exist so not registered":
+            v = Fore.RED + v + Fore.RESET
+        else:
+            v =  Fore.GREEN + v + Fore.RESET
+
+        dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                     Fore.GREEN + k + Fore.RESET,
+                     Fore.GREEN + v + Fore.RESET
+                     ]
+        counter = counter+1
+        data.append(dataArray)
+    printTabular(None, headers, data)
+    #if(response.text=="success"):
+    #    verboseHandle.printConsoleInfo("All objects are registered successfully!!")
+    #else:
+    #    verboseHandle.printConsoleError("Error in registering objects batch.")
 
 
 if __name__ == '__main__':
