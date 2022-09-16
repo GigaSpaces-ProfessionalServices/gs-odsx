@@ -1,7 +1,8 @@
 echo "Starting Grafana Installation."
 #echo "Extracting install.tar to "$targetDir
 sourceInstallerDirectory=$1
-additionalParamTarget=$2
+gsConfigYamlTarget=$2
+gsConfigSpaceboardTarget=$3
 echo "sourceInstallerDirectory: "$sourceInstallerDirectory
 tar -xvf install.tar
 home_dir=$(pwd)
@@ -10,11 +11,11 @@ echo "InstallationPath="$installation_path
 installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
 echo "InstallationFile:"$installation_file
 yum install -y $installation_path/$installation_file
-cp $installation_path/gs_config.yaml /etc/grafana/provisioning/dashboards/
+cp $installation_path/gs_config.yaml $gsConfigYamlTarget
 sed -i -e 's|;disable_sanitize_html = false|disable_sanitize_html = true|g' /etc/grafana/grafana.ini
 sleep 5
 
-cp -r $installation_path/dashboards/*.json  /usr/share/grafana/conf/provisioning/dashboards/
+cp -r $installation_path/dashboards/*.json  $gsConfigSpaceboardTarget
 
 #Added
 systemctl daemon-reload

@@ -9,7 +9,8 @@ from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_node
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder, \
+    getYamlJarFilePath
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -56,17 +57,27 @@ def installUserAndTargetDirectory():
     try:
         global user
         global hostList
-        '''
-        host = str(input(Fore.YELLOW+"Enter host to install Grafana: "+Fore.RESET))
-        while(len(str(host))==0):
-            host = str(input(Fore.YELLOW+"Enter host to install Grafana: "+Fore.RESET))
-        logger.info("Enter host to install Grafana: "+str(host))
-        user = str(input(Fore.YELLOW+"Enter user to connect Grafana servers [root]:"+Fore.RESET))
-        if(len(str(user))==0):
-        '''
+        global gsConfigYaml
+        global gsConfigYamlTarget
+        global gsConfigSpaceboardTarget
         user="root"
         hostList = getGrafanaHostFromEnv()
-        verboseHandle.printConsoleInfo("Garafana server will be installed on hosts : "+str(hostList))
+        gsConfigYaml = str(getYamlFilePathInsideFolder(".grafana.gsconfig"))
+        gsConfigYamlTarget = str(readValuefromAppConfig("app.grafana.gsconfigyaml.target"))
+        gsConfigSpaceboardSource = str(getYamlJarFilePath(".grafana.dashboards",""))
+        gsConfigSpaceboardTarget = str(readValuefromAppConfig("app.grafana.provisioning.dashboards.target"))
+        sourcePath= sourceInstallerDirectory+"/grafana/"
+        packageName = [f for f in os.listdir(sourcePath) if f.endswith('.rpm')]
+
+
+        verboseHandle.printConsoleWarning("-------------------Summary---------------------------")
+        verboseHandle.printConsoleInfo("1. gs_config.yaml source : "+str(gsConfigYaml))
+        verboseHandle.printConsoleInfo("2. gs_config.yaml target : "+str(gsConfigYamlTarget))
+        verboseHandle.printConsoleInfo("3. daashboards source : "+str(gsConfigSpaceboardSource))
+        verboseHandle.printConsoleInfo("4. daashboards target : "+str(gsConfigSpaceboardTarget))
+        verboseHandle.printConsoleInfo("5. Garafana server will be installed on hosts : "+str(hostList))
+        verboseHandle.printConsoleInfo("6. Zookeeper installer : "+str(packageName))
+        verboseHandle.printConsoleWarning("-----------------------------------------------------")
         logger.info(" user: "+str(user))
 
     except Exception as e:
@@ -92,8 +103,8 @@ def executeCommandForInstall():
     logger.info("executeCommandForInstall(): start")
     try:
         commandToExecute="scripts/servers_grafana_install.sh"
-        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
-        additionalParam=sourceInstallerDirectory
+
+        additionalParam=sourceInstallerDirectory+' '+gsConfigYamlTarget+' '+gsConfigSpaceboardTarget
         for host in hostList.split(','):
             logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
             with Spinner():
@@ -106,6 +117,7 @@ def executeCommandForInstall():
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> Grafana -> Install')
     try:
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         installUserAndTargetDirectory()
         confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Grafana servers (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):

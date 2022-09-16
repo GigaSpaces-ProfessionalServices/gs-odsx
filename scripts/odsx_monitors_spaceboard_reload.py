@@ -9,6 +9,7 @@ from colorama import Fore
 from scripts.odsx_servers_grafana_list import listGrafana
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import getGrafanaServerHostList
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
 
@@ -57,13 +58,14 @@ def reloadSpaceboardServiceByHost():
         filename = "gs_config.yaml"
     else:
         filename = ""
+    gsConfigSpaceboardTarget = str(readValuefromAppConfig("app.grafana.provisioning.dashboards.target"))
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
     print(Fore.GREEN+"1. "+
-          Fore.GREEN+"Grafana dashboard files  = "+sourceInstallerDirectory+"/grafana/dashboard/"+
+          Fore.GREEN+"Grafana dashboard files  = "+sourceInstallerDirectory+"/grafana/dashboards/"+
           Fore.GREEN+str(filename)+Fore.RESET)
-    verboseHandle.printConsoleInfo("2. Target path : /usr/share/grafana/conf/provisioning/dashboards/")
+    verboseHandle.printConsoleInfo("2. Target path : "+str(gsConfigSpaceboardTarget))
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     if(len(nodes)>0):
         confirm = str(input(Fore.YELLOW+"Are you sure want to reload grafana servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
@@ -73,7 +75,7 @@ def reloadSpaceboardServiceByHost():
         if(confirm=='y'):
             commandToExecute="scripts/monitors_spaceboard_reload.sh"
             sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
-            additionalParam=sourceInstallerDirectory
+            additionalParam=sourceInstallerDirectory+' '+str(gsConfigSpaceboardTarget)
             logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+nodes+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
             with Spinner():
                 output= connectExecuteSSH(nodes, user,commandToExecute,additionalParam)
