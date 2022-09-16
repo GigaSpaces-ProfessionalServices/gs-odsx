@@ -424,6 +424,7 @@ def proceedToDeployPU():
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
+    db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
     verboseHandle.printConsoleInfo("------------------------------------------------------------")
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
@@ -434,6 +435,7 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter mssql.server : "+str(mssqlServer))
     verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
+    verboseHandle.printConsoleInfo("Enter sqlite3 db file :"+str(db_file))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder .jar file including file name : "+str(sourceMSSQLJarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder *.sh file : "+str(sourceMSSQLFeederShFilePath))
 

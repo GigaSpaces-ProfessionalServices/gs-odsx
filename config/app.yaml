@@ -6,6 +6,10 @@ current:
       db2ccjar: db2jcc-4.26.14.jar
       db2feederJar: db2feeder-1.0.0.jar
     scripts: null
+  data-integration:
+    dim:
+    mdm:
+    flink:
   data-validator:
     files:
       dvkeytab: UTKA02E.keytab
@@ -17,6 +21,8 @@ current:
     catalog:
       jars:
         catalogjar: catalogue-service.jar
+    dashboards:
+      gsconfig: gs_config.yaml
   gs:
     config:
       log:
@@ -42,6 +48,8 @@ current:
       space:
         spacejar: space-0.1.jar
     upgrade:
+  iidr:
+    watchdog:
   kafka:
     jolokiaJar: jolokia-agent.jar
   kapacitor:
@@ -86,7 +94,7 @@ current:
       pivot:
         pivotconf: pivot.telegraf.conf
       space:
-        spaceconf: agents.telegraf.conf
+        spaceconf: space.telegraf.conf
     scripts:
       pivot:
       scripts:

@@ -57,16 +57,23 @@ info "Copying files from "$sourceInstallerDirectory/kapacitor/templates/" to /et
 cp $sourceInstallerDirectory/kapacitor/templates/*.json /etc/kapacitor/templates/
 
 kapacitor_url='export KAPACITOR_URL=http://'$host:$port
+sed -i '/export KAPACITOR_URL/d' ~/.bash_profile
 echo "kapacitor_url:"$kapacitor_url
 echo "$kapacitor_url" >> ~/.bash_profile
 source ~/.bash_profile
-source .bash_profile
 systemctl daemon-reload
 sleep 2
 #For debug
 #sed -i -e 's|#   endpoint = "example"|  endpoint = "debug"|g' /etc/kapacitor/kapacitor.conf
 #sed -i -e 's|#   url = "http://example.com"|  url = "http://localhost:4242"|g' /etc/kapacitor/kapacitor.conf
 #sed -i -e 's|#   alert-template-file = "/path/to/template/file"| alert-template-file = "/etc/kapacitor/templates/debug.json"|g' /etc/kapacitor/kapacitor.conf
-info "\n Configuring kapacitor conf to /etc/kapacitor/kapacitor.conf"
+#info "\n Configuring kapacitor conf to /etc/kapacitor/kapacitor.conf"
 cat $sourceInstallerDirectory/kapacitor/config/kapacitor.conf.template >> /etc/kapacitor/kapacitor.conf
-sleep 2
+#sed -i -e 's|  state-changes-only = false|  state-changes-only = true|g' /etc/kapacitor/kapacitor.conf
+ex /etc/kapacitor/kapacitor.conf <<-EOF
+   /^\[smtp\]
+   /^  state-changes-only =
+   s/= false/= true/
+   wq
+EOF
+sleep 5

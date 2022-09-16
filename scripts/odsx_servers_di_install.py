@@ -150,6 +150,30 @@ def installCluster():
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Want to install Java : "+wantJava+"" + Fore.RESET)
     logger.info(" wantJava: " + str(wantJava))
+    srNo=srNo+1
+    sourcePath= sourceInstallerDirectory+"/kafka/"
+    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.tgz')]
+    verboseHandle.printConsoleInfo(str(srNo)+". kafka installer : "+str(packageName))
+    srNo=srNo+1
+    sourcePath= sourceInstallerDirectory+"/zk/"
+    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.gz')]
+    verboseHandle.printConsoleInfo(str(srNo)+". Zookeeper installer : "+str(packageName))
+    srNo=srNo+1
+    sourcePath= sourceInstallerDirectory+"/telegraf/"
+    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.rpm')]
+    verboseHandle.printConsoleInfo(str(srNo)+". Telegraf installer : "+str(packageName))
+    srNo=srNo+1
+    sourcePath= sourceInstallerDirectory+"/data-integration/di-manager/"
+    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.gz')]
+    verboseHandle.printConsoleInfo(str(srNo)+". DI-Manager (DIM) installer : "+str(packageName))
+    srNo=srNo+1
+    sourcePath= sourceInstallerDirectory+"/data-integration/di-mdm/"
+    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.gz')]
+    verboseHandle.printConsoleInfo(str(srNo)+". DI-Metadata Manager (MDM) installer : "+str(packageName))
+    srNo=srNo+1
+    sourcePath= sourceInstallerDirectory+"/data-integration/di-flink/"
+    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.tgz')]
+    verboseHandle.printConsoleInfo(str(srNo)+". DI-Flink installer : "+str(packageName))
 
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
@@ -205,13 +229,13 @@ def executeCommandForInstall(host, type, count,nodeListSize):
         additionalParam = telegrafInstallFlag + ' '
         if (len(clusterHosts) == 4):
             commandToExecute = "scripts/servers_di_install.sh"
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)
