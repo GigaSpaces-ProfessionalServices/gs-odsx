@@ -739,6 +739,16 @@ def copyFilesFromODSXToSpaceServer():
         status = os.system(cmd)
         logger.info("cp status :"+str(status))
 
+def updatecachepolicySummary():
+    logger.info("updatecachepolicySummary() ")
+    verboseHandle.printConsoleWarning("------------------------------------------------------------")
+    verboseHandle.printConsoleWarning("***Summary***")
+    maxWorker = str(getNumberOfSpaceInstances())
+    print(Fore.GREEN+"1. "+
+          Fore.GREEN+"Batch max size  = "+Fore.RESET,
+          Fore.GREEN+maxWorker+Fore.RESET)
+    verboseHandle.printConsoleWarning("------------------------------------------------------------")
+
 def listGSC(managerHost):
     global managerHostConfig
     global spaceNumber
@@ -756,6 +766,7 @@ def listGSC(managerHost):
         displayOnlyGSC()
         inputParams()
         truncateInSqlLite()
+        updatecachepolicySummary()
         confirmAndProceedForAll()
         return
     except Exception as e:

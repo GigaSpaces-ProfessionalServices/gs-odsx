@@ -724,6 +724,17 @@ def getSpaceNodeIps():
     logger.info("ips : "+str(ips))
     return ips
 
+def updatecachepolicySummary():
+    logger.info("updatecachepolicySummary() ")
+    maxWorker = str(readValuefromAppConfig("app.update.cache.policy.max.worker"))
+    verboseHandle.printConsoleWarning("------------------------------------------------------------")
+    verboseHandle.printConsoleWarning("***Summary***")
+    print(Fore.GREEN+"1. "+
+          Fore.GREEN+"Batch size = "+Fore.RESET,
+          Fore.GREEN+maxWorker+Fore.RESET)
+    verboseHandle.printConsoleWarning("------------------------------------------------------------")
+
+
 def copyFilesFromODSXToSpaceServer():
     logger.info("copyFilesFromODSXToSpaceServer()")
     ips = getSpaceNodeIps()
@@ -797,6 +808,7 @@ def listGSC(managerHost):
         displayOnlyGSC()
         inputParams()
         truncateInSqlLite()
+        updatecachepolicySummary()
         confirmAndProceedForAllWithBatch()
         return
     except Exception as e:
@@ -826,7 +838,7 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password =  str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 logger.info("Manager Host :"+str(managerHost))
                 gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
                 logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))
