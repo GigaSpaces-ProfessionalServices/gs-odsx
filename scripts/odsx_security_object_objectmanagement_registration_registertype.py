@@ -449,7 +449,6 @@ if __name__ == '__main__':
                     setInputs(False)
                     registerInSingle()
                 if int(selectedOption) == 99:
-                    print("aaaa")
                     exit(0)
                 showMenuOptions()
                 selectedOption = str(

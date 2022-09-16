@@ -7,9 +7,10 @@ from colorama import Fore
 from configobj import ConfigObj
 
 from scripts.logManager import LogManager
-from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig,set_value_in_property_file as config_set_value_in_property_file
-from utils.odsx_objectmanagement_utilities import getPivotHost
+from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
+    set_value_in_property_file as config_set_value_in_property_file
 from utils.ods_manager import getManagerHost, getManagerInfo
+from utils.odsx_objectmanagement_utilities import getPivotHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -68,10 +69,10 @@ def setUserInputs1():
     global ddlAndPropertiesBasePath
     global tableNameFromddlFileName
 
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
 
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
-    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
-#ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
+    # ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
     global ddlfileOptions
     ddlfileOptions = {}
     counter = 1
@@ -144,9 +145,14 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     routingDefault = readValuefromConfig("routing")
     indexDefault = readValuefromConfig("index")
     indexTypeDefault = readValuefromConfig("indexType")
-    #supportDynamicPropertiesDefault = readValuefromConfig("supportDynamicProperties")
+    # supportDynamicPropertiesDefault = readValuefromConfig("supportDynamicProperties")
     verboseHandle.printConsoleWarning("Set properties values in " + propertiesFileName)
-    if indexDefault is None:
+    if spaceIdDefault is None:
+        spaceIdDefault = ""
+        spaceIdValue = str(
+            input(
+                Fore.YELLOW + "Space ID :" + Fore.RESET))
+    else:
         spaceIdValue = str(
             input(
                 Fore.YELLOW + "Space ID [" + spaceIdDefault + "] :" + Fore.RESET))
@@ -175,7 +181,7 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
         routingValue = str(
             input(
                 Fore.YELLOW + "Routing Value [" + routingDefault + "] :" + Fore.RESET))
-    if (len(str(routingDefault)) == 0):
+    if (len(str(routingValue)) == 0):
         routingValue = routingDefault
 
     if indexDefault is None:
@@ -201,7 +207,6 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
                 Fore.YELLOW + "Index Type [" + indexTypeDefault + "] :" + Fore.RESET))
     if (len(str(indexTypeValue)) == 0):
         indexTypeValue = indexTypeDefault
-
     """
     if supportDynamicPropertiesDefault is None:
         supportDynamicPropertiesDefault = ""
@@ -215,7 +220,6 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     if (len(str(supportDynamicPropertiesDefault)) == 0):
         supportDynamicProperties = supportDynamicPropertiesDefault
     """
-
     verboseHandle.printConsoleWarning("***Summary***")
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleInfo("1. Space Id : " + spaceIdValue)
@@ -223,7 +227,7 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     verboseHandle.printConsoleInfo("3. Routing Value : " + routingValue)
     verboseHandle.printConsoleInfo("4. Index : " + indexValue)
     verboseHandle.printConsoleInfo("5. Index Type : " + indexTypeValue)
-    #verboseHandle.printConsoleInfo("6. Support Dynamic Properties : " + supportDynamicProperties)
+    # verboseHandle.printConsoleInfo("6. Support Dynamic Properties : " + supportDynamicProperties)
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
     confirm = str(input(
@@ -232,20 +236,19 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
         confirm = str(input(
             Fore.YELLOW + "Are you sure want to edit " + propertiesFileName + " ? [yes (y)] / [no (n)]" + Fore.RESET))
     print(confirm)
-    if confirm.lower() != "y" and confirm.lower() != "yes":
-        exit(0)
-
-    if len(spaceIdValue) > 0 and spaceIdValue != "":
-        set_value_in_property_file("spaceId", spaceIdValue)
-    if len(spaceIdTypeValue) > 0 and spaceIdTypeValue != "":
-        set_value_in_property_file("spaceIdType", spaceIdTypeValue)
-    if len(routingValue) > 0 and routingValue != "":
-        set_value_in_property_file("routing", routingValue)
-    if len(indexValue) > 0 and indexValue != "":
-        set_value_in_property_file("index", indexValue)
-    if len(indexTypeValue) > 0 and indexTypeValue != "":
-        set_value_in_property_file("indexType", indexTypeValue)
-    #if len(supportDynamicProperties) > 0 and supportDynamicProperties != "":
+    if confirm.lower() == "y" or confirm.lower() == "yes":
+        if len(spaceIdValue) > 0 and spaceIdValue != "":
+            set_value_in_property_file("spaceId", spaceIdValue)
+        if len(spaceIdTypeValue) > 0 and spaceIdTypeValue != "":
+            set_value_in_property_file("spaceIdType", spaceIdTypeValue)
+        if len(routingValue) > 0 and routingValue != "":
+            set_value_in_property_file("routing", routingValue)
+        if len(indexValue) > 0 and indexValue != "":
+            set_value_in_property_file("index", indexValue)
+        if len(indexTypeValue) > 0 and indexTypeValue != "":
+            set_value_in_property_file("indexType", indexTypeValue)
+        verboseHandle.printConsoleInfo("updated " + propertiesFileName)
+    # if len(supportDynamicProperties) > 0 and supportDynamicProperties != "":
     #    set_value_in_property_file("supportDynamicProperties", supportDynamicProperties)
 
 
@@ -258,22 +261,21 @@ def setInputs(isSandbox):
     global sandboxSpaceName
 
     sandboxSpaceName = readValuefromAppConfig("app.objectmanagement.sandboxspace")
-    if(sandboxSpaceName is None or sandboxSpaceName=="" or len(str(sandboxSpaceName))<0):
+    if (sandboxSpaceName is None or sandboxSpaceName == "" or len(str(sandboxSpaceName)) < 0):
         sandboxSpaceName = "demo"
-        config_set_value_in_property_file("app.objectmanagement.sandboxspace",sandboxSpaceName)
+        config_set_value_in_property_file("app.objectmanagement.sandboxspace", sandboxSpaceName)
 
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
-    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
-
-    #ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
+    # ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
     tableNameFromddlFileName = ''
     objectMgmtHost = getPivotHost()
-    
+
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
-    if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
+    if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
-        config_set_value_in_property_file("app.objectmanagement.space",spaceName)
-    
+        config_set_value_in_property_file("app.objectmanagement.space", spaceName)
+
     ddlfileOptions = {}
     counter = 1
     for file in os.listdir(ddlAndPropertiesBasePath):
@@ -284,58 +286,64 @@ def setInputs(isSandbox):
 
     selectedOption = str(
         input(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
-    if(selectedOption.isnumeric()==True):
+    if (selectedOption.isnumeric() == True):
         if len(selectedOption) <= 0 or int(selectedOption) not in ddlfileOptions:
             verboseHandle.printConsoleError("Invalid Option!")
             exit(0)
-    else:    
+    else:
         verboseHandle.printConsoleError("Invalid Option!")
         exit(0)
     selectedddlFilename = ddlfileOptions.get(int(selectedOption))
     tableNameFromddlFileName = selectedddlFilename.replace(".ddl", "")
 
-    if(isSandbox == True):
-        displaySummary(lookupLocator,lookupGroup,objectMgmtHost,sandboxSpaceName,selectedddlFilename,tableNameFromddlFileName)
+    if (isSandbox == True):
+        displaySummary(lookupLocator, lookupGroup, objectMgmtHost, sandboxSpaceName, selectedddlFilename,
+                       tableNameFromddlFileName)
     else:
-        displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,selectedddlFilename,tableNameFromddlFileName)
+        displaySummary(lookupLocator, lookupGroup, objectMgmtHost, spaceName, selectedddlFilename,
+                       tableNameFromddlFileName)
 
-    summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
-    while(len(str(summaryConfirm))==0):
-        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+    summaryConfirm = str(input(
+        Fore.YELLOW + "Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: " + Fore.RESET))
+    while (len(str(summaryConfirm)) == 0):
+        summaryConfirm = str(input(
+            Fore.YELLOW + "Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: " + Fore.RESET))
 
-    if(str(summaryConfirm).casefold()=='n' or str(summaryConfirm).casefold()=='no'):
+    if (str(summaryConfirm).casefold() == 'n' or str(summaryConfirm).casefold() == 'no'):
         logger.info("Exiting without registering object")
         exit(0)
 
-def displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,selectedddlFilename,tableName):
+
+def displaySummary(lookupLocator, lookupGroup, objectMgmtHost, spaceName, selectedddlFilename, tableName):
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
-    print(Fore.GREEN+"1. "+
-            Fore.GREEN+"Lookup Manager = "+
-            Fore.GREEN+lookupLocator+Fore.RESET)
-    print(Fore.GREEN+"2. "+
-            Fore.GREEN+"Lookup Group = "+
-            Fore.GREEN+lookupGroup+Fore.RESET)
-    print(Fore.GREEN+"3. "+
-            Fore.GREEN+"Object Management Host = "+
-            Fore.GREEN+objectMgmtHost+Fore.RESET)
-    print(Fore.GREEN+"4. "+
-            Fore.GREEN+"Space Name = "+
-            Fore.GREEN+spaceName+Fore.RESET)
-    print(Fore.GREEN+"5. "+
-            Fore.GREEN+"Selected DDL File = "+
-            Fore.GREEN+selectedddlFilename+Fore.RESET)
-    print(Fore.GREEN+"6. "+
-            Fore.GREEN+"Table Name = "+
-            Fore.GREEN+tableName+Fore.RESET)
-    
+    print(Fore.GREEN + "1. " +
+          Fore.GREEN + "Lookup Manager = " +
+          Fore.GREEN + lookupLocator + Fore.RESET)
+    print(Fore.GREEN + "2. " +
+          Fore.GREEN + "Lookup Group = " +
+          Fore.GREEN + lookupGroup + Fore.RESET)
+    print(Fore.GREEN + "3. " +
+          Fore.GREEN + "Object Management Host = " +
+          Fore.GREEN + objectMgmtHost + Fore.RESET)
+    print(Fore.GREEN + "4. " +
+          Fore.GREEN + "Space Name = " +
+          Fore.GREEN + spaceName + Fore.RESET)
+    print(Fore.GREEN + "5. " +
+          Fore.GREEN + "Selected DDL File = " +
+          Fore.GREEN + selectedddlFilename + Fore.RESET)
+    print(Fore.GREEN + "6. " +
+          Fore.GREEN + "Table Name = " +
+          Fore.GREEN + tableName + Fore.RESET)
+
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
+
 
 def getDataSandbox():
     data = {
         "tableName": "" + tableNameFromddlFileName + "",
-        "spaceName": "" +sandboxSpaceName+""
-        
+        "spaceName": "" + sandboxSpaceName + ""
+
     }
     return data
 
@@ -343,7 +351,7 @@ def getDataSandbox():
 def getData():
     data = {
         "tableName": "" + tableNameFromddlFileName + ""
-        
+
     }
     return data
 
@@ -353,7 +361,7 @@ def registerInSandbox():
     # print(getData())
     response = requests.post('http://' + objectMgmtHost + ':7001/registertype/sandbox', data=getDataSandbox(),
                              headers={'Accept': 'application/json'})
-    if(response.text=="success"):
+    if (response.text == "success"):
         verboseHandle.printConsoleInfo("Object is registered to sandbox successfully!!")
     else:
         verboseHandle.printConsoleError("Error in registering object to sandbox.")
@@ -364,16 +372,16 @@ def registerInSingle():
     # print(getData())
     response = requests.post('http://' + objectMgmtHost + ':7001/registertype/single', data=getData(),
                              headers={'Accept': 'application/json'})
-    if(response.text=="success"):
+    if (response.text == "success"):
         verboseHandle.printConsoleInfo("Object is registered successfully!!")
-    elif(response.text=="duplicate"):
+    elif (response.text == "duplicate"):
         verboseHandle.printConsoleError("Object is already registered.")
     else:
         verboseHandle.printConsoleError("Error in registering object.")
 
 
 def showMenuOptions():
-    #menus = "Load From DDL,Edit Properties,Register Type To Sandbox,Register Type,EXIT"
+    # menus = "Load From DDL,Edit Properties,Register Type To Sandbox,Register Type,EXIT"
     menus = "Edit Properties,Register Type To Sandbox,Register Type,EXIT"
     counter = 1
     global registerTypeOptions
@@ -396,32 +404,36 @@ if __name__ == '__main__':
     managerHost = getManagerHost()
     managerInfo = getManagerInfo()
     lookupGroup = str(managerInfo['lookupGroups'])
-    lookupLocator = str(managerHost)+":4174"
+    lookupLocator = str(managerHost) + ":4174"
     try:
         args = []
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
         args.append(sys.argv[0])
         myCheckArg()
         showMenuOptions()
-        
+
         selectedOption = str(
             input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
 
         if selectedOption.isnumeric() == True:
-            while len(selectedOption) <= 0 or int(selectedOption) not in registerTypeOptions or int(selectedOption) != 99:
+            while len(selectedOption) <= 0 or int(selectedOption) not in registerTypeOptions or int(
+                    selectedOption) != 99:
                 if len(selectedOption) <= 0 or int(selectedOption) not in registerTypeOptions:
                     verboseHandle.printConsoleError("Invalid option!")
                     exit(0)
                 if int(selectedOption) == 1:
                     setUserInputs1()
-                #if int(selectedOption) == 2:    
+                    # if int(selectedOption) == 2:
                     setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath)
                 if int(selectedOption) == 2:
-                    setInputs(True)
-                    registerInSandbox()
+                    verboseHandle.printConsoleInfo("TBD")
+                # uncomment when done with sandbox                    setInputs(True)
+                # uncomment when done with sandbox                   registerInSandbox()
                 if int(selectedOption) == 3:
                     setInputs(False)
                     registerInSingle()
+                if int(selectedOption) == 99:
+                    exit(0)
                 showMenuOptions()
                 selectedOption = str(
                     input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
