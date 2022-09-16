@@ -266,6 +266,18 @@ def displayOnlyGSC():
     except Exception as e:
         handleException(e)
 
+def createDB2EntryInSqlLite():
+    logger.info("createDB2EntryInSqlLite()")
+    try:
+        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace('"','').replace(' ','')
+        cnx = sqlite3.connect(db_file)
+        cnx.execute("CREATE TABLE IF NOT EXISTS db2_updatecachepolicy_status (spaceID VARCHAR(50), hostId VARCHAR(50), status VARCHAR(50))")
+        cnx.commit()
+        logger.info("query result for create:"+str(cnx))
+        cnx.close()
+    except Exception as e:
+        handleException(e)
+
 def listGSC(managerHost):
     global managerHostConfig
     global spaceNumber
@@ -304,6 +316,7 @@ if __name__ == '__main__':
                 gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
                 logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))
                 if(len(gs_space_host_dictionary_obj)>0):
+                    createDB2EntryInSqlLite()
                     listGSC(managerHost)
                 else:
                     verboseHandle.printConsoleInfo("No space found.")
