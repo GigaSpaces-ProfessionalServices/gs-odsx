@@ -91,7 +91,7 @@ def setupService():
 
     # set_value_in_property_file(app_config_space_key,str(spaceName))
 
-    tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.ts.criteria")).replace('"', '')
+    tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlCriteriaFileName")).replace('"','')
     odsx_profile = readValuefromAppConfig("app.setup.profile")
 
     appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"', '')
