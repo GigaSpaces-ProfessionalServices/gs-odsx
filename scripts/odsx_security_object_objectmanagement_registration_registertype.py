@@ -1,6 +1,7 @@
 import argparse
 import os
 import sys
+import time
 
 import requests
 from colorama import Fore
@@ -260,6 +261,7 @@ def setInputs(isSandbox):
     global tableNameFromddlFileName
     global ddlfileOptions
     global sandboxSpaceName
+    global reportFilePath
 
     sandboxSpaceName = readValuefromAppConfig("app.objectmanagement.sandboxspace")
     if (sandboxSpaceName is None or sandboxSpaceName == "" or len(str(sandboxSpaceName)) < 0):
@@ -296,8 +298,17 @@ def setInputs(isSandbox):
         exit(0)
     selectedddlFilename = ddlfileOptions.get(int(selectedOption))
     tableNameFromddlFileName = selectedddlFilename.replace(".ddl", "")
+    reportFilePath = ""
+    if isSandbox == True:
+        timestr = time.strftime("%Y%m%d-%H%M%S")
 
-    if (isSandbox == True):
+        reportFilePath = readValuefromAppConfig("app.objectmanagement.validate.reportlocation")
+        if reportFilePath is None or reportFilePath=="" or len(str(reportFilePath))<0:
+            reportFilePath = ddlAndPropertiesBasePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
+            set_value_in_property_file("app.objectmanagement.validate.reportlocation",ddlAndPropertiesBasePath)
+        else:
+            reportFilePath = reportFilePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
+
         displaySummary(lookupLocator, lookupGroup, objectMgmtHost, sandboxSpaceName, selectedddlFilename,
                        tableNameFromddlFileName)
     else:
@@ -336,15 +347,18 @@ def displaySummary(lookupLocator, lookupGroup, objectMgmtHost, spaceName, select
     print(Fore.GREEN + "6. " +
           Fore.GREEN + "Table Name = " +
           Fore.GREEN + tableName + Fore.RESET)
-
+    if reportFilePath != "":
+        print(Fore.GREEN + "7. " +
+              Fore.GREEN + "Report File location  = "+
+              Fore.GREEN + reportFilePath + Fore.RESET)
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
 
 def getDataSandbox():
     data = {
         "tableName": "" + tableNameFromddlFileName + "",
-        "spaceName": "" + sandboxSpaceName + ""
-
+        "spaceName": "" + sandboxSpaceName + "",
+        "reportFilePath": ""+reportFilePath+""
     }
     return data
 
@@ -362,8 +376,10 @@ def registerInSandbox():
     # print(getData())
     response = requests.post('http://' + objectMgmtHost + ':7001/registertype/sandbox', data=getDataSandbox(),
                              headers={'Accept': 'application/json'})
-    if (response.text == "success"):
-        verboseHandle.printConsoleInfo("Object is registered to sandbox successfully!!")
+    if response.text == "success":
+        with open(reportFilePath, 'r') as f:
+            print(f.read())
+        verboseHandle.printConsoleInfo("Object was registered to sandbox successfully!!")
     else:
         verboseHandle.printConsoleError("Error in registering object to sandbox.")
 
@@ -442,9 +458,9 @@ if __name__ == '__main__':
                     # if int(selectedOption) == 2:
                     setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath)
                 if int(selectedOption) == 2:
-                    verboseHandle.printConsoleInfo("TBD")
-                # uncomment when done with sandbox                    setInputs(True)
-                # uncomment when done with sandbox                   registerInSandbox()
+                  #  verboseHandle.printConsoleInfo("TBD")
+                    setInputs(True)
+                    registerInSandbox()
                 if int(selectedOption) == 3:
                     setInputs(False)
                     registerInSingle()

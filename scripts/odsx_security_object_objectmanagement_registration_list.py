@@ -140,6 +140,7 @@ def listObjects():
     #    print(objectJson)
     #    print(objectJson[0]["objects"])
     dataColumnsDict = {}
+    dataTableColumnsDict = {}
     #print("objectJson ->"+str(objectJson))
     tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
@@ -165,6 +166,7 @@ def listObjects():
                          propertiesFileCheck
                         ]
             dataColumnsDict.update({counter: object["columns"]})
+            dataTableColumnsDict.update({counter: object["tablename"]})
             counter = counter + 1
             data.append(dataArray)
     printTabular(None, headers, data)
@@ -182,7 +184,7 @@ def listObjects():
             counter = 1
             # print(dataColumnsDict)
             # print(dataColumnsDict.get(int(objectMgmtColumnsInput)))
-
+            verboseHandle.printConsoleInfo("Selected Table Name : " + dataTableColumnsDict.get(int(objectMgmtColumnsInput)))
             headers = [
                        Fore.YELLOW + "Sr Num" + Fore.RESET,
                        Fore.YELLOW + "Name" + Fore.RESET,
