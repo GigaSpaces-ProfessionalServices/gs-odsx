@@ -1,6 +1,12 @@
-1. app.config
-   param added
-   app.objectmanagement.validate.reportlocation=/dbagigashare/current/object/config/ddlparser/reports
+1. Create the influxdb.conf.template at location /dbagigashare/current/influx/config/influxdb.conf.template
 
-2. app.yaml
-   object.config.ddlparser.ddlBatchFileName.ddlCriteriaFileName: TieredCriteria.tab
+2. Add the code mention below.
+
+[data]
+ # The directory where the TSM storage engine stores TSM files.
+ dir = "/dbagigainflaxdata/influxdb/data"
+ 
+ # The directory where the TSM storage engine stores WAL files.
+ wal-dir = "/dbagigainflaxdata/influxdb/wal"
+ 
+ max-series-per-database = 0
