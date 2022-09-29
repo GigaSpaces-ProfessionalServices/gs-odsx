@@ -98,6 +98,6 @@ current:
         spaceconf: space.telegraf.conf
     scripts:
       pivot:
-      scripts:
+      space:
     jars:
       readfromshobjar: readFromShob-1.0.0.jar
