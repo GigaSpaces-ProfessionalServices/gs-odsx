@@ -141,7 +141,7 @@ def getContainers():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Containers -> List\n')
+    verboseHandle.printConsoleWarning('Menu -> Space -> Containers -> List\n')
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main" + str(managerNodes))

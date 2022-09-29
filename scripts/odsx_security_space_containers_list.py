@@ -144,7 +144,7 @@ def getContainers():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Containers -> List\n')
+    verboseHandle.printConsoleWarning('Menu -> Space -> Containers -> List\n')
     username = ""
     password = ""
     appId=""

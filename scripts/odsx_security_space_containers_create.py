@@ -179,7 +179,7 @@ def hostList(managerHost, spaceNodes):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Containers -> Create\n')
+    verboseHandle.printConsoleWarning('Menu -> Space -> Containers -> Create\n')
     isMenuDriven=''
     username = ""
     password = ""

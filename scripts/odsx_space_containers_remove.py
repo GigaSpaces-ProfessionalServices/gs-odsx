@@ -223,7 +223,7 @@ def removeByZone():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Containers -> Remove\n')
+    verboseHandle.printConsoleWarning('Menu -> Space -> Containers -> Remove\n')
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
@@ -241,7 +241,7 @@ if __name__ == '__main__':
         streamDict = getContainersList()
         # print(streamDict)
         containerRemoveType = str(input(
-            Fore.YELLOW + "press [1] if you want to remove container by Id. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
+            Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
         logger.info("containerRemoveType:" + str(containerRemoveType))
         if containerRemoveType == '1':
             optionMainMenu = str(input("Enter your srno to remove container: "))
