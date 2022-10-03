@@ -79,7 +79,7 @@ def createContainers(managerHost,hostData):
         hostName = ''
         while (len(str(hostName)) == 0):
             hostName=str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
-            hostId = hostData.get(hostName)
+            hostId = hostData.get(int(hostName))
             logger.info("host  :" + str(hostId))
 
         numberOfGSC = str(input(Fore.YELLOW + "Enter number of GSCs per host [1] : " + Fore.RESET))
@@ -151,31 +151,29 @@ def get_gs_host_details(managerHost):
         gs_servers_host_dictionary_obj.add(str(data['address']),str(data['address']))
     return gs_servers_host_dictionary_obj
 
-def hostList(managerHost, spaceNodes):
+def hostList():
     try:
-        logger.info("displaySpaceHostWithNumber() managerNodes :"+str(managerHost)+" spaceNodes :"+str(spaceNodes))
-        gs_host_details_obj = get_gs_host_details(managerHost)
-        logger.info("gs_host_details_obj : "+str(gs_host_details_obj))
+        logger.debug("listing space host")
+        logger.info("hostList()")
+        spaceServers = config_get_space_hosts()
+        headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
+                   Fore.YELLOW + "Host" + Fore.RESET
+                   ]
+        data = []
         counter = 0
-        space_dict_obj = host_dictionary_obj()
-        logger.info("space_dict_obj : "+str(space_dict_obj))
-        for node in spaceNodes:
-            if(gs_host_details_obj.__contains__(str(os.getenv(node.name))) or (str(os.getenv(node.name)) in gs_host_details_obj.values())):
-                space_dict_obj.add(str(counter+1),os.getenv(node.name))
-                counter=counter+1
-        logger.info("space_dict_obj : "+str(space_dict_obj))
-        verboseHandle.printConsoleWarning("Host list")
-        headers = [Fore.YELLOW+"No"+Fore.RESET,
-                   Fore.YELLOW+"Host"+Fore.RESET]
-        dataTable=[]
-        for data in range (1,len(space_dict_obj)+1):
-            dataArray = [Fore.GREEN+str(data)+Fore.RESET,
-                         Fore.GREEN+str(space_dict_obj.get(str(data)))+Fore.RESET]
-            dataTable.append(dataArray)
-        printTabular(None,headers,dataTable)
-        return space_dict_obj
+        spaceDict = {}
+        for server in spaceServers:
+            host = os.getenv(server.ip)
+            counter = counter + 1
+            spaceDict.update({counter: host})
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + host + Fore.RESET]
+            data.append(dataArray)
+        printTabular(None, headers, data)
+
     except Exception as e:
-        handleException(e)
+        logger.error("Error in odsx_space_container_create " + str(e))
+    return spaceDict
 
 
 if __name__ == '__main__':
@@ -197,16 +195,17 @@ if __name__ == '__main__':
         logger.info("managerNodes: main" + str(managerNodes))
         if (len(str(managerNodes)) > 0):
             spaceNodes = config_get_space_hosts()
-            logger.info("spaceNodes: main" + str(spaceNodes))
             logger.info("managerHost : main" + str(managerHost))
             username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
             password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
-            if (len(str(managerHost)) > 0):
-                hostID = hostList(managerHost,spaceNodes)
-                createContainers(managerHost,hostID)
-            else:
-                logger.info("Please check manager server status.")
-                verboseHandle.printConsoleInfo("Please check manager server status.")
+            hostID = hostList()
+            containerRemoveType = str(input(
+                Fore.YELLOW + "press [Enter] if you want to Create container. \nPress [99] for exit.: " + Fore.RESET))
+            logger.info("containerRemoveType:" + str(containerRemoveType))
+            if len(str(containerRemoveType)) == 0:
+                createContainers(managerHost, hostID)
+            elif containerRemoveType == '99':
+                logger.info("99")
         else:
             logger.info("No Manager configuration found please check.")
             verboseHandle.printConsoleInfo("No Manager configuration found please check.")
