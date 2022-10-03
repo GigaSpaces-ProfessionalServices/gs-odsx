@@ -223,6 +223,11 @@ def main(**args):
             if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
+        #CommandMenu
+        for cmd in cmdlist:
+            if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
+                initialFileName=initialFileName+'_'+cmd.replace('--','')
+                cmdlist.remove(cmd)
 
         #SubCommandMenu
         for cmd in cmdlist:

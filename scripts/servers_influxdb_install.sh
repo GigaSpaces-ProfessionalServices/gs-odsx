@@ -18,6 +18,20 @@ if [ ! -d "$dir" ]; then
      mkdir $dir
      chmod 777 $dir
 fi
+
+if (grep -v '^ *#' /etc/influxdb/influxdb.conf  | grep -q '\[data\]'); then
+
+    start=$( grep -n  -v "^ *\(--\|#\)" /etc/influxdb/influxdb.conf  | grep '\[data\]' | cut -d: -f1 )
+    end=$(  grep -v '^ *#' /etc/influxdb/influxdb.conf | sed -n '/series-id-set-cache-size = 100/=' /etc/influxdb/influxdb.conf  )
+    sed -i "$start,$end s/^/#/" /etc/influxdb/influxdb.conf
+
+    echo "" >> /etc/influxdb/influxdb.conf
+    echo "# Influxdb config START" >> /etc/influxdb/influxdb.conf
+    cat /dbagigashare/current/influx/config/influxdb.conf.template >> /etc/influxdb/influxdb.conf
+    echo "# Influxdb config END " >> /etc/influxdb/influxdb.conf
+
+fi
+sleep 5
 chown -R influxdb:influxdb $dir
 systemctl enable influxdb.service
 sleep 2
