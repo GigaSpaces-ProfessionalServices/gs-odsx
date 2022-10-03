@@ -86,9 +86,9 @@ def validateUserInput():
 
     isValid = False
     objectMgmtTableInput = str(
-        input(Fore.YELLOW + "Select object to unregister type :" + Fore.RESET))
+        input(Fore.YELLOW + "Select object to unregister type \n or exit [99] :" + Fore.RESET))
 
-    if objectMgmtTableInput.isnumeric() == True:
+    if objectMgmtTableInput.isnumeric() == True and objectMgmtTableInput!="99":
         objectMgmtTableInput = int(objectMgmtTableInput)
         if objectMgmtTableInput > 0 and objectMgmtTableInput in dataSpaceDict:
             isValid = True
@@ -104,7 +104,8 @@ def validateUserInput():
             if (str(summaryConfirm).casefold() == 'n' or str(summaryConfirm).casefold() == 'no'):
                 logger.info("Exiting without unregistering object")
                 exit(0)
-
+    elif objectMgmtTableInput=="99":
+        exit(0)
     if (isValid == False):
         verboseHandle.printConsoleError("Invalid option!")
         exit(0)

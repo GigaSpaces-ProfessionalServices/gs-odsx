@@ -4,6 +4,8 @@ import os, time
 import signal
 
 from colorama import Fore
+from configobj import ConfigObj
+
 from scripts.logManager import LogManager
 import requests, json, math
 
@@ -351,7 +353,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         logger.info("slaProperties :"+str(slaProperties))
 
         global tieredCriteriaConfigFilePath
-        tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.ts.criteria")).replace('"','')
+        tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlCriteriaFileName")).replace('"','')
         #tieredCriteriaConfigFilePathInput = \
         #print(Fore.YELLOW+"tieredCriteriaConfig.filePath : "+str(tieredCriteriaConfigFilePath)+Fore.RESET)
         #if(len(str(tieredCriteriaConfigFilePathInput))>0):
@@ -491,6 +493,22 @@ def copyFilesFromODSXToSpaceServer():
     logger.info(" ips : "+str(ips)+" spacePropertyConfigFilePath : "+str(spacePropertyConfigFilePath)+" spacePropertyConfigFilePathTarget : "+str(spacePropertyConfigFilePathTarget))
     copyFile(ips,spacePropertyConfigFilePath , spacePropertyConfigFilePathTarget)
 
+def set_value_in_property_file(key, value, filename):
+    #file='config/app.config'
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    file= filename
+    config = ConfigObj(file)
+    if(len(value)==0):
+        value=''
+    config[key] = value        #Update Key
+    config.write()             #Write Content
+    x = open(file)
+    s = x.read().replace(' = ','=')
+    x.close()
+    x=open(file,"w")
+    x.write(s)
+    x.close
 def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
     logger.info("proceedForTieredStorageDeployment()")
     try:
@@ -561,6 +579,10 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             logger.info("url : "+"http://"+managerHostConfig+":8090/v2/pus")
             logger.info("dJson Paylod : "+str(data))
+            # set dirty bit file for initial deployment
+            tieredDirtyBitFile = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlCriteriaFileName")).replace('"','')
+            set_value_in_property_file("firstTimedeployment", "true", tieredDirtyBitFile)
+
             response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
             deployResponseCode = str(response.content.decode('utf-8'))
             verboseHandle.printConsoleInfo("deployResponseCode : "+str(deployResponseCode))
@@ -574,6 +596,8 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
                 retryCount=5
                 while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
                     status = validateResponseGetDescription(deployResponseCode)
+                    # update dirty bit file after initial deployment
+                    set_value_in_property_file("firstTimedeployment", "false", tieredDirtyBitFile)
                     verboseHandle.printConsoleInfo("Response :"+str(status))
                     retryCount = retryCount-1
                     time.sleep(2)

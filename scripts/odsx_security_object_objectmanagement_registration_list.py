@@ -5,6 +5,7 @@ import sys
 
 import requests
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
@@ -133,7 +134,9 @@ def listObjects():
            #    Fore.YELLOW + "Indexes" + Fore.RESET,
            #    Fore.YELLOW + "Tier Criteria" + Fore.RESET
                Fore.YELLOW + "DDl File exist" + Fore.RESET,
-               Fore.YELLOW + "Properties File exist" + Fore.RESET
+               Fore.YELLOW + "Properties File exist" + Fore.RESET,
+               Fore.YELLOW + "Total records in disk" + Fore.RESET,
+               Fore.YELLOW + "Total records in ram" + Fore.RESET
                ]
     data = []
     counter = 1
@@ -144,6 +147,16 @@ def listObjects():
     #print("objectJson ->"+str(objectJson))
     tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
+    spaceName = readValuefromAppConfig("app.objectmanagement.space")
+    getData()
+    if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
+        spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
+    response = requests.get("http://" + managerHost + ":8090/v2/spaces/" + str(spaceName) + "/statistics/types",auth = HTTPBasicAuth(username,password))
+    logger.info(response.text)
+    jsonData = json.loads(response.text)
+
+    logger.info("response : " + str(jsonData))
+    #if (str(jsonData["status"]).__contains__("failed")):
 
     for spaces in objectJson:
         #        print(spaces["objects"])
@@ -163,7 +176,9 @@ def listObjects():
                     #     Fore.GREEN + str(object["index"]) + Fore.RESET,
                     #     Fore.GREEN + str(object["criteria"]) + Fore.RESET
                          ddlFileCheck,
-                         propertiesFileCheck
+                         propertiesFileCheck,
+                         Fore.GREEN + str(object["objectInMemory"]) + Fore.RESET,
+                         Fore.GREEN + str(jsonData[str(object["tablename"])]["entries"]) + Fore.RESET,
                         ]
             dataColumnsDict.update({counter: object["columns"]})
             dataTableColumnsDict.update({counter: object["tablename"]})

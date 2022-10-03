@@ -35,10 +35,7 @@ current:
       space:
         spacepropertyfile: space.properties
       ts:
-        bck:
-          currentTs: null
-          previousTs: null
-        criteria: TieredCriteria.tab
+        criteria: TSDirtyBit
         spaceproperty: spaceproperty.properties
     jars:
       ts:
@@ -76,6 +73,10 @@ current:
   object:
     config:
       ddlparser:
+        ts:
+          bck:
+            currentTs: null
+            previousTs: null
         ddlBatchFileName: tableList.txt
         ddlCriteriaFileName: TieredCriteria.tab
     jars:

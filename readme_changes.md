@@ -1,6 +1,4 @@
-1. app.config
-   param added
-   app.objectmanagement.validate.reportlocation=/dbagigashare/current/object/config/ddlparser/reports
-
-2. app.yaml
-   object.config.ddlparser.ddlBatchFileName.ddlCriteriaFileName: TieredCriteria.tab
+1. app.yaml
+   Replaced from .gs.ts to 
+     object.config.ddlparser.ts.bck.currentTs
+     object.config.ddlparser.ts.bck.previousTs
