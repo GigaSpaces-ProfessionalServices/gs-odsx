@@ -306,6 +306,8 @@ def setInputs(isSandbox):
             reportFilePath = ddlAndPropertiesBasePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
             set_value_in_property_file("app.objectmanagement.validate.reportlocation",ddlAndPropertiesBasePath)
         else:
+            if not os.path.exists(reportFilePath):
+                os.mkdir(reportFilePath)
             reportFilePath = reportFilePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
 
         displaySummary(lookupLocator, lookupGroup, objectMgmtHost, sandboxSpaceName, selectedddlFilename,
@@ -427,11 +429,23 @@ if __name__ == '__main__':
         args.append(sys.argv[0])
         myCheckArg()
         showMenuOptions()
+        selectedOption = ""
+        if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
+            arguments = myCheckArg(sys.argv[1:])
+            if arguments.m== "editproperties":
+                selectedOption = "1"
+            elif arguments.m== "registertypetosandbox":
+                selectedOption = "2"
+            elif arguments.m== "registertype":
+                selectedOption = "3"
+            else:
+                verboseHandle.printConsoleError("Invalid option")
+                exit(0)
+        if selectedOption == "":
+            selectedOption = str(
+                input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
 
-        selectedOption = str(
-            input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
-
-        if selectedOption.isnumeric() == True:
+        if selectedOption.isnumeric():
             while len(selectedOption) <= 0 or int(selectedOption) not in registerTypeOptions or int(
                     selectedOption) != 99:
                 if len(selectedOption) <= 0 or int(selectedOption) not in registerTypeOptions:

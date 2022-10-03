@@ -519,10 +519,10 @@ def copyFilesFromODSXToSpaceServer():
     logger.info("copyFilesFromODSXToSpaceServer()")
     ips = getSpaceNodeIps()
     logger.info("ips :"+str(ips))
-    tieredCriteriaConfigFilePathError = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.currentTs")).replace('"','')
+    tieredCriteriaConfigFilePathError = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ts.bck.currentTs")).replace('"','')
     logger.info("tieredCriteriaConfigFilePathError : "+str(tieredCriteriaConfigFilePathError))
     tieredCriteriaConfigFilePath=""
-    tieredCriteriaConfigFilePathBck = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.previousTs")).replace('"','')
+    tieredCriteriaConfigFilePathBck = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ts.bck.previousTs")).replace('"','')
     logger.info("tieredCriteriaConfigFilePathBck : "+str(tieredCriteriaConfigFilePathBck))
     if(tieredCriteriaConfigFilePathBck.__contains__('.bck')):
         tieredCriteriaConfigFilePath = tieredCriteriaConfigFilePathBck.replace(".bck","")
@@ -594,10 +594,10 @@ if __name__ == '__main__':
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
                 global sourceFile
-                sourceFile = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.currentTs")).replace('"','')
+                sourceFile = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ts.bck.currentTs")).replace('"','')
                 logger.info("sourceFile : "+str(sourceFile))
                 global backupCriteriaFile
-                backupCriteriaFile = str(getYamlFilePathInsideFolder(".gs.config.ts.bck.previousTs")).replace('"','')
+                backupCriteriaFile = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ts.bck.previousTs")).replace('"','')
                 logger.info("backupFile : "+str(backupCriteriaFile))
                 if(Path(backupCriteriaFile).is_file()):
                     logger.info("File exist"+str(backupCriteriaFile))

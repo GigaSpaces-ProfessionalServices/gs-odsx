@@ -224,6 +224,12 @@ def main(**args):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
 
+        #SubCommandMenu
+        for cmd in cmdlist:
+            if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
+                initialFileName=initialFileName+'_'+cmd.replace('--','')
+                cmdlist.remove(cmd)
+
         if cmdlist.__contains__("--help") or cmdlist.__contains__("-h"):
             helpUsage(initialFileName)
         else:
