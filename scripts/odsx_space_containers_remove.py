@@ -9,11 +9,10 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular, printTabularGrid
+from utils.odsx_print_tabular_data import  printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -88,6 +87,45 @@ class host_dictionary_obj(dict):
     def add(self, key, value):
         self[key] = value
 
+def remove_duplicate_items(_api_data, _key):
+    logger.info("remove_duplicate_items()")
+    unique_elements = []
+    cleaned_data = []
+    keys = []
+    for i, j in enumerate(_api_data):
+        if _api_data[i][_key] not in unique_elements:
+            unique_elements.append(_api_data[i][_key])
+            keys.append(i)
+    for key in keys:
+        cleaned_data.append(_api_data[key])
+    return cleaned_data
+
+
+def getZoneList():
+    try:
+        response = requests.get("http://"+managerHost+":8090/v2/containers")
+        logger.info("response.text : "+str(response.text))
+        jsonArray = json.loads(response.text)
+        zoneList = remove_duplicate_items(jsonArray,'zones')
+        verboseHandle.printConsoleWarning("List of Zones:")
+        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                   Fore.YELLOW+"Zones"+Fore.RESET
+                   ]
+        counter=0
+        dataTable=[]
+        spaceDict={}
+        for data in zoneList:
+            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                         Fore.GREEN+str(data["zones"])+Fore.RESET
+                         ]
+            counter=counter+1
+            spaceDict.update({counter: data})
+            dataTable.append(dataArray)
+        printTabularGrid(None,headers,dataTable)
+    except Exception as e:
+      handleException(e)
+    return spaceDict
+
 
 def getContainersList():
     containerRemoveType = str(
@@ -100,12 +138,17 @@ def getContainersList():
         jsonArray = json.loads(response.text)
 
         if (str(containerRemoveType) == '1'):
-            zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to remove [bll] : " + Fore.RESET))
-            while (len(str(zoneGSC)) == 0):
-                zoneGSC = 'bll'
+            zoneList = getZoneList()
+            zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+
+            while (len(str(zoneGSCNo)) == 0):
+                zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+
+            zoneGSC = zoneList.get(int(zoneGSCNo))
+
             logger.info("zoneGSC :" + str(zoneGSC))
+            zoneGSC = zoneGSC['zones'][0]
             filterArray = [x for x in jsonArray if x['zones'][0] == str(zoneGSC)]
-        # print("     hellp   "+str(filterArray))
         if (len(str(containerRemoveType)) == 0):
             filterArray = jsonArray
         verboseHandle.printConsoleWarning("List of containers:")
@@ -148,7 +191,6 @@ def exitAndDisplay(isMenuDriven):
 def removeByContainer(containerid):
     logger.info("removeContainer")
     # newList = containerid.split()
-    # print(newList)
     try:
         for data in containerid:
             commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill " + str(
@@ -175,9 +217,10 @@ def getContainers():
                    ]
         counter = 0
         dataTable = []
-        zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to remove [bll] : " + Fore.RESET))
+        zoneGSC = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
         while (len(str(zoneGSC)) == 0):
-            zoneGSC = 'bll'
+            zoneGSC = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+
         logger.info("zoneGSC :" + str(zoneGSC))
         filterArray = [x for x in jsonArray if x['zones'][0] == str(zoneGSC)]
         filterData = json.dumps(filterArray)
@@ -239,7 +282,6 @@ if __name__ == '__main__':
         logger.info(" Container list")
         # getContainers()
         streamDict = getContainersList()
-        # print(streamDict)
         containerRemoveType = str(input(
             Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
         logger.info("containerRemoveType:" + str(containerRemoveType))
@@ -249,7 +291,6 @@ if __name__ == '__main__':
             if optionMainMenu != 99:
                 # if len(streamDict) >= optionMainMenu:
                 removeList = [x.strip() for x in optionMainMenu.split()]
-                # print(" remove List "+ str(removeList))
                 for data in removeList:
                     host.append(streamDict.get(int(data)))
                 choice = str(input(

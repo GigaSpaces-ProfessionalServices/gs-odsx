@@ -14,6 +14,7 @@ verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 confirmCreateContainer = ''
 
+
 class bcolors:
     OK = '\033[92m'  # GREEN
     WARNING = '\033[93m'  # YELLOW
@@ -43,6 +44,7 @@ def handleException(e):
         'trace': trace
     })))
 
+
 def getManagerHost(managerNodes):
     managerHost = ""
     try:
@@ -55,6 +57,7 @@ def getManagerHost(managerNodes):
     except Exception as e:
         handleException(e)
 
+
 class host_dictionary_obj(dict):
     # __init__ function
     def __init__(self):
@@ -64,7 +67,8 @@ class host_dictionary_obj(dict):
     def add(self, key, value):
         self[key] = value
 
-def createContainers(managerHost,hostData):
+
+def createContainers(managerHost, hostData):
     logger.info("createContainers()")
     global numberOfGSC
     global zoneGSC
@@ -75,124 +79,87 @@ def createContainers(managerHost,hostData):
     try:
         hostName = ''
         while (len(str(hostName)) == 0):
-            hostName=str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
-            hostId = hostData.get(hostName)
+            hostName = str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
+            hostId = hostData.get(int(hostName))
             logger.info("host  :" + str(hostId))
 
         numberOfGSC = str(input(Fore.YELLOW + "Enter number of GSCs per host [1] : " + Fore.RESET))
         while (len(str(numberOfGSC)) == 0):
-                numberOfGSC = 1
+            numberOfGSC = 1
         logger.info("numberOfGSC :" + str(numberOfGSC))
 
         zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to create [bll] : " + Fore.RESET))
         while (len(str(zoneGSC)) == 0):
-               zoneGSC = 'bll'
+            zoneGSC = 'bll'
         logger.info("zoneGSC :" + str(zoneGSC))
 
         memoryGSC = str(input(Fore.YELLOW + "Enter memory of GSC [4g] : " + Fore.RESET))
         while (len(str(memoryGSC)) == 0):
-                memoryGSC = '4g'
+            memoryGSC = '4g'
 
         confirmCreateContainer = str(input(Fore.YELLOW + "Do you want to create container ? (y/n) [y] : "))
 
         if (len(str(confirmCreateContainer)) == 0 or confirmCreateContainer == 'y' or confirmCreateContainer == 'yes'):
 
-            commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count=" + str(numberOfGSC) + " --zone=" + str(zoneGSC) + " --memory=" + str(memoryGSC) + " " + str(hostId)
+            commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count=" + str(
+                numberOfGSC) + " --zone=" + str(zoneGSC) + " --memory=" + str(memoryGSC) + " " + str(hostId)
             logger.info(commandToExecute)
             with Spinner():
                 output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
                 logger.info("Output:" + str(output))
                 print(output)
 
-        elif(confirmCreateContainer =='no' or confirmCreateContainer=='n'):
-            if(isMenuDriven=='m'):
+        elif (confirmCreateContainer == 'no' or confirmCreateContainer == 'n'):
+            if (isMenuDriven == 'm'):
                 logger.info("menudriven")
-                os.system('python3 scripts/odsx_space_containers_create.py'+' '+isMenuDriven)
+                os.system('python3 scripts/odsx_space_containers_create.py' + ' ' + isMenuDriven)
 
         # commandToExecute = "container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" "+str(hostName)
     except Exception as e:
         handleException(e)
 
-def getContainers():
+def hostList():
     try:
-        response = requests.get("http://"+managerHost+":8090/v2/containers")
-        logger.info("response.text : "+str(response.text))
-        jsonArray = json.loads(response.text)
-        verboseHandle.printConsoleWarning("List of containers:")
-        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-                   Fore.YELLOW+"Container ID"+Fore.RESET,
-                   Fore.YELLOW+"PID"+Fore.RESET,
-                   Fore.YELLOW+"Zones"+Fore.RESET
+        logger.debug("listing space host")
+        logger.info("hostList()")
+        spaceServers = config_get_space_hosts()
+        headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
+                   Fore.YELLOW + "Host" + Fore.RESET
                    ]
-        counter=0
-        dataTable=[]
-        for data in jsonArray:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["id"]+Fore.RESET,
-                         Fore.GREEN+str(data["pid"])+Fore.RESET,
-                         Fore.GREEN+str(data["zones"])+Fore.RESET
-                         ]
-            counter=counter+1
-            dataTable.append(dataArray)
-        printTabularGrid(None,headers,dataTable)
-    except Exception as e:
-        handleException(e)
-
-def get_gs_host_details(managerHost):
-    logger.info("get_gs_host_details()")
-    response = requests.get('http://'+managerHost+':8090/v2/hosts', headers={'Accept': 'application/json'})
-
-    jsonArray = json.loads(response.text)
-    gs_servers_host_dictionary_obj = host_dictionary_obj()
-    for data in jsonArray:
-        gs_servers_host_dictionary_obj.add(str(data['address']),str(data['address']))
-    return gs_servers_host_dictionary_obj
-
-def hostList(managerHost, spaceNodes):
-    try:
-        logger.info("displaySpaceHostWithNumber() managerNodes :"+str(managerHost)+" spaceNodes :"+str(spaceNodes))
-        gs_host_details_obj = get_gs_host_details(managerHost)
-        logger.info("gs_host_details_obj : "+str(gs_host_details_obj))
+        data = []
         counter = 0
-        space_dict_obj = host_dictionary_obj()
-        logger.info("space_dict_obj : "+str(space_dict_obj))
-        for node in spaceNodes:
-            if(gs_host_details_obj.__contains__(str(os.getenv(node.name))) or (str(os.getenv(node.name)) in gs_host_details_obj.values())):
-                space_dict_obj.add(str(counter+1),os.getenv(node.name))
-                counter=counter+1
-        logger.info("space_dict_obj : "+str(space_dict_obj))
-        verboseHandle.printConsoleWarning("Host list")
-        headers = [Fore.YELLOW+"No"+Fore.RESET,
-                   Fore.YELLOW+"Host"+Fore.RESET]
-        dataTable=[]
-        for data in range (1,len(space_dict_obj)+1):
-            dataArray = [Fore.GREEN+str(data)+Fore.RESET,
-                         Fore.GREEN+str(space_dict_obj.get(str(data)))+Fore.RESET]
-            dataTable.append(dataArray)
-        printTabular(None,headers,dataTable)
-        return space_dict_obj
+        spaceDict = {}
+        for server in spaceServers:
+            host = os.getenv(server.ip)
+            counter = counter + 1
+            spaceDict.update({counter: host})
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + host + Fore.RESET]
+            data.append(dataArray)
+        printTabular(None, headers, data)
+
     except Exception as e:
-        handleException(e)
+        logger.error("Error in odsx_space_container_create " + str(e))
+    return spaceDict
 
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Space -> Containers -> Create\n')
-    isMenuDriven=''
+    isMenuDriven = ''
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main" + str(managerNodes))
-        managerHost= getManagerHost(managerNodes)
+        managerHost = getManagerHost(managerNodes)
         logger.info("managerNodes: main" + str(managerNodes))
         if (len(str(managerNodes)) > 0):
-            spaceNodes = config_get_space_hosts()
-            logger.info("spaceNodes: main" + str(spaceNodes))
-            logger.info("managerHost : main" + str(managerHost))
-            if (len(str(managerHost)) > 0):
-                    hostID = hostList(managerHost,spaceNodes)
-                    createContainers(managerHost,hostID)
-            else:
-                logger.info("Please check manager server status.")
-                verboseHandle.printConsoleInfo("Please check manager server status.")
+            hostID = hostList()
+            containerRemoveType = str(input(
+                Fore.YELLOW + "press [Enter] if you want to Create container. \nPress [99] for exit.: " + Fore.RESET))
+            logger.info("containerRemoveType:" + str(containerRemoveType))
+            if len(str(containerRemoveType)) == 0:
+              createContainers(managerHost, hostID)
+            elif containerRemoveType == '99':
+                logger.info("99")
         else:
             logger.info("No Manager configuration found please check.")
             verboseHandle.printConsoleInfo("No Manager configuration found please check.")

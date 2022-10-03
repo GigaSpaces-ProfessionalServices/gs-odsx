@@ -91,6 +91,45 @@ class host_dictionary_obj(dict):
     def add(self, key, value):
         self[key] = value
 
+def remove_duplicate_items(_api_data, _key):
+    logger.info("remove_duplicate_items()")
+    unique_elements = []
+    cleaned_data = []
+    keys = []
+    for i, j in enumerate(_api_data):
+        if _api_data[i][_key] not in unique_elements:
+            unique_elements.append(_api_data[i][_key])
+            keys.append(i)
+    for key in keys:
+        cleaned_data.append(_api_data[key])
+    return cleaned_data
+
+
+def getZoneList():
+    try:
+        response = requests.get("http://"+managerHost+":8090/v2/containers",auth = HTTPBasicAuth(username, password))
+        logger.info("response.text : "+str(response.text))
+        jsonArray = json.loads(response.text)
+        zoneList = remove_duplicate_items(jsonArray,'zones')
+        verboseHandle.printConsoleWarning("List of Zone:")
+        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                   Fore.YELLOW+"Zones"+Fore.RESET
+                   ]
+        counter=0
+        dataTable=[]
+        spaceDict={}
+        for data in zoneList:
+            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                         Fore.GREEN+str(data["zones"])+Fore.RESET
+                         ]
+            counter=counter+1
+            spaceDict.update({counter: data})
+            dataTable.append(dataArray)
+        printTabularGrid(None,headers,dataTable)
+    except Exception as e:
+        handleException(e)
+    return spaceDict
+
 
 def getContainersList():
     containerRemoveType = str(
@@ -103,12 +142,15 @@ def getContainersList():
         jsonArray = json.loads(response.text)
 
         if (str(containerRemoveType) == '1'):
-            zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to remove [bll] : " + Fore.RESET))
-            while (len(str(zoneGSC)) == 0):
-                zoneGSC = 'bll'
+            zoneList = getZoneList()
+            zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+            while (len(str(zoneGSCNo)) == 0):
+                zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+            zoneGSC = zoneList.get(int(zoneGSCNo))
+
             logger.info("zoneGSC :" + str(zoneGSC))
+            zoneGSC = zoneGSC['zones'][0]
             filterArray = [x for x in jsonArray if x['zones'][0] == str(zoneGSC)]
-        # print("     hellp   "+str(filterArray))
         if (len(str(containerRemoveType)) == 0):
             filterArray = jsonArray
         verboseHandle.printConsoleWarning("List of containers:")
