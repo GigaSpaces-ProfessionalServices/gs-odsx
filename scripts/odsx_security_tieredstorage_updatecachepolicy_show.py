@@ -60,7 +60,13 @@ def setup_logger(name, log_file, level=logging.INFO):
 
     return logger
 
-loggerTiered = setup_logger(os.path.basename(__file__), 'logs/tieredstorage_updatecachepolicy_trace.log')
+if not os.path.exists('/dbagigalogs/tieredstorage/'):
+    os.makedirs('/dbagigalogs/tieredstorage/')
+else:
+    loggerTiered = setup_logger(os.path.basename(__file__), '/dbagigalogs/tieredstorage/tieredstorage_updatecachepolicy_trace.log')
+    loggerTiered = setup_logger(os.path.basename(__file__), 'logs/tieredstorage_updatecachepolicy_trace.log')
+
+# loggerTiered = setup_logger(os.path.basename(__file__), 'logs/tieredstorage_updatecachepolicy_trace.log')
 # TieredStorage log file configuration  ---Ends
 
 timeToSleepForRestart = 30
