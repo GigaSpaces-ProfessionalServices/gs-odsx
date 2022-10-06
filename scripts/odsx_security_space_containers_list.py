@@ -205,15 +205,18 @@ if __name__ == '__main__':
         logger.info("managerNodes: main" + str(managerNodes))
         managerHost = getManagerHost(managerNodes)
         logger.info(" Container list")
-        containerListType = str(input(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET))
-        logger.info("containerRemoveType:"+str(containerListType))
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
-        if(containerListType=='1'):
-            getContainersbyZone()
-        elif(len(str(containerListType))==0):
-            getContainers()
-        elif(containerListType =='99'):
-            logger.info("99")
+        exitMenu = True
+        while exitMenu:
+            containerListType = str(input(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET))
+            logger.info("containerRemoveType:"+str(containerListType))
+            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            if(containerListType=='1'):
+                getContainersbyZone()
+            elif(len(str(containerListType))==0):
+                getContainers()
+            elif(containerListType =='99'):
+                logger.info("99")
+                exitMenu = False
     except Exception as e:
         handleException(e)

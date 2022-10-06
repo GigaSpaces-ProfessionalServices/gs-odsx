@@ -347,6 +347,11 @@ function installTelegraf {
     echo "Telegraf installed"
 }
 
+function copyLogFile {
+    printf "file copied from source to target"
+    cp $logSourcePath/xap_logging.properties $logTargetPath
+}
+
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
@@ -434,6 +439,8 @@ wantInstallJava=${10}
 wantInstallUnzip=${11}
 sourceInstallerDirectory=${12}
 gsNicAddress=${13}
+logTargetPath=${14}
+logSourcePath=${15}
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts
@@ -486,3 +493,4 @@ else
   setGSHome $targetDir
 fi
 installTelegraf
+copyLogFile

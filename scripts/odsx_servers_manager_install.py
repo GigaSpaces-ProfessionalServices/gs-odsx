@@ -354,6 +354,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
         print(Fore.GREEN+"1. "+
@@ -389,6 +391,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"11. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"12. "+
+              Fore.GREEN+"Log source file path : "+Fore.RESET,
+              Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"13. "+
+              Fore.GREEN+"Log target file path : "+Fore.RESET,
+              Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
         additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -418,6 +426,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if(len(str(gsNicAddress))==0):
                     gsNicAddress='x'     # put dummy param to maintain position of arguments
                 additionalParam=additionalParam+' '+gsNicAddress
+                logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+                logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
+                additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
                 #print(additionalParam)
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')

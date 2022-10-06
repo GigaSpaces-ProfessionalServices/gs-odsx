@@ -293,29 +293,33 @@ if __name__ == '__main__':
 
         username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
         password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
-
-        streamDict = getContainersList()
-        containerRemoveType = str(input(
-            Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
-        logger.info("containerRemoveType:" + str(containerRemoveType))
-        if containerRemoveType == '1':
-            optionMainMenu = str(input("Enter your srno to remove container: "))
-            logger.info("Enter your srno to remove container:" + str(optionMainMenu))
-            if optionMainMenu != 99:
-                removeList = [x.strip() for x in optionMainMenu.split()]
-                for data in removeList:
-                    host.append(streamDict.get(int(data)))
-                choice = str(input(
-                    Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
-                while len(str(choice)) == 0:
+        exitMenu = True
+        while exitMenu:
+            streamDict = getContainersList()
+            containerRemoveType = str(input(
+                Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
+            logger.info("containerRemoveType:" + str(containerRemoveType))
+            verboseHandle.printConsoleInfo("Delete using single or multiple using comma (1,2,3)")
+            if containerRemoveType == '1':
+                optionMainMenu = str(input("Enter your srno to remove container: "))
+                logger.info("Enter your srno to remove container:" + str(optionMainMenu))
+                if optionMainMenu != 99:
+                    removeList = [x.strip() for x in optionMainMenu.split(',')]
+                    for data in removeList:
+                        host.append(streamDict.get(int(data)))
                     choice = str(input(
                         Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
-                logger.info("choice :" + str(choice))
-                if choice.casefold() == 'yes' or choice.casefold() == 'y':
-                    removeByContainer(host)
-        elif len(str(containerRemoveType)) == 0:
-            removeByZone()
-        elif containerRemoveType == '99':
-            logger.info("99")
+                    while len(str(choice)) == 0:
+                        choice = str(input(
+                            Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
+                    logger.info("choice :" + str(choice))
+                    if choice.casefold() == 'yes' or choice.casefold() == 'y':
+                        removeByContainer(host)
+                        host.clear()
+            elif len(str(containerRemoveType)) == 0:
+                removeByZone()
+            elif containerRemoveType == '99':
+                logger.info("99")
+                exitMenu = False
     except Exception as e:
         handleException(e)

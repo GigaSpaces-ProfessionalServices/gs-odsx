@@ -153,13 +153,16 @@ if __name__ == '__main__':
         logger.info("managerNodes: main" + str(managerNodes))
         if (len(str(managerNodes)) > 0):
             hostID = hostList()
-            containerRemoveType = str(input(
-                Fore.YELLOW + "press [Enter] if you want to Create container. \nPress [99] for exit.: " + Fore.RESET))
-            logger.info("containerRemoveType:" + str(containerRemoveType))
-            if len(str(containerRemoveType)) == 0:
-              createContainers(managerHost, hostID)
-            elif containerRemoveType == '99':
-                logger.info("99")
+            exitMenu = True
+            while exitMenu:
+                containerRemoveType = str(input(
+                    Fore.YELLOW + "press [Enter] if you want to Create container. \nPress [99] for exit.: " + Fore.RESET))
+                logger.info("containerRemoveType:" + str(containerRemoveType))
+                if len(str(containerRemoveType)) == 0:
+                  createContainers(managerHost, hostID)
+                elif containerRemoveType == '99':
+                    logger.info("99")
+                    exitMenu = False
         else:
             logger.info("No Manager configuration found please check.")
             verboseHandle.printConsoleInfo("No Manager configuration found please check.")

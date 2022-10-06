@@ -346,7 +346,9 @@ function loadEnv {
   home_dir=$(pwd)
   source $home_dir/setenv.sh
 }
-
+function copyLogFile {
+    cp /dbagigashare/current/gs/config/xap_logging.properties /dbagiga/gs_config/
+}
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
@@ -434,6 +436,8 @@ memoryGSC=${13}
 zoneGSC=${14}
 sourceInstallerDirectory=${15}
 gsNicAddress=${16}
+logTargetPath=${17}
+logSourcePath=${18}
 
 echo "param1"$1
 echo "param2"$targetDir
@@ -458,6 +462,7 @@ else
   targetDir=$2
 fi
 echo "TargetDir:"$targetDir
+copyLogFile
 if [ $1 == 'true' ]; then
   if [ "$wantInstallJava" == "y" ]; then
     echo "Setup AirGapJava"
