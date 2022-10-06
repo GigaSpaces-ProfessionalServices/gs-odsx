@@ -270,7 +270,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         msSqlFeederFilePath=".mssql.files"
         msSqlFeederFileSource = sourceInstallerDirectory+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
-
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -337,6 +338,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"21. "+
               Fore.GREEN+"Space server installation : "+Fore.RESET,
               Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"22. "+
+              Fore.GREEN+"Log source file path : "+Fore.RESET,
+              Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"23. "+
+              Fore.GREEN+"Log target file path : "+Fore.RESET,
+              Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
+
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -353,7 +361,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
-                    additionalParam=additionalParam+' '+gsNicAddress
+                    # logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+                    # logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
+                    # additionalParam=additionalParam+' '+gsNicAddress + ' '+logTargetPath + ' '+ logSourcePath
                     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     logger.info("additionalParam - Installation :")
                     logger.info("Building .tar file : tar -cvf install/install.tar install")
@@ -379,7 +389,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     output = executeRemoteCommandAndGetOutput(host, user, cmd)
                     logger.debug("Execute RemoteCommand output:"+str(output))
                     verboseHandle.printConsoleInfo(output)
-
                     commandToExecute="scripts/servers_space_install.sh"
                     logger.info("additionalParam : "+str(additionalParam))
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))

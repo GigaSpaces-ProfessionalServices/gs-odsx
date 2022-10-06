@@ -3,7 +3,7 @@ import os, requests,json
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_cluster_config import  config_get_manager_node
 from scripts.odsx_tieredstorage_undeploy import getManagerHost
 from utils.odsx_print_tabular_data import printTabular
 from requests.auth import HTTPBasicAuth
