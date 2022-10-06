@@ -118,8 +118,8 @@ def listObjects():
            #    Fore.YELLOW + "Tier Criteria" + Fore.RESET
                Fore.YELLOW + "DDl File exist" + Fore.RESET,
                Fore.YELLOW + "Properties File exist" + Fore.RESET,
-               Fore.YELLOW + "Total records in disk" + Fore.RESET,
-               Fore.YELLOW + "Total records in ram" + Fore.RESET
+               Fore.YELLOW + "Total records in ram" + Fore.RESET,
+               Fore.YELLOW + "Total records in disk" + Fore.RESET
                ]
     data = []
     counter = 1
@@ -172,10 +172,13 @@ def listObjects():
         exit(0)
     while True:
         objectMgmtColumnsInput = str(
-            input(Fore.YELLOW + "Select object to show more details \n or exit [99] :"+ Fore.RESET))
+            input(Fore.YELLOW + "Select object to show more details \n [0] Show List again \n or exit [99] :" + Fore.RESET))
 
         if len(objectMgmtColumnsInput)<0:
             objectMgmtColumnsInput = "99"
+        if objectMgmtColumnsInput == "0":
+            listObjects()
+            exit(0)
 
         if (objectMgmtColumnsInput.isnumeric()==True and objectMgmtColumnsInput!="99"):
             data = []
