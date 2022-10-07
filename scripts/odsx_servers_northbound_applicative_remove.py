@@ -117,7 +117,10 @@ if __name__ == '__main__':
         # print('install :',args)
         remotePath = "/home/ec2-user"
         verboseHandle.printConsoleInfo("Starting nb un-installation")
-        nbConfig = createPropertiesMapFromFile("config/nb.conf")
+        #nbConfig = createPropertiesMapFromFile("config/nb.conf")
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        nbConfig = createPropertiesMapFromFile(sourceInstallerDirectory+"/nb/management/nb.conf")
+
         serverNodes = getNBServerHostList() # Checking in cofig json if entries are present for server or not
         confirmServerRemove=""
         confirmAgentRemove=""
