@@ -605,7 +605,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
                     retryCount = retryCount-1
                     time.sleep(2)
                     if(str(status).casefold().__contains__('successful')):
-                        print("Before setting dirty flag false "+retryCount)
+                        print("Before setting dirty flag false "+str(retryCount))
                         tieredDirtyBitFileValue = open(tieredDirtyBitFile, "r")
                         print(tieredDirtyBitFileValue.read())
 
@@ -616,12 +616,6 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
                         return
                     elif(str(status).casefold().__contains__('failed')):
                         return
-
-
-                    print("Setting dirty flag false")
-                    set_value_in_property_file("firstTimedeployment", "false", tieredDirtyBitFile)
-                    tieredDirtyBitFileValue = open(tieredDirtyBitFile, "r")
-                    print(tieredDirtyBitFileValue.read())
 
             else:
                 logger.info("Unable to deploy :"+str(status))
