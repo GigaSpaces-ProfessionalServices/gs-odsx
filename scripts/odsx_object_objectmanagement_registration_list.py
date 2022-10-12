@@ -134,7 +134,7 @@ def listObjects():
     # getData()
     if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
-    response = requests.get("http://" + managerHost + ":8090/v2/spaces/" + str(spaceName) + "/statistics/types",auth = HTTPBasicAuth(username,password))
+    response = requests.get("http://" + managerHost + ":8090/v2/spaces/" + str(spaceName) + "/statistics/types")
     logger.info(response.text)
     jsonData = json.loads(response.text)
 
