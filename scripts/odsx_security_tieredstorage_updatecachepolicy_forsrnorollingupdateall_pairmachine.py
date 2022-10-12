@@ -690,7 +690,7 @@ def copyFilesFromODSXToSpaceServer():
     logger.info("ips: "+str(ips))
     tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlCriteriaFileName")).replace('"','')
     logger.info("tieredCriteriaConfigFilePath : "+str(tieredCriteriaConfigFilePath))
-    tieredCriteriaConfigFilePathTarget = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlCriteriaFileName")).replace('"','')
+    tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','')
     logger.info("tieredCriteriaConfigFilePathTarget : "+str(tieredCriteriaConfigFilePathTarget))
     spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.ts.spaceproperty")).replace('"','')
     logger.info("spacePropertyConfigFilePath : "+str(spacePropertyConfigFilePath))

@@ -168,7 +168,7 @@ def registerInBatch():
     logger.info(objectJson)
     for k,v in objectJson.items():
         if v == "Already exist so not registered":
-            v = Fore.RED + v + Fore.RESET
+            v = Fore.YELLOW + v + Fore.RESET
         else:
             v =  Fore.GREEN + v + Fore.RESET
 
