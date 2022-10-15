@@ -347,11 +347,6 @@ function installTelegraf {
     echo "Telegraf installed"
 }
 
-function copyLogFile {
-    printf "file copied from source to target"
-    cp $logSourcePath/xap_logging.properties $logTargetPath
-}
-
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
@@ -421,6 +416,12 @@ function gsCreateGSServeice {
   sudo systemctl stop gs.service
   '
   echo "GS Creating services -Done!."
+}
+
+function copyLogFile {
+    echo "xap_logging file copied from source to target"
+    cd /dbagiga/gs_config/
+    sudo cp $logSourcePath/xap_logging.properties $logTargetPath
 }
 
 #if the airGap true then it will install from user/install dir

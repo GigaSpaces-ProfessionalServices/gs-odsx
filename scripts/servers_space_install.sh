@@ -346,9 +346,6 @@ function loadEnv {
   home_dir=$(pwd)
   source $home_dir/setenv.sh
 }
-function copyLogFile {
-    cp /dbagigashare/current/gs/config/xap_logging.properties /dbagiga/gs_config/
-}
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
@@ -416,7 +413,11 @@ function gsCreateGSServeice {
   '
   echo "GS Creating services -Done!."
 }
-
+function copyLogFile {
+    echo "xap_logging file copied from source to target"
+    cd /dbagiga/gs_config/
+    sudo cp /dbagigashare/current/gs/config/xap_logging.properties /dbagiga/gs_config/
+}
 #if the airGap true then it will install from user/install dir
 targetDir=$2
 gs_clusterhosts=$3
@@ -462,7 +463,6 @@ else
   targetDir=$2
 fi
 echo "TargetDir:"$targetDir
-copyLogFile
 if [ $1 == 'true' ]; then
   if [ "$wantInstallJava" == "y" ]; then
     echo "Setup AirGapJava"
@@ -494,3 +494,4 @@ else
   echo "Set GS Home"
   setGSHome $targetDir
 fi
+copyLogFile

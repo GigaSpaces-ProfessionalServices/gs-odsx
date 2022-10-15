@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 import json
 import os
+from collections import Counter
+
 import requests
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -83,7 +85,7 @@ def createContainers(managerHost, hostData):
             hostId = hostData.get(int(hostName))
             logger.info("host  :" + str(hostId))
 
-        numberOfGSC = str(input(Fore.YELLOW + "Enter number of GSCs per host [1] : " + Fore.RESET))
+        numberOfGSC = str(input(Fore.YELLOW + "Enter number of GSCs [1] : " + Fore.RESET))
         while (len(str(numberOfGSC)) == 0):
             numberOfGSC = 1
         logger.info("numberOfGSC :" + str(numberOfGSC))
@@ -124,7 +126,9 @@ def hostList():
         logger.info("hostList()")
         spaceServers = config_get_space_hosts()
         headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
-                   Fore.YELLOW + "Host" + Fore.RESET
+                   Fore.YELLOW + "Host" + Fore.RESET,
+                   Fore.YELLOW + "GSC" + Fore.RESET,
+                   Fore.YELLOW + "Zone" + Fore.RESET
                    ]
         data = []
         counter = 0
@@ -133,8 +137,48 @@ def hostList():
             host = os.getenv(server.ip)
             counter = counter + 1
             spaceDict.update({counter: host})
+            response = requests.get("http://"+managerHost+":8090/v2/hosts/"+str(host))
+            logger.info("response.text : "+str(response.text))
+            jsonArray = json.loads(response.text)
+
+            response1 = requests.get("http://"+managerHost+":8090/v2/hosts/"+str(host)+"/containers")
+            logger.info("response.text : "+str(response1.text))
+            jsonArray1= json.loads(response1.text)
+            c = Counter(player['zones'][0] for player in jsonArray1)
+            # print(c)
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-                         Fore.GREEN + host + Fore.RESET]
+                         Fore.GREEN + host + Fore.RESET,
+                         Fore.GREEN + str(len(jsonArray["containers"])) + Fore.RESET,
+                         Fore.GREEN + str(dict(c)) + Fore.RESET]
+            data.append(dataArray)
+        printTabular(None, headers, data)
+
+    except Exception as e:
+        logger.error("Error in odsx_space_container_create " + str(e))
+    return spaceDict
+
+def zoneList():
+    try:
+        logger.debug("listing space host")
+        logger.info("hostList()")
+        spaceServers = config_get_space_hosts()
+        headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
+                   Fore.YELLOW + "Zone" + Fore.RESET,
+                   Fore.YELLOW + "GSC" + Fore.RESET
+                   ]
+        data = []
+        counter = 0
+        spaceDict = {}
+        for server in spaceServers:
+            host = os.getenv(server.ip)
+            counter = counter + 1
+            spaceDict.update({counter: host})
+            response = requests.get("http://"+managerHost+":8090/v2/hosts/"+str(host))
+            logger.info("response.text : "+str(response.text))
+            jsonArray = json.loads(response.text)
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + host + Fore.RESET,
+                         Fore.GREEN + str(len(jsonArray["containers"])) + Fore.RESET]
             data.append(dataArray)
         printTabular(None, headers, data)
 
@@ -152,9 +196,10 @@ if __name__ == '__main__':
         managerHost = getManagerHost(managerNodes)
         logger.info("managerNodes: main" + str(managerNodes))
         if (len(str(managerNodes)) > 0):
-            hostID = hostList()
+
             exitMenu = True
             while exitMenu:
+                hostID = hostList()
                 containerRemoveType = str(input(
                     Fore.YELLOW + "press [Enter] if you want to Create container. \nPress [99] for exit.: " + Fore.RESET))
                 logger.info("containerRemoveType:" + str(containerRemoveType))
