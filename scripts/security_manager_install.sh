@@ -427,6 +427,12 @@ function gsCreateGSServeice {
   echo "GS Creating services -Done!."
 }
 
+
+function copyLogFile {
+    echo "xap_logging file copied from source to target"
+    cd /dbagiga/gs_config/
+    sudo cp $logSourcePath/xap_logging.properties $logTargetPath
+}
 #if the airGap true then it will install from user/install dir
 targetDir=$2
 gs_clusterhosts=$3
@@ -443,6 +449,8 @@ wantInstallJava=${10}
 wantInstallUnzip=${11}
 sourceInstallerDirectory=${12}
 gsNicAddress=${13}
+logSourcePath=${14}
+logTargetPath=${15}
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts
@@ -495,3 +503,4 @@ else
   setGSHome $targetDir
 fi
 installTelegraf
+copyLogFile

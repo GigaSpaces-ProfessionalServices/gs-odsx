@@ -283,18 +283,15 @@ if __name__ == '__main__':
         exitMenu = True
         while exitMenu:
             streamDict = getContainersList()
+            verboseHandle.printConsoleInfo("Delete using individual, with comma(1,2) or range(1-3)")
             containerRemoveType = str(input(
                 Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
             logger.info("containerRemoveType:" + str(containerRemoveType))
-            verboseHandle.printConsoleInfo("Delete using single or multiple using comma (1,2,3)")
+
             if containerRemoveType == '1':
                 optionMainMenu = str(input("Enter your srno to remove container: "))
                 logger.info("Enter your srno to remove container:" + str(optionMainMenu))
                 if optionMainMenu != 99:
-                    # if len(streamDict) >= optionMainMenu:
-                    removeList = [x.strip() for x in optionMainMenu.split(',')]
-                    for data in removeList:
-                        host.append(streamDict.get(int(data)))
                     choice = str(input(
                         Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
                     while len(str(choice)) == 0:
@@ -302,8 +299,29 @@ if __name__ == '__main__':
                             Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
                     logger.info("choice :" + str(choice))
                     if choice.casefold() == 'yes' or choice.casefold() == 'y':
-                        removeByContainer(host)
-                        host.clear()
+                        # if len(streamDict) >= optionMainMenu:
+                        if(',' in str(optionMainMenu)):
+                            removeList = [x.strip() for x in optionMainMenu.split(',')]
+                            for data in removeList:
+                                host.append(streamDict.get(int(data)))
+                            removeByContainer(host)
+                            host.clear()
+                        elif('-' in str(optionMainMenu)):
+                            host = optionMainMenu.split('-')
+                            if(len(host) == 2):
+                                firstIndex = int(host[0])
+                                lastIndex = int(host[-1])
+                                for data in range(firstIndex,lastIndex+1):
+                                    host.clear()
+                                    host.append(streamDict.get(int(data)))
+                                    removeByContainer(host)
+                                host.clear()
+                            else:
+                                verboseHandle.printConsoleError("Please enter two integer only")
+                        else:
+                            host.append(streamDict.get(int(optionMainMenu)))
+                            removeByContainer(host)
+                            host.clear()
             elif len(str(containerRemoveType)) == 0:
                 removeByZone()
             elif containerRemoveType == '99':

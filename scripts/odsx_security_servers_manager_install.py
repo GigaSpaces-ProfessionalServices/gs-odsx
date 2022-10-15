@@ -366,6 +366,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         ldapSecurityConfigInput = str(getYamlFilePathInsideFolder(".security.config.ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
     #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -426,6 +428,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"18. "+
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"19. "+
+              Fore.GREEN+"Log source file path : "+Fore.RESET,
+              Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"20. "+
+          Fore.GREEN+"Log target file path : "+Fore.RESET,
+          Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -452,8 +460,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.info("NIC address:"+gsNicAddress+" for host "+host)
                 if(len(str(gsNicAddress))==0):
                     gsNicAddress='x'     # put dummy param to maintain position of arguments
-                additionalParam=additionalParam+' '+gsNicAddress
-                #print(additionalParam)
+                additionalParam=additionalParam+' '+gsNicAddress+' '+logSourcePath+' '+logTargetPath
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')
                     ##scp_upload(host, user, 'install/gs.service', '')

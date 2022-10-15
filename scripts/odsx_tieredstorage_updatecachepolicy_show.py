@@ -315,11 +315,15 @@ if __name__ == '__main__':
                 logger.info("Manager Host :"+str(managerHost))
                 gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
                 logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))
-                if(len(gs_space_host_dictionary_obj)>0):
-                    createDB2EntryInSqlLite()
-                    listGSC(managerHost)
-                else:
-                    verboseHandle.printConsoleInfo("No space found.")
+                exitMenu = True
+                while exitMenu:
+                    if(len(gs_space_host_dictionary_obj)>0):
+                        createDB2EntryInSqlLite()
+                        listGSC(managerHost)
+                    else:
+                        verboseHandle.printConsoleInfo("No space found.")
+                        exitMenu = False
+
                 #confirmParamAndRestartGSC()
             else:
                 logger.info("Please check manager server status.")

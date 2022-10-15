@@ -11,12 +11,11 @@ from requests.auth import HTTPBasicAuth
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
-from utils.odsx_print_tabular_data import printTabular, printTabularGrid
+from utils.odsx_print_tabular_data import  printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -107,11 +106,11 @@ def remove_duplicate_items(_api_data, _key):
 
 def getZoneList():
     try:
-        response = requests.get("http://"+managerHost+":8090/v2/containers",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+managerHost+":8090/v2/containers",auth = HTTPBasicAuth(username,password))
         logger.info("response.text : "+str(response.text))
         jsonArray = json.loads(response.text)
         zoneList = remove_duplicate_items(jsonArray,'zones')
-        verboseHandle.printConsoleWarning("List of Zone:")
+        verboseHandle.printConsoleWarning("List of Zones:")
         headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
                    Fore.YELLOW+"Zones"+Fore.RESET
                    ]
@@ -137,15 +136,17 @@ def getContainersList():
     logger.info("containerRemoveType:" + str(containerRemoveType))
     filterArray = ''
     try:
-        response = requests.get("http://" + managerHost + ":8090/v2/containers",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://" + managerHost + ":8090/v2/containers",auth = HTTPBasicAuth(username,password))
         logger.info("response.text : " + str(response.text))
         jsonArray = json.loads(response.text)
 
         if (str(containerRemoveType) == '1'):
             zoneList = getZoneList()
             zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+
             while (len(str(zoneGSCNo)) == 0):
                 zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+
             zoneGSC = zoneList.get(int(zoneGSCNo))
 
             logger.info("zoneGSC :" + str(zoneGSC))
@@ -192,9 +193,10 @@ def exitAndDisplay(isMenuDriven):
 
 def removeByContainer(containerid):
     logger.info("removeContainer")
+    # newList = containerid.split()
     try:
         for data in containerid:
-            commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill " + str(
+            commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+ " --password="+password+" container kill " + str(
                 data['id'])
             logger.info(commandToExecute)
             with Spinner():
@@ -205,43 +207,44 @@ def removeByContainer(containerid):
         handleException(e)
 
 
-# def getContainers():
-#     try:
-#         response = requests.get("http://" + managerHost + ":8090/v2/containers",auth = HTTPBasicAuth(username, password))
-#         logger.info("response.text : " + str(response.text))
-#         jsonArray = json.loads(response.text)
-#         verboseHandle.printConsoleWarning("List of containers:")
-#         headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
-#                    Fore.YELLOW + "Container ID" + Fore.RESET,
-#                    Fore.YELLOW + "PID" + Fore.RESET,
-#                    Fore.YELLOW + "Zones" + Fore.RESET
-#                    ]
-#         counter = 0
-#         dataTable = []
-#         zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to remove [bll] : " + Fore.RESET))
-#         while (len(str(zoneGSC)) == 0):
-#             zoneGSC = 'bll'
-#         logger.info("zoneGSC :" + str(zoneGSC))
-#         filterArray = [x for x in jsonArray if x['zones'][0] == str(zoneGSC)]
-#         filterData = json.dumps(filterArray)
-#         spaceDict = {}
-#         for data in filterData:
-#             counter = counter + 1
-#             spaceDict.update({counter: data})
-#             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
-#                          Fore.GREEN + str(data["id"]) + Fore.RESET,
-#                          Fore.GREEN + str(data["pid"]) + Fore.RESET,
-#                          Fore.GREEN + str(data["zones"]) + Fore.RESET
-#                          ]
-#
-#             dataTable.append(dataArray)
-#         printTabularGrid(None, headers, dataTable)
-#     except Exception as e:
-#         handleException(e)
-#     return spaceDict
+def getContainers():
+    try:
+        response = requests.get("http://" + managerHost + ":8090/v2/containers",auth = HTTPBasicAuth(username,password))
+        logger.info("response.text : " + str(response.text))
+        jsonArray = json.loads(response.text)
+        verboseHandle.printConsoleWarning("List of containers:")
+        headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
+                   Fore.YELLOW + "Container ID" + Fore.RESET,
+                   Fore.YELLOW + "PID" + Fore.RESET,
+                   Fore.YELLOW + "Zones" + Fore.RESET
+                   ]
+        counter = 0
+        dataTable = []
+        zoneGSC = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+        while (len(str(zoneGSC)) == 0):
+            zoneGSC = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+
+        logger.info("zoneGSC :" + str(zoneGSC))
+        filterArray = [x for x in jsonArray if x['zones'][0] == str(zoneGSC)]
+        filterData = json.dumps(filterArray)
+        spaceDict = {}
+        for data in filterData:
+            counter = counter + 1
+            spaceDict.update({counter: data})
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + str(data["id"]) + Fore.RESET,
+                         Fore.GREEN + str(data["pid"]) + Fore.RESET,
+                         Fore.GREEN + str(data["zones"]) + Fore.RESET
+                         ]
+
+            dataTable.append(dataArray)
+        printTabularGrid(None, headers, dataTable)
+    except Exception as e:
+        handleException(e)
+    return spaceDict
 
 
-def  removeByZone():
+def removeByZone():
     logger.info("removeByZoner")
     try:
         zoneName = str(input(Fore.YELLOW + "Enter zone : " + Fore.RESET))
@@ -250,7 +253,7 @@ def  removeByZone():
             confirm = str(input(Fore.YELLOW + "Are you sure want to container ? [yes (y)] / [no (n)] : " + Fore.RESET))
         logger.info("confirm :" + str(confirm))
         if (confirm == 'yes' or confirm == 'y'):
-            commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill --zones=" + str(
+            commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+ " --password="+password+" container kill --zones=" + str(
                 zoneName)
             logger.info(commandToExecute)
             with Spinner():
@@ -260,21 +263,22 @@ def  removeByZone():
         elif confirm == 'no' or confirm == 'n':
             if isMenuDriven == 'm':
                 logger.info("menudriven")
-                os.system('python3 scripts/odsx_security_space_containers_remove.py' + ' ' + isMenuDriven)
+                os.system('python3 scripts/odsx_space_containers_remove.py' + ' ' + isMenuDriven)
     except Exception as e:
         handleException(e)
 
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Space -> Containers -> Remove\n')
+    args = []
+    menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
+    args.append(sys.argv[0])
+    isMenuDriven=''
     username = ""
     password = ""
     appId=""
     safeId=""
     objectId=""
-    args = []
-    menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
-    args.append(sys.argv[0])
     try:
         optionMainMenu = ''
         choice = ''
@@ -289,24 +293,20 @@ if __name__ == '__main__':
         logger.info("managerNodes: main" + str(managerNodes))
         managerHost = getManagerHost(managerNodes)
         logger.info(" Container list")
-        # getContainers()
-
         username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
         password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
         exitMenu = True
         while exitMenu:
             streamDict = getContainersList()
+            verboseHandle.printConsoleInfo("Delete using individual, with comma(1,2) or range(1-3)")
             containerRemoveType = str(input(
                 Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
             logger.info("containerRemoveType:" + str(containerRemoveType))
-            verboseHandle.printConsoleInfo("Delete using single or multiple using comma (1,2,3)")
+
             if containerRemoveType == '1':
                 optionMainMenu = str(input("Enter your srno to remove container: "))
                 logger.info("Enter your srno to remove container:" + str(optionMainMenu))
                 if optionMainMenu != 99:
-                    removeList = [x.strip() for x in optionMainMenu.split(',')]
-                    for data in removeList:
-                        host.append(streamDict.get(int(data)))
                     choice = str(input(
                         Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
                     while len(str(choice)) == 0:
@@ -314,12 +314,34 @@ if __name__ == '__main__':
                             Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
                     logger.info("choice :" + str(choice))
                     if choice.casefold() == 'yes' or choice.casefold() == 'y':
-                        removeByContainer(host)
-                        host.clear()
+                        # if len(streamDict) >= optionMainMenu:
+                        if(',' in str(optionMainMenu)):
+                            removeList = [x.strip() for x in optionMainMenu.split(',')]
+                            for data in removeList:
+                                host.append(streamDict.get(int(data)))
+                                removeByContainer(host)
+                                host.clear()
+                        elif('-' in str(optionMainMenu)):
+                            host = optionMainMenu.split('-')
+                            if(len(host) == 2):
+                                firstIndex = int(host[0])
+                                lastIndex = int(host[-1])
+                                for data in range(firstIndex,lastIndex+1):
+                                    host.clear()
+                                    host.append(streamDict.get(int(data)))
+                                    removeByContainer(host)
+                                host.clear()
+                            else:
+                                verboseHandle.printConsoleError("Please enter two integer only")
+                        else:
+                            host.append(streamDict.get(int(optionMainMenu)))
+                            removeByContainer(host)
+                            host.clear()
             elif len(str(containerRemoveType)) == 0:
                 removeByZone()
             elif containerRemoveType == '99':
                 logger.info("99")
                 exitMenu = False
+            streamDict.clear()
     except Exception as e:
         handleException(e)

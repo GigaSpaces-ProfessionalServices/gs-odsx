@@ -285,6 +285,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         ldapSecurityConfigInput = str(getYamlFilePathInsideFolder(".security.config.ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
+
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -375,6 +378,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"28. "+
               Fore.GREEN+"Space server installation : "+Fore.RESET,
               Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"19. "+
+              Fore.GREEN+"Log source file path : "+Fore.RESET,
+              Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"20. "+
+              Fore.GREEN+"Log target file path : "+Fore.RESET,
+              Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -391,8 +400,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
-                    additionalParam=additionalParam+' '+gsNicAddress
+                    additionalParam=additionalParam+' '+gsNicAddress+' '+logSourcePath+' '+logTargetPath
                     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
+                    # print("---------------------"+str(additionalParam))
                     logger.info("additionalParam - Installation :")
                     logger.info("Building .tar file : tar -cvf install/install.tar install")
                     '''

@@ -63,9 +63,11 @@ def setup_logger(name, log_file, level=logging.INFO):
 
 if not os.path.exists('/dbagigalogs/tieredstorage/'):
     os.makedirs('/dbagigalogs/tieredstorage/')
+    loggerTiered = setup_logger(os.path.basename(__file__), '/dbagigalogs/tieredstorage/tieredstorage_updatecachepolicy_trace.log')
+
 else:
     loggerTiered = setup_logger(os.path.basename(__file__), '/dbagigalogs/tieredstorage/tieredstorage_updatecachepolicy_trace.log')
-    loggerTiered = setup_logger(os.path.basename(__file__), 'logs/tieredstorage_updatecachepolicy_trace.log')
+    # loggerTiered = setup_logger(os.path.basename(__file__), 'logs/tieredstorage_updatecachepolicy_trace.log')
 
 # loggerTiered = setup_logger(os.path.basename(__file__), 'logs/tieredstorage_updatecachepolicy_trace.log')
 # TieredStorage log file configuration  ---Ends
@@ -394,7 +396,7 @@ def confirmAndProceedForAll():
                 if(len(ll) == 0):
                     label = False
             end_time = time.time()
-
+            print(" All Partitions Restarted successfully ")
             # print(f'Total time to run multithreads: {end_time - start_time:2f}s')
 
     except Exception as e:
