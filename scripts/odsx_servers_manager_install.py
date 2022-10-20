@@ -355,7 +355,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         #To Display Summary ::
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
-        logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
         print(Fore.GREEN+"1. "+
@@ -427,7 +427,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     gsNicAddress='x'     # put dummy param to maintain position of arguments
                 additionalParam=additionalParam+' '+gsNicAddress
                 logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
-                logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
+                logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
                 additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
                 #print(additionalParam)
                 with Spinner():

@@ -313,15 +313,21 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
-                gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
-                logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))
+
                 exitMenu = True
                 while exitMenu:
-                    if(len(gs_space_host_dictionary_obj)>0):
-                        createDB2EntryInSqlLite()
-                        listGSC(managerHost)
-                    else:
-                        verboseHandle.printConsoleInfo("No space found.")
+                    optionMainMenu = str(input("press [1] For Show: \nPress [99] for exit.:"))
+                    if optionMainMenu == '1':
+                        gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
+                        logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))
+
+                        if(len(gs_space_host_dictionary_obj)>0):
+                                createDB2EntryInSqlLite()
+                                listGSC(managerHost)
+                        else:
+                                verboseHandle.printConsoleInfo("No space found.")
+                                exitMenu = False
+                    elif optionMainMenu == '99':
                         exitMenu = False
 
                 #confirmParamAndRestartGSC()
