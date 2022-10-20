@@ -221,7 +221,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         appId = str(readValuefromAppConfig("app.space.security.appId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         objectId= str(readValuefromAppConfig("app.space.security.objectId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
         else:
@@ -286,7 +287,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
-        logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
 
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -400,7 +401,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
-                    additionalParam=additionalParam+' '+gsNicAddress+' '+logSourcePath+' '+logTargetPath
+                    additionalParam=additionalParam+' '+logSourcePath+' '+gsNicAddress
                     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     # print("---------------------"+str(additionalParam))
                     logger.info("additionalParam - Installation :")
@@ -427,7 +428,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     output = executeRemoteCommandAndGetOutput(host, user, cmd)
                     logger.debug("Execute RemoteCommand output:"+str(output))
                     verboseHandle.printConsoleInfo(output)
-
+                    # additionalParam=additionalParam+' '+logSourcePath+' '+logTargetPath
                     commandToExecute="scripts/security_space_install.sh"
                     logger.info("additionalParam : "+str(additionalParam))
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))

@@ -421,7 +421,7 @@ function gsCreateGSServeice {
 function copyLogFile {
     echo "xap_logging file copied from source to target"
     cd /dbagiga/gs_config/
-    sudo cp $logSourcePath/xap_logging.properties $logTargetPath
+    sudo cp $logSourcePath $logTargetPath
 }
 
 #if the airGap true then it will install from user/install dir
