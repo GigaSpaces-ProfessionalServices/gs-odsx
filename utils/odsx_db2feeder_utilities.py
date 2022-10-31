@@ -198,6 +198,7 @@ def getMSSQLQueryStatusFromSqlLite(feederName):
 
 def getUsernameByHost(managerHost,appId,safeId,objectId):
     logger.info("getUsernameByHost()")
+    return "gs-admin"
     cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
     logger.info("cmdToExecute : "+str(cmdToExecute))
     output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
@@ -207,6 +208,7 @@ def getUsernameByHost(managerHost,appId,safeId,objectId):
 
 def getPasswordByHost(managerHost,appId,safeId,objectId):
     logger.info("getPasswordByHost()")
+    return "gs-admin"
     cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
     logger.info("cmdToExecute : "+str(cmdToExecute))
     output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)

@@ -161,7 +161,7 @@ def displayInputParam(nbConfig):
     print(str("PIVOT_SERVERS= "+nbConfig.get("PIVOT_SERVERS")).replace('"',''))
 
 def summaryForManagementInstallation():
-    nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf"
+    nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
     proceedForEnvHostConfiguration(nbConfig,'management')
     verboseHandle.printConsoleInfo("nb.conf params for management servers.")
     nbConfig = createPropertiesMapFromFile(nbConfig)
@@ -174,10 +174,10 @@ def cleanNbConfig():
     direcrotyArray = ['management','applicative']
     for dir in direcrotyArray:
         if userCMD == 'ec2-user':
-            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
+            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
             logger.info(cmd)
         else:
-            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
+            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
         with Spinner():
             status = os.system(cmd)
             logger.info("removed nb.conf status "+str(status))

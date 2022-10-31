@@ -22,7 +22,7 @@ current:
       jars:
         catalogjar: catalogue-service.jar
     dashboards:
-      gsconfig: gs_config.yaml
+    gsconfig: gs_config.yaml
   gs:
     config:
       log:

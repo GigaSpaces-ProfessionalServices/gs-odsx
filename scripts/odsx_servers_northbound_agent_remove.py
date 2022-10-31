@@ -119,7 +119,7 @@ if __name__ == '__main__':
         verboseHandle.printConsoleInfo("Starting nb un-installation")
 #        nbConfig = createPropertiesMapFromFile("config/nb.conf")
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-        nbConfig = createPropertiesMapFromFile(sourceInstallerDirectory+"/nb/management/nb.conf")
+        nbConfig = createPropertiesMapFromFile(sourceInstallerDirectory+"/nb/management/nb.conf.template")
 
         serverNodes = getNBServerHostList() # Checking in cofig json if entries are present for server or not
         confirmServerRemove=""

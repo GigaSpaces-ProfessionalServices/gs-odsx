@@ -134,11 +134,14 @@ def listObjects():
     # getData()
     if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
-    response = requests.get("http://" + managerHost + ":8090/v2/spaces/" + str(spaceName) + "/statistics/types")
+    #  response = requests.get("http://" + managerHost + ":8090/v2/spaces/" + str(spaceName) + "/statistics/types")
+    countResponse = requests.get("http://" + managerHost + ":8090/v2/internal/spaces/utilization",auth = HTTPBasicAuth(username,password))
     logger.info(response.text)
-    jsonData = json.loads(response.text)
+   # jsonData = json.loads(response.text)
+    jsonCountData = json.loads(countResponse.text)
 
-    logger.info("response : " + str(jsonData))
+   # logger.info("response : " + str(jsonData))
+    # logger.info("response : " + str(countResponse))
     #if (str(jsonData["status"]).__contains__("failed")):
 
     for spaces in objectJson:
@@ -160,8 +163,9 @@ def listObjects():
                     #     Fore.GREEN + str(object["criteria"]) + Fore.RESET
                          ddlFileCheck,
                          propertiesFileCheck,
-                         Fore.GREEN + str(object["objectInMemory"]) + Fore.RESET,
-                         Fore.GREEN + str(jsonData[str(object["tablename"])]["entries"]) + Fore.RESET,
+                    #     Fore.GREEN + str(object["objectInMemory"]) + Fore.RESET,
+                         Fore.GREEN + str(jsonCountData[0]["objectTypes"][str(object["tablename"])]["tieredEntries"]) + Fore.RESET,
+                         Fore.GREEN + str(jsonCountData[0]["objectTypes"][str(object["tablename"])]["entries"]) + Fore.RESET
                         ]
             dataColumnsDict.update({counter: object["columns"]})
             dataTableColumnsDict.update({counter: object["tablename"]})
