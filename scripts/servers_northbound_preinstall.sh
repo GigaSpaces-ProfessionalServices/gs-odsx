@@ -15,8 +15,8 @@ echo $installation_path"/"$installation_file
 echo "Extracting .tar.gz file from "$installation_path
 tar -xzf $installation_path/*.tar.gz -C /dbagiga
 
-echo "Moving file from $installation_path/nb.conf To $targetDir/nb-infra/"
-mv $installation_path/nb.conf $targetDir/nb-infra/
+echo "Moving file from $installation_path/nb.conf.template To $targetDir/nb-infra/"
+mv $installation_path/nb.conf.template $targetDir/nb-infra/
 
 echo "copying ssl files to $targetDir/nb-infra/ssl"
 pfxFiles=$(ls install/nb/ssl/*.pfx 2> /dev/null | wc -l)
