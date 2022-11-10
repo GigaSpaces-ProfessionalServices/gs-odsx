@@ -16,6 +16,7 @@ from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetV
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
@@ -284,7 +285,7 @@ if __name__ == '__main__':
                                 str(managerCountStorage) + ". Enough storage space is not available in [" + managerIp + "] : " + str(
                                     managerStorageSpace) + " % free")
                     verboseHandle.printConsoleWarning("------------------------------------------")
-                    inputChoice = str(input(Fore.YELLOW+"[1] For individual\n[Enter] For all. \n[99] For exit. :"+Fore.RESET))
+                    inputChoice = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual\n[Enter] For all. \n[99] For exit. :"+Fore.RESET))
                     if inputChoice=='99':
                         quit(0)
                     if inputChoice=='1':

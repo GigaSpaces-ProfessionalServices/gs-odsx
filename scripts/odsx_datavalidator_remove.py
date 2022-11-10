@@ -13,6 +13,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_re
     config_get_dataValidation_nodes, config_remove_dataValidation_byNameIP
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from scripts.odsx_servers_di_list import listDIServers
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -101,7 +102,7 @@ def executeCommandForUnInstall():
         if(len(nodes)>0):
             removeType=''
             if(len(nodesCount)>1):
-                removeType = str(input(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
+                removeType = str(userInputWithEscWrapper(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
                 confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove Data validation servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):

@@ -14,6 +14,7 @@ from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutputPython36
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from requests.auth import HTTPBasicAuth
@@ -158,7 +159,7 @@ if __name__ == '__main__':
     hostsConfig = ''
     hostsConfig = getManagerHostFromEnv()
     global inputChoice
-    inputChoice = str(input(Fore.YELLOW+"[1] For individual\n[Enter] For all. \n[99] For exit. :"+Fore.RESET))
+    inputChoice = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual\n[Enter] For all. \n[99] For exit. :"+Fore.RESET))
     if inputChoice=='99':
         quit(0)
     if inputChoice=='1':

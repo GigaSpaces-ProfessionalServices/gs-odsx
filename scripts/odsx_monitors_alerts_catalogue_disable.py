@@ -14,6 +14,7 @@ from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPyt
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_node
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -104,7 +105,7 @@ if __name__ == '__main__':
         host = os.getenv("pivot1")
         alertDict = getListAndSelect()
         if len(alertDict)>0 :
-            choice = str(input(Fore.YELLOW+"[1] For individual \n[Enter] For all \n[99] For exit. : "+Fore.RESET))
+            choice = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual \n[Enter] For all \n[99] For exit. : "+Fore.RESET))
             if choice=='99':
                 quit()
             if choice=='1':

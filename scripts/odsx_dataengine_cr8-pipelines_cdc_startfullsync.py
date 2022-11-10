@@ -9,6 +9,8 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
+from utils.odsx_keypress import userInputWithEscWrapper
+
 cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
@@ -92,7 +94,7 @@ def display_stream_list1(args):
 def startStream(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = cdclist.display_stream_list(args)
-    selectedOption = int(input("Enter your option: "))
+    selectedOption = int(userInputWithEscWrapper("Enter your option: "))
     if selectedOption != 99:
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)

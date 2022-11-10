@@ -3,6 +3,7 @@
 import os, time, requests,json, subprocess, glob,sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
@@ -161,7 +162,7 @@ def inputParam():
     logger.info("inputParam()")
     inputNumberToStop =''
     inputChoice=''
-    inputChoice = str(input(Fore.YELLOW+"Enter [1] For individual stop \n[Enter] For all \n[99] For exit : "+Fore.RESET))
+    inputChoice = str(userInputWithEscWrapper(Fore.YELLOW+"Enter [1] For individual stop \n[Enter] For all \n[99] For exit : "+Fore.RESET))
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):

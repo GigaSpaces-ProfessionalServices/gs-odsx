@@ -10,6 +10,8 @@ from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPyt
 from utils.ods_cluster_config import config_get_space_node
 import os.path
 
+from utils.odsx_keypress import userInputWithEscWrapper
+
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 nbConfig = {}
@@ -143,7 +145,7 @@ if __name__ == '__main__':
         user='root'
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
-        serverRemoveType = str(input(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
+        serverRemoveType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverRemoveType:"+str(serverRemoveType))
         if(serverRemoveType=='1'):
             optionMainMenu = int(input("Enter your host number to remove: "))

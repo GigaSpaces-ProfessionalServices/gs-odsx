@@ -10,6 +10,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_ssh import connectExecuteSSH
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_space_node, config_get_manager_node
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -185,7 +186,7 @@ if __name__ == '__main__':
         user='root'
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
-        serverInstallType = str(input(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
+        serverInstallType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverInstallType:"+str(serverInstallType))
         if(serverInstallType=='1'):
             optionMainMenu = int(input("Enter your host number to install: "))

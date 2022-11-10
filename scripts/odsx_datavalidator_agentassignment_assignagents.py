@@ -8,6 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -77,10 +78,10 @@ def doValidate():
         verboseHandle.printConsoleWarning("No agents available. Please add one")
         return
 
-    agentId = str(input("Select Agent Id from list \n OR [99] ESC:"))
+    agentId = str(userInputWithEscWrapper("Select Agent Id from list \n OR [99] ESC:"))
     while(len(agentId) == 0):
         print(Fore.YELLOW +"Agent Id is invalid or Empty"+Fore.RESET)
-        agentId = str(input("Select Agent Id from list \n OR [99] ESC:"))
+        agentId = str(userInputWithEscWrapper("Select Agent Id from list \n OR [99] ESC:"))
 
     if(agentId=='99'):
         return
@@ -96,10 +97,10 @@ def doValidate():
     verboseHandle.printConsoleWarning('');
     #verboseHandle.printConsoleWarning('Select Data Source:');
 
-    dataSourceIds = str(input("Select data source id from list.You can specify multiple Ids with comma separated \n OR [99] ESC:"))
+    dataSourceIds = str(userInputWithEscWrapper("Select data source id from list.You can specify multiple Ids with comma separated \n OR [99] ESC:"))
     while(len(dataSourceIds) == 0):
         print(Fore.YELLOW +"DataSource Id is invalid (Empty)"+Fore.RESET)
-        dataSourceIds = str(input("Select data source id from list.You can specify multiple Ids with comma separated \n OR [99] ESC:"))
+        dataSourceIds = str(userInputWithEscWrapper("Select data source id from list.You can specify multiple Ids with comma separated \n OR [99] ESC:"))
         #while(dataSourceName in dataSourceNames):
         #     print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
         #     dataSourceName = str(input("DataSource Name:"))

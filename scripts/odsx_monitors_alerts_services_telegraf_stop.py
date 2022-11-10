@@ -9,6 +9,7 @@ from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafS
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -79,7 +80,7 @@ if __name__ == '__main__':
         user='root'
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
-        serverStopType = str(input(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop all. \nPress [99] for exit.: "+Fore.RESET))
+        serverStopType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStopType:"+str(serverStopType))
         if(serverStopType=='1'):
             optionMainMenu = int(input("Enter your host number to stop: "))

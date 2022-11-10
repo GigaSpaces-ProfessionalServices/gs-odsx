@@ -13,6 +13,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabularGrid, printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -246,7 +247,7 @@ if __name__ == '__main__':
             while exitMenu:
                 hostID = hostList()
 
-                containerRemoveType = str(input(
+                containerRemoveType = str(userInputWithEscWrapper(
                     Fore.YELLOW + "press [Enter] if you want to Create container. \nPress [99] for exit.: " + Fore.RESET))
                 logger.info("containerRemoveType:" + str(containerRemoveType))
                 if len(str(containerRemoveType)) == 0:

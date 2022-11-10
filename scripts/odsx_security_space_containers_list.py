@@ -15,6 +15,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular, printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -207,7 +208,7 @@ if __name__ == '__main__':
         logger.info(" Container list")
         exitMenu = True
         while exitMenu:
-            containerListType = str(input(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET))
+            containerListType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET))
             logger.info("containerRemoveType:"+str(containerListType))
             username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
             password = str(getPasswordByHost(managerHost,appId,safeId,objectId))

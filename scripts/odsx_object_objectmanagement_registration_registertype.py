@@ -11,6 +11,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
     set_value_in_property_file as config_set_value_in_property_file
 from utils.ods_manager import getManagerHost, getManagerInfo
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -443,7 +444,7 @@ if __name__ == '__main__':
                 exit(0)
         if selectedOption == "":
             selectedOption = str(
-                input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
+                userInputWithEscWrapper(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
 
         if selectedOption.isnumeric():
             while len(selectedOption) <= 0 or int(selectedOption) not in registerTypeOptions or int(

@@ -5,6 +5,7 @@ import os
 import sys
 
 from scripts.logManager import LogManager
+from utils.odsx_keypress import userInputWithEscWrapper
 
 cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from scripts.spinner import Spinner
@@ -47,7 +48,7 @@ def handleException(e):
 def deletePipeline(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = cdclist.display_stream_list(args)
-    selectedOption = int(input("Enter your option: "))
+    selectedOption = int(userInputWithEscWrapper("Enter your option: "))
     if selectedOption != 99:
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)

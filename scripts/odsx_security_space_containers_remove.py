@@ -15,6 +15,7 @@ from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import  printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -132,7 +133,7 @@ def getZoneList():
 
 def getContainersList():
     containerRemoveType = str(
-        input(Fore.YELLOW + "press [1] Show by zones. \nPress [Enter] for all. \nPress [99] for exit.: " + Fore.RESET))
+        userInputWithEscWrapper(Fore.YELLOW + "press [1] Show by zones. \nPress [Enter] for all. \nPress [99] for exit.: " + Fore.RESET))
     logger.info("containerRemoveType:" + str(containerRemoveType))
     filterArray = ''
     try:
@@ -299,12 +300,12 @@ if __name__ == '__main__':
         while exitMenu:
             streamDict = getContainersList()
             verboseHandle.printConsoleInfo("Delete using individual, with comma(1,2) or range(1-3)")
-            containerRemoveType = str(input(
+            containerRemoveType = str(userInputWithEscWrapper(
                 Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [Enter] by zone. \nPress [99] for exit.: " + Fore.RESET))
             logger.info("containerRemoveType:" + str(containerRemoveType))
 
             if containerRemoveType == '1':
-                optionMainMenu = str(input("Enter your srno to remove container: "))
+                optionMainMenu = str(userInputWithEscWrapper("Enter your srno to remove container: "))
                 logger.info("Enter your srno to remove container:" + str(optionMainMenu))
                 if optionMainMenu != 99:
                     choice = str(input(

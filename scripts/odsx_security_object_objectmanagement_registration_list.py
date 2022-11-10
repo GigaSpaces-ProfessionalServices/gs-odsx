@@ -14,6 +14,7 @@ from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.ods_validation import getDataValidationServerStatus
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.odsx_print_tabular_data import printTabular
 
@@ -193,7 +194,7 @@ def listObjects():
         exit(0)
     while True:
         objectMgmtColumnsInput = str(
-            input(Fore.YELLOW + "Select object to show more details \n [0] Show List again \n or exit [99] :" + Fore.RESET))
+            userInputWithEscWrapper(Fore.YELLOW + "Select object to show more details \n [0] Show List again \n or exit [99] :" + Fore.RESET))
 
         if len(objectMgmtColumnsInput)<0:
             objectMgmtColumnsInput = "99"

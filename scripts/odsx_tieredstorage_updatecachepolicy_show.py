@@ -13,6 +13,7 @@ from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValueByConfigObj,readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
@@ -316,7 +317,7 @@ if __name__ == '__main__':
 
                 exitMenu = True
                 while exitMenu:
-                    optionMainMenu = str(input("press [1] For Show: \nPress [99] for exit.:"))
+                    optionMainMenu = str(userInputWithEscWrapper("press [1] For Show: \nPress [99] for exit.:"))
                     if optionMainMenu == '1':
                         gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
                         logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))

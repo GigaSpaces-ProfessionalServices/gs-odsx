@@ -8,6 +8,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
 from utils.ods_cluster_config import config_get_manager_listWithStatus, config_get_manager_node
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -67,7 +68,7 @@ if __name__ == '__main__':
     hostsConfig=hostsConfig.replace('"','')
     if(len(str(hostsConfig))>0):
         verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
-    serverStartType = str(input(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop current Configuration. \nPress [99] for exit.: "+Fore.RESET))
+    serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop current Configuration. \nPress [99] for exit.: "+Fore.RESET))
     try:
         if(serverStartType=='1'):
             optionMainMenu = int(input("Enter your host number to stop: "))

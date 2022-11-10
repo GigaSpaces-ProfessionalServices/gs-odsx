@@ -12,6 +12,7 @@ from colorama import Fore
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_retentionmanager_utilities import isTimeFormat, setupOrReloadService,getManagerHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -32,9 +33,9 @@ def setScheduleInterval():
     confirmMsg = Fore.YELLOW + "Are you sure, you want to update scheduler interval for retenion manager ? (Yes/No):" + Fore.RESET
     schedulerConfInput = Fore.YELLOW + "Please select scheduler configuration from below options \n [1]-Regular Interval\n [2]-Specific time in a day\n [99]-Exit : " + Fore.RESET
     
-    schedulerConf = str(input(schedulerConfInput))
+    schedulerConf = str(userInputWithEscWrapper(schedulerConfInput))
     while(len(schedulerConf) == 0 or (str(schedulerConf)!='1') and str(schedulerConf)!='2'  and str(schedulerConf)!='99'):
-        schedulerConf = str(input(schedulerConfInput))
+        schedulerConf = str(userInputWithEscWrapper(schedulerConfInput))
     
     schedulerIntervalInput = ""
     if schedulerConf=="99":
