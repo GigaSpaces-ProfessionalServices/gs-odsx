@@ -18,6 +18,7 @@ import argcomplete
 import os
 ###############################
 from scripts.ods_help import helpUsage
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -86,7 +87,8 @@ def displayMainMenu(menu,currentMenu):
                     print('['+str(elementNumber)+'] '+column)
                 elementNumber+=1
             try:
-                optionMainMenu = int(input("Enter your option: "))
+                optionMainMenu = int(userInputWithEscWrapper("Enter your option: "))
+
                 screen_clear()
             except ValueError:
                 print("Invalid input.")

@@ -5,6 +5,8 @@ import os
 import sys
 
 from scripts.logManager import LogManager
+from utils.odsx_keypress import userInputWithEscWrapper
+
 cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput
@@ -45,7 +47,7 @@ def handleException(e):
 def stopStream(args):
     deNodes = config_get_dataEngine_nodes()
     pipelineDict = cdclist.display_stream_list(args)
-    selectedOption = int(input("Enter your option: "))
+    selectedOption = int(userInputWithEscWrapper("Enter your option: "))
     if selectedOption != 99:
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)

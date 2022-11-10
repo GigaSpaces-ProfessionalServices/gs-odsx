@@ -7,6 +7,7 @@ import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
 from scripts.spinner import Spinner
@@ -138,7 +139,7 @@ def proceedForAllUndeployed(managerHost):
 def getUserInput(managerHost):
     logger.info("getUserInput()")
     try:
-        typeOfRemove = str(input(Fore.YELLOW+"[1] For individual undeployed PU\n[Enter] For all above undeployed PUs \n[99] For exist. :"+Fore.RESET))
+        typeOfRemove = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual undeployed PU\n[Enter] For all above undeployed PUs \n[99] For exist. :"+Fore.RESET))
         print(typeOfRemove)
         logger.info("typeOfRemove : "+str(typeOfRemove))
         if(typeOfRemove=='1'):
@@ -225,11 +226,11 @@ def proceedForAllUndeploy(managerHost):
 def proceedToUndeployPU(managerHost):
     logger.info("proceedToUndeployPU()")
     try:
-        typeOfRemove = str(input(Fore.YELLOW+"[1] For individual undeploy PU\n[Enter] For all above PUs \n[99] For exist. :"+Fore.RESET))
+        typeOfRemove = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual undeploy PU\n[Enter] For all above PUs \n[99] For exist. :"+Fore.RESET))
         logger.info("typeOfRemove : "+str(typeOfRemove))
 
         if(typeOfRemove=='1'):
-            spaceNumberTobeRemove = str(input(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
+            spaceNumberTobeRemove = str(userInputWithEscWrapper(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
             while(len(str(spaceNumberTobeRemove))==0 or (not spaceNumberTobeRemove.isdigit())):
                 spaceNumberTobeRemove = str(input(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
             logger.info("spaceNumberTobeRemove :"+str(spaceNumberTobeRemove))

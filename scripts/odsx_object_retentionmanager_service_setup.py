@@ -6,6 +6,7 @@ import sys
 
 from utils.ods_cleanup import signal_handler
 from utils.ods_scp import scp_upload
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_retentionmanager_utilities import isTimeFormat, setupOrReloadService,getManagerHost
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
@@ -46,9 +47,9 @@ def setupService():
     #if(len(spaceName) == 0):
     spaceName=defaultSpaceName
    
-    schedulerConf = str(input(schedulerConfInput))
+    schedulerConf = str(userInputWithEscWrapper(schedulerConfInput))
     while(len(schedulerConf) == 0 or (str(schedulerConf)!='1') and str(schedulerConf)!='2' and str(schedulerConf)!='99'):
-        schedulerConf = str(input(schedulerConfInput))
+        schedulerConf = str(userInputWithEscWrapper(schedulerConfInput))
 
     schedulerIntervalInput = ""
     if schedulerConf=="99":

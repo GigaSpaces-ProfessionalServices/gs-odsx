@@ -8,6 +8,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
 from scripts.odsx_servers_manager_list import listFileFromDirectory
 from utils.ods_cluster_config import config_get_manager_listWithStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -58,7 +59,7 @@ if __name__ == '__main__':
     hostsConfig=hostsConfig.replace('"','')
     if(len(str(hostsConfig))>0):
         verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
-    hostConfiguration = str(input(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start current Configuration. \nPress [99] for exit.: "+Fore.RESET))
+    hostConfiguration = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start current Configuration. \nPress [99] for exit.: "+Fore.RESET))
     logger.info("hostConfiguration"+str(hostConfiguration))
 
     try:

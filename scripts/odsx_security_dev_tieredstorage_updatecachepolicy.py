@@ -7,6 +7,7 @@ import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
@@ -629,7 +630,7 @@ def listGSC(managerHost):
         typeOfRestart=''
         #typeOfRestart = str(input("[1] For individual GSC restart \n[Enter] For all GSCs \n[99] For Exit. \nEnter your choice : "))
         while(str(typeOfRestart)!='99'):
-            typeOfRestart = str(input(Fore.YELLOW+"[1] For List \n[2] For SrNo rolling update \n[Enter] For rolling update all \n[99] For Exit. \nEnter your choice : "+Fore.RESET))
+            typeOfRestart = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For List \n[2] For SrNo rolling update \n[Enter] For rolling update all \n[99] For Exit. \nEnter your choice : "+Fore.RESET))
             logger.info("typeOfRestart : "+str(typeOfRestart))
             if(len(str(typeOfRestart))==0):
                 #confirmParamAndRestartGSC()

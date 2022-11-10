@@ -10,6 +10,7 @@ from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteComma
 from scripts.spinner import Spinner
 from colorama import Fore
 from scripts.odsx_servers_di_list import listDIServers
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -166,7 +167,7 @@ if __name__ == '__main__':
     host_dict_obj = listDIServers()
     nodes = getDIServerHostList()
     verboseHandle.printConsoleWarning("Current configurations ["+str(nodes)+"]")
-    choiceOption = str(input(Fore.YELLOW+"Press [1] Individual stop\nPress [Enter] Stop current configuration.\nPress [99] For exit.:"+Fore.RESET))
+    choiceOption = str(userInputWithEscWrapper(Fore.YELLOW+"Press [1] Individual stop\nPress [Enter] Stop current configuration.\nPress [99] For exit.:"+Fore.RESET))
     if choiceOption == "99":
         exit(0)
     stopKafkaService(args)

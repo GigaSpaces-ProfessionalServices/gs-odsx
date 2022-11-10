@@ -4,6 +4,7 @@ from scripts.logManager import LogManager
 import platform
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.ods_cluster_config import getStreamIdAndName
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -51,7 +52,7 @@ if __name__ == '__main__':
         if(sys.argv[1]==menuDrivenFlag):
             isMenuDriven='m'
         streamDict = getStreamIdAndName()
-        optionMainMenu = int(input("Enter your option: "))
+        optionMainMenu = int(userInputWithEscWrapper("Enter your option: "))
         if(optionMainMenu != 99):
             cliArguments = sys.argv[1:]
             if len(streamDict) >= optionMainMenu:

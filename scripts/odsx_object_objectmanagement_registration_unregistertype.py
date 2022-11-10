@@ -9,6 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_manager import getManagerHost, getManagerInfo
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.odsx_print_tabular_data import printTabular
 
@@ -86,7 +87,7 @@ def validateUserInput():
 
     isValid = False
     objectMgmtTableInput = str(
-        input(Fore.YELLOW + "Select object to unregister type \n or exit [99] :" + Fore.RESET))
+        userInputWithEscWrapper(Fore.YELLOW + "Select object to unregister type \n or exit [99] :" + Fore.RESET))
 
     if objectMgmtTableInput.isnumeric() == True and objectMgmtTableInput!="99":
         objectMgmtTableInput = int(objectMgmtTableInput)

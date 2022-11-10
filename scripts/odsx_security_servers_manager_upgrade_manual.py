@@ -14,6 +14,7 @@ from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from requests.auth import HTTPBasicAuth
@@ -146,7 +147,7 @@ if __name__ == '__main__':
     hostsConfig = hostsConfig.replace('"', '')
     if (len(str(hostsConfig)) > 0):
         verboseHandle.printConsoleWarning("Current cluster configuration : [" + hostsConfig + "] ")
-    hostConfiguration = str(input(Fore.YELLOW + "Select server to upgrade : " + Fore.RESET))
+    hostConfiguration = str(userInputWithEscWrapper(Fore.YELLOW + "Select server to upgrade : " + Fore.RESET))
     logger.info("hostConfiguration" + str(hostConfiguration))
 
     try:

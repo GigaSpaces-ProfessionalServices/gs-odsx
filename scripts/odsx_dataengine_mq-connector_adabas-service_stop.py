@@ -10,6 +10,7 @@ from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -137,7 +138,7 @@ def executeService(host):
 def stopAdabusService(args):
     try:
         listDEServers()
-        inputChoice = str(input(Fore.YELLOW+"[1] For individual stop \n[Enter] For stop all servers \n[99] For exit \nEnter your choice : "+Fore.RESET))
+        inputChoice = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual stop \n[Enter] For stop all servers \n[99] For exit \nEnter your choice : "+Fore.RESET))
         if(inputChoice=='1'):
             hostNumber = str(input(Fore.YELLOW+"Enter host number to stop : "+Fore.RESET))
             while(len(str(hostNumber))==0):

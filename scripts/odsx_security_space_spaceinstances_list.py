@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from scripts.odsx_tieredstorage_undeploy import getManagerHost
 from utils.odsx_db2feeder_utilities import getUsernameByHost,getPasswordByHost
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cleanup import signal_handler
 from utils.ods_app_config import readValuefromAppConfig
@@ -85,7 +86,7 @@ def handleException(e):
 #         handleException(e)
 
 def listDeployed(managerHost,spaceName,username,password):
-    optionForFilter = str(input(
+    optionForFilter = str(userInputWithEscWrapper(
         Fore.YELLOW + "press [1] if you want to Filter by Mode. \n[Enter] For all  \nPress [99] for exit.: " + Fore.RESET))
     # Fore.YELLOW + "press [1] if you want to Filter by Mode.\npress [2] if you want to Filter by Host.\n[Enter] For all  \nPress [99] for exit.: " + Fore.RESET))
     if optionForFilter != '99':
@@ -306,7 +307,7 @@ def listSpaceFromHosts(managerNodes):
                     logger.info("Manager Host :"+str(managerHost))
                     spacename = listOfSpacename(managerHost,username,password)
                     if(len(spacename)>0):
-                        optionMainMenu = str(input("Press [99] for exit.: \nEnter your host number for instance list: "))
+                        optionMainMenu = str(userInputWithEscWrapper("Press [99] for exit.: \nEnter your host number for instance list: "))
                         logger.info("Enter your host number for instance list:" + str(optionMainMenu))
                         if (optionMainMenu != '99'):
                             if len(spacename) >= int(optionMainMenu):

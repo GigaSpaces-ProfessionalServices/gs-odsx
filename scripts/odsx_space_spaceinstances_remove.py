@@ -8,6 +8,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from scripts.odsx_tieredstorage_undeploy import getManagerHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cleanup import signal_handler
 
@@ -81,7 +82,7 @@ def hostList():
 
 
 def listDeployed(managerHost, spaceName):
-    optionForFilter = str(input(
+    optionForFilter = str(userInputWithEscWrapper(
         Fore.YELLOW + "press [1] if you want to Filter by Mode. \n[Enter] For all.  \nPress [99] for exit.: " + Fore.RESET))
     if optionForFilter != '99':
         if optionForFilter == '1':
@@ -288,7 +289,7 @@ def instancelistFromHosts(managerNodes):
                 logger.info("Manager Host :" + str(managerHost))
                 spacename = listOfSpacename(managerHost)
                 if (len(spacename) > 0):
-                    optionMainMenu = str(input("Press [99] for exit.\nEnter your space srno. for instance remove: "))
+                    optionMainMenu = str(userInputWithEscWrapper("Press [99] for exit.\nEnter your space srno. for instance remove: "))
                     logger.info("Enter your space srno. for instance list:" + str(optionMainMenu))
 
                     if len(spacename) >= int(optionMainMenu):
@@ -340,12 +341,12 @@ if __name__ == '__main__':
         streamDict = instancelistFromHosts(managerNodes)
         if len(streamDict) != 0:
             verboseHandle.printConsoleInfo("Delete using individual, with comma(1,2) or range(1-3)")
-            containerRemoveType = str(input(
+            containerRemoveType = str(userInputWithEscWrapper(
                 Fore.YELLOW + "press [1] if you want to remove container by Srno. \nPress [99] for exit.: " + Fore.RESET))
             logger.info("containerRemoveType:" + str(containerRemoveType))
             if containerRemoveType == '1':
 
-                optionMainMenu = str(input("Press [99] for exit.: \nEnter your srno to remove container: "))
+                optionMainMenu = str(userInputWithEscWrapper("Press [99] for exit.: \nEnter your srno to remove container: "))
                 logger.info("Enter your srno to remove container:" + str(optionMainMenu))
 
                 if optionMainMenu != '99':

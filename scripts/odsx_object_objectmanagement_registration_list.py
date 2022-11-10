@@ -12,6 +12,7 @@ from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFo
 from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.ods_validation import getDataValidationServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.odsx_print_tabular_data import printTabular
 
@@ -135,7 +136,7 @@ def listObjects():
     if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
     #  response = requests.get("http://" + managerHost + ":8090/v2/spaces/" + str(spaceName) + "/statistics/types")
-    countResponse = requests.get("http://" + managerHost + ":8090/v2/internal/spaces/utilization",auth = HTTPBasicAuth(username,password))
+    countResponse = requests.get("http://" + managerHost + ":8090/v2/internal/spaces/utilization")
     logger.info(response.text)
    # jsonData = json.loads(response.text)
     jsonCountData = json.loads(countResponse.text)
@@ -176,7 +177,7 @@ def listObjects():
         exit(0)
     while True:
         objectMgmtColumnsInput = str(
-            input(Fore.YELLOW + "Select object to show more details \n [0] Show List again \n or exit [99] :" + Fore.RESET))
+            userInputWithEscWrapper(Fore.YELLOW + "Select object to show more details \n [0] Show List again \n or exit [99] :" + Fore.RESET))
 
         if len(objectMgmtColumnsInput)<0:
             objectMgmtColumnsInput = "99"

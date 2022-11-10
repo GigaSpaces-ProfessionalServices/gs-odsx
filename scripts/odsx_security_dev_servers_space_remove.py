@@ -6,6 +6,7 @@ from utils.ods_cluster_config import config_get_space_list_with_status, config_g
 from colorama import Fore
 from utils.ods_app_config import readValuefromAppConfig
 from scripts.spinner import Spinner
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -100,7 +101,7 @@ if __name__ == '__main__':
         global removeJava
         global removeUnzip
         streamDict = config_get_space_list_with_status(user)
-        serverStartType = str(input(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
+        serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStartType:"+str(serverStartType))
         if(serverStartType=='1'):
             optionMainMenu = int(input("Enter your host number to remove: "))

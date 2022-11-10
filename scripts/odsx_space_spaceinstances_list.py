@@ -6,6 +6,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from scripts.odsx_tieredstorage_undeploy import getManagerHost
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cleanup import signal_handler
 
@@ -52,7 +53,7 @@ def handleException(e):
     })))
 
 def listDeployed(managerHost,spaceName):
-    optionForFilter = str(input(
+    optionForFilter = str(userInputWithEscWrapper(
         Fore.YELLOW + "press [1] if you want to Filter by Mode. \n[Enter] For all  \nPress [99] for exit.: " + Fore.RESET))
         # Fore.YELLOW + "press [1] if you want to Filter by Mode.\npress [2] if you want to Filter by Host.\n[Enter] For all  \nPress [99] for exit.: " + Fore.RESET))
     if optionForFilter != '99':
@@ -262,7 +263,7 @@ def instancelistFromHosts(managerNodes):
                     logger.info("Manager Host :"+str(managerHost))
                     spacename = listOfSpacename(managerHost)
 
-                    optionMainMenu = str(input(Fore.YELLOW+"press [1] Enter your space srno. for instance list. \nPress [99] for exit.: "+Fore.RESET))
+                    optionMainMenu = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] Enter your space srno. for instance list. \nPress [99] for exit.: "+Fore.RESET))
                     logger.info("Enter your space srno. for instance list:" + str(optionMainMenu))
 
                     if(str(optionMainMenu) == '1'):

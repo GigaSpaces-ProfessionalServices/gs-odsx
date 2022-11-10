@@ -8,6 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_policyConfigurations
 from utils.ods_ssh import executeLocalCommandAndGetOutput
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -34,7 +35,7 @@ def show_policy_info(args):
         policyAssociatedDict.update({policyAssociated.policy: policyAssociated})
 
     print("[99] " + "ESC")
-    choice = str(input("Enter your option: "))
+    choice = str(userInputWithEscWrapper("Enter your option: "))
     if len(choice) == 0 or int(choice) > len(policyDict) or int(choice) == 99:
         if int(choice) != 99:
             verboseHandle.printConsoleError("Invalid input")
