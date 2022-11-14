@@ -14,7 +14,8 @@ from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH,executeRemoteCommandAndGetOutputPython36
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_add_dataValidation_node, config_get_dataIntegration_nodes
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder, \
+    getYamlFilePathInsideConfigFolder
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
 
@@ -157,8 +158,8 @@ def buildUploadInstallTarToServer(host):
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
             scp_upload(host, user, 'install/install.tar', targetInstallDir)
-            scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvkeytab")), targetInstallDir)
-            scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvJdbc")), targetInstallDir)
+            scp_upload(host, user, str(getYamlFilePathInsideConfigFolder(".datavalidatorkeytab")), targetInstallDir)
+            scp_upload(host, user, str(getYamlFilePathInsideConfigFolder(".datavalidatorsqljdbc")), targetInstallDir)
             #scp_upload(host, user, 'install/gs_config/SQLJDBCDriver.conf', '/home/gsods')
             #scp_upload(host, user, 'install/gs_config/UTKA02E.keytab', '/home/gsods')
     except Exception as e:

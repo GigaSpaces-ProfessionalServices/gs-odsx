@@ -1311,9 +1311,9 @@ def cleanManagerHostFronConfig():
 def discoverHostConfig():
     try:
         #file = '/home/tapan/Gigaspace/Bank_Leumi/tempBranch/filename.yaml'
-        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
         logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-        file = sourceInstallerDirectory+'/odsx/host.yaml'
+        file = sourceInstallerDirectory+'/host.yaml'
         with open(file) as f:
             content = yaml.safe_load(f)
 
