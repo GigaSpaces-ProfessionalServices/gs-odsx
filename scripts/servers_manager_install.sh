@@ -439,9 +439,9 @@ nofileLimitFile=$9
 wantInstallJava=${10}
 wantInstallUnzip=${11}
 sourceInstallerDirectory=${12}
-gsNicAddress=${13}
-logTargetPath=${14}
-logSourcePath=${15}
+logTargetPath=${13}
+logSourcePath=${14}
+gsNicAddress=${15}
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts

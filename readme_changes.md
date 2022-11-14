@@ -1,16 +1,5 @@
-1. app.yaml
-   Replaced from .gs.ts to 
-     object.config.ddlparser.ts.bck.currentTs
-     object.config.ddlparser.ts.bck.previousTs
-2. Create the influxdb.conf.template at location /dbagigashare/current/influx/config/influxdb.conf.template
-
-3. Add the code mention below.
-
-[data]
- # The directory where the TSM storage engine stores TSM files.
- dir = "/dbagigainflaxdata/influxdb/data"
- 
- # The directory where the TSM storage engine stores WAL files.
- wal-dir = "/dbagigainflaxdata/influxdb/wal"
- 
- max-series-per-database = 0
+1. Add this in **app.config**
+   app.grafana.provisioning.dashboards.target=/usr/share/grafana/conf/provisioning/dashboards/
+   app.utilities.recovery.monitor.space.name=bllspace
+   app.utilities.gcexplicit.file=/dbagiga/utils/jcmd_exec.sh
+   app.utilities.recoverymonitor.file=/dbagiga/utils/recovery_monitor/recovery_monitor.py
