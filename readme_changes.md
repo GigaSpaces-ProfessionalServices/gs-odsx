@@ -1,16 +1,10 @@
 1. app.yaml
-   Replaced from .gs.ts to 
-     object.config.ddlparser.ts.bck.currentTs
-     object.config.ddlparser.ts.bck.previousTs
-2. Create the influxdb.conf.template at location /dbagigashare/current/influx/config/influxdb.conf.template
-
-3. Add the code mention below.
-
-[data]
- # The directory where the TSM storage engine stores TSM files.
- dir = "/dbagigainflaxdata/influxdb/data"
- 
- # The directory where the TSM storage engine stores WAL files.
- wal-dir = "/dbagigainflaxdata/influxdb/wal"
- 
- max-series-per-database = 0
+In the end of the file add this part. And remove the keys from appropriate locations in app.yaml 
+   env_config:
+       msqslsqljdbc: SQLJDBCDriver.conf
+       datavalidatorsqljdbc: SQLJDBCDriver.conf
+       ldapsourcefile: ldap-security-config.xml
+       datavalidatorkeytab: UTKA02E.keytab
+       mssqlkeytab: udkods2.keytab
+2. Create directory env_config in /dbagigashare and add below in ~/.bashrc :
+   export ENV_CONFIG=/dbagigashare/env_config/
