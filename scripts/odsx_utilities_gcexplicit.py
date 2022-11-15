@@ -192,10 +192,9 @@ if __name__ == '__main__':
             if (len(str(managerHost)) > 0):
                 displaySummary()
 
-                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone : " + Fore.RESET))
+                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone[bll] : " + Fore.RESET))
                 while (len(str(zoneGSCNo)) == 0):
-                    zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone : " + Fore.RESET))
-
+                    zoneGSCNo = 'bll'
                 hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
                 while (len(str(hostSpecific)) == 0):
                     hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
