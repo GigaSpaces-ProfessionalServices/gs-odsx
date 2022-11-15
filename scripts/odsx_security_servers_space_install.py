@@ -229,7 +229,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
-
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
+        additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
         #noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
         #while (len(str(noOfHost))==0):
         #    noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
@@ -401,7 +403,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
-                    additionalParam=additionalParam+' '+logSourcePath+' '+gsNicAddress
+                    additionalParam=additionalParam+' '+gsNicAddress
                     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     # print("---------------------"+str(additionalParam))
                     logger.info("additionalParam - Installation :")
