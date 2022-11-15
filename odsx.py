@@ -130,7 +130,8 @@ def displayMainMenu(menu,currentMenu):
                 menu = str(menu).strip()
                 if not(defaultMenu.__contains__('retentionmanager')) and defaultMenu.__contains__(menu):
                     scriptMenu = defaultMenu.replace('menu','odsx_security')
-
+        if scriptMenu.endswith('monitors_spaceboard_reload'):
+            scriptMenu = defaultMenu.replace('menu','odsx')
         #print(scriptsFolder+'/'+scriptMenu+'.py')
         logger.info("Finding file to execute selected command: "+scriptsFolder+'/'+scriptMenu+'.py')
         menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
@@ -218,6 +219,17 @@ def main(**args):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
         #CommandMenu
+        for cmd in cmdlist:
+            if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
+                initialFileName=initialFileName+'_'+cmd.replace('--','')
+                cmdlist.remove(cmd)
+        #CommandMenu
+        for cmd in cmdlist:
+            if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
+                initialFileName=initialFileName+'_'+cmd.replace('--','')
+                cmdlist.remove(cmd)
+
+        #SubCommandMenu
         for cmd in cmdlist:
             if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')

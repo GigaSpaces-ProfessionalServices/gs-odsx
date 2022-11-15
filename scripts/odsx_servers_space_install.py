@@ -221,10 +221,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    sourceDirectoryForJar='/dbagiga'
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         logger.info("sourceInstallerDirectory :"+str(sourceInstallerDirectory))
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory+' '+logSourcePath+' '+logTargetPath
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory+' '+logSourcePath+' '+logTargetPath
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
@@ -267,10 +269,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
         db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
-        msSqlFeederFilePath=".mssql.files"
-        msSqlFeederFileSource = sourceInstallerDirectory+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
+        msSqlFeederFilePath="."
+        msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
-
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -337,6 +340,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"21. "+
               Fore.GREEN+"Space server installation : "+Fore.RESET,
               Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"22. "+
+              Fore.GREEN+"Log source file path : "+Fore.RESET,
+              Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"23. "+
+              Fore.GREEN+"Log target file path : "+Fore.RESET,
+              Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
+
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -379,7 +389,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                     output = executeRemoteCommandAndGetOutput(host, user, cmd)
                     logger.debug("Execute RemoteCommand output:"+str(output))
                     verboseHandle.printConsoleInfo(output)
-
                     commandToExecute="scripts/servers_space_install.sh"
                     logger.info("additionalParam : "+str(additionalParam))
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))

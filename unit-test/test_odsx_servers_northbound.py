@@ -56,7 +56,7 @@ def update_app_config_file(linePatternToReplace, value, lines1):
     lines[lineNo] = ""
     lines[lineNo] = linePatternToReplace + '"' + value + '"\n'
 
-    out = open("config/nb.conf", 'w')
+    out = open("config/nb.conf.template", 'w')
     out.writelines(lines)
     out.close()
     return lines
@@ -72,7 +72,7 @@ def upload_packages_to_nb_servers(hostip,nb_user,confirmServerInstall,confirmAge
     logger.info("hostip : "+str(hostip))
 
     logger.info("Building .tar file : tar -cvf install/install.tar install")
-    cmd = 'cp config/nb.conf install/nb/;tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
+    cmd = 'cp config/nb.conf.template install/nb/;tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : "+str(status))
@@ -254,7 +254,7 @@ if __name__ == '__main__':
     nb_ops = "10.0.0.146"
     gridui_servers = nb_ops
     opsmanager_servers = nb_ops
-    nbConfig = createPropertiesMapFromFile("config/nb.conf")
+    nbConfig = createPropertiesMapFromFile("config/nb.conf.template")
 
     confirmServerInstall = "y"
     confirmAgentInstall = 'y'

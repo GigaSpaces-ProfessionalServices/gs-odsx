@@ -99,6 +99,18 @@ def stopTelegrafServiceByHost(host):
         else:
             verboseHandle.printConsoleError("Service telegraf failed to stop"+str(host))
 
+def stopDIMServices(host):
+    logger.info("stopTelegrafServiceByHost()")
+    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;/dbagiga/di-flink/latest-flink/bin/stop-cluster.sh"
+    logger.info("Getting status.. di :"+str(cmd))
+    user = 'root'
+    with Spinner():
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        if (output == 0):
+            verboseHandle.printConsoleInfo("Services di-manager/di-mdm/di-flink stopped successfully on "+str(host))
+        else:
+            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink failed to start on "+str(host))
+
 def stopKafkaService(args):
     logger.info("stopKafkaService()")
     try:
@@ -119,6 +131,7 @@ def stopKafkaService(args):
                 elif nodeListSize<4:
                     stopKafkaService(str(host_dict_obj.get(hostNumber)))
                 stopTelegrafServiceByHost(str(host_dict_obj.get(hostNumber)))
+                stopDIMServices(str(host_dict_obj.get(hostNumber)))
             else:
                 exit(0)
         if choiceOption == "":
@@ -137,6 +150,7 @@ def stopKafkaService(args):
                     stopZookeeperServiceByHost(os.getenv(node.ip))
             for node in config_get_dataIntegration_nodes():
                 stopTelegrafServiceByHost(os.getenv(node.ip))
+                stopDIMServices(os.getenv(node.ip))
 
     except Exception as e:
         handleException(e)
@@ -156,3 +170,4 @@ if __name__ == '__main__':
     if choiceOption == "99":
         exit(0)
     stopKafkaService(args)
+

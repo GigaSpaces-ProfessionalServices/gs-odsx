@@ -40,7 +40,7 @@ cp $sourceDvServerJar $home_dir/install/data-validation/
 
 # start data validation service
 source setenv.sh
-cmd="java -Djava.security.auth.login.config=$home_dir/SQLJDBCDriver.conf -jar $home_dir/install/data-validation/"$serverJarFileName
+cmd="java -Djava.security.auth.login.config=$home_dir/SQLJDBCDriver.conf -jar $home_dir/install/data-validation/$serverJarFileName --spring.config.location=$home_dir/install/data-validation/application.properties"
 echo "$cmd">>$start_data_validation_file
 # stop data validation service
 cmd="pkill -9 -f "$serverJarFileName

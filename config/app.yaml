@@ -6,10 +6,11 @@ current:
       db2ccjar: db2jcc-4.26.14.jar
       db2feederJar: db2feeder-1.0.0.jar
     scripts: null
+  data-integration:
+    dim:
+    mdm:
+    flink:
   data-validator:
-    files:
-      dvkeytab: UTKA02E.keytab
-      dvJdbc: SQLJDBCDriver.conf
     jars:
       serverjar: data-validator-server-0.0.1-SNAPSHOT.jar
       agentjar: data-validator-agent-0.0.1-SNAPSHOT.jar
@@ -17,6 +18,8 @@ current:
     catalog:
       jars:
         catalogjar: catalogue-service.jar
+    dashboards:
+    gsconfig: gs_config.yaml
   gs:
     config:
       log:
@@ -29,10 +32,7 @@ current:
       space:
         spacepropertyfile: space.properties
       ts:
-        bck:
-          currentTs: null
-          previousTs: null
-        criteria: TieredCriteria.tab
+        criteria: TSDirtyBit
         spaceproperty: spaceproperty.properties
     jars:
       ts:
@@ -42,8 +42,15 @@ current:
       space:
         spacejar: space-0.1.jar
     upgrade:
+  iidr:
+    watchdog:
   kafka:
     jolokiaJar: jolokia-agent.jar
+  kapacitor:
+    alert:
+    config:
+      kapacitorconfigfile: kapacitor.conf.template
+    templates:
   mq-connector:
     adabas:
       config:
@@ -54,20 +61,21 @@ current:
         kafkaConnector: kafka-connector-1.0.0-SNAPSHOT-jar-with-dependencies.jar
   mssql:
     config: null
-    files:
-      keytab: udkods2.keytab
-      sqljdbc: SQLJDBCDriver.conf
     jars:
       mssqlJarFile: mssqlFeeder-1.0.0.jar
     scripts: null
   object:
     config:
-      ddlparser: tableList.txt
+      ddlparser:
+        ts:
+          bck:
+            currentTs: null
+            previousTs: null
+        ddlBatchFileName: tableList.txt
+        ddlCriteriaFileName: TieredCriteria.tab
     jars:
-      objectmanagementjar:
+      objectmanagementjar: objectManagement.jar
   security:
-    config:
-      ldapsourcefile: ldap-security-config.xml
     jars:
       cef:
         cefjar: CEFLogger-1.0-SNAPSHOT.jar
@@ -75,3 +83,20 @@ current:
       springldapcore: spring-ldap-core-2.3.3.RELEASE.jar
       springldapjar: spring-security-ldap-5.1.7.RELEASE.jar
       vaultsupportjar: VaultSupport-1.0-SNAPSHOT.jar
+  telegraf:
+    config:
+      pivot:
+        pivotconf: pivot.telegraf.conf
+      space:
+        spaceconf: space.telegraf.conf
+    scripts:
+      pivot:
+      space:
+    jars:
+      readfromshobjar: readFromShob-1.0.0.jar
+env_config:
+  msqslsqljdbc: SQLJDBCDriver.conf
+  datavalidatorsqljdbc: SQLJDBCDriver.conf
+  ldapsourcefile: ldap-security-config.xml
+  datavalidatorkeytab: UTKA02E.keytab
+  mssqlkeytab: udkods2.keytab

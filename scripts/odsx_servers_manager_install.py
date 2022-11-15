@@ -354,6 +354,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
         print(Fore.GREEN+"1. "+
@@ -389,12 +391,21 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"11. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"12. "+
+              Fore.GREEN+"Log source file path : "+Fore.RESET,
+              Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"13. "+
+              Fore.GREEN+"Log target file path : "+Fore.RESET,
+              Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
         additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
             summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
@@ -404,6 +415,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             #else:
             #    additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             #print('additional param :'+additionalParam)
+            additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
             logger.info('additional param :'+additionalParam)
             output=""
             logger.info("Building .tar file : tar -cvf install/install.tar install")
