@@ -363,9 +363,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
-                    # logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
-                    # logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
-                    # additionalParam=additionalParam+' '+gsNicAddress + ' '+logTargetPath + ' '+ logSourcePath
+                    additionalParam=additionalParam+' '+gsNicAddress
                     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     logger.info("additionalParam - Installation :")
                     logger.info("Building .tar file : tar -cvf install/install.tar install")
