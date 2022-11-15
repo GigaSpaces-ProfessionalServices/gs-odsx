@@ -388,8 +388,8 @@ if __name__ == '__main__':
         managerHost = getManagerHost(managerNodes)
         isMemoryAvailable=''
         if(len(str(managerHost))>0):
-            username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
             #managerHostConfig = str(input(Fore.YELLOW+"Proceed with manager host ["+managerHost+"] : "))
             managerHostConfig = managerHost
             if(len(str(managerHostConfig))>0):

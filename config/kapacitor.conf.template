@@ -1,0 +1,22 @@
+#[http]
+#  bind-address = ":9992"
+#  log-enabled = false
+
+[[httppost]]
+  endpoint = "debug"
+  url = "http://localhost:4242"
+  alert-template-file = "/etc/kapacitor/templates/debug.json"
+
+[[httppost]]
+  endpoint = "common-alert"
+  url = "https://servicenow-preprod-itom/api/global/em/jsonv2"
+  headers = { Accept = "application/json" , Content-Type = "application/json" }
+  basic-auth = { username = "", password = "" }
+  alert-template-file = "/etc/kapacitor/templates/common-alert.json"
+
+[[httppost]]
+  endpoint = "nginx-load-raw"
+  url = "https://servicenow-preprod-itom/api/global/em/jsonv2"
+  headers = { Accept = "application/json" , Content-Type = "application/json" }
+  basic-auth = { username = "", password = "" }
+  row-template-file = "/etc/kapacitor/templates/nginx-load-raw.json"

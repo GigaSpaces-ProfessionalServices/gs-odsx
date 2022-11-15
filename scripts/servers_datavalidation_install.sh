@@ -37,7 +37,7 @@ cp $sourceDvServerJar $home_dir/install/data-validation/
 
 # start data validation service
 source setenv.sh
-cmd="java -jar $home_dir/install/data-validation/data-validator-server-0.0.1-SNAPSHOT.jar"
+cmd="java -jar $home_dir/install/data-validation/data-validator-server-0.0.1-SNAPSHOT.jar --spring.config.location=$home_dir/install/data-validation/application.properties"
 echo "$cmd">>$start_data_validation_file
 # stop data validation service
 cmd="pkill -9 -f data-validator-0.0.1-SNAPSHOT.jar"

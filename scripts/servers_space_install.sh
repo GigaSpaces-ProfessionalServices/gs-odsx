@@ -346,7 +346,6 @@ function loadEnv {
   home_dir=$(pwd)
   source $home_dir/setenv.sh
 }
-
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
@@ -414,7 +413,11 @@ function gsCreateGSServeice {
   '
   echo "GS Creating services -Done!."
 }
-
+function copyLogFile {
+    echo "xap_logging file copied from source to target"
+    cd /dbagiga/gs_config/
+    sudo cp $logSourcePath $logTargetPath
+}
 #if the airGap true then it will install from user/install dir
 targetDir=$2
 gs_clusterhosts=$3
@@ -433,7 +436,9 @@ gscCount=${12}
 memoryGSC=${13}
 zoneGSC=${14}
 sourceInstallerDirectory=${15}
-gsNicAddress=${16}
+logSourcePath=${16}
+logTargetPath=${17}
+gsNicAddress=${18}
 
 echo "param1"$1
 echo "param2"$targetDir
@@ -489,3 +494,4 @@ else
   echo "Set GS Home"
   setGSHome $targetDir
 fi
+copyLogFile

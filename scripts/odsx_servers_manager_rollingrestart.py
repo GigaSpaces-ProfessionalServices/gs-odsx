@@ -100,12 +100,15 @@ def getGSVersion(host):
 
 def proceedForRollingRestart(host):
     logger.info("proceedForRollingRestart")
-    cmdList = ["systemctl stop gsa.service;sleep 20","systemctl daemon-reload","systemctl start gsa.service;sleep 30"]
+    rolingRestartStopTime = str(readValuefromAppConfig("app.manager.rollingrestart.stop.sleep.time"))
+    rollingRestartStartTime = str(readValuefromAppConfig("app.manager.rollingrestart.start.sleep.time"))
+
+    cmdList = ["systemctl stop gsa.service;sleep "+str(rolingRestartStopTime),"systemctl start gsa.service;sleep "+str(rollingRestartStartTime)]
     user='root'
     infoDict = {}
     infoDict.update({1:"Stopping service..."})
-    infoDict.update({2:"Reloading service..."})
-    infoDict.update({3:"Starting service..."})
+    #infoDict.update({2:"Reloading service..."})
+    infoDict.update({2:"Starting service..."})
     counter=1
     with Spinner():
         for cmd in cmdList:

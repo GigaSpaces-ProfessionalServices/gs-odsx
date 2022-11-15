@@ -88,7 +88,7 @@ def setupService():
 
     displaySummary(managerServer,spaceName,schedulerInterval)
 
-    confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Retention Manager service ? (Yes/No):" + Fore.RESET
+    confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Retention Manager service ? (Yes/No) [yes]:" + Fore.RESET
     choice = str(input(confirmMsg))
     while(len(choice) == 0):
         choice = 'y'

@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 import os, requests,json
+import signal
+
 from colorama import Fore
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from scripts.odsx_tieredstorage_undeploy import getManagerHost
 from utils.odsx_print_tabular_data import printTabular
-from requests.auth import HTTPBasicAuth
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.ods_cleanup import signal_handler
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -54,7 +54,7 @@ def listDeployed(managerHost):
     global gs_space_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username,password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -86,25 +86,32 @@ def listDeployed(managerHost):
         handleException(e)
 
 def listSpaceFromHosts(managerNodes):
-    managerHost= getManagerHost(managerNodes)
-    listDeployed(managerHost)
+    signal.signal(signal.SIGINT, signal_handler)
+    try:
+        if(len(str(managerNodes))>0):
+            logger.info("managerNodes: main"+str(managerNodes))
+            managerHost = getManagerHost(managerNodes)
+            logger.info("managerHost : "+str(managerHost))
+            if(len(str(managerHost))>0):
+                logger.info("Manager Host :"+str(managerHost))
+                managerHost= getManagerHost(managerNodes)
+                listDeployed(managerHost)
+            else:
+                logger.info("Please check manager server status.")
+                verboseHandle.printConsoleInfo("Please check manager server status.")
+        else:
+            logger.info("No Manager configuration found please check.")
+            verboseHandle.printConsoleInfo("No Manager configuration found please check.")
+    except Exception as e:
+        verboseHandle.printConsoleError("Error in odsx_space_pulist.py : "+str(e))
+        logger.error("Exception in odsx_space_pulist.py"+str(e))
+        handleException(e)
+
+    # managerHost= getManagerHost(managerNodes)
+    # listDeployed(managerHost)
 
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Space -> List")
     managerNodes = config_get_manager_node()
-    username = ""
-    password = ""
-    appId=""
-    safeId=""
-    objectId=""
-    appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
-    safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
-    objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
-    logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-    managerHost = getManagerHost(managerNodes)
-    logger.info("managerHost : main"+str(managerHost))
-    if(len(str(managerHost))>0):
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
-        listSpaceFromHosts(managerNodes)
+    listSpaceFromHosts(managerNodes)

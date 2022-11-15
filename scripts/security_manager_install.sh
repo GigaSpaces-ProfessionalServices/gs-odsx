@@ -346,6 +346,16 @@ function loadEnv {
   source $home_dir/setenv.sh
 }
 
+function installTelegraf {
+    echo "Starting Telegraf Installation."
+    installation_path=$sourceInstallerDirectory/telegraf
+    echo "InstallationPath="$installation_path
+    installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
+    echo "InstallationFile:"$installation_file
+    yum install -y $installation_path/$installation_file
+    echo "Telegraf installed"
+}
+
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
@@ -417,6 +427,12 @@ function gsCreateGSServeice {
   echo "GS Creating services -Done!."
 }
 
+
+function copyLogFile {
+    echo "xap_logging file copied from source to target"
+    cd /dbagiga/gs_config/
+    sudo cp $logSourcePath $logTargetPath
+}
 #if the airGap true then it will install from user/install dir
 targetDir=$2
 gs_clusterhosts=$3
@@ -432,7 +448,9 @@ nofileLimitFile=$9
 wantInstallJava=${10}
 wantInstallUnzip=${11}
 sourceInstallerDirectory=${12}
-gsNicAddress=${13}
+logTargetPath=${13}
+logSourcePath=${14}
+gsNicAddress=${15}
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts
@@ -484,3 +502,5 @@ else
   echo "Set GS Home"
   setGSHome $targetDir
 fi
+installTelegraf
+copyLogFile

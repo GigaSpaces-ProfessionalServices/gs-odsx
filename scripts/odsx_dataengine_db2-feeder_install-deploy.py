@@ -426,6 +426,7 @@ def proceedToDeployPU():
 
 
 def displaySummaryOfInputParam():
+    db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
     logger.info("displaySummaryOfInputParam()")
     verboseHandle.printConsoleInfo("------------------------------------------------------------")
     verboseHandle.printConsoleInfo("***Summary***")
@@ -441,6 +442,7 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter db2.password : "+str(db2Password))
     verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
+    verboseHandle.printConsoleInfo("Enter sqlite3 db file : "+str(db_file))
     verboseHandle.printConsoleInfo("Enter source file path of db2-feeder .jar file including file name : "+str(sourceDB2JarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of db2-feeder *.sh file : "+str(sourceDB2FeederShFilePath))
 
