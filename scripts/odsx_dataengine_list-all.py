@@ -3,6 +3,7 @@
 import os, time, requests,json, subprocess, sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
+from utils.odsx_dataengine_utilities import getAllFeeders
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
@@ -64,7 +65,7 @@ def getManagerHost(managerNodes):
         handleException(e)
 
 
-def listDeployed(managerHost):
+def listDeployed_old(managerHost):
     logger.info("listDeployed - db2-Feeder list")
     global gs_space_dictionary_obj
     try:
@@ -176,6 +177,27 @@ def listDeployed(managerHost):
 
     except Exception as e:
         handleException(e)
+
+
+def listDeployed(managerHost):
+    logger.info("listDeployed - db2-Feeder list")
+    global gs_space_dictionary_obj
+    try:
+        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                   Fore.YELLOW+"Name"+Fore.RESET,
+                   Fore.YELLOW+"Host"+Fore.RESET,
+                   Fore.YELLOW+"Zone"+Fore.RESET,
+                   Fore.YELLOW+"Query Status"+Fore.RESET,
+                   Fore.YELLOW+"Status"+Fore.RESET
+                   ]
+
+        dataTable = getAllFeeders()
+        
+        printTabular(None,headers,dataTable)
+
+    except Exception as e:
+        handleException(e)
+
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_list-all")

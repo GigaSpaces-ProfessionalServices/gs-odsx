@@ -1,16 +1,14 @@
-1. app.yaml
-   Replaced from .gs.ts to 
-     object.config.ddlparser.ts.bck.currentTs
-     object.config.ddlparser.ts.bck.previousTs
-2. Create the influxdb.conf.template at location /dbagigashare/current/influx/config/influxdb.conf.template
-
-3. Add the code mention below.
-
-[data]
- # The directory where the TSM storage engine stores TSM files.
- dir = "/dbagigainflaxdata/influxdb/data"
- 
- # The directory where the TSM storage engine stores WAL files.
- wal-dir = "/dbagigainflaxdata/influxdb/wal"
- 
- max-series-per-database = 0
+1. In app.yaml file updated keytab & sql config
+   env_config:
+     sqljdbc: SQLJDBCDriver.conf
+     keytab: UTKA02E.keytab
+     ldapsourcefile: ldap-security-config.xml
+2. Also the structure for object jars is now and removed retention jar from appropriate location :
+   jars:
+     management:
+       objectmanagementjar: objectManagement.jar
+     retention:
+       retentionjar: retention-manager.jar
+3. In app.config updated target path for data validator :
+   app.dv.install.target=/dbagiga/gs_config
+4. Names for tier storage jar and in memory jar are updated as tiered_storage_jar-0.1.jar and in_memory_jar-0.1.jar
