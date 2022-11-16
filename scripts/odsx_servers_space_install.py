@@ -5,7 +5,7 @@ import os, subprocess, sys, argparse, platform,socket
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
-    getYamlJarFilePath, getYamlFilePathInsideFolder
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
 from colorama import Fore
 
 from utils.ods_list import getManagerHostFromEnv, configureMetricsXML
@@ -269,8 +269,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
         db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
-        msSqlFeederFilePath=".mssql.files"
-        msSqlFeederFileSource = sourceInstallerDirectory+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
+        msSqlFeederFilePath="."
+        msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
@@ -363,9 +363,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
-                    # logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
-                    # logSourcePath=str(readValuefromAppConfig("app.log.source.file"))
-                    # additionalParam=additionalParam+' '+gsNicAddress + ' '+logTargetPath + ' '+ logSourcePath
+                    additionalParam=additionalParam+' '+gsNicAddress
                     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     logger.info("additionalParam - Installation :")
                     logger.info("Building .tar file : tar -cvf install/install.tar install")
@@ -414,11 +412,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         verboseHandle.printConsoleInfo(db2jccJarLicenseInput+" -> "+db2FeederJarTargetInput)
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
                         #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-                        verboseHandle.printConsoleInfo(msSqlFeederFileSource+"/*keytab -> "+msSqlFeederFileTarget)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*keytab "+msSqlFeederFileTarget)
+                        verboseHandle.printConsoleInfo(getYamlFilePathInsideConfigFolder("..keytab")+" -> "+msSqlFeederFileTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..keytab")+" "+msSqlFeederFileTarget)
                         #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
-                        verboseHandle.printConsoleInfo(msSqlFeederFileSource+"/*conf ->"+msSqlFeederFileTarget)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*conf "+msSqlFeederFileTarget)
+                        verboseHandle.printConsoleInfo(getYamlFilePathInsideConfigFolder("..sqljdbc")+" ->"+msSqlFeederFileTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+" "+msSqlFeederFileTarget)
                         configureMetricsXML(host)
                     serverHost=''
                     try:

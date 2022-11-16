@@ -13,9 +13,9 @@ configProperties = {}
 
 def setConfigProperties():
     #file1 = open('config/app.config', 'r')
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    file1 = open(sourceInstallerDirectory+'/odsx/app.config', 'r')
+    file1 = open(sourceInstallerDirectory+'/app.config', 'r')
     Lines = file1.readlines()
     for line in Lines:
         if (line.startswith("#")) or len(line) < 2:
@@ -33,9 +33,9 @@ def readValuefromAppConfig(key, verbose=False):
 def writeToFile(key,value,verbose=False):
     verboseHandle.setVerboseFlag(verbose)
     #file="config/app.config"
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    file = sourceInstallerDirectory+"/odsx/app.config"
+    file = sourceInstallerDirectory+"/app.config"
     logger.debug("writing to file "+file+" key="+key+" value="+value)
     file1 = open(file, 'a')
     file1.write('\n')
@@ -50,9 +50,9 @@ def writeToFile(key,value,verbose=False):
 
 def set_value_in_property_file(key, value):
     #file='config/app.config'
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    file= sourceInstallerDirectory+'/odsx/app.config'
+    file= sourceInstallerDirectory+'/app.config'
     config = ConfigObj(file)
     if(len(value)==0):
         value=''
@@ -92,9 +92,9 @@ def read_value_in_property_file_generic_section(key,file,section):
     return userinfo[key]
 
 def readValueByConfigObj(key,file='config/app.config'):
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    file=sourceInstallerDirectory+'/odsx/app.config'
+    file=sourceInstallerDirectory+'/app.config'
     config = ConfigObj(file)
     return  config.get(key)
 
@@ -115,6 +115,13 @@ def getYamlJarFilePath(yamlPath,appConfig):
 
 def getYamlFilePathInsideFolder(configPath):
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    fileName= readValueFromYaml(configPath)
+    path = str(configPath)[:str(configPath).rindex('.')].replace('.','/')
+    return sourceInstallerDirectory+path+'/'+fileName
+
+def getYamlFilePathInsideConfigFolder(configPath):
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
     fileName= readValueFromYaml(configPath)
     path = str(configPath)[:str(configPath).rindex('.')].replace('.','/')

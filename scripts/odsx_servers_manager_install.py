@@ -404,6 +404,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         while(len(str(summaryConfirm))==0):
             summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
+
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
             #if(len(additionalParam)==0):
@@ -412,6 +415,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             #else:
             #    additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             #print('additional param :'+additionalParam)
+            additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
             logger.info('additional param :'+additionalParam)
             output=""
             logger.info("Building .tar file : tar -cvf install/install.tar install")
@@ -426,9 +430,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if(len(str(gsNicAddress))==0):
                     gsNicAddress='x'     # put dummy param to maintain position of arguments
                 additionalParam=additionalParam+' '+gsNicAddress
-                logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
-                logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-                additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
                 #print(additionalParam)
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')

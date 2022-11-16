@@ -5,7 +5,7 @@ import os, subprocess, sys, argparse, platform,socket
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
-    getYamlJarFilePath, getYamlFilePathInsideFolder
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
 from colorama import Fore
 
 from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
@@ -229,7 +229,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
-
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
+        additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
         #noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
         #while (len(str(noOfHost))==0):
         #    noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
@@ -277,13 +279,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
 
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
-        msSqlFeederFilePath=".mssql.files"
-        msSqlFeederFileSource = sourceInstallerDirectory+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
+        msSqlFeederFilePath="."
+        msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
-        ldapSecurityConfigInput = str(getYamlFilePathInsideFolder(".security.config.ldapsourcefile"))
+        ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
@@ -401,7 +403,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 if installStatus == 'No':
                     gsNicAddress = host_nic_dict_obj[host]
                     #print(host+"  "+gsNicAddress)
-                    additionalParam=additionalParam+' '+logSourcePath+' '+gsNicAddress
+                    additionalParam=additionalParam+' '+gsNicAddress
                     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
                     # print("---------------------"+str(additionalParam))
                     logger.info("additionalParam - Installation :")
@@ -445,9 +447,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
                         #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*keytab "+msSqlFeederFileTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..keytab")+msSqlFeederFileTarget)
                         #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+msSqlFeederFileSource+"/*conf "+msSqlFeederFileTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+msSqlFeederFileTarget)
                         #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
                         #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)

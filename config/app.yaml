@@ -11,9 +11,6 @@ current:
     mdm:
     flink:
   data-validator:
-    files:
-      dvkeytab: UTKA02E.keytab
-      dvJdbc: SQLJDBCDriver.conf
     jars:
       serverjar: data-validator-server-0.0.1-SNAPSHOT.jar
       agentjar: data-validator-agent-0.0.1-SNAPSHOT.jar
@@ -39,11 +36,9 @@ current:
         spaceproperty: spaceproperty.properties
     jars:
       ts:
-        tieredStorageBuild: bll-0.1.jar
-      retention:
-        retentionjar: retention-manager.jar
+        tieredStorageBuild: tiered_storage_jar-0.1.jar
       space:
-        spacejar: space-0.1.jar
+        spacejar: in_memory_jar-0.1.jar
     upgrade:
   iidr:
     watchdog:
@@ -64,9 +59,6 @@ current:
         kafkaConnector: kafka-connector-1.0.0-SNAPSHOT-jar-with-dependencies.jar
   mssql:
     config: null
-    files:
-      keytab: udkods2.keytab
-      sqljdbc: SQLJDBCDriver.conf
     jars:
       mssqlJarFile: mssqlFeeder-1.0.0.jar
     scripts: null
@@ -80,10 +72,11 @@ current:
         ddlBatchFileName: tableList.txt
         ddlCriteriaFileName: TieredCriteria.tab
     jars:
-      objectmanagementjar: objectManagement.jar
+      management:
+        objectmanagementjar: objectManagement.jar
+      retention:
+        retentionjar: retention-manager.jar
   security:
-    config:
-      ldapsourcefile: ldap-security-config.xml
     jars:
       cef:
         cefjar: CEFLogger-1.0-SNAPSHOT.jar
@@ -102,3 +95,7 @@ current:
       space:
     jars:
       readfromshobjar: readFromShob-1.0.0.jar
+env_config:
+  sqljdbc: SQLJDBCDriver.conf
+  keytab: UTKA02E.keytab
+  ldapsourcefile: ldap-security-config.xml

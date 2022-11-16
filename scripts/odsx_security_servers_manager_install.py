@@ -4,8 +4,9 @@
 import os, subprocess, sys, argparse, platform,socket,signal
 from scripts.logManager import LogManager
 from scripts.odsx_security_servers_space_install import configureMetricsXML
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
-    getYamlJarFilePath, getYamlFilePathInsideFolder
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
 from colorama import Fore
 
 from utils.ods_cleanup import signal_handler
@@ -363,7 +364,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
-        ldapSecurityConfigInput = str(getYamlFilePathInsideFolder(".security.config.ldapsourcefile"))
+        ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
@@ -439,6 +440,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         while(len(str(summaryConfirm))==0):
             summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
+
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
             #if(len(additionalParam)==0):
@@ -447,6 +451,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
             additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+sourceInstallerDirectory
             #print('additional param :'+additionalParam)
+            additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
             logger.info('additional param :'+additionalParam)
             output=""
             logger.info("Building .tar file : tar -cvf install/install.tar install")
@@ -460,7 +465,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.info("NIC address:"+gsNicAddress+" for host "+host)
                 if(len(str(gsNicAddress))==0):
                     gsNicAddress='x'     # put dummy param to maintain position of arguments
-                additionalParam=additionalParam+' '+gsNicAddress+' '+logSourcePath+' '+logTargetPath
+                additionalParam=additionalParam+' '+gsNicAddress
                 with Spinner():
                     scp_upload(host, user, 'install/install.tar', '')
                     ##scp_upload(host, user, 'install/gs.service', '')
