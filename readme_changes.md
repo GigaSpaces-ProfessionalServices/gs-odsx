@@ -1,15 +1,14 @@
-1. app.yaml
-In the end of the file add this part. And remove the keys from appropriate locations in app.yaml 
+1. In app.yaml file updated keytab & sql config
    env_config:
-       msqslsqljdbc: SQLJDBCDriver.conf
-       datavalidatorsqljdbc: SQLJDBCDriver.conf
-       ldapsourcefile: ldap-security-config.xml
-       datavalidatorkeytab: UTKA02E.keytab
-       mssqlkeytab: udkods2.keytab
-2. Create directory env_config in /dbagigashare and add below in ~/.bashrc :
-   export ENV_CONFIG=/dbagigashare/env_config/
-3. Add this in app.config
-   app.grafana.provisioning.dashboards.target=/usr/share/grafana/conf/provisioning/dashboards/
-   app.utilities.recovery.monitor.space.name=bllspace
-   app.utilities.gcexplicit.file=/dbagiga/utils/jcmd_exec.sh
-   app.utilities.recoverymonitor.file=/dbagiga/utils/recovery_monitor/recovery_monitor.py
+     sqljdbc: SQLJDBCDriver.conf
+     keytab: UTKA02E.keytab
+     ldapsourcefile: ldap-security-config.xml
+2. Also the structure for object jars is now and removed retention jar from appropriate location :
+   jars:
+     management:
+       objectmanagementjar: objectManagement.jar
+     retention:
+       retentionjar: retention-manager.jar
+3. In app.config updated target path for data validator :
+   app.dv.install.target=/dbagiga/gs_config
+4. Names for tier storage jar and in memory jar are updated as tiered_storage_jar-0.1.jar and in_memory_jar-0.1.jar

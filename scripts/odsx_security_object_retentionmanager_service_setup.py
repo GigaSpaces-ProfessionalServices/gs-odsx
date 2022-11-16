@@ -111,7 +111,7 @@ def setupService():
 
 def displaySummary(managerServer,spaceName,schedulerInterval):
     global retentionJar
-    retentionJar = str(getYamlFilePathInsideFolder(".gs.jars.retention.retentionjar"))
+    retentionJar = str(getYamlFilePathInsideFolder(".object.jars.retention.retentionjar"))
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
     print(Fore.GREEN+"1. "+

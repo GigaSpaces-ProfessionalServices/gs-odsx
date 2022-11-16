@@ -108,16 +108,6 @@ def readValueFromYaml(key):
     for val in find(content, key):
         return val
 
-def readValueFromConfigYaml(key):
-    key = pathlib.Path(key).suffix[1:]
-    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
-    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    file=sourceInstallerDirectory+'/app.yaml'
-    with open(file) as f:
-        content = yaml.safe_load(f)
-    for val in find(content, key):
-        return val
-
 def getYamlJarFilePath(yamlPath,appConfig):
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
@@ -133,7 +123,7 @@ def getYamlFilePathInsideFolder(configPath):
 def getYamlFilePathInsideConfigFolder(configPath):
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    fileName= readValueFromConfigYaml(configPath)
+    fileName= readValueFromYaml(configPath)
     path = str(configPath)[:str(configPath).rindex('.')].replace('.','/')
     return sourceInstallerDirectory+path+'/'+fileName
 
