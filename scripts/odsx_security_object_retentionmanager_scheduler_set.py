@@ -90,7 +90,7 @@ def setScheduleInterval():
     spaceName = readValuefromAppConfig(app_config_space_key)
     dbLocation = readValuefromAppConfig(app_retentionmanager_sqlite_dbfile)
     #print(str(intervalInMilliSecs))
-    retentionJar = str(getYamlFilePathInsideFolder(".gs.jars.retention.retentionjar"))
+    retentionJar = str(getYamlFilePathInsideFolder(".object.jars.retention.retentionjar"))
     setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,retentionJar)
     verboseHandle.printConsoleInfo("Scheduler interval set successfull!")
     logger.info("setScheduleInterval() : end")

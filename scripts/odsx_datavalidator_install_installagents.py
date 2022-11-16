@@ -158,8 +158,8 @@ def buildUploadInstallTarToServer(host):
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
             scp_upload(host, user, 'install/install.tar', targetInstallDir)
-            scp_upload(host, user, str(getYamlFilePathInsideConfigFolder(".datavalidatorkeytab")), targetInstallDir)
-            scp_upload(host, user, str(getYamlFilePathInsideConfigFolder(".datavalidatorsqljdbc")), targetInstallDir)
+            scp_upload(host, user, str(getYamlFilePathInsideConfigFolder("..keytab")), targetInstallDir)
+            scp_upload(host, user, str(getYamlFilePathInsideConfigFolder("..sqljdbc")), targetInstallDir)
             #scp_upload(host, user, 'install/gs_config/SQLJDBCDriver.conf', '/home/gsods')
             #scp_upload(host, user, 'install/gs_config/UTKA02E.keytab', '/home/gsods')
     except Exception as e:

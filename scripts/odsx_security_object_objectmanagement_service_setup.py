@@ -119,7 +119,7 @@ def setupService():
 
 def displaySummary(managerServer, spaceName, ddlAndPropertiesBasePath, tableListfilePath):
     global serviceJar
-    serviceJar = str(getYamlFilePathInsideFolder(".object.jars.objectmanagementjar")).replace("//", "/")
+    serviceJar = str(getYamlFilePathInsideFolder(".object.jars.management.objectmanagementjar")).replace("//", "/")
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
     print(Fore.GREEN + "1. " +

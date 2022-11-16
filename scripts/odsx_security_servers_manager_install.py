@@ -364,7 +364,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
-        ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder(".ldapsourcefile"))
+        ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
