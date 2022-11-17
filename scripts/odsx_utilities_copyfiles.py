@@ -5,6 +5,7 @@ import platform
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_node, config_get_nb_list, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
+from utils.odsx_keypress import userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -116,7 +117,7 @@ def showAndSelectOption():
     print("\n")
     for key, value in getOptions().items():
         print("[" + str(key) + "] " + value)
-    optionSelected = input("Enter your option [1]: ")
+    optionSelected = userInputWithEscWrapper("Enter your option [1]: ")
     if optionSelected == "":
         optionSelected = 1
     elif int(optionSelected) == 99 :

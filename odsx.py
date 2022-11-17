@@ -134,11 +134,11 @@ def displayMainMenu(menu,currentMenu):
                     scriptMenu = defaultMenu.replace('menu','odsx_security')
         if scriptMenu.endswith('monitors_spaceboard_reload'):
             scriptMenu = defaultMenu.replace('menu','odsx')
-        #print(scriptsFolder+'/'+scriptMenu+'.py')
+        #print(scriptsFolder+'/'+scriptMenu+'.py 137')
         logger.info("Finding file to execute selected command: "+scriptsFolder+'/'+scriptMenu+'.py')
         menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
-        #print("scriptsFolder:"+scriptsFolder)
-        #print("scriptMenu:"+str(scriptMenu))
+       # print("scriptsFolder:"+scriptsFolder+" 140")
+      #  print("scriptMenu:"+str(scriptMenu)+"  141")
         try:
             if(path.exists(scriptsFolder+'/'+scriptMenu+'.py')):
                 logger.info("File "+scriptsFolder+'/'+scriptMenu+'.py'+' exist.')
@@ -168,7 +168,7 @@ def findArgumentInFile(currentArg,initialFileName):
     #logger.info("findArgumentInFile-currentArg : "+currentArg+ " initialFileName :"+initialFileName)
     fileSuffix ='.csv'
     directory='csv'
-    #print('initialFilename:',initialFileName)
+    #print('initialFilename:',initialFileName+" currentArg : "+currentArg+" 171")
     try:
         with open(os.path.join(directory, initialFileName+fileSuffix),'r') as menuFile:
             reader = csv.reader(menuFile, delimiter=",")
@@ -209,34 +209,39 @@ def main(**args):
                 quit()
             '''
         #cmdlist.remove(requiredPrefix)
-        #print(cmdlist)
+       # print(cmdlist)
         #MainMenu
         for cmd in cmdlist:
             if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
+       # print(initialFileName)
         #SubMenu
         for cmd in cmdlist:
             if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
+        #print(initialFileName)
         #CommandMenu
         for cmd in cmdlist:
             if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
+       # print(initialFileName)
         #CommandMenu
         for cmd in cmdlist:
             if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
 
+       # print(initialFileName)
         #SubCommandMenu
         for cmd in cmdlist:
             if(findArgumentInFile(cmd.replace('--',''),initialFileName)):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
 
+        #print(cmdlist)
         #Addded one more loop to support additional arguments
         #CommandMenu
         for cmd in cmdlist:
@@ -244,6 +249,8 @@ def main(**args):
                 initialFileName=initialFileName+'_'+cmd.replace('--','')
                 cmdlist.remove(cmd)
 
+      #  print(cmdlist)
+     #   print(initialFileName+" 247")
         if cmdlist.__contains__("--help") or cmdlist.__contains__("-h"):
             helpUsage(initialFileName)
         else:
@@ -260,7 +267,7 @@ def main(**args):
                     menu = str(menu).strip()
                     if not(initialFileName.__contains__('retentionmanager')) and initialFileName.__contains__(menu):
                         initialFileName = initialFileName.replace('odsx','odsx_security')
-            #print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
+          #  print('python3 '+scriptsFolder+'/'+initialFileName+' '+args+ " 264")
             try:
                 if(path.exists(scriptsFolder+'/'+initialFileName)):
                     #print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
