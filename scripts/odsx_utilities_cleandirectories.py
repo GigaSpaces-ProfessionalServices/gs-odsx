@@ -1,10 +1,13 @@
 #!/usr/bin/env python3
 
 import os, time
+import sys
+
 from colorama import Fore
 import requests, json, math
 from scripts.logManager import LogManager
 from utils.ods_validation import port_check_config
+from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
@@ -146,7 +149,7 @@ def showAndSelectOption():
     print("\n")
     for key, value in getOptions().items():
         print("[" + str(key) + "] " + value)
-    optionSelected = input("Enter your option [1]: ")
+    optionSelected = userInputWithEscWrapper("Enter your option [1]: ")
     if optionSelected == "":
         optionSelected = "1"
     elif int(optionSelected) == 99 :
@@ -166,10 +169,19 @@ if __name__ == '__main__':
     logger.info("odsx_utilities_cleandirectories_manager")
     verboseHandle.printConsoleWarning("Menu -> Utilities -> Clean Directories")
     try:
-
-        optionSelected = showAndSelectOption()
-        while(optionSelected!=99):
+        args = []
+        optionSelected = ""
+        if (len(sys.argv) == 2):
+            optionSelected = str(sys.argv[1])
+        if optionSelected == "managerservers" or optionSelected == "spaceservers" :
+            if(optionSelected=="managerservers"):
+                cleanUpManagerServers()
+            elif(optionSelected=="spaceservers"):
+                cleanUpSpaceServers()
+        else:
             optionSelected = showAndSelectOption()
+            while(optionSelected!=99):
+                optionSelected = showAndSelectOption()
 
     except Exception as e:
         verboseHandle.printConsoleError("Eror in odsx_tieredstorage_undeployed : "+str(e))
