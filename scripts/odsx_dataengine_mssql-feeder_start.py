@@ -120,38 +120,92 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
                    Fore.YELLOW+"Query Status"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
+                   Fore.YELLOW+"Status"+Fore.RESET,
+                   Fore.YELLOW+"Condition"+Fore.RESET,
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
         counter=0
         dataTable=[]
-        for data in jsonArray:
-            hostId=''
-            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances")
-            jsonArray2 = json.loads(response2.text)
-            queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
-            for data2 in jsonArray2:
-                hostId=data2["hostId"]
-            if(len(str(hostId))==0):
-                hostId="N/A"
-            if(str(data["name"]).__contains__('mssql')):
-                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                             Fore.GREEN+data["name"]+Fore.RESET,
-                             Fore.GREEN+str(hostId)+Fore.RESET,
-                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
-                             Fore.GREEN+data["status"]+Fore.RESET
-                             ]
-                logger.info("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                mycursor = cnx.execute("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                logger.info("query result:"+str(mycursor.rowcount))
+        flag = False
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory+".mssql.scripts.").replace('.','/')
+        for i in jsonArray:
+            if(str(i['name']).__contains__("mssql")):
+                flag = True
+        if(len(jsonArray) == 0 or flag == False):
 
-                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-                counter=counter+1
+            logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+
+            os.chdir(sourceMSSQLFeederShFilePath)
+
+            for file in glob.glob("load_*.sh"):
+                os.chdir(sourceMSSQLFeederShFilePath)
+                puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+                file = open(file, "r")
+                for line in file:
+                    if (line.startswith("curl")):
+                        myString = line
+                        startString = '&condition='
+                        endString = "'&exclude-columns="
+                        global mySubString
+                        mySubString = myString[
+                                      myString.find(startString) + len(startString):myString.find(endString)]
+                        puName = 'mssqlfeeder_'+puName
+                        dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                                     Fore.GREEN + puName + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + "Undeployed" + Fore.RESET,
+                                     Fore.GREEN + str(mySubString) + Fore.RESET,
+                                     ]
+                counter = counter + 1
                 dataTable.append(dataArray)
+        else:
+            for data in jsonArray:
+                hostId = ''
+                response2 = requests.get(
+                    "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances")
+                jsonArray2 = json.loads(response2.text)
+                queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
+                for data2 in jsonArray2:
+                    hostId = data2["hostId"]
+                if (len(str(hostId)) == 0):
+                    hostId = "N/A"
+                if (str(data["name"]).__contains__('mssql')):
+                    os.getcwd()
+                    os.chdir(sourceMSSQLFeederShFilePath)
+                    for file in glob.glob("load_*.sh"):
+                        puName = str(str(data["name"])).replace('mssqlfeeder_', 'load_').casefold()
+                        puName = puName + ".sh"
+                        if (file.casefold() == puName):
+                            file = open(file, "r")
+                            for line in file:
+                                if (line.startswith("curl")):
+                                    myString = line
+                                    startString = '&condition='
+                                    endString = "'&exclude-columns="
+                                    mySubString = myString[myString.find(startString) + len(startString):myString.find(
+                                        endString)]
+                                    dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                                                 Fore.GREEN + data["name"] + Fore.RESET,
+                                                 Fore.GREEN + str(hostId) + Fore.RESET,
+                                                 Fore.GREEN + str(data["sla"]["zones"]) + Fore.RESET,
+                                                 Fore.GREEN + str(queryStatus) + Fore.RESET,
+                                                 Fore.GREEN + data["status"] + Fore.RESET,
+                                                 Fore.GREEN + str(mySubString) + Fore.RESET
+                                                 ]
+                    logger.info("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    mycursor = cnx.execute("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    logger.info("query result:"+str(mycursor.rowcount))
+
+                    gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                    counter=counter+1
+                    dataTable.append(dataArray)
         cnx.commit()
         cnx.close()
+
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:

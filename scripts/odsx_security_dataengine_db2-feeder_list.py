@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
-
+import glob
 import os, time, requests,json, subprocess, sqlite3
+import re
+import sys
+
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
@@ -74,42 +77,99 @@ def listDeployed(managerHost):
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
+        # print(jsonArray)
         verboseHandle.printConsoleWarning("Resources on cluster:")
         headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
                    Fore.YELLOW+"Name"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
                    Fore.YELLOW+"Query Status"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
+                   Fore.YELLOW+"Status"+Fore.RESET,
+                   Fore.YELLOW+"Condition"+Fore.RESET
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
         counter=0
         dataTable=[]
-        for data in jsonArray:
-            hostId=''
-            response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
-            jsonArray2 = json.loads(response2.text)
-            queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
-            for data2 in jsonArray2:
-                hostId=data2["hostId"]
-            if(len(str(hostId))==0):
-               hostId="N/A"
-            if(str(data["name"]).__contains__('db2')):
-                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                             Fore.GREEN+data["name"]+Fore.RESET,
-                             Fore.GREEN+str(hostId)+Fore.RESET,
-                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
-                             Fore.GREEN+data["status"]+Fore.RESET
-                             ]
-                logger.info("UPDATE db2_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                mycursor = cnx.execute("UPDATE db2_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                logger.info("query result:"+str(mycursor.rowcount))
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        flag = False
+        for i in jsonArray:
+            if(str(i["name"]).__contains__("db2")):
+                flag = True
+        if(len(jsonArray) == 0 or flag == False):
 
-                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-                counter=counter+1
-                dataTable.append(dataArray)
+            logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+            directory = os.getcwd()
+            sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
+            os.chdir(sourceDB2FeederShFilePathConfig)
+
+            for file in glob.glob("load_*.sh"):
+                os.chdir(directory)
+                puName = str(file).replace('load_','').replace('.sh','').casefold()
+                puName = 'db2feeder_'+puName
+                if(str(puName).__contains__('db2')):
+                    os.chdir(sourceDB2FeederShFilePathConfig)
+                    puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+                    file = open(file, "r")
+                    for line in file:
+                        if (line.startswith("curl")):
+                            myString = line
+                            startString = '&condition='
+                            endString = "'&exclude-columns="
+                            global mySubString
+                            mySubString = myString[
+                                      myString.find(startString) + len(startString):myString.find(endString)]
+                            puName = 'db2feeder_'+puName
+                            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                                             Fore.GREEN+str(puName)+Fore.RESET,
+                                             Fore.GREEN+str("-")+Fore.RESET,
+                                             Fore.GREEN+str("-")+Fore.RESET,
+                                             Fore.GREEN+str("-")+Fore.RESET,
+                                             Fore.GREEN+str("Undeployed")+Fore.RESET,
+                                             Fore.GREEN+str(mySubString)+Fore.RESET
+                                             ]
+                    counter=counter+1
+                    dataTable.append(dataArray)
+        else:
+            for data in jsonArray:
+                hostId=''
+                response2 = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(data["name"])+"/instances",auth = HTTPBasicAuth(username, password))
+                jsonArray2 = json.loads(response2.text)
+                queryStatus = str(getQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
+                for data2 in jsonArray2:
+                    hostId=data2["hostId"]
+                if(len(str(hostId))==0):
+                   hostId="N/A"
+                if(str(data["name"]).__contains__('db2')):
+                    os.getcwd()
+                    sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
+                    os.chdir(sourceDB2FeederShFilePathConfig)
+                    for file in glob.glob("load_*.sh"):
+                        puName = str(str(data["name"])).replace('db2feeder_','load_').casefold()
+                        puName= puName+".sh"
+                        if(file.casefold() == puName):
+                            file = open(file, "r")
+                            for line in file:
+                                if (line.startswith("curl")):
+                                    myString = line
+                                    startString = '&condition='
+                                    endString = '&exclude'
+                                    mySubString=myString[myString.find(startString)+len(startString):myString.find(endString)]
+                                    dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                                                 Fore.GREEN+data["name"]+Fore.RESET,
+                                                 Fore.GREEN+str(hostId)+Fore.RESET,
+                                                 Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                                                 Fore.GREEN+str(queryStatus)+Fore.RESET,
+                                                 Fore.GREEN+data["status"]+Fore.RESET,
+                                                 Fore.GREEN+str(mySubString)+Fore.RESET
+                                                 ]
+                    logger.info("UPDATE db2_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    mycursor = cnx.execute("UPDATE db2_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    logger.info("query result:"+str(mycursor.rowcount))
+
+                    gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                    counter=counter+1
+                    dataTable.append(dataArray)
         cnx.commit()
         cnx.close()
         printTabular(None,headers,dataTable)

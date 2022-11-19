@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import glob
 import os, subprocess, sqlite3, json, requests
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -93,6 +93,63 @@ def getAllFeeders():
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
         counter=0
         dataTable=[]
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+
+        if (len(jsonArray) == 0):
+            sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
+            os.chdir(sourceDB2FeederShFilePathConfig)
+            for file in glob.glob("load_*.sh"):
+                puName = str(file).replace('load_','').replace('.sh','').casefold()
+                puName = 'db2feeder_'+puName
+                if(str(puName).__contains__('db2')):
+                    os.chdir(sourceDB2FeederShFilePathConfig)
+                    puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+                    file = open(file, "r")
+                    for line in file:
+                        if (line.startswith("curl")):
+                            myString = line
+                            startString = '&condition='
+                            endString = "'&exclude-columns="
+                            global mySubString
+                            mySubString = myString[
+                                          myString.find(startString) + len(startString):myString.find(endString)]
+                            puName = 'db2feeder_'+puName
+                            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                                         Fore.GREEN+str(puName)+Fore.RESET,
+                                         Fore.GREEN+str("-")+Fore.RESET,
+                                         Fore.GREEN+str("-")+Fore.RESET,
+                                         Fore.GREEN+str("-")+Fore.RESET,
+                                         Fore.GREEN+str("Undeployed")+Fore.RESET,
+                                         Fore.GREEN+str(mySubString)+Fore.RESET
+                                         ]
+                    counter=counter+1
+                    dataTable.append(dataArray)
+
+            os.getcwd()
+            sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory + ".mssql.scripts.").replace('.', '/')
+            os.chdir(sourceMSSQLFeederShFilePath)
+            for file in glob.glob("load_*.sh"):
+                os.chdir(sourceMSSQLFeederShFilePath)
+                puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+                file = open(file, "r")
+                for line in file:
+                    if (line.startswith("curl")):
+                        myString = line
+                        startString = '&condition='
+                        endString = "'&exclude-columns="
+                        mySubString = myString[
+                                      myString.find(startString) + len(startString):myString.find(endString)]
+                        puName = 'mssqlfeeder_'+puName
+                        dataArray1 = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                                     Fore.GREEN + puName + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + "Undeployed" + Fore.RESET,
+                                     Fore.GREEN + str(mySubString) + Fore.RESET,
+                                     ]
+                counter = counter + 1
+                dataTable.append(dataArray1)
         for data in jsonArray:
             hostId=''
             if profile == 'security':
@@ -106,17 +163,67 @@ def getAllFeeders():
             if(len(str(hostId))==0):
                 hostId="N/A"
             if(str(data["name"]).__contains__('db2')):
-                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                             Fore.GREEN+data["name"]+Fore.RESET,
-                             Fore.GREEN+str(hostId)+Fore.RESET,
-                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
-                             Fore.GREEN+data["status"]+Fore.RESET
-                             ]
-                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                directory = os.getcwd()
+                sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
+                os.chdir(sourceDB2FeederShFilePathConfig)
+
+                for file in glob.glob("load_*.sh"):
+                    os.chdir(directory)
+                    puName = str(file).replace('load_','').replace('.sh','').casefold()
+                    puName = 'db2feeder_'+puName
+                    if(str(puName).__contains__('db2')):
+                        os.chdir(sourceDB2FeederShFilePathConfig)
+                        file = open(file, "r")
+                        for line in file:
+                            if (line.startswith("curl")):
+                                myString = line
+                                startString = '&condition='
+                                endString = "'&exclude-columns="
+                                mySubString = myString[
+                                              myString.find(startString) + len(startString):myString.find(endString)]
+                                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                                             Fore.GREEN+data["name"]+Fore.RESET,
+                                             Fore.GREEN+str(hostId)+Fore.RESET,
+                                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                                             Fore.GREEN+str(queryStatus)+Fore.RESET,
+                                             Fore.GREEN+data["status"]+Fore.RESET,
+                                             Fore.GREEN + str(mySubString) + Fore.RESET
+                                             ]
+                                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
-
+            # if not(str(data["name"]).__contains__('db2')):
+            #     directory = os.getcwd()
+            #     sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
+            #     os.chdir(sourceDB2FeederShFilePathConfig)
+            #
+            #     for file in glob.glob("load_*.sh"):
+            #         os.chdir(directory)
+            #         puName = str(file).replace('load_','').replace('.sh','').casefold()
+            #         # puName = 'db2feeder_'+puName
+            #         if(str(puName).__contains__('db2')):
+            #             os.chdir(sourceDB2FeederShFilePathConfig)
+            #             puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+            #             file = open(file, "r")
+            #             for line in file:
+            #                 if (line.startswith("curl")):
+            #                     myString = line
+            #                     startString = '&condition='
+            #                     endString = "'&exclude-columns="
+            #                     mySubString = myString[
+            #                                   myString.find(startString) + len(startString):myString.find(endString)]
+            #                     puName = 'db2feeder_'+puName
+            #                     dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+            #                                  Fore.GREEN+str(puName)+Fore.RESET,
+            #                                  Fore.GREEN+str("-")+Fore.RESET,
+            #                                  Fore.GREEN+str("-")+Fore.RESET,
+            #                                  Fore.GREEN+str("-")+Fore.RESET,
+            #                                  Fore.GREEN+str("Undeployed")+Fore.RESET,
+            #                                  Fore.GREEN+str(mySubString)+Fore.RESET
+            #                                  ]
+            #         counter=counter+1
+            #         dataTable.append(dataArray)
+            #
         # For Kafka - Consumer
         
             if(str(data["name"]).casefold().__contains__('adabasconsumer')):
@@ -125,25 +232,80 @@ def getAllFeeders():
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
                              Fore.GREEN+str("-")+Fore.RESET,
-                             Fore.GREEN+data["status"]+Fore.RESET
+                             Fore.GREEN+data["status"]+Fore.RESET,
+                             Fore.GREEN + str("-") + Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
+
+            # if not(str(data["name"]).__contains__('adabasconsumer')):
+            #     dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+            #                  Fore.GREEN+data["name"]+Fore.RESET,
+            #                  Fore.GREEN+str(hostId)+Fore.RESET,
+            #                  Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+            #                  Fore.GREEN+str(queryStatus)+Fore.RESET,
+            #                  Fore.GREEN+str("Undeployed")+Fore.RESET,
+            #                  Fore.GREEN + str("-") + Fore.RESET
+            #                  ]
+            #     counter=counter+1
+            #     dataTable.append(dataArray)
+            #
         # For MS-SQL-Feeder
-        
-            if(str(data["name"]).__contains__('mssql')):
-                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                             Fore.GREEN+data["name"]+Fore.RESET,
-                             Fore.GREEN+str(hostId)+Fore.RESET,
-                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
-                             Fore.GREEN+data["status"]+Fore.RESET
-                             ]
-                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+
+            if (str(data["name"]).__contains__('mssql')):
+                os.getcwd()
+                sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory + ".mssql.scripts.").replace('.', '/')
+                os.chdir(sourceMSSQLFeederShFilePath)
+                for file in glob.glob("load_*.sh"):
+                    puName = str(str(data["name"])).replace('mssqlfeeder_', 'load_').casefold()
+                    puName = puName + ".sh"
+                    if (file.casefold() == puName):
+                        file = open(file, "r")
+                        for line in file:
+                            if (line.startswith("curl")):
+                                myString = line
+                                startString = '&condition='
+                                endString = "'&exclude-columns="
+                                mySubString = myString[myString.find(startString) + len(startString):myString.find(
+                                    endString)]
+                                dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                                             Fore.GREEN + data["name"] + Fore.RESET,
+                                             Fore.GREEN + str(hostId) + Fore.RESET,
+                                             Fore.GREEN + str(data["sla"]["zones"]) + Fore.RESET,
+                                             Fore.GREEN + str(queryStatus) + Fore.RESET,
+                                             Fore.GREEN + data["status"] + Fore.RESET,
+                                             Fore.GREEN + str(mySubString) + Fore.RESET
+                                             ]
+                            gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
-        
+            # if not(str(data["name"]).__contains__('mssql')):
+            #     sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory + ".mssql.scripts.").replace('.', '/')
+            #     os.chdir(sourceMSSQLFeederShFilePath)
+            #
+            #     for file in glob.glob("load_*.sh"):
+            #         os.chdir(sourceMSSQLFeederShFilePath)
+            #         puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+            #         file = open(file, "r")
+            #         for line in file:
+            #             if (line.startswith("curl")):
+            #                 myString = line
+            #                 startString = '&condition='
+            #                 endString = "'&exclude-columns="
+            #                 mySubString = myString[
+            #                               myString.find(startString) + len(startString):myString.find(endString)]
+            #                 puName = 'mssqlfeeder_'+puName
+            #                 dataArray1 = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+            #                               Fore.GREEN + puName + Fore.RESET,
+            #                               Fore.GREEN + str("-") + Fore.RESET,
+            #                               Fore.GREEN + str("-") + Fore.RESET,
+            #                               Fore.GREEN + str("-") + Fore.RESET,
+            #                               Fore.GREEN + "Undeployed" + Fore.RESET,
+            #                               Fore.GREEN + str(mySubString) + Fore.RESET,
+            #                               ]
+            #         counter = counter + 1
+            #         dataTable.append(dataArray1)
         logger.info("getAllFeeders() : end")
         return dataTable
         
