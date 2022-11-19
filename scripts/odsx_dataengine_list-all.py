@@ -83,7 +83,7 @@ def listDeployed_old(managerHost):
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
                    Fore.YELLOW+"Query Status"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
+                   Fore.YELLOW+"Status"+Fore.RESET,
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
         logger.info("gs_space_dictionary_obj : "+str(gs_space_dictionary_obj))
@@ -188,7 +188,8 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
                    Fore.YELLOW+"Query Status"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
+                   Fore.YELLOW+"Status"+Fore.RESET,
+                   Fore.YELLOW+"Condition"+Fore.RESET
                    ]
 
         dataTable = getAllFeeders()
