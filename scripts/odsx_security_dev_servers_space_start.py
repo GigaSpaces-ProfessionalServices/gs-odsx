@@ -7,7 +7,7 @@ from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list
 from colorama import Fore
 from utils.ods_app_config import readValuefromAppConfig
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -75,7 +75,7 @@ if __name__ == '__main__':
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     spaceStart = streamDict.get(optionMainMenu)
-                    choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
                         choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     #print("coice start server:"+str(choice))
@@ -151,7 +151,7 @@ if __name__ == '__main__':
             logger.info("99 - Exist start")
         else:
             confirm=''
-            confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
             while(len(str(confirm))==0):
                 confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
             logger.info("confirm :"+str(confirm))

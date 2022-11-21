@@ -8,7 +8,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
 from scripts.odsx_servers_manager_list import listFileFromDirectory
 from utils.ods_cluster_config import config_get_manager_listWithStatus
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -112,7 +112,7 @@ if __name__ == '__main__':
                 optionMenu = str(input("Enter your host number to start : "))
                 while(len(optionMenu)==0):
                     optionMenu = str(input("Enter your host number to start : "))
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)]"+Fore.RESET))
                 while(len(str(confirm))==0):
                     confirm = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)]"+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
@@ -139,7 +139,7 @@ if __name__ == '__main__':
             elif(hostConfiguration=='99'):
                 logger.info("99 - Exist stop")
             else:
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
                 while(len(str(confirm))==0):
                     confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
                 logger.info("confirm :"+str(confirm))

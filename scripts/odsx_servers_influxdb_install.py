@@ -10,6 +10,7 @@ from utils.ods_ssh import connectExecuteSSH
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_add_influxdb_node, config_get_influxdb_node
 from utils.ods_app_config import set_value_in_property_file,readValuefromAppConfig
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -111,7 +112,7 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> Influxdb -> Install')
     try:
         installUserAndTargetDirectory()
-        confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Influxdb servers on host "+str(host)+" (y/n) [y]: "+Fore.RESET))
+        confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install Influxdb servers on host "+str(host)+" (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
             confirmInstall='y'
         if(confirmInstall=='y'):

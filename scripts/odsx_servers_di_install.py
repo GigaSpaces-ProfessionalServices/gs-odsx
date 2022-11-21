@@ -13,6 +13,7 @@ from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_add_dataIntegration_node, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -177,7 +178,7 @@ def installCluster():
 
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
-    confirmInstall = str(input(
+    confirmInstall = str(userInputWrapper(
         Fore.YELLOW + "Are you sure want to install DI servers on " + str(clusterHosts) + " (y/n) [y]: " + Fore.RESET))
     if (len(str(confirmInstall)) == 0):
         confirmInstall = 'y'

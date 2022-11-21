@@ -9,6 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, set_value_in_property_file
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.odsx_print_tabular_data import printTabular
@@ -60,6 +61,7 @@ class bcolors:
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
     parser.add_argument('m', nargs='?')
+    parser.add_argument('-f', nargs='?')
     parser.add_argument('-dryrun', '--dryrun',
                         help='Dry run flag',
                         default='false', action='store_true')
@@ -113,7 +115,7 @@ def setUserInputs():
 
     displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,ddlAndPropertiesBasePath,tableListfilePath)
     
-    summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+    summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
     while(len(str(summaryConfirm))==0):
         summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
 

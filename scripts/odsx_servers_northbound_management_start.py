@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_nb_list
 from utils.ods_ssh import connectExecuteSSH,executeRemoteCommandAndGetOutputPython36
 from utils.ods_app_config import readValuefromAppConfig
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -157,7 +158,7 @@ def executeCommandForStart():
         nodesManagement = getManagementHostList()
         logger.info("nodesManagement :"+str(len(nodesManagement)))
         if(len(nodesManagement)>0):
-            confirm = str(input(Fore.YELLOW+"Are you sure want to start NB Management servers ["+nodesManagement+"] (y/n) [y]: "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start NB Management servers ["+nodesManagement+"] (y/n) [y]: "+Fore.RESET))
             if(len(str(confirm))==0):
                 confirm='y'
             logger.info("confirm :"+str(confirm))

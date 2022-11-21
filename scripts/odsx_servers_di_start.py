@@ -8,7 +8,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from scripts.spinner import Spinner
 from scripts.odsx_servers_di_list import listDIServers
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -133,7 +133,7 @@ def startKafkaService(args):
 
         if choiceOption == '1':
             hostNumber = str(input(Fore.YELLOW+"Enter host number to start kafka service : "+Fore.RESET))
-            choice = str(input(Fore.YELLOW+"Are you sure want to start kafka service on "+str(host_dict_obj.get(hostNumber))+" ? (y/n) [y]: "+Fore.RESET))
+            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start kafka service on "+str(host_dict_obj.get(hostNumber))+" ? (y/n) [y]: "+Fore.RESET))
             if len(choice)==0:
                 choice='y'
             if choice =='y':
@@ -153,7 +153,7 @@ def startKafkaService(args):
                 exit(0)
 
         if choiceOption == "":
-            choice = str(input(Fore.YELLOW+"Are you sure want to start kafka service on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
+            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start kafka service on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
             if choice.casefold() == 'n':
                 exit(0)
             #print(nodeListSize)

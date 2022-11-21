@@ -9,7 +9,7 @@ from colorama import Fore
 from utils.ods_cluster_config import config_get_manager_listWithStatus,config_remove_manager_nodeByIP
 from scripts.spinner import Spinner
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -113,7 +113,7 @@ if __name__ == '__main__':
             removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
             if(len(str(removeUnzip))==0):
                 removeUnzip='n'
-            confirm = str(input(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
             while(len(str(confirm))==0):
                 confirm = str(input(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
@@ -149,7 +149,7 @@ if __name__ == '__main__':
             if(len(str(removeUnzip))==0):
                 removeUnzip='n'
 
-            confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
                 confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))

@@ -6,6 +6,7 @@ from utils.ods_cluster_config import config_get_space_list_with_status, config_g
 from colorama import Fore
 from utils.ods_app_config import readValuefromAppConfig
 from scripts.spinner import Spinner
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -41,6 +42,7 @@ def handleException(e):
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
     parser.add_argument('m', nargs='?')
+    parser.add_argument('-f', nargs='?')
     parser.add_argument('--host',
                         help='host ip',
                         required='True',
@@ -114,7 +116,7 @@ if __name__ == '__main__':
                     removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
                     if(len(str(removeUnzip))==0):
                         removeUnzip='n'
-                    choice = str(input(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
                         choice = str(input(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice remvoe server:"+str(choice))
@@ -200,7 +202,7 @@ if __name__ == '__main__':
             removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
             if(len(str(removeUnzip))==0):
                 removeUnzip='n'
-            confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
                 confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))

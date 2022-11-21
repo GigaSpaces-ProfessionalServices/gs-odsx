@@ -5,6 +5,7 @@ from utils.ods_ssh import connectExecuteSSH
 from scripts.logManager import LogManager
 from utils.ods_validation import validateClusterCsvHost
 from utils.ods_cluster_config import config_remove_nb_streamByNameIP, config_get_nb_list
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 from colorama import Fore
 
@@ -128,7 +129,7 @@ if __name__ == '__main__':
         logger.info("serverNodes : "+str(serverNodes))
         if(len(str(serverNodes))>0):
             verboseHandle.printConsoleInfo("Consul_servers going to remove ["+serverNodes+"]")
-            confirmServerRemove = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative server un-installation ? (y/n) [y]:"+Fore.RESET))
+            confirmServerRemove = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed above NB applicative server un-installation ? (y/n) [y]:"+Fore.RESET))
             if(len(str(confirmServerRemove))==0):
                 confirmServerRemove='y'
         else:

@@ -7,7 +7,7 @@ from colorama import Fore
 import requests, json, math
 from scripts.logManager import LogManager
 from utils.ods_validation import port_check_config
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
@@ -97,7 +97,7 @@ def cleanUpManagerServers():
         logger.info("managerNodes: main"+str(managerNodes))
         verboseHandle.printConsoleInfo("Cleaning [/dbagigawork] ,[/dbagigalogs] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
         managerHosts = getManagerServerHostList()
-        confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
+        confirm = str(userInputWithEscWrapper(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
             cmd = "rm -rf /dbagigawork/*;find /dbagigalogs -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
@@ -124,7 +124,7 @@ def cleanUpSpaceServers():
         logger.info("spaceNodes: main"+str(spaceNodes))
         verboseHandle.printConsoleInfo("Cleaning [/dbagigadata] ,[/dbagigalogs] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
         spaceHosts = getSpaceServerHostList()
-        confirm = str(input(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
+        confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
             cmd = "rm -rf /dbagigadata/*;find /dbagigalogs -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
@@ -171,7 +171,7 @@ if __name__ == '__main__':
     try:
         args = []
         optionSelected = ""
-        if (len(sys.argv) == 2):
+        if (len(sys.argv) >= 2):
             optionSelected = str(sys.argv[1])
         if optionSelected == "managerservers" or optionSelected == "spaceservers" :
             if(optionSelected=="managerservers"):
