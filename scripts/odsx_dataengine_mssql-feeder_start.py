@@ -314,7 +314,7 @@ if __name__ == '__main__':
             displayMSSQLFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
-                if len(sys.argv) > 1:
+                if len(sys.argv) > 1 and sys.argv[1] != "m":
                     proceedToStartMSSQLFeederWithName(sys.argv[1])
                 else:
                     inputParam()

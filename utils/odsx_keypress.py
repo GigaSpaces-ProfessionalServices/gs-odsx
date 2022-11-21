@@ -5,6 +5,11 @@ from colorama import Fore
 
 
 def userInputWrapper(str):
+    userInput = input(str)
+    return userInput
+
+# Moving to different branch -f param
+def userInputWrapper1(str):
     userInput = ""
     cmd = ''
     cmdlist = list(cmd)
@@ -18,8 +23,12 @@ def userInputWrapper(str):
     print(cmdlist)
     return userInput
 
-
 def userInputWithEscWrapper(str):
+    userInput = input(str)
+    return userInput
+
+#Reverting ESC changes
+def userInputWithEscWrapper1(str):
     try:
         # verboseHandle = LogManager(os.path.basename(__file__))
         # verboseHandle.printConsoleWarning(str)
