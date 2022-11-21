@@ -10,6 +10,7 @@ from utils.ods_ssh import connectExecuteSSH
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from scripts.odsx_servers_di_list import listDIServers
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -72,7 +73,7 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
     while(len(str(hostNumer))==0):
         hostNumer = str(input(Fore.YELLOW+"Enter serial number to remove : "+Fore.RESET))
     host = host_dict_obj.get(hostNumer)
-    confirm = str(input(Fore.YELLOW+"Are you sure want to remove "+str(host)+" ? (y/n) [y]"+Fore.RESET))
+    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove "+str(host)+" ? (y/n) [y]"+Fore.RESET))
     if(confirm=='y' or len(str(confirm))==0 ):
         logger.info("Individual host : "+str(host))
         commandToExecute="scripts/servers_di_remove.sh"
@@ -106,7 +107,7 @@ def executeCommandForUnInstall():
                 verboseHandle.printConsoleInfo("Want to remove kafka : "+str(wantToRemoveKafka))
                 verboseHandle.printConsoleInfo("Want to remove zookeeper : "+str(wantToRemoveZk))
                 verboseHandle.printConsoleInfo("Want to remove telegraf : "+str(wantToRemoveTelegraf))
-                confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
+                confirmUninstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))

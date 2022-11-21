@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_nb_list
 from utils.ods_ssh import connectExecuteSSH
 from utils.ods_app_config import readValuefromAppConfig
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -106,7 +107,7 @@ def executeCommandForStop():
         nodesManagement = getManagementHostList()
         if(len(nodesManagement)>0):
             print(Fore.YELLOW+"NB management servers going to stop ["+nodesManagement+"]"+Fore.RESET)
-        confirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y]: "+Fore.RESET))
+        confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y]: "+Fore.RESET))
         if(len(str(confirm))==0):
             confirm='y'
         if confirm.casefold() == 'y':

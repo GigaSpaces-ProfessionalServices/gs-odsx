@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
@@ -530,7 +531,7 @@ def proceedToDeployPUInputParam(managerHost):
 
     displaySummaryOfInputParam()
 
-    finalConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
+    finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
     if(len(str(finalConfirm))==0):
         finalConfirm='y'
     if(finalConfirm=='y'):

@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH
 from utils.ods_cluster_config import config_remove_influxdb_byNameIP, config_get_influxdb_node
 from utils.ods_app_config import set_value_in_property_file
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -72,7 +73,7 @@ def executeCommandForUnInstall():
     try:
         nodes = getInfluxdbServerHostList()
         if(len(nodes)>0):
-            confirmUninstall = str(input(Fore.YELLOW+"Are you sure want to remove Influxdb servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
+            confirmUninstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove Influxdb servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
             if(len(str(confirmUninstall))==0):
                 confirmUninstall='y'
             logger.info("confirmUninstall :"+str(confirmUninstall))

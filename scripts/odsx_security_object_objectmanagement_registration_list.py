@@ -65,6 +65,7 @@ class bcolors:
 def myCheckArg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')
     parser.add_argument('m', nargs='?')
+    parser.add_argument('-f', nargs='?')
     parser.add_argument('-dryrun', '--dryrun',
                         help='Dry run flag',
                         default='false', action='store_true')

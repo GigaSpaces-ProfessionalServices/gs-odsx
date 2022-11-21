@@ -10,7 +10,7 @@ from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteComma
 from scripts.spinner import Spinner
 from colorama import Fore
 from scripts.odsx_servers_di_list import listDIServers
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -117,7 +117,7 @@ def stopKafkaService(args):
     try:
         if choiceOption == '1':
             hostNumber = str(input(Fore.YELLOW+"Enter host number to stop kafka service : "+Fore.RESET))
-            choice = str(input(Fore.YELLOW+"Are you sure want to stop kafka service on "+str(host_dict_obj.get(hostNumber))+" ? (y/n) [y]: "+Fore.RESET))
+            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop kafka service on "+str(host_dict_obj.get(hostNumber))+" ? (y/n) [y]: "+Fore.RESET))
             if len(choice)==0:
                 choice='y'
             if choice =='y':
@@ -136,7 +136,7 @@ def stopKafkaService(args):
             else:
                 exit(0)
         if choiceOption == "":
-            choice = str(input(Fore.YELLOW+"Are you sure want to stop kafka service on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
+            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop kafka service on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
             if choice.casefold() == 'n':
                 exit(0)
             for node in config_get_dataIntegration_nodes():

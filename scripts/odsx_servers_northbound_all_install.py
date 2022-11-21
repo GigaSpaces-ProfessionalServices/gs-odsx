@@ -10,6 +10,7 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_add_nb_node, config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 
@@ -313,7 +314,7 @@ if __name__ == '__main__':
         summaryForApplicativeInstallation()
         summaryForAgentInstallation()
         summaryForManagementInstallation()
-        confirmInstall = str(input("Are you sure want to proceed for installation ? (y/n) [y] :"))
+        confirmInstall = str(userInputWrapper("Are you sure want to proceed for installation ? (y/n) [y] :"))
         if confirmInstall.casefold()=='':
             confirmInstall='y'
         if(confirmInstall.casefold()=='y'):

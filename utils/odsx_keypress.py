@@ -1,20 +1,37 @@
 import os
+import sys
 
-from scripts.logManager import LogManager
-from colorama import init, Fore, Back, Style
+from colorama import Fore
+
+
+def userInputWrapper(str):
+    userInput = ""
+    cmd = ''
+    cmdlist = list(cmd)
+    n = len(sys.argv)
+    for i in range(1, n):
+        cmdlist.append(sys.argv[i])
+    if cmdlist.__contains__("-f"):
+        userInput = "y"
+    else:
+        userInput = input(str)
+    print(cmdlist)
+    return userInput
 
 
 def userInputWithEscWrapper(str):
     try:
-       # verboseHandle = LogManager(os.path.basename(__file__))
-       # verboseHandle.printConsoleWarning(str)
+        # verboseHandle = LogManager(os.path.basename(__file__))
+        # verboseHandle.printConsoleWarning(str)
         print(Fore.YELLOW + str)
         keyPressed = userInputWithEsc()
-        #print(keyPressed)
+        # print(keyPressed)
         os.system('stty sane')
+        os.system("stty erase ^H")
         return keyPressed
     except (KeyboardInterrupt, SystemExit):
         os.system('stty sane')
+        os.system("stty erase ^H")
         return "99"
 
 

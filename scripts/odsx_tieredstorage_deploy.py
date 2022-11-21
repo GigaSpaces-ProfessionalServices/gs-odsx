@@ -15,6 +15,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueFromYaml, \
     getYamlFilePathInsideFolder, set_value_yaml_config
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
@@ -564,7 +565,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         data = dataPuREST(resource,resourceName,zoneOfPU,partition,maxInstancesPerMachine,backUpRequired)
 
         displaySummaryOfInputParam(confirmCreateGSC)
-        finalConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
         if(len(str(finalConfirm))==0):
             finalConfirm='y'
         if(finalConfirm=='y'):

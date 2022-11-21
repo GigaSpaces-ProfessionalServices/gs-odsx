@@ -7,7 +7,7 @@ import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
 from scripts.spinner import Spinner
@@ -255,7 +255,7 @@ def proceedToUndeployPU(managerHost):
 
             proceedForInputParams()
 
-            confirmToRemoveSpace = str(input(Fore.YELLOW+"Are you sure want to remove "+str(spaceTobeUndeploy)+" ? (y/n) [y] :"))
+            confirmToRemoveSpace = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove "+str(spaceTobeUndeploy)+" ? (y/n) [y] :"))
             logger.info("confirmToRemoveSpace : "+str(confirmToRemoveSpace))
             if(len(str(confirmToRemoveSpace))==0):
                 confirmToRemoveSpace='y'
@@ -336,7 +336,7 @@ def removeGSC(managerHost,spaceNumberTobeRemove,flag):
         if(len(zoneToDeleteGSC)==0):
             zoneToDeleteGSC=zoneToRemove
         logger.info("zoneToDeleteGSC : "+str(zoneToDeleteGSC))
-        confirmRemoveGSC = str(input(Fore.YELLOW+"Are you sure want to remove GSCs under zone ["+str(zoneToDeleteGSC)+"] ? (y/n) [y] :"))
+        confirmRemoveGSC = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove GSCs under zone ["+str(zoneToDeleteGSC)+"] ? (y/n) [y] :"))
         if(len(str(confirmRemoveGSC))==0):
             confirmRemoveGSC='y'
     else:

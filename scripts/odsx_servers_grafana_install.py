@@ -11,6 +11,7 @@ from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_node
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder, \
     getYamlJarFilePath
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -119,7 +120,7 @@ if __name__ == '__main__':
     try:
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         installUserAndTargetDirectory()
-        confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Grafana servers (y/n) [y]: "+Fore.RESET))
+        confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install Grafana servers (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
             confirmInstall='y'
         if(confirmInstall=='y'):

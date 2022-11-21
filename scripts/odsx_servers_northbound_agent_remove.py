@@ -5,6 +5,7 @@ from utils.ods_ssh import connectExecuteSSH
 from scripts.logManager import LogManager
 from utils.ods_validation import validateClusterCsvHost
 from utils.ods_cluster_config import config_remove_nb_streamByNameIP, config_get_nb_list
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 from colorama import Fore
 
@@ -140,7 +141,7 @@ if __name__ == '__main__':
         logger.info("agentNodes : "+str(agentNodes))
         if(len(agentNodes)>0):
             verboseHandle.printConsoleInfo("Consul agents going to remove ["+agentNodes+"]")
-            confirmAgentRemove = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative agent un-installation ? (y/n) [y]:"+Fore.RESET))
+            confirmAgentRemove = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed above NB applicative agent un-installation ? (y/n) [y]:"+Fore.RESET))
             if(len(str(confirmAgentRemove))==0):
                 confirmAgentRemove='y'
         else:
