@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
 import glob
 import os, time, requests,json, subprocess, sqlite3
+import re
+from datetime import date, timedelta
+
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValueByConfigObj
@@ -62,6 +65,23 @@ def getManagerHost(managerNodes):
     except Exception as e:
         handleException(e)
 
+def getFormattedDate(mySubString):
+    mySubString = mySubString.replace("%20", " ")
+    startDate = ""
+    endDate = ""
+    if re.search('current|date', mySubString.casefold()):
+        startDate = date.today().strftime('%d/%m/%Y')
+    if(re.search('days', mySubString.casefold())):
+        dates = mySubString.split('-')[-1]
+        num = [int(x) for x in dates.split() if x.isdigit()]
+        endDate = date.today()-timedelta(days=num[0])
+        endDate = endDate.strftime('%d/%m/%Y')
+    if ( len(str(startDate)) == 0 or len(str(endDate)) == 0):
+        conditionDate = mySubString
+    else:
+        conditionDate = mySubString.split('=')[0]+"='"+str(endDate)+"'"
+    return conditionDate
+
 def listDeployed(managerHost):
     logger.info("listDeployed()")
     global gs_space_dictionary_obj
@@ -106,18 +126,18 @@ def listDeployed(managerHost):
                     if (line.startswith("curl")):
                         myString = line
                         startString = '&condition='
-                        endString = "'&exclude-columns="
-                        global mySubString
+                        endString = "&exclude-columns="
                         mySubString = myString[
                                       myString.find(startString) + len(startString):myString.find(endString)]
                         puName = 'mssqlfeeder_'+puName
+                        conditionDate = getFormattedDate(mySubString)
                         dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                      Fore.GREEN + puName + Fore.RESET,
                                      Fore.GREEN + str("-") + Fore.RESET,
                                      Fore.GREEN + str("-") + Fore.RESET,
                                      Fore.GREEN + str("-") + Fore.RESET,
                                      Fore.GREEN + "Undeployed" + Fore.RESET,
-                                     Fore.GREEN + str(mySubString) + Fore.RESET,
+                                     Fore.GREEN + str(conditionDate) + Fore.RESET,
                                      ]
                 counter = counter + 1
                 dataTable.append(dataArray)
@@ -144,16 +164,17 @@ def listDeployed(managerHost):
                                 if (line.startswith("curl")):
                                     myString = line
                                     startString = '&condition='
-                                    endString = "'&exclude-columns="
+                                    endString = "&exclude-columns="
                                     mySubString = myString[myString.find(startString) + len(startString):myString.find(
                                         endString)]
+                                    conditionDate = getFormattedDate(mySubString)
                                     dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                                  Fore.GREEN + data["name"] + Fore.RESET,
                                                  Fore.GREEN + str(hostId) + Fore.RESET,
                                                  Fore.GREEN + str(data["sla"]["zones"]) + Fore.RESET,
                                                  Fore.GREEN + str(queryStatus) + Fore.RESET,
                                                  Fore.GREEN + data["status"] + Fore.RESET,
-                                                 Fore.GREEN + str(mySubString) + Fore.RESET
+                                                 Fore.GREEN + str(conditionDate) + Fore.RESET
                                                  ]
                     logger.info("UPDATE mssql_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
                         data["name"]) + "%' ")

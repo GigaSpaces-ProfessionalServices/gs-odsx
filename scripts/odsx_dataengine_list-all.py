@@ -188,8 +188,7 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
                    Fore.YELLOW+"Query Status"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET,
-                   Fore.YELLOW+"Condition"+Fore.RESET
+                   Fore.YELLOW+"Status"+Fore.RESET
                    ]
 
         dataTable = getAllFeeders()
@@ -219,8 +218,8 @@ if __name__ == '__main__':
                     safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
                     objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
                     logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-                    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username =str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                    password =str(getPasswordByHost(managerHost,appId,safeId,objectId))
                 listDeployed(managerHost)
             else:
                 logger.info("No manager status ON.")
