@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 
 import os, time, requests,json, subprocess, glob,sqlite3
+import sys
+
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.odsx_keypress import userInputWithEscWrapper
@@ -264,6 +266,21 @@ def proceedToStartMSSQLFeeder(fileNumberToStart):
     #output = executeLocalCommandAndGetOutput(cmd)
     #print(output)
 
+def proceedToStartMSSQLFeederWithName(puName):
+    logger.info("proceedToStartMSSQLFeederWithName()")
+    #shFileName = fileNameDict.get(str(fileNumberToStart))
+    print(puName)
+    shFileName = fileNamePuNameDict.get(str(puName))
+    hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
+    print("hostAndPort"+str(hostAndPort))
+    host = str(hostAndPort[0])
+    port = str(hostAndPort[1])
+    shFileName = str(hostAndPort[2])
+    cmd = str(sourceMSSQLFeederShFilePath)+'/'+shFileName+' '+host+" "+port
+    logger.info("cmd : "+str(cmd))
+    print(cmd)
+    os.system(cmd)
+
 if __name__ == '__main__':
     logger.info("odsx_dataengine_mssql-feeder_start")
     verboseHandle.printConsoleWarning("Menu -> DataEngine -> MSSQL-Feeder -> Start")
@@ -275,7 +292,10 @@ if __name__ == '__main__':
             displayMSSQLFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
-                inputParam()
+                if len(sys.argv) > 1:
+                    proceedToStartMSSQLFeederWithName(sys.argv[1])
+                else:
+                    inputParam()
             else:
                 logger.info("No feeder found.")
                 verboseHandle.printConsoleInfo("No feeder found.")
