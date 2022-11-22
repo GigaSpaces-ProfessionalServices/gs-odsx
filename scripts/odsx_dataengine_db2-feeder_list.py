@@ -133,10 +133,18 @@ def listDeployed(managerHost):
                             myString = line
                             startString = '&condition='
                             endString = "&exclude-columns="
-                            mySubString = myString[
-                                          myString.find(startString) + len(startString):myString.find(endString)]
-                            puName = 'db2feeder_'+puName
-                            conditionDate = getFormattedDate(mySubString)
+                            if(myString.find(startString) != -1):
+                                mySubString = myString[
+                                              myString.find(startString) + len(startString):myString.find(endString)]
+                                puName = 'db2feeder_'+puName
+                                conditionDate = getFormattedDate(mySubString)
+                            else:
+                                puName = 'db2feeder_'+puName
+                                conditionDate = "-"
+                            # mySubString = myString[
+                            #               myString.find(startString) + len(startString):myString.find(endString)]
+                            # puName = 'db2feeder_'+puName
+                            # conditionDate = getFormattedDate(mySubString)
                             dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                                          Fore.GREEN+str(puName)+Fore.RESET,
                                          Fore.GREEN+str("-")+Fore.RESET,
@@ -171,8 +179,14 @@ def listDeployed(managerHost):
                                     myString = line
                                     startString = '&condition='
                                     endString = '&exclude'
-                                    mySubString=myString[myString.find(startString)+len(startString):myString.find(endString)]
-                                    conditionDate = getFormattedDate(mySubString)
+                                    if(myString.find(startString) != -1):
+                                        mySubString = myString[
+                                                      myString.find(startString) + len(startString):myString.find(endString)]
+                                        conditionDate = getFormattedDate(mySubString)
+                                    else:
+                                        conditionDate = "-"
+                                    # mySubString=myString[myString.find(startString)+len(startString):myString.find(endString)]
+                                    # conditionDate = getFormattedDate(mySubString)
                                     dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                                                  Fore.GREEN+data["name"]+Fore.RESET,
                                                  Fore.GREEN+str(hostId)+Fore.RESET,
