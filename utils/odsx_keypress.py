@@ -3,13 +3,14 @@ import sys
 
 from colorama import Fore
 
+from utils.ods_app_config import readValuefromAppConfig
 
-def userInputWrapper(str):
-    userInput = input(str)
+def userInputWrapper(inputStr):
+    userInput = input(inputStr)
     return userInput
 
 # Moving to different branch -f param
-def userInputWrapper1(str):
+def userInputWrapper1(inputStr):
     userInput = ""
     cmd = ''
     cmdlist = list(cmd)
@@ -19,29 +20,27 @@ def userInputWrapper1(str):
     if cmdlist.__contains__("-f"):
         userInput = "y"
     else:
-        userInput = input(str)
+        userInput = input(inputStr)
     print(cmdlist)
     return userInput
 
-def userInputWithEscWrapper(str):
-    userInput = input(str)
-    return userInput
-
 #Reverting ESC changes
-def userInputWithEscWrapper1(str):
-    try:
-        # verboseHandle = LogManager(os.path.basename(__file__))
-        # verboseHandle.printConsoleWarning(str)
-        print(Fore.YELLOW + str)
-        keyPressed = userInputWithEsc()
-        # print(keyPressed)
-        os.system('stty sane')
-        os.system("stty erase ^H")
-        return keyPressed
-    except (KeyboardInterrupt, SystemExit):
-        os.system('stty sane')
-        os.system("stty erase ^H")
-        return "99"
+def userInputWithEscWrapper(inputStr):
+    isEsc = str(readValuefromAppConfig("app.functionality.esc"))
+    if(isEsc == 'True'):
+        try:
+            print(Fore.YELLOW + inputStr)
+            keyPressed = userInputWithEsc()
+            os.system('stty sane')
+            os.system("stty erase ^H")
+            return keyPressed
+        except (KeyboardInterrupt, SystemExit):
+            os.system('stty sane')
+            os.system("stty erase ^H")
+            return "99"
+    else:
+        userInput = input(inputStr)
+        return userInput
 
 
 def userInputWithEsc():
