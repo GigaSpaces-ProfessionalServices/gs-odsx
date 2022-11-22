@@ -2,6 +2,7 @@
 
 import os, time, requests,json, subprocess, glob,sqlite3
 import re
+import sys
 from datetime import date, timedelta
 
 from colorama import Fore
@@ -283,6 +284,19 @@ def sqlLiteGetHostAndPortByFileName(puName):
     except Exception as e:
         handleException(e)
 
+def proceedToStopDB2FeederByName(puName):
+    logger.info("proceedToStopDB2Feeder()")
+    #shFileName = fileNameDict.get(str(fileNumberToStop))
+    print(puName)
+    shFileName = fileNamePuNameDict.get(str(puName))
+    hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
+    logger.info("hostAndPort"+str(hostAndPort))
+    host = str(hostAndPort[0])
+    port = str(hostAndPort[1])
+    cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
+    print(cmd)
+    logger.info("cmd : "+str(cmd))
+    os.system(cmd)
 def proceedToStopDB2Feeder(fileNumberToStop):
     logger.info("proceedToStopDB2Feeder()")
     #shFileName = fileNameDict.get(str(fileNumberToStop))
@@ -320,7 +334,10 @@ if __name__ == '__main__':
             displayDB2FeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
-                inputParam()
+                if len(sys.argv) > 1 and sys.argv[1] != "m":
+                    proceedToStopDB2FeederByName(sys.argv[1])
+                else:
+                    inputParam()
             else:
                 logger.info("No feeder found.")
                 verboseHandle.printConsoleInfo("No feeder found.")
