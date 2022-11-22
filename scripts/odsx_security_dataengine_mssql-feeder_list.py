@@ -136,11 +136,18 @@ def listDeployed(managerHost):
                             myString = line
                             startString = '&condition='
                             endString = "&exclude-columns="
-                            global mySubString
-                            mySubString = myString[
-                                          myString.find(startString) + len(startString):myString.find(endString)]
-                            puName = 'mssqlfeeder_'+puName
-                            conditionDate = getFormattedDate(mySubString)
+                            # global mySubString
+                            # mySubString = myString[
+                            #               myString.find(startString) + len(startString):myString.find(endString)]
+                            # puName = 'mssqlfeeder_'+puName
+                            if(myString.find(startString) != -1):
+                                    mySubString = myString[
+                                                  myString.find(startString) + len(startString):myString.find(endString)]
+                                    puName = 'mssqlfeeder_'+puName
+                                    conditionDate = getFormattedDate(mySubString)
+                            else:
+                                puName = 'mssqlfeeder_'+puName
+                                conditionDate = "-"
                             dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                          Fore.GREEN + puName + Fore.RESET,
                                          Fore.GREEN + str("-") + Fore.RESET,
@@ -176,9 +183,16 @@ def listDeployed(managerHost):
                                     myString = line
                                     startString = '&condition='
                                     endString = "&exclude-columns="
-                                    mySubString = myString[myString.find(startString) + len(startString):myString.find(
-                                        endString)]
-                                    conditionDate = getFormattedDate(mySubString)
+                                    if(myString.find(startString) != -1):
+                                        mySubString = myString[
+                                                      myString.find(startString) + len(startString):myString.find(endString)]
+                                            # puName = 'mssqlfeeder_'+puName
+                                        conditionDate = getFormattedDate(mySubString)
+                                    else:
+                                        conditionDate = "-"
+                                    # mySubString = myString[myString.find(startString) + len(startString):myString.find(
+                                    #     endString)]
+                                    # conditionDate = getFormattedDate(mySubString)
                                     dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                                  Fore.GREEN + data["name"] + Fore.RESET,
                                                  Fore.GREEN + str(hostId) + Fore.RESET,

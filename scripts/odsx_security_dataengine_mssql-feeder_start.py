@@ -173,11 +173,14 @@ def listDeployed(managerHost):
                         myString = line
                         startString = '&condition='
                         endString = "&exclude-columns="
-                        global mySubString
-                        mySubString = myString[
-                                      myString.find(startString) + len(startString):myString.find(endString)]
-                        puName = 'mssqlfeeder_'+puName
-                        conditionDate = getFormattedDate(mySubString)
+                        if(myString.find(startString) != -1):
+                            mySubString = myString[
+                                          myString.find(startString) + len(startString):myString.find(endString)]
+                            puName = 'mssqlfeeder_'+puName
+                            conditionDate = getFormattedDate(mySubString)
+                        else:
+                            puName = 'mssqlfeeder_'+puName
+                            conditionDate = "-"
                         dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                      Fore.GREEN + puName + Fore.RESET,
                                      Fore.GREEN + str("-") + Fore.RESET,
@@ -213,9 +216,16 @@ def listDeployed(managerHost):
                                     myString = line
                                     startString = '&condition='
                                     endString = "&exclude-columns="
-                                    mySubString = myString[myString.find(startString) + len(startString):myString.find(
-                                        endString)]
-                                    conditionDate = getFormattedDate(mySubString)
+                                    if(myString.find(startString) != -1):
+                                        mySubString = myString[
+                                                      myString.find(startString) + len(startString):myString.find(endString)]
+                                        # puName = 'mssqlfeeder_'+puName
+                                        conditionDate = getFormattedDate(mySubString)
+                                    else:
+                                        conditionDate = "-"
+                                    # mySubString = myString[myString.find(startString) + len(startString):myString.find(
+                                    #     endString)]
+                                    # conditionDate = getFormattedDate(mySubString)
                                     dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                                  Fore.GREEN + data["name"] + Fore.RESET,
                                                  Fore.GREEN + str(hostId) + Fore.RESET,
@@ -329,10 +339,10 @@ if __name__ == '__main__':
             displayMSSQLFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
-                if len(sys.argv) > 1 and sys.argv[1] != "m":
-                    proceedToStartMSSQLFeederWithName(sys.argv[1])
-                else:
-                    inputParam()
+                # if len(sys.argv) > 1:
+                #     proceedToStartMSSQLFeederWithName(sys.argv[1])
+                # else:
+                inputParam()
             else:
                 logger.info("No feeder found.")
                 verboseHandle.printConsoleInfo("No feeder found.")
