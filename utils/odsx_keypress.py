@@ -5,18 +5,15 @@ from colorama import Fore
 
 
 def userInputWrapper(str):
-    userInput = input(str)
-    return userInput
-
-# Moving to different branch -f param
-def userInputWrapper1(str):
     userInput = ""
     cmd = ''
     cmdlist = list(cmd)
     n = len(sys.argv)
     for i in range(1, n):
         cmdlist.append(sys.argv[i])
+    print(cmdlist)
     if cmdlist.__contains__("-f"):
+        print("in -f")
         userInput = "y"
     else:
         userInput = input(str)
@@ -24,23 +21,27 @@ def userInputWrapper1(str):
     return userInput
 
 def userInputWithEscWrapper(str):
-    userInput = input(str)
-    return userInput
-
-#Reverting ESC changes
-def userInputWithEscWrapper1(str):
     try:
         # verboseHandle = LogManager(os.path.basename(__file__))
         # verboseHandle.printConsoleWarning(str)
         print(Fore.YELLOW + str)
-        keyPressed = userInputWithEsc()
+        cmd = ''
+        cmdlist = list(cmd)
+        n = len(sys.argv)
+        for i in range(1, n):
+            cmdlist.append(sys.argv[i])
+        if cmdlist.__contains__("-f"):
+            print("in -f n")
+            keyPressed = ""
+        else:
+            keyPressed = userInputWithEsc()
         # print(keyPressed)
         os.system('stty sane')
-        os.system("stty erase ^H")
+        #os.system("stty erase ^H")
         return keyPressed
     except (KeyboardInterrupt, SystemExit):
         os.system('stty sane')
-        os.system("stty erase ^H")
+        #os.system("stty erase ^H")
         return "99"
 
 
