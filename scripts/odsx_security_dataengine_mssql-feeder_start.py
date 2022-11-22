@@ -339,10 +339,10 @@ if __name__ == '__main__':
             displayMSSQLFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
-                # if len(sys.argv) > 1:
-                #     proceedToStartMSSQLFeederWithName(sys.argv[1])
-                # else:
-                inputParam()
+                if len(sys.argv) > 1 and sys.argv[1] != "m":
+                    proceedToStartMSSQLFeederWithName(sys.argv[1])
+                else:
+                    inputParam()
             else:
                 logger.info("No feeder found.")
                 verboseHandle.printConsoleInfo("No feeder found.")
