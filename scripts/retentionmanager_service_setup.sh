@@ -2,7 +2,7 @@
 home_dir_sh=$(pwd)
 service_name='retention-manager.service'
 serviceJarName='retention-manager.jar'
-log_location=/dbagigalogs/retenion-manager/
+log_location=/dbagigalogs/retention-manager/
 space_name=$1
 manager_host=$2
 db_location=$3
