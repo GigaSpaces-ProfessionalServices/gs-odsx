@@ -467,7 +467,7 @@ if __name__ == '__main__':
                     exit(0)
                 showMenuOptions()
                 selectedOption = str(
-                    input(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
+                    userInputWithEscWrapper(Fore.YELLOW + "Select an option to perform :" + Fore.RESET))
         else:
             verboseHandle.printConsoleError("Invalid option!")
             exit(0)

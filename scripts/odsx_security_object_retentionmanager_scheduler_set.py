@@ -29,7 +29,7 @@ def setScheduleInterval():
     #print("defaultManagerServer=>"+str(defaultManagerServer))
     logger.info("setScheduleInterval() : start")
 
-    confirmMsg = Fore.YELLOW + "Are you sure, you want to update scheduler interval for retenion manager ? (Yes/No):" + Fore.RESET
+    confirmMsg = Fore.YELLOW + "Are you sure, you want to update scheduler interval for retention manager ? (Yes/No):" + Fore.RESET
     schedulerConfInput = Fore.YELLOW + "Please select scheduler configuration from below options \n [1]-Regular Interval\n [2]-Specific time in a day\n [99]-Exit : " + Fore.RESET
     
     schedulerConf = str(input(schedulerConfInput))

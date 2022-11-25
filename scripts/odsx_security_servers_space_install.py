@@ -447,7 +447,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                         #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
                         #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..keytab")+msSqlFeederFileTarget)
+                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..keytab")+msSqlFeederFileTarget)
                         #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
                         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+msSqlFeederFileTarget)
                         #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
