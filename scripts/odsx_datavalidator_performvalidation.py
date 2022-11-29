@@ -13,6 +13,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommand
 from subprocess import Popen, PIPE
 from scripts.spinner import Spinner
 from utils.ods_validation import isValidHost, getTelnetStatus
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -152,7 +153,7 @@ def doValidate():
                 "whereCondition": whereCondition
             }
             headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
-            response = requests.post("http://"+dataValidatorServiceHost+":7890/measurement/register"
+            response = requests.post("http://"+dataValidatorServiceHost+":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/register"
                                      ,data=json.dumps(data)
                                      ,headers=headers)
 
@@ -176,7 +177,7 @@ def doValidate():
                 executionTime = '0'
 
             response = requests.get(
-                "http://" + dataValidatorServiceHost + ":7890/measurement/run/"+measurementId+"?executionTime="+executionTime)
+                "http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/run/"+measurementId+"?executionTime="+executionTime)
 
             logger.info(str(response.status_code))
             jsonArray = json.loads(response.text)
@@ -213,7 +214,7 @@ def doValidate():
 
             # http://localhost:7890/compare/avg?dataSource1Type=gigaspaces&dataSource1HostIp=localhost&dataSource1Port=414&schemaName1=demo&dataSource2Type=gigaspaces&dataSource2HostIp=localhost&dataSource2Port=4174&schemaName2=demo2&tableName=com.mycompany.app.Person&fieldName=salary
             response = requests.get(
-                "http://" + dataValidatorServiceHost + ":7890/compare/" + measurementIdA+"/"+measurementIdB
+                "http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/compare/" + measurementIdA+"/"+measurementIdB
                  + "?executionTime=" + executionTime)
 
             if response.status_code == 200:
@@ -297,7 +298,7 @@ def doValidate():
 
         # http://localhost:7890/compare/avg?dataSource1Type=gigaspaces&dataSource1HostIp=localhost&dataSource1Port=414&schemaName1=demo&dataSource2Type=gigaspaces&dataSource2HostIp=localhost&dataSource2Port=4174&schemaName2=demo2&tableName=com.mycompany.app.Person&fieldName=salary
         response = requests.get(
-            "http://" + dataValidatorServiceHost + ":7890/compare/" + test + "?dataSource1Type=" + dataSource1Type
+            "http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/compare/" + test + "?dataSource1Type=" + dataSource1Type
             + "&dataSource1HostIp=" + dataSource1HostIp + "&dataSource1Port=" + dataSource1Port
             + "&username1=" + username1 + "&password1=" + password1
             + "&schemaName1=" + schemaName1 + "&tableName1=" + tableName1
@@ -322,7 +323,7 @@ def doValidate():
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
     elif testType == '3':
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/scheduledtasks")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/scheduledtasks")
         logger.info(str(response.status_code))
         jsonArray = json.loads(response.text)
         response = json.loads(jsonArray["response"])
@@ -387,7 +388,7 @@ measurementids=[]
 def printmeasurementtable(dataValidatorServiceHost):
 
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/list")
     except:
         print("An exception occurred")
 

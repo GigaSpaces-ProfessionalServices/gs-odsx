@@ -121,7 +121,7 @@ def executeCommandForUnInstall():
                         for host in nodes.split(','):
                             if(dataValidationHost != ''):
                                 response = requests.delete(
-                                    "http://" + dataValidationHost + ":7890/agent/remove/" + host)
+                                    "http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/agent/remove/" + host)
                                 logger.info(str(response.status_code))
 
                             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)

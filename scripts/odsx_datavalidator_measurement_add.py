@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -131,7 +132,7 @@ def doValidate():
         }
         
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
-        response = requests.post("http://" + dataValidatorServiceHost + ":7890/measurement/register"
+        response = requests.post("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/register"
                                  , data=json.dumps(data)
                                  , headers=headers)
 
@@ -146,7 +147,7 @@ def doValidate():
 
 def printmeasurementtable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/list")
     except:
         print("An exception occurred")
 
@@ -188,7 +189,7 @@ dataSourceIds=[]
 testTypes =["count","avg","min","max","sum",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/list")
     except:
         print("An exception occurred")
 

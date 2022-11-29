@@ -15,6 +15,7 @@ from utils.ods_cluster_config import config_add_dataValidation_node, config_get_
     config_get_dataValidation_nodes
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
 
+
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 clusterHosts=[]
@@ -112,7 +113,7 @@ def installSingle():
 
         #open and add properties as per user inputs
         with open('install/data-validation/application.properties', 'w') as f:
-         f.write('server.port=7890')
+         f.write('server.port='+str(readValuefromAppConfig("app.dv.server.port")))
          f.write('\n')
          f.write('logging.file.name='+logFilepath)
          f.write('\n')

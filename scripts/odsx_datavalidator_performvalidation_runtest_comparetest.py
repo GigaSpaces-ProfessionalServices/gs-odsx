@@ -8,6 +8,7 @@ from scripts.odsx_datavalidator_list import getDataValidationHost
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 import requests, json
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -81,7 +82,7 @@ def doValidate():
 
         # http://localhost:7890/compare/avg?dataSource1Type=gigaspaces&dataSource1HostIp=localhost&dataSource1Port=414&schemaName1=demo&dataSource2Type=gigaspaces&dataSource2HostIp=localhost&dataSource2Port=4174&schemaName2=demo2&tableName=com.mycompany.app.Person&fieldName=salary
         response = requests.get(
-            "http://" + dataValidatorServiceHost + ":7890/compare/" + measurementIdA + "/" + measurementIdB
+            "http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/compare/" + measurementIdA + "/" + measurementIdB
             + "?executionTime=" + executionTime)
 
         if response.status_code == 200:
@@ -101,7 +102,7 @@ def doValidate():
 measurementids=[]
 def printmeasurementtable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/list")
     except:
         print("An exception occurred")
 
