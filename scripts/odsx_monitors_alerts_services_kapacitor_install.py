@@ -42,6 +42,16 @@ def handleException(e):
         'trace': trace
     })))
 
+def rpmExitsOrNot():
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    rpmPath=sourceInstallerDirectory+"/kapacitor/"
+    rpmFile = [f for f in os.listdir(str(rpmPath)+"/") if f.endswith('.rpm')]
+    files = [i for i in rpmFile if i.lower().startswith(("jq","kapacitor"))]
+    if(len(files) == 2 ):
+           return "Yes"
+    else:
+           return "No"
+
 def installUserAndTargetDirectory():
     logger.info("installUserAndTargetDirectory():")
     try:
@@ -89,10 +99,14 @@ if __name__ == '__main__':
     try:
         installUserAndTargetDirectory()
         confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Kapacitor (y/n) [y]: "+Fore.RESET))
-        if(len(str(confirmInstall))==0):
-            confirmInstall='y'
-        if(confirmInstall=='y'):
-            #buildUploadInstallTarToServer()
-            executeCommandForInstall()
+        rpmStatus = rpmExitsOrNot()
+        if(rpmStatus == "Yes"):
+            if(len(str(confirmInstall))==0):
+                confirmInstall='y'
+                if(confirmInstall=='y'):
+                    #buildUploadInstallTarToServer()
+                    executeCommandForInstall()
+        else:
+            verboseHandle.printConsoleError(" jq or kapacitor rpm File not exists")
     except Exception as e:
         handleException(e)

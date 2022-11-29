@@ -106,7 +106,7 @@ def getAllFeeders():
                                          Fore.GREEN+str(puName)+Fore.RESET,
                                          Fore.GREEN+str("-")+Fore.RESET,
                                          Fore.GREEN+str("-")+Fore.RESET,
-                                         Fore.GREEN+str("-")+Fore.RESET,
+                                         # Fore.GREEN+str("-")+Fore.RESET,
                                          Fore.GREEN+str("Undeployed")+Fore.RESET,
                                          ]
                     counter=counter+1
@@ -123,7 +123,7 @@ def getAllFeeders():
                                      Fore.GREEN + puName + Fore.RESET,
                                      Fore.GREEN + str("-") + Fore.RESET,
                                      Fore.GREEN + str("-") + Fore.RESET,
-                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     # Fore.GREEN + str("-") + Fore.RESET,
                                      Fore.GREEN + "Undeployed" + Fore.RESET,
                                      ]
                 counter = counter + 1
@@ -139,7 +139,7 @@ def getAllFeeders():
                                          Fore.GREEN + resourceName + Fore.RESET,
                                          Fore.GREEN + str("-") + Fore.RESET,
                                          Fore.GREEN + str("-") + Fore.RESET,
-                                         Fore.GREEN + str("-") + Fore.RESET,
+                                         # Fore.GREEN + str("-") + Fore.RESET,
                                          Fore.GREEN + "Undeployed" + Fore.RESET,
                                          ]
                     counter = counter + 1
@@ -161,7 +161,7 @@ def getAllFeeders():
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
+                             # Fore.GREEN+str(queryStatus)+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -175,7 +175,7 @@ def getAllFeeders():
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str("-")+Fore.RESET,
+                             # Fore.GREEN+str("-")+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -188,7 +188,7 @@ def getAllFeeders():
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
+                             # Fore.GREEN+str(queryStatus)+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -219,7 +219,7 @@ def getAllFeeders():
                                  Fore.GREEN+str(puName)+Fore.RESET,
                                  Fore.GREEN+str("-")+Fore.RESET,
                                  Fore.GREEN+str("-")+Fore.RESET,
-                                 Fore.GREEN+str("-")+Fore.RESET,
+                                 # Fore.GREEN+str("-")+Fore.RESET,
                                  Fore.GREEN+str("Undeployed")+Fore.RESET,
                                  ]
                     counter=counter+1
@@ -236,7 +236,7 @@ def getAllFeeders():
                               Fore.GREEN + puName + Fore.RESET,
                               Fore.GREEN + str("-") + Fore.RESET,
                               Fore.GREEN + str("-") + Fore.RESET,
-                              Fore.GREEN + str("-") + Fore.RESET,
+                              # Fore.GREEN + str("-") + Fore.RESET,
                               Fore.GREEN + "Undeployed" + Fore.RESET,
                               ]
                 counter = counter + 1
@@ -252,7 +252,7 @@ def getAllFeeders():
                               Fore.GREEN + resourceName + Fore.RESET,
                               Fore.GREEN + str("-") + Fore.RESET,
                               Fore.GREEN + str("-") + Fore.RESET,
-                              Fore.GREEN + str("-") + Fore.RESET,
+                              # Fore.GREEN + str("-") + Fore.RESET,
                               Fore.GREEN + "Undeployed" + Fore.RESET,
                               ]
 

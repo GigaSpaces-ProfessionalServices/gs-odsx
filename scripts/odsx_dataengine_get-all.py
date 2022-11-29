@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import glob
 import os, time, requests,json, subprocess, sqlite3
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -8,7 +8,7 @@ from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite, getMSSQLQueryStatusFromSqlLite
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder, readValueByConfigObj
 from requests.auth import HTTPBasicAuth
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
@@ -178,22 +178,51 @@ def listDeployed_old(managerHost):
     except Exception as e:
         handleException(e)
 
+def listAllFeeders():
+    logger.info("getAllFeeders() : start")
 
+    profile=str(readValuefromAppConfig("app.setup.profile"))
+    managerNodes = config_get_manager_node()
+    global gs_space_dictionary_obj
+    managerHost = getManagerHost(managerNodes)
+    if profile=='security':
+        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+        logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+
+    try:
+        response=""
+        logger.info("managerHost :"+str(managerHost))
+        if profile == 'security':
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        else:
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
+        jsonArray = json.loads(response.text)
+        #verboseHandle.printConsoleWarning("Resources on cluster:")
+
+        return jsonArray
+
+    except Exception as e:
+        handleException(e)
 def listDeployed(managerHost):
     logger.info("listDeployed - db2-Feeder list")
     global gs_space_dictionary_obj
     try:
-        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-                   Fore.YELLOW+"Name"+Fore.RESET,
-                   Fore.YELLOW+"Host"+Fore.RESET,
-                   Fore.YELLOW+"Zone"+Fore.RESET,
-                   # Fore.YELLOW+"Query Status"+Fore.RESET,
-                   Fore.YELLOW+"Status"+Fore.RESET
-                   ]
+        # headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+        #            Fore.YELLOW+"Name"+Fore.RESET,
+        #            Fore.YELLOW+"Host"+Fore.RESET,
+        #            Fore.YELLOW+"Zone"+Fore.RESET,
+        #            # Fore.YELLOW+"Query Status"+Fore.RESET,
+        #            Fore.YELLOW+"Status"+Fore.RESET
+        #            ]
 
-        dataTable = getAllFeeders()
-        
-        printTabular(None,headers,dataTable)
+        dataTable = listAllFeeders()
+        print(dataTable)
+        # printTabular(None,headers,dataTable)
 
     except Exception as e:
         handleException(e)
@@ -201,7 +230,7 @@ def listDeployed(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_list-all")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine ->List-All")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine ->Get-All")
     profile=str(readValuefromAppConfig("app.setup.profile"))
     username = ""
     password = ""
