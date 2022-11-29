@@ -90,6 +90,7 @@ mv /tmp/st*_adabasFeeder.sh /usr/local/bin/
 chmod +x /usr/local/bin/st*_adabasFeeder.sh
 
 mv /tmp/$service_file /etc/systemd/system/
+systemctl enable odsxadabas.service
 systemctl daemon-reload
 
 chown gsods:gsods $rootDir

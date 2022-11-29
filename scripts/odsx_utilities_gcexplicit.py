@@ -4,6 +4,7 @@ import os
 
 import requests
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
 from scripts.odsx_security_dev_tieredstorage_deploy import displaySpaceHostWithNumber
 from scripts.odsx_servers_manager_list import getGSInfo
 from scripts.spinner import Spinner
@@ -12,7 +13,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import host_dictionary_obj
+from utils.odsx_db2feeder_utilities import host_dictionary_obj, getUsernameByHost, getPasswordByHost
 from utils.odsx_print_tabular_data import printTabularGrid, printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -77,7 +78,6 @@ def executeCommandForInstall(zone,host):
     logger.info("executeCommandForInstall(): start")
     try:
         path = str(readValuefromAppConfig("app.utilities.gcexplicit.file"))
-
         with Spinner():
             os.system('sh '+path+' -z '+zone+' -n '+host)
     except Exception as e:
@@ -110,30 +110,30 @@ def remove_duplicate_items(_api_data, _key):
         cleaned_data.append(_api_data[key])
     return cleaned_data
 
-def getZoneList():
-    try:
-        response = requests.get("http://"+managerHost+":8090/v2/containers")
-        logger.info("response.text : "+str(response.text))
-        jsonArray = json.loads(response.text)
-        zoneList = remove_duplicate_items(jsonArray,'zones')
-        verboseHandle.printConsoleWarning("List of Zone:")
-        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-                   Fore.YELLOW+"Zones"+Fore.RESET
-                   ]
-        counter=0
-        dataTable=[]
-        spaceDict={}
-        for data in zoneList:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+str(data["zones"])+Fore.RESET
-                         ]
-            counter=counter+1
-            spaceDict.update({counter: data})
-            dataTable.append(dataArray)
-        printTabularGrid(None,headers,dataTable)
-    except Exception as e:
-        handleException(e)
-    return spaceDict
+# def getZoneList():
+#     try:
+#         response = requests.get("http://"+managerHost+":8090/v2/containers")
+#         logger.info("response.text : "+str(response.text))
+#         jsonArray = json.loads(response.text)
+#         zoneList = remove_duplicate_items(jsonArray,'zones')
+#         verboseHandle.printConsoleWarning("List of Zone:")
+#         headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+#                    Fore.YELLOW+"Zones"+Fore.RESET
+#                    ]
+#         counter=0
+#         dataTable=[]
+#         spaceDict={}
+#         for data in zoneList:
+#             dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+#                          Fore.GREEN+str(data["zones"])+Fore.RESET
+#                          ]
+#             counter=counter+1
+#             spaceDict.update({counter: data})
+#             dataTable.append(dataArray)
+#         printTabularGrid(None,headers,dataTable)
+#     except Exception as e:
+#         handleException(e)
+#     return spaceDict
 
 def managerHostList(spaceNodes):
     logger.info("managerHost : "+str(spaceNodes))
@@ -168,6 +168,42 @@ def displaySummary():
           Fore.GREEN+jcmd+Fore.RESET)
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
+def getZoneList():
+    profile=str(readValuefromAppConfig("app.setup.profile"))
+    if profile=='security':
+        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+        logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+        username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
+        password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+    try:
+        if profile == 'security':
+            response = requests.get("http://"+managerHost+":8090/v2/containers",auth = HTTPBasicAuth(username, password))
+        else:
+            response = requests.get("http://"+managerHost+":8090/v2/containers")
+        logger.info("response.text : "+str(response.text))
+        jsonArray = json.loads(response.text)
+        zoneList = remove_duplicate_items(jsonArray,'zones')
+        verboseHandle.printConsoleWarning("List of Zone:")
+        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                   Fore.YELLOW+"Zones"+Fore.RESET
+                   ]
+        counter=0
+        dataTable=[]
+        spaceDict={}
+        for data in zoneList:
+            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                         Fore.GREEN+str(data["zones"])+Fore.RESET
+                         ]
+            counter=counter+1
+            spaceDict.update({counter: data["zones"][0]})
+            dataTable.append(dataArray)
+        printTabularGrid(None,headers,dataTable)
+        return spaceDict
+    except Exception as e:
+        handleException(e)
+
 if __name__ == '__main__':
     logger.info("Menu -> Utilities -> GC Explicit")
     verboseHandle.printConsoleWarning('Menu -> Utilities -> GC Explicit')
@@ -191,26 +227,26 @@ if __name__ == '__main__':
             logger.info("managerHost : main" + str(managerHost))
             if (len(str(managerHost)) > 0):
                 displaySummary()
-
-                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone[bll] : " + Fore.RESET))
+                zoneList = getZoneList()
+                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone : " + Fore.RESET))
                 while (len(str(zoneGSCNo)) == 0):
-                    zoneGSCNo = 'bll'
-                hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
+                    zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone : " + Fore.RESET))
+                zoneAddr=zoneList.get(int(zoneGSCNo))
+                hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] [n]: " + Fore.RESET))
                 while (len(str(hostSpecific)) == 0):
-                    hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
-
+                    hostSpecific = 'n'
                 if(hostSpecific == 'y' or hostSpecific == "Y"):
                     hostList=managerHostList(spaceNodes)
                     hostNo = str(input(Fore.YELLOW + "Enter host : " + Fore.RESET))
                     while (len(str(hostNo)) == 0):
                         hostNo = str(input(Fore.YELLOW + "Enter host : " + Fore.RESET))
                     hostAddr=hostList.get(int(hostNo))
-                    executeCommandForInstall(zoneGSCNo,hostAddr)
+                    executeCommandForInstall(zoneAddr,hostAddr)
 
                 elif(hostSpecific == 'n' or hostSpecific == "N"):
                     hostList=managerHostList(spaceNodes)
                     for node in hostList:
-                      executeCommandForInstall(zoneGSCNo,hostList.get(int(node)))
+                      executeCommandForInstall(zoneAddr,hostList.get(int(node)))
             else:
                 logger.info("Please check manager server status.")
                 verboseHandle.printConsoleInfo("Please check manager server status.")
