@@ -1,4 +1,4 @@
-source /home/gsods/setenv.sh
+source setenv.sh
 
 systemctl stop odsxdatavalidation.service
 sleep 2
