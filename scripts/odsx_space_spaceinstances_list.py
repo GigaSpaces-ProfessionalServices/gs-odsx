@@ -263,8 +263,8 @@ def instancelistFromHosts(managerNodes):
                     logger.info("Manager Host :"+str(managerHost))
                     spacename = listOfSpacename(managerHost)
 
-                    optionMainMenu = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] Enter your space srno. for instance list. \nPress [99] for exit.: "+Fore.RESET))
-                    logger.info("Enter your space srno. for instance list:" + str(optionMainMenu))
+                    optionMainMenu = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] Enter your space number for instance list. \nPress [99] for exit.: "+Fore.RESET))
+                    logger.info("Enter your space number for instance list:" + str(optionMainMenu))
 
                     if(str(optionMainMenu) == '1'):
                              if len(spacename) >= int(optionMainMenu):

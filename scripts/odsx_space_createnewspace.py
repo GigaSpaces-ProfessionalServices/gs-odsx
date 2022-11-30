@@ -119,10 +119,10 @@ def dataContainerREST(host,zone,memory):
     #response = requests.post("http://54.154.72.190:8090/v2/spaces?name=space&partitions=1&backups=true")
     return  data
 
-def displaySpaceHostWithNumber(managerHost, spaceNodes):
+def displaySpaceHostWithNumber(managerNodes, spaceNodes):
     try:
-        logger.info("displaySpaceHostWithNumber() managerNodes :"+str(managerHost)+" spaceNodes :"+str(spaceNodes))
-        gs_host_details_obj = get_gs_host_details(managerHost)
+        logger.info("displaySpaceHostWithNumber() managerNodes :"+str(managerNodes)+" spaceNodes :"+str(spaceNodes))
+        gs_host_details_obj = get_gs_host_details(managerNodes)
         logger.info("gs_host_details_obj : "+str(gs_host_details_obj))
         counter = 0
         space_dict_obj = host_dictionary_obj()
@@ -254,7 +254,7 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     logger.info("memoryGSCWithoutSuffix :"+str(memoryGSCWithoutSuffix))
     memoryRequiredGSCInBytes = convertMemoryGSCToBytes(memoryGSCWithoutSuffix,type,size)
     logger.info("memoryRequiredGSCInBytes :"+str(memoryRequiredGSCInBytes))
-    global isMemoryAvailable
+    
     logger.info("space_dict_obj :"+str(space_dict_obj))
     # Creating GSC on each available host
     isMemoryAvailable = checkIsMemoryAvailableOnHost(managerNodes,memoryGSC,memoryRequiredGSCInBytes,zoneGSC,numberOfGSC,managerHostConfig)
@@ -270,7 +270,7 @@ def displaySummaryOfInputParameter():
         verboseHandle.printConsoleWarning("Number of GSC per host :"+str(numberOfGSC))
         verboseHandle.printConsoleWarning("Enter memory to create gsc :"+str(memoryGSC))
         verboseHandle.printConsoleWarning("Enter zone :"+str(zoneGSC))
-    verboseHandle.printConsoleWarning("Enter space name :"+spaceName)
+    verboseHandle.printConsoleWarning("Enter space name :"+str(spaceName))
     verboseHandle.printConsoleWarning("Enter space zone :"+str(zoneOfPU))
     verboseHandle.printConsoleWarning("Enter resource name :"+str(resourceName))
     verboseHandle.printConsoleWarning("Enter resource file name :"+str(resource))
@@ -442,30 +442,30 @@ def createNewSpaceREST(managerHostConfig):
             if(str(backUpRequired)=='n'):
                 backUpRequired=0
 
-        displaySummaryOfInputParameter()
-        
-        createConfirm = str(input("Are you sure want to proceed ? (y/n) [y] :"))
-        if(confirmCreateGSC == 'y'):
-            createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig)
-        if(len(str(createConfirm))==0):
-            createConfirm='y'
-        if(createConfirm=='y'):
-            uploadFileRest(managerHostConfig)
-            data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
-            headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+            displaySummaryOfInputParameter()
+            createConfirm = str(input("Are you sure want to proceed ? (y/n) [y] :"))
+            if(confirmCreateGSC == 'y'):
+                createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig)
+                time.sleep(10)
+            if(len(str(createConfirm))==0):
+                createConfirm='y'
+            if(createConfirm=='y'):
+                uploadFileRest(managerHostConfig)
+                data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
+                headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-        # if(isBuildGlobally=='y'):
-            #for i in range(1,len(space_dict_obj)+1):
-            #    host = space_dict_obj.get(str(i))
-            # logger.info("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
-            #print("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
-            # response = requests.post("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
-            # response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers)
-            response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers)
-            deployResponseCode = str(response.content.decode('utf-8'))
-            print("deployResponseCode : "+str(deployResponseCode))
-            logger.info("deployResponseCode :"+str(deployResponseCode))
-            proceedForValidateResponse(response)
+            # if(isBuildGlobally=='y'):
+                #for i in range(1,len(space_dict_obj)+1):
+                #    host = space_dict_obj.get(str(i))
+                # logger.info("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
+                #print("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
+                # response = requests.post("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
+                # response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers)
+                response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers)
+                deployResponseCode = str(response.content.decode('utf-8'))
+                print("deployResponseCode : "+str(deployResponseCode))
+                logger.info("deployResponseCode :"+str(deployResponseCode))
+                proceedForValidateResponse(response)
         # elif(isBuildGlobally=='n'):
         #     response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers)
         #     deployResponseCode = str(response.content.decode('utf-8'))
@@ -500,7 +500,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         spaceNodes = config_get_space_hosts()
         managerHost = getManagerHost(managerNodes)
-        isMemoryAvailable=''
+        global isMemoryAvailable
+        isMemoryAvailable = False
         if(len(str(managerHost))>0):
             managerHostConfig = str(input(Fore.YELLOW+"Proceed with manager host ["+managerHost+"] : "))
             if(len(str(managerHostConfig))>0):
