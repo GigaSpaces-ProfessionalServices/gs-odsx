@@ -228,18 +228,18 @@ if __name__ == '__main__':
             if (len(str(managerHost)) > 0):
                 displaySummary()
                 zoneList = getZoneList()
-                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone : " + Fore.RESET))
+                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone Srno. : " + Fore.RESET))
                 while (len(str(zoneGSCNo)) == 0):
-                    zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone : " + Fore.RESET))
+                    zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone  Srno. : " + Fore.RESET))
                 zoneAddr=zoneList.get(int(zoneGSCNo))
                 hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] [n]: " + Fore.RESET))
                 while (len(str(hostSpecific)) == 0):
                     hostSpecific = 'n'
                 if(hostSpecific == 'y' or hostSpecific == "Y"):
                     hostList=managerHostList(spaceNodes)
-                    hostNo = str(input(Fore.YELLOW + "Enter host : " + Fore.RESET))
+                    hostNo = str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
                     while (len(str(hostNo)) == 0):
-                        hostNo = str(input(Fore.YELLOW + "Enter host : " + Fore.RESET))
+                        hostNo = str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
                     hostAddr=hostList.get(int(hostNo))
                     executeCommandForInstall(zoneAddr,hostAddr)
 

@@ -122,7 +122,7 @@ def dataContainerREST(host,zone,memory):
     #response = requests.post("http://54.154.72.190:8090/v2/spaces?name=space&partitions=1&backups=true")
     return  data
 
-def displaySpaceHostWithNumber(managerHost, spaceNodes):
+def displaySpaceHostWithNumber(managerNodes, spaceNodes):
     try:
         logger.info("displaySpaceHostWithNumber() managerNodes :"+str(managerHost)+" spaceNodes :"+str(spaceNodes))
         gs_host_details_obj = get_gs_host_details(managerHost)
@@ -257,7 +257,6 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     logger.info("memoryGSCWithoutSuffix :"+str(memoryGSCWithoutSuffix))
     memoryRequiredGSCInBytes = convertMemoryGSCToBytes(memoryGSCWithoutSuffix,type,size)
     logger.info("memoryRequiredGSCInBytes :"+str(memoryRequiredGSCInBytes))
-    global isMemoryAvailable
     logger.info("space_dict_obj :"+str(space_dict_obj))
     # Creating GSC on each available host
     isMemoryAvailable = checkIsMemoryAvailableOnHost(managerNodes,memoryGSC,memoryRequiredGSCInBytes,zoneGSC,numberOfGSC,managerHostConfig)
@@ -653,7 +652,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         spaceNodes = config_get_space_hosts()
         managerHost = getManagerHost(managerNodes)
-        isMemoryAvailable=''
+        global isMemoryAvailable
+        isMemoryAvailable=False
         if(len(str(managerHost))>0):
             username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
             password = str(getPasswordByHost(managerHost,appId,safeId,objectId))

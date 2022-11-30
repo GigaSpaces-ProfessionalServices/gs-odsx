@@ -316,9 +316,8 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                 counter=0
                 for i in range(1,len(space_dict_obj)+1):
                     host = space_dict_obj.get(str(i))
-                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container --username="+username+" --password="+password+" create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
+                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
                     logger.info("cmd : "+str(cmd))
-                    print(str(cmd))
                     with Spinner():
                         output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
                     logger.info("Extracting .tar file :"+str(output))
@@ -600,7 +599,6 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
 
             response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth=HTTPBasicAuth(username,password))
             deployResponseCode = str(response.content.decode('utf-8'))
-            print("deployResponseCode : "+str(deployResponseCode))
             logger.info("deployResponseCode :"+str(deployResponseCode))
             status = validateResponseGetDescription(deployResponseCode)
             logger.info("response.status_code :"+str(response.status_code))
@@ -656,6 +654,8 @@ if __name__ == '__main__':
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
+        global isMemoryAvailable
+        isMemoryAvailable=False
         if(len(str(managerNodes))>0):
             spaceNodes = config_get_space_hosts()
             logger.info("spaceNodes: main"+str(spaceNodes))

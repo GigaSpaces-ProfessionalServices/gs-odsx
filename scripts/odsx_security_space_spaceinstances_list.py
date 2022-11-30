@@ -307,8 +307,8 @@ def listSpaceFromHosts(managerNodes):
                     logger.info("Manager Host :"+str(managerHost))
                     spacename = listOfSpacename(managerHost,username,password)
                     if(len(spacename)>0):
-                        optionMainMenu = str(userInputWithEscWrapper("Press [99] for exit.: \nEnter your host number for instance list: "))
-                        logger.info("Enter your host number for instance list:" + str(optionMainMenu))
+                        optionMainMenu = str(userInputWithEscWrapper("Press [99] for exit.: \nEnter your space number for instance list: "))
+                        logger.info("Enter your space number for instance list:" + str(optionMainMenu))
                         if (optionMainMenu != '99'):
                             if len(spacename) >= int(optionMainMenu):
                                 host = spacename.get(optionMainMenu)

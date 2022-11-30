@@ -223,7 +223,6 @@ def checkIsMemoryAvailableOnHost(managerNodes,memoryGSC,memoryRequiredGSCInBytes
 
 def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     logger.info("createGSCInputParam()")
-    global confirmCreateGSC
     global numberOfGSC
     global memoryGSC
     global zoneGSC
@@ -231,7 +230,7 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global individualHostConfirm
     try:
 
-        confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc"))#str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+        confirmCreateGSC = 'y'#str(readValuefromAppConfig("app.spacejar.creategsc"))#str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
         #if(len(confirmCreateGSC)==0):
         #    confirmCreateGSC='y'
         if(confirmCreateGSC=='y'):
@@ -248,16 +247,27 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
                 verboseHandle.printConsoleInfo("GSC will be created on :"+str(specificHost))
             logger.info("individualHostConfirm : "+str(individualHostConfirm))
 
-            numberOfGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscperhost"))#str(input(Fore.YELLOW+"Enter number of GSC per host  :"+Fore.RESET))
+            numberOfGSC = str(input("Enter number of GSC per host [2] :"+Fore.RESET))
+            if(len(str(numberOfGSC))==0):
+                numberOfGSC=2
+            logger.info("numberofGSC :"+str(numberOfGSC))
+            # numberOfGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscperhost"))#str(input(Fore.YELLOW+"Enter number of GSC per host  :"+Fore.RESET))
             #if(len(str(numberOfGSC))==0):
             #    numberOfGSC=2
             logger.info("numberofGSC :"+str(numberOfGSC))
 
-            memoryGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory"))#str(input(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
+            memoryGSC = str(input("Enter memory to create gsc [12g] :"+Fore.RESET))
+            if(len(memoryGSC)==0):
+                memoryGSC="12g"
+            # memoryGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory"))#str(input(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
             #if(len(memoryGSC)==0):
             #    memoryGSC="12g"
 
-            zoneGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone"))#str(input(Fore.YELLOW+"Enter zone :"+Fore.RESET))
+            zoneGSC = str(input("Enter zone :"+Fore.RESET))
+            while(len(str(zoneGSC))==0):
+                zoneGSC = str(input("Enter zone :"+Fore.RESET))
+
+        # zoneGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone"))#str(input(Fore.YELLOW+"Enter zone :"+Fore.RESET))
             #while(len(str(zoneGSC))==0):
             #    zoneGSC = str(input("Enter zone :"+Fore.RESET))
 
@@ -267,7 +277,7 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
             logger.info("memoryGSCWithoutSuffix :"+str(memoryGSCWithoutSuffix))
             memoryRequiredGSCInBytes = convertMemoryGSCToBytes(memoryGSCWithoutSuffix,type,size)
             logger.info("memoryRequiredGSCInBytes :"+str(memoryRequiredGSCInBytes))
-            global isMemoryAvailable
+
             logger.info("space_dict_obj :"+str(space_dict_obj))
             # Creating GSC on each available host
             isMemoryAvailable = checkIsMemoryAvailableOnHost(managerNodes,memoryGSC,memoryRequiredGSCInBytes,zoneGSC,numberOfGSC,managerHostConfig)
@@ -636,6 +646,8 @@ if __name__ == '__main__':
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
+        global isMemoryAvailable
+        isMemoryAvailable = False
         if(len(str(managerNodes))>0):
             spaceNodes = config_get_space_hosts()
             logger.info("spaceNodes: main"+str(spaceNodes))
@@ -646,17 +658,18 @@ if __name__ == '__main__':
                 logger.info("managerHostConfig : "+str(managerHost))
                 listSpacesOnServer(managerNodes)
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
+                global confirmCreateGSC
+                confirmCreateGSC = str(input("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
                 isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHostConfig)
                 logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
                 logger.info("confirmCreateGSC : "+str(confirmCreateGSC))
-                # global confirmCreateGSC
-                global confirmCreateGSC
-                confirmCreateGSC = str(input("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
-                if(confirmCreateGSC=='y'):
+                if(confirmCreateGSC=='y' or len(str(confirmCreateGSC)) == 0):
+                    confirmCreateGSC='y'
                     if(isMemoryAvailable):
                         proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
                     else:
                         logger.info("No memeory available double check.")
+                        verboseHandle.printConsoleInfo("No memeory available double check.")
                 if(confirmCreateGSC=='n'):
                     proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
             else:
