@@ -687,6 +687,6 @@ if __name__ == '__main__':
             verboseHandle.printConsoleInfo("No Manager configuration found please check.")
 
     except Exception as e:
-        logger.error("Exception in odsx_space_createspace "+str(e))
-        verboseHandle.printConsoleError("Exception in odsx_space_createspace "+str(e))
+        logger.error("Exception in odsx_security_space_createspace_jar.py "+str(e))
+        verboseHandle.printConsoleError("Exception in odsx_security_space_createspace_jar.py "+str(e))
         handleException(e)

@@ -562,9 +562,9 @@ def getManagerHost(managerNodes):
 #         verboseHandle.printConsoleError("Exception in odsx_space_createnewspace "+str(e))
 #         handleException(e)
 if __name__ == '__main__':
-    logger.info("Menu -> Space -> Create space with jar")
+    logger.info("Menu -> Space -> Create new space")
     #loggerTiered.info("Deploy")
-    verboseHandle.printConsoleWarning("Menu -> Space -> Create space")
+    verboseHandle.printConsoleWarning("Menu -> Space -> Create new space")
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
@@ -602,6 +602,6 @@ if __name__ == '__main__':
             verboseHandle.printConsoleInfo("No Manager configuration found please check.")
 
     except Exception as e:
-        logger.error("Exception in odsx_space_createspace "+str(e))
-        verboseHandle.printConsoleError("Exception in odsx_space_createspace "+str(e))
+        logger.error("Exception in odsx_space_createspace.py "+str(e))
+        verboseHandle.printConsoleError("Exception in odsx_space_createspace.py "+str(e))
         handleException(e)
