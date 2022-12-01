@@ -65,50 +65,67 @@ def getStatusAndTypeOfSpaceOrPU(managerHost,puName):
     statusAndType.append(jsonArray["processingUnitType"])
     return statusAndType
 
-def listSpacesOnServer(managerHost):
-    response = requests.get("http://"+managerHost+":8090/v2/spaces",auth = HTTPBasicAuth(username,password))
-    jsonArray = json.loads(response.text)
-    verboseHandle.printConsoleWarning("Existing spaces on cluster:")
-    headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-               Fore.YELLOW+"Name"+Fore.RESET,
-               Fore.YELLOW+"PU Name"+Fore.RESET,
-               Fore.YELLOW+"Partition"+Fore.RESET,
-               Fore.YELLOW+"Backup Partition"+Fore.RESET,
-               Fore.YELLOW+"Type"+Fore.RESET,
-               Fore.YELLOW+"Status"+Fore.RESET
-               ]
-    gs_space_host_dictionary_obj = host_dictionary_obj()
-    counter=0
-    dataTable=[]
-    for data in jsonArray:
-        if(str(data["topology"]["backupsPerPartition"])=="1"):
-            isBackup="YES"
-        if(str(data["topology"]["backupsPerPartition"])=="0"):
-            isBackup="NO"
-        statusAndType = getStatusAndTypeOfSpaceOrPU(managerHost,str(data["processingUnitName"]))
-        dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                     Fore.GREEN+data["name"]+Fore.RESET,
-                     Fore.GREEN+data["processingUnitName"]+Fore.RESET,
-                     Fore.GREEN+str(data["topology"]["partitions"])+Fore.RESET,
-                     Fore.GREEN+isBackup+Fore.RESET,
-                     Fore.GREEN+statusAndType[1]+Fore.RESET,
-                     Fore.GREEN+statusAndType[0]+Fore.RESET
-                     ]
-        gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
-        counter=counter+1
-        dataTable.append(dataArray)
-    printTabular(None,headers,dataTable)
-    return gs_space_host_dictionary_obj
+def listSpacesOnServer(managerNodes):
+    try:
+        logger.info("listSpacesOnServer : managerNodes :"+str(managerNodes))
+        managerHost=''
+        for node in managerNodes:
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            logger.info("Ip :"+str(os.getenv(node.ip))+"Status : "+str(status))
+            if(status=="ON"):
+                managerHost = os.getenv(node.ip);
+        logger.info("managerHost :"+managerHost)
+        response = requests.get("http://"+managerHost+":8090/v2/spaces",auth = HTTPBasicAuth(username,password))
+        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code))
+        jsonArray = json.loads(response.text)
+        verboseHandle.printConsoleWarning("Existing spaces on cluster:")
+        headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                   Fore.YELLOW+"Name"+Fore.RESET,
+                   Fore.YELLOW+"PU Name"+Fore.RESET,
+                   Fore.YELLOW+"Partition"+Fore.RESET,
+                   Fore.YELLOW+"Backup Partition"+Fore.RESET
+                   ]
+        gs_space_host_dictionary_obj = host_dictionary_obj()
+        logger.info("gs_space_host_dictionary_obj : "+str(gs_space_host_dictionary_obj))
+        counter=0
+        dataTable=[]
+        for data in jsonArray:
+            if(str(data["topology"]["backupsPerPartition"])=="1"):
+                isBackup="YES"
+            if(str(data["topology"]["backupsPerPartition"])=="0"):
+                isBackup="NO"
+            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                         Fore.GREEN+data["name"]+Fore.RESET,
+                         Fore.GREEN+data["processingUnitName"]+Fore.RESET,
+                         Fore.GREEN+str(data["topology"]["partitions"])+Fore.RESET,
+                         Fore.GREEN+isBackup+Fore.RESET
+                         ]
+            gs_space_host_dictionary_obj.add(str(counter+1),str(data["name"]))
+            counter=counter+1
+            dataTable.append(dataArray)
+        printTabular(None,headers,dataTable)
+        return gs_space_host_dictionary_obj
+    except Exception as e:
+        handleException(e)
 
-def get_gs_host_details(managerHost):
-    logger.info("get_gs_host_details()")
-    response = requests.get('http://'+managerHost+':8090/v2/hosts', headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
-
-    jsonArray = json.loads(response.text)
-    gs_servers_host_dictionary_obj = host_dictionary_obj()
-    for data in jsonArray:
-        gs_servers_host_dictionary_obj.add(str(data['address']),str(data['address']))
-    return gs_servers_host_dictionary_obj
+def get_gs_host_details(managerNodes):
+    try:
+        logger.info("get_gs_host_details() : managerNodes :"+str(managerNodes))
+        for node in managerNodes:
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            if(status=="ON"):
+                managerHostConfig = os.getenv(node.ip);
+        logger.info("managerHostConfig : "+str(managerHostConfig))
+        response = requests.get('http://'+managerHostConfig+':8090/v2/hosts', headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
+        logger.info("response status of host :"+str(managerHostConfig)+" status :"+str(response.status_code))
+        jsonArray = json.loads(response.text)
+        gs_servers_host_dictionary_obj = host_dictionary_obj()
+        for data in jsonArray:
+            gs_servers_host_dictionary_obj.add(str(data['name']),str(data['address']))
+        logger.info("gs_servers_host_dictionary_obj : "+str(gs_servers_host_dictionary_obj))
+        return gs_servers_host_dictionary_obj
+    except Exception as e:
+        handleException(e)
 
 def dataContainerREST(host,zone,memory):
     data ={
@@ -124,8 +141,8 @@ def dataContainerREST(host,zone,memory):
 
 def displaySpaceHostWithNumber(managerNodes, spaceNodes):
     try:
-        logger.info("displaySpaceHostWithNumber() managerNodes :"+str(managerHost)+" spaceNodes :"+str(spaceNodes))
-        gs_host_details_obj = get_gs_host_details(managerHost)
+        logger.info("displaySpaceHostWithNumber() managerNodes :"+str(managerNodes)+" spaceNodes :"+str(spaceNodes))
+        gs_host_details_obj = get_gs_host_details(managerNodes)
         logger.info("gs_host_details_obj : "+str(gs_host_details_obj))
         counter = 0
         space_dict_obj = host_dictionary_obj()
@@ -249,7 +266,7 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global zoneGSC
     zoneGSC = str(input("Enter zone [bll] :"+Fore.RESET))
     while(len(str(zoneGSC))==0):
-        zoneGSC = 'bll'
+        zoneGSC ='bll'
 
     size = 1024
     type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
@@ -389,10 +406,11 @@ def uploadFileRest(managerHostConfig):
         handleException(e)
 
 def createNewSpaceREST(managerHostConfig):
-    global confirmCreateSpace
-    logger.info("createNewSpaceREST() : managerHostConfig:"+str(managerHostConfig))
-    confirmCreateSpace = str(input("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
-    if(len(confirmCreateSpace)==0 or confirmCreateSpace == 'y'):
+    try:
+      global confirmCreateSpace
+      logger.info("createNewSpaceREST() : managerHostConfig:"+str(managerHostConfig))
+      confirmCreateSpace = str(input("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
+      if(len(confirmCreateSpace)==0 or confirmCreateSpace == 'y'):
         confirmCreateSpace='y'
         if(confirmCreateSpace=='y'):
             # print("\n")
@@ -470,11 +488,31 @@ def createNewSpaceREST(managerHostConfig):
             #print("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
             # response = requests.post("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
             # response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers)
-            response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username,password))
+            response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth=HTTPBasicAuth(username,password))
             deployResponseCode = str(response.content.decode('utf-8'))
-            print("deployResponseCode : "+str(deployResponseCode))
             logger.info("deployResponseCode :"+str(deployResponseCode))
-            proceedForValidateResponse(response)
+            status = validateResponseGetDescription(deployResponseCode)
+            logger.info("response.status_code :"+str(response.status_code))
+            logger.info("response.content :"+str(response.content) )
+            if(response.status_code==202):
+                logger.info("Response :"+str(status))
+                retryCount=5
+                while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                    status = validateResponseGetDescription(deployResponseCode)
+                    verboseHandle.printConsoleInfo("Response :"+str(status))
+                    retryCount = retryCount-1
+                    time.sleep(2)
+                    if(str(status).casefold().__contains__('successful')):
+                        return
+                    elif(str(status).casefold().__contains__('failed')):
+                        return
+                    else:
+                        logger.info("Unable to deploy :"+str(status))
+                        verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
+            else:
+                return
+    except Exception as e:
+     handleException(e)
     # logger.info("createNewSpaceREST() : managerHostConfig:"+str(managerHostConfig))
     # confirmCreateSpace = str(input("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
     # if(len(confirmCreateSpace)==0):
@@ -638,6 +676,8 @@ def getManagerHost(managerNodes):
     return managerHost
 
 if __name__ == '__main__':
+    logger.info("Menu -> Space -> Create new space")
+    #loggerTiered.info("Deploy")
     verboseHandle.printConsoleWarning("Menu -> Space -> Create new space")
     username = ""
     password = ""
@@ -650,31 +690,84 @@ if __name__ == '__main__':
         objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
         managerNodes = config_get_manager_node()
-        spaceNodes = config_get_space_hosts()
-        managerHost = getManagerHost(managerNodes)
+        logger.info("managerNodes: main"+str(managerNodes))
         global isMemoryAvailable
         isMemoryAvailable=False
-        if(len(str(managerHost))>0):
-            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
-            #managerHostConfig = str(input(Fore.YELLOW+"Proceed with manager host ["+managerHost+"] : "))
-            managerHostConfig = managerHost
-            if(len(str(managerHostConfig))>0):
-                managerHost = managerHostConfig
+        if(len(str(managerNodes))>0):
+            spaceNodes = config_get_space_hosts()
+            logger.info("spaceNodes: main"+str(spaceNodes))
+            managerHost = getManagerHost(managerNodes)
+            logger.info("managerHost : main"+str(managerHost))
+            if(len(str(managerHost))>0):
+                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                managerHostConfig = managerHost
+                logger.info("managerHostConfig : "+str(managerHost))
+                listSpacesOnServer(managerNodes)
+                space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
+                global confirmCreateGSC
+                confirmCreateGSC = str(input("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+                isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHostConfig)
+                logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
+                logger.info("confirmCreateGSC : "+str(confirmCreateGSC))
+                if(confirmCreateGSC=='y' or len(str(confirmCreateGSC)) == 0):
+                    confirmCreateGSC='y'
+                    if(isMemoryAvailable):
+                        createNewSpaceREST(managerHost)
+                    else:
+                        logger.info("No memeory available double check.")
+                        verboseHandle.printConsoleInfo("No memeory available double check.")
+                if(confirmCreateGSC=='n' or len(str(confirmCreateGSC)) == 0):
+                    createNewSpaceREST(managerHost)
+            else:
+                logger.info("Please check manager server status.")
+                verboseHandle.printConsoleInfo("Please check manager server status.")
+        else:
+            logger.info("No Manager configuration found please check.")
+            verboseHandle.printConsoleInfo("No Manager configuration found please check.")
 
-            listSpacesOnServer(managerHost)
-            global space_dict_obj
-            space_dict_obj = displaySpaceHostWithNumber(managerHost,spaceNodes)
-            global confirmCreateGSC
-            confirmCreateGSC = str(input("Do you want to create GSC ? (y/n) [n] :"+Fore.RESET))#str(input("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
-            if(len(confirmCreateGSC)==0):
-               confirmCreateGSC='n'
-            if(confirmCreateGSC=='y'):
-               isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHost)
-            logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
-            if(confirmCreateGSC=='n' or isMemoryAvailable):
-               createNewSpaceREST(managerHost)
     except Exception as e:
-        logger.error("Exception in odsx_space_createnewspace "+str(e))
-        verboseHandle.printConsoleError("Exception in odsx_space_createnewspace "+str(e))
+        logger.error("Exception in odsx_security_space_createspace_jar.py "+str(e))
+        verboseHandle.printConsoleError("Exception in odsx_security_space_createspace_jar.py "+str(e))
         handleException(e)
+# if __name__ == '__main__':
+#     verboseHandle.printConsoleWarning("Menu -> Space -> Create new space")
+#     username = ""
+#     password = ""
+#     appId=""
+#     safeId=""
+#     objectId=""
+#     try:
+#         appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+#         safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+#         objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+#         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+#         managerNodes = config_get_manager_node()
+#         spaceNodes = config_get_space_hosts()
+#         managerHost = getManagerHost(managerNodes)
+#         global isMemoryAvailable
+#         isMemoryAvailable=False
+#         if(len(str(managerHost))>0):
+#             username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+#             password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+#             #managerHostConfig = str(input(Fore.YELLOW+"Proceed with manager host ["+managerHost+"] : "))
+#             managerHostConfig = managerHost
+#             if(len(str(managerHostConfig))>0):
+#                 managerHost = managerHostConfig
+#
+#             listSpacesOnServer(managerHost)
+#             global space_dict_obj
+#             space_dict_obj = displaySpaceHostWithNumber(managerHost,spaceNodes)
+#             global confirmCreateGSC
+#             confirmCreateGSC = str(input("Do you want to create GSC ? (y/n) [n] :"+Fore.RESET))#str(input("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+#             if(len(confirmCreateGSC)==0):
+#                confirmCreateGSC='n'
+#             if(confirmCreateGSC=='y'):
+#                isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHost)
+#             logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
+#             if(confirmCreateGSC=='n' or isMemoryAvailable):
+#                createNewSpaceREST(managerHost)
+#     except Exception as e:
+#         logger.error("Exception in odsx_space_createnewspace "+str(e))
+#         verboseHandle.printConsoleError("Exception in odsx_space_createnewspace "+str(e))
+#         handleException(e)
