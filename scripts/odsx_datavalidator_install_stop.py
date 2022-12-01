@@ -8,7 +8,8 @@ from scripts.odsx_datavalidator_install_list import listDVAgents
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from scripts.spinner import Spinner
-from scripts.odsx_datavalidator_install_list import listDVServers
+from scripts.odsx_datavalidator_install_list import listDVServers,isServiceInstalled
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -60,26 +61,50 @@ def getDVServerHostList():
 
 def stopDataValidationService(args):
     try:
-        listDVServers()
-        nodes = getDVServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to stop data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
-        if choice.casefold() == 'n':
-            exit(0)
-        for node in config_get_dataValidation_nodes():
-            cmd = "systemctl stop odsxdatavalidation.service"
-            logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
-            user = 'root'
-            with Spinner():
-                output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
-                if (output == 0):
-                    verboseHandle.printConsoleInfo("Service data validation stop successfully on "+str(os.getenv(node.ip)))
+        host_dict_obj = listDVServers()
+        #listDVAgents()
+        serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop all servers. \nPress [99] for exit.: "+Fore.RESET))
+        if(serverStartType=='1'):
+            optionMainMenu = int(input("Enter host Sr Number to stop: "))
+            if len(host_dict_obj) >= optionMainMenu:
+                hostToStart = host_dict_obj.get(str(optionMainMenu))
+                # start individual
+                if len(str(isServiceInstalled(hostToStart)))>0:
+                    cmd = "systemctl stop odsxdatavalidation.service"
+                    logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                    user = 'root'
+                    with Spinner():
+                        output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
+                        if (output == 0):
+                            verboseHandle.printConsoleInfo("Service data validation stop successfully on "+str(hostToStart))
+                        else:
+                            verboseHandle.printConsoleError("Service data validation failed to stop on "+str(hostToStart))
                 else:
-                    verboseHandle.printConsoleError("Service data validation failed to stop")
-
+                    verboseHandle.printConsoleError("No service installed for host:"+str(hostToStart))
+        elif(serverStartType =='99'):
+            logger.info("99 - Exist start")
+        else:
+            confirm=''
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            while(len(str(confirm))==0):
+                confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            logger.info("confirm :"+str(confirm))
+            if(confirm=='yes' or confirm=='y'): # Start all
+                for node in config_get_dataValidation_nodes():
+                    cmd = "systemctl stop odsxdatavalidation.service"
+                    logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                    user = 'root'
+                    with Spinner():
+                        output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
+                        if (output == 0):
+                            verboseHandle.printConsoleInfo("Service data validation stop successfully on "+str(os.getenv(node.ip)))
+                        else:
+                            verboseHandle.printConsoleError("Service data validation failed to stop")
+            else:
+                exit(0)
 
     except Exception as e:
         handleException(e)
-
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> DataValidator -> Install -> Stop")

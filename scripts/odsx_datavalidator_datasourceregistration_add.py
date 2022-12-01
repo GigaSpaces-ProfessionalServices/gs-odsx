@@ -78,14 +78,6 @@ def doValidate():
         verboseHandle.printConsoleWarning('');
         verboseHandle.printConsoleWarning('Add new DataSource:');
 
-        dataSourceName = str(input("DataSource Name:"))
-        while(len(dataSourceName) == 0):
-             print(Fore.YELLOW +"DataSource Name is invalid (Empty)"+Fore.RESET)
-             dataSourceName = str(input("DataSource Name:"))
-        while(dataSourceName in dataSourceNames):
-             print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
-             dataSourceName = str(input("DataSource Name:"))
-
         dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
         while(dataSource1Type not in dataSourceTypes):
             print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
@@ -93,9 +85,31 @@ def doValidate():
 
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
-        dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
+
+        if (dataSource1Type == 'ms-sql'):
+            dataSourceNameDefault = "DB_Central"
+            dataSourceName = str(input("DataSource Name ["+dataSourceNameDefault+"]:"))
+            if (len(str(dataSourceName)) == 0):
+                dataSourceName = dataSourceNameDefault
+        else:
+            dataSourceNameDefault = ""
+            dataSourceName = str(input("DataSource Name:"))
+
+        while(len(dataSourceName) == 0):
+             print(Fore.YELLOW +"DataSource Name is invalid (Empty)"+Fore.RESET)
+             dataSourceName = str(input("DataSource Name:"))
+        while(dataSourceName in dataSourceNames):
+             print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
+             dataSourceName = str(input("DataSource Name:"))
+
+        if (dataSource1Type == 'ms-sql'):
+            dataSource1HostIpDefault = str(readValuefromAppConfig("app.dataengine.mssql-feeder.mssql.server"))
+        else:
+            dataSource1HostIpDefault = 'localhost'
+        dataSource1HostIp = str(input("DataSource Host Ip ["+dataSource1HostIpDefault+"]: "))
+        #dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
         if (len(str(dataSource1HostIp)) == 0):
-            dataSource1HostIp = 'localhost'
+            dataSource1HostIp = dataSource1HostIpDefault
         dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
