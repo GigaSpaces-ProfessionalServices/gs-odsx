@@ -65,7 +65,14 @@ function installFlink() {
   sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|taskmanager.numberOfTaskSlots: 1|taskmanager.numberOfTaskSlots: 10|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  echo "jobmanager.memory.jvm-metaspace.size: 1500m" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  if [ "$flinkJobManagerMemoryMetaspaceSize" != "None" ] ; then
+    sed -i '/^jobmanager.memory.jvm-metaspace.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+    echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  fi
+  if [ "$flinkTaskManagerMemoryProcessSize" != "None" ] ; then
+    sed -i '/^taskmanager.memory.process.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+    echo "taskmanager.memory.process.size: $flinkTaskManagerMemoryProcessSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  fi
   sed -i -e 's|jobmanager.memory.process.size: 1600m|jobmanager.memory.process.size: 4000m|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-jobmanager.service
   sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-taskmanager.service
@@ -160,11 +167,15 @@ logsFolderKafka=${10}
 logsFolderZK=${11}
 wantInstallJava=${12}
 sourceInstallerDirectory=${13}
+flinkJobManagerMemoryMetaspaceSize=${15}
+flinkTaskManagerMemoryProcessSize=${16}
+
 if [ "$wantInstallJava" == "y" ]; then
     echo "Setup AirGapJava"
     installAirGapJava
-  fi
+fi
 echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK" sourceInstallerDirectory "$sourceInstallerDirectory
+echo "flinkJobManagerMemoryMetaspaceSize $flinkJobManagerMemoryMetaspaceSize, flinkTaskManagerMemoryProcessSize=$flinkTaskManagerMemoryProcessSize"
 #cd /dbagiga/
 tar -xvf install.tar
 home_dir=$(pwd)
