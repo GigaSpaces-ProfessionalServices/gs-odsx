@@ -2,14 +2,13 @@
 
 import os
 
-from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers, getStatusOfTelegraf
-from scripts.spinner import Spinner
-from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from colorama import Fore
 
-from utils.odsx_keypress import userInputWithEscWrapper
+from scripts.logManager import LogManager
+from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers, getStatusOfTelegraf
+from scripts.spinner import Spinner
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -92,15 +91,15 @@ if __name__ == '__main__':
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStartType:"+str(serverStartType))
         if(serverStartType=='1'):
-            optionMainMenu = int(input("Enter your host number to start: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to start: "))
             logger.info("Enter your host number to start:"+str(optionMainMenu))
             spaceStart1 = streamDict.get(optionMainMenu)
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     host = streamDict.get(optionMainMenu)
-                    choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
                         if(isMenuDriven=='m'):
@@ -114,9 +113,9 @@ if __name__ == '__main__':
             logger.info("99 - Exist start")
         else:
             confirm=''
-            confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
 
             if(confirm=='yes' or confirm=='y'):

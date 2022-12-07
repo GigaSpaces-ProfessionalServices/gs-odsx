@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-import sys
 import argparse
 import json
-import os, textwrap
-from colorama import Fore
+import os
+import sys
 from datetime import datetime
-from utils.ods_validation import isValidHost
+
+from colorama import Fore
+
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_cdc_streams
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_validation import isValidHost
 from utils.odsx_print_tabular_data import printTabularStream
 
 verboseHandle = LogManager(os.path.basename(__file__))

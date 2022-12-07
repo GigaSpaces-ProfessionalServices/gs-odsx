@@ -1,14 +1,13 @@
 #!/usr/bin/env python3
 #!/usr/bin/python
 import os
-import platform
-from os import path
+
 from colorama import Fore
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_nb_list
 from utils.ods_ssh import connectExecuteSSH
-from utils.ods_app_config import readValuefromAppConfig
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -84,7 +83,7 @@ def stopInputUserAndHost():
     try:
         global user
         global host
-        #user = str(input(Fore.YELLOW+"Enter user to connect to NB [root]:"+Fore.RESET))
+        #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to NB [root]:"+Fore.RESET))
         #if(len(str(user))==0):
         #    user="root"
         user = 'root'
@@ -112,7 +111,7 @@ def executeCommandForStop():
             confirm='y'
         if confirm.casefold() == 'y':
             if(len(nodes)>0):
-                #confirm = str(input(Fore.YELLOW+"Are you sure want to stop NB applicative servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
+                #confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop NB applicative servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 #if(len(str(confirm))==0):
                 confirm='y'
                 logger.info("NB servers confirm :"+str(confirm))
@@ -133,7 +132,7 @@ def executeCommandForStop():
             spaceHostsConfig = getAgentHostList()
             logger.info("spaceHostsConfig : "+str(spaceHostsConfig))
             if(len(spaceHostsConfig)>0):
-                #confirm = str(input(Fore.YELLOW+"Are you sure want to stop NB Agent ["+spaceHostsConfig+"] (y/n) [y]: "+Fore.RESET))
+                #confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop NB Agent ["+spaceHostsConfig+"] (y/n) [y]: "+Fore.RESET))
                 #if(len(str(confirm))==0):
                 confirm='y'
                 logger.info("stop NB Agent confirm :"+str(confirm))
@@ -152,7 +151,7 @@ def executeCommandForStop():
                 verboseHandle.printConsoleInfo("No NB Agent server details found.")
             nodesManagement = getManagementHostList()
             if(len(nodesManagement)>0):
-                #confirm = str(input(Fore.YELLOW+"Are you sure want to stop NB management servers ["+nodesManagement+"] (y/n) [y]: "+Fore.RESET))
+                #confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop NB management servers ["+nodesManagement+"] (y/n) [y]: "+Fore.RESET))
                 #if(len(str(confirm))==0):
                 confirm='y'
                 logger.info("stop management servers confirm :"+str(confirm))

@@ -4,15 +4,13 @@ import os
 
 import requests
 from colorama import Fore
-from scripts.odsx_security_dev_tieredstorage_deploy import displaySpaceHostWithNumber
-from scripts.odsx_servers_manager_list import getGSInfo
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import host_dictionary_obj
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabularGrid, printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -192,18 +190,18 @@ if __name__ == '__main__':
             if (len(str(managerHost)) > 0):
                 displaySummary()
 
-                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone[bll] : " + Fore.RESET))
+                zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Zone[bll] : " + Fore.RESET))
                 while (len(str(zoneGSCNo)) == 0):
                     zoneGSCNo = 'bll'
-                hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
+                hostSpecific = str(userInputWrapper(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
                 while (len(str(hostSpecific)) == 0):
-                    hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
+                    hostSpecific = str(userInputWrapper(Fore.YELLOW + "Do you want to run on specific host [y/n] : " + Fore.RESET))
 
                 if(hostSpecific == 'y' or hostSpecific == "Y"):
                     hostList=managerHostList(spaceNodes)
-                    hostNo = str(input(Fore.YELLOW + "Enter host : " + Fore.RESET))
+                    hostNo = str(userInputWrapper(Fore.YELLOW + "Enter host : " + Fore.RESET))
                     while (len(str(hostNo)) == 0):
-                        hostNo = str(input(Fore.YELLOW + "Enter host : " + Fore.RESET))
+                        hostNo = str(userInputWrapper(Fore.YELLOW + "Enter host : " + Fore.RESET))
                     hostAddr=hostList.get(int(hostNo))
                     executeCommandForInstall(zoneGSCNo,hostAddr)
 

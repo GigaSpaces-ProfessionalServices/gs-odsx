@@ -1,14 +1,20 @@
 #!/usr/bin/env python3
 
-import os, time
+import os
+import time
+
+import json
+import math
+import requests
 from colorama import Fore
+
 from scripts.logManager import LogManager
-import requests, json, math
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from scripts.odsx_tieredstorage_undeploy import listDeployed
+
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 
@@ -227,26 +233,26 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     #global space_dict_obj
     #space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
     '''
-    hostToCreateGSC = str(input("Enter space host serial number to create gsc [1] :"+Fore.RESET))
+    hostToCreateGSC = str(userInputWrapper("Enter space host serial number to create gsc [1] :"+Fore.RESET))
     if(len(hostToCreateGSC)==0):
         hostToCreateGSC="1"
     host = space_dict_obj.get(hostToCreateGSC)
     '''
     global numberOfGSC
-    numberOfGSC = str(input("Enter number of GSC per host [2] :"+Fore.RESET))
+    numberOfGSC = str(userInputWrapper("Enter number of GSC per host [2] :"+Fore.RESET))
     if(len(str(numberOfGSC))==0):
         numberOfGSC=2
     logger.info("numberofGSC :"+str(numberOfGSC))
 
     global memoryGSC
-    memoryGSC = str(input("Enter memory to create gsc [12g] :"+Fore.RESET))
+    memoryGSC = str(userInputWrapper("Enter memory to create gsc [12g] :"+Fore.RESET))
     if(len(memoryGSC)==0):
         memoryGSC="12g"
 
     global zoneGSC
-    zoneGSC = str(input("Enter zone :"+Fore.RESET))
+    zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
     while(len(str(zoneGSC))==0):
-        zoneGSC = str(input("Enter zone :"+Fore.RESET))
+        zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
 
     size = 1024
     type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
@@ -306,27 +312,27 @@ def proceedForValidateResponse(response):
 
 def createNewSpaceREST(managerHostConfig):
     logger.info("createNewSpaceREST() : managerHostConfig:"+str(managerHostConfig))
-    #confirmCreateSpace = #str(input("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
+    #confirmCreateSpace = #str(userInputWrapper("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
     #if(len(confirmCreateSpace)==0):
     confirmCreateSpace='y'
     if(confirmCreateSpace=='y'):
         global spaceName
-        spaceName = str(readValuefromAppConfig("app.newspace.name"))#str(input("Enter space name  [mySpace] :"+Fore.RESET))
+        spaceName = str(readValuefromAppConfig("app.newspace.name"))#str(userInputWrapper("Enter space name  [mySpace] :"+Fore.RESET))
         #if(len(str(spaceName))==0):
         #    spaceName="mySpace"
 
         global isBuildGlobally
-        isBuildGlobally = str(readValuefromAppConfig("app.newspace.createglobally"))#str(input("Build globally over the cluster (y/n) [y] :"+Fore.RESET))
+        isBuildGlobally = str(readValuefromAppConfig("app.newspace.createglobally"))#str(userInputWrapper("Build globally over the cluster (y/n) [y] :"+Fore.RESET))
         #if(len(str(isBuildGlobally))==0):
         #    isBuildGlobally='y'
 
         global partitions
-        partitions = str(readValuefromAppConfig("app.newspace.partitions"))#str(input("Enter partitions [1] :"+Fore.RESET))
+        partitions = str(readValuefromAppConfig("app.newspace.partitions"))#str(userInputWrapper("Enter partitions [1] :"+Fore.RESET))
         #if(len(str(partitions))==0):
         #    partitions="1"
 
         global backUpRequired
-        backUpRequired = str(readValuefromAppConfig("app.newspace.ha"))#str(input("SLA [HA] ? (y/n) [y] :"+Fore.RESET))
+        backUpRequired = str(readValuefromAppConfig("app.newspace.ha"))#str(userInputWrapper("SLA [HA] ? (y/n) [y] :"+Fore.RESET))
         if(len(str(backUpRequired))==0 or backUpRequired=='y'):
             backUpRequired='true'
         if(str(backUpRequired)=='n'):
@@ -334,7 +340,7 @@ def createNewSpaceREST(managerHostConfig):
         
         displaySummaryOfInputParameter()
         
-        createConfirm = str(input("Are you sure want to proceed ? (y/n) [y] :"))
+        createConfirm = str(userInputWrapper("Are you sure want to proceed ? (y/n) [y] :"))
         if(len(str(createConfirm))==0):
             createConfirm='y'
         if(confirmCreateGSC=='y'):
@@ -376,7 +382,7 @@ if __name__ == '__main__':
         managerHost = getManagerHost(managerNodes)
         isMemoryAvailable=''
         if(len(str(managerHost))>0):
-            managerHostConfig = str(input(Fore.YELLOW+"Proceed with manager host ["+managerHost+"] : "))
+            managerHostConfig = str(userInputWrapper(Fore.YELLOW+"Proceed with manager host ["+managerHost+"] : "))
             if(len(str(managerHostConfig))>0):
                 managerHost = managerHostConfig
 
@@ -385,7 +391,7 @@ if __name__ == '__main__':
             space_dict_obj = displaySpaceHostWithNumber(managerHost,spaceNodes)
 
             global confirmCreateGSC
-            confirmCreateGSC = str(input("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+            confirmCreateGSC = str(userInputWrapper("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
             if(len(confirmCreateGSC)==0):
                 confirmCreateGSC='y'
             if(confirmCreateGSC=='y'):

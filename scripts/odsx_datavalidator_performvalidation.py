@@ -1,19 +1,17 @@
 #!/usr/bin/env python3
 
-import os.path, argparse, sys
-from scripts.logManager import LogManager
+import os.path
+
+import json
+import requests
 from colorama import Fore
 
+from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_list import getDataValidationHost
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_dataValidation_nodes
-from utils.ods_validation import getSpaceServerStatus
-import requests, json, subprocess
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from subprocess import Popen, PIPE
-from scripts.spinner import Spinner
-from utils.ods_validation import isValidHost, getTelnetStatus
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_keypress import userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -73,7 +71,7 @@ def doValidate():
 
     printTabular(None, headers, data)
     verboseHandle.printConsoleWarning('');
-    testType = str(input("Enter test sr number [1]: "))
+    testType = str(userInputWrapper("Enter test sr number [1]: "))
     if (len(str(testType)) == 0):
         testType = '1'
 
@@ -86,7 +84,7 @@ def doValidate():
         verboseHandle.printConsoleError("Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    #dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    #dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     #if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -99,43 +97,43 @@ def doValidate():
 
         registernew = 'yes'
         if resultCount > 0:
-            registernew = str(input("Do you want to register new measurement (yes/no) [no]: "))
+            registernew = str(userInputWrapper("Do you want to register new measurement (yes/no) [no]: "))
             if (len(str(registernew)) == 0):
                 registernew = 'no'
         else:
             verboseHandle.printConsoleWarning("No measurement available. Please register one")
 
         if registernew == 'yes':
-            test = str(input("Test type (count/avg/min/max/sum) [count]: "))
+            test = str(userInputWrapper("Test type (count/avg/min/max/sum) [count]: "))
             if (len(str(test)) == 0):
                 test = 'count'
-            dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
             if (len(str(dataSource1Type)) == 0):
                 dataSource1Type = 'gigaspaces'
-            dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
+            dataSource1HostIp = str(userInputWrapper("DataSource Host Ip [localhost]: "))
             if (len(str(dataSource1HostIp)) == 0):
                 dataSource1HostIp = 'localhost'
-            dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
+            dataSource1Port = str(userInputWrapper("DataSource Port [" + getPort(dataSource1Type) + "]: "))
             if (len(str(dataSource1Port)) == 0):
                 dataSource1Port = getPort(dataSource1Type)
-            username1 = str(input("User name []: "))
+            username1 = str(userInputWrapper("User name []: "))
             if (len(str(username1)) == 0):
                 username1 = ''
-            password1 = str(input("Password []: "))
+            password1 = str(userInputWrapper("Password []: "))
             if (len(str(password1)) == 0):
                 password1 = ''
-            schemaName1 = str(input("Schema Name [demo]: "))
+            schemaName1 = str(userInputWrapper("Schema Name [demo]: "))
             if (len(str(schemaName1)) == 0):
                 schemaName1 = 'demo'
 
-            tableName1 = str(input("Table Name : "))
+            tableName1 = str(userInputWrapper("Table Name : "))
             if (len(str(tableName1)) == 0):
                 tableName1 = '0'
-            fieldName1 = str(input("Field Name : "))
+            fieldName1 = str(userInputWrapper("Field Name : "))
             if (len(str(fieldName1)) == 0):
                 fieldName1 = 'demo'
             if test != 'lastvalue':
-                whereCondition = str(input("Where Condition [''] : "))
+                whereCondition = str(userInputWrapper("Where Condition [''] : "))
                 if (len(str(whereCondition)) == 0):
                     whereCondition = ''
 
@@ -166,13 +164,13 @@ def doValidate():
             verboseHandle.printConsoleWarning("------------------------------------------------------------")
         else:  # Run existing measurement
             verboseHandle.printConsoleWarning('');
-            measurementId = str(input("Select measurement by id to run [1]: "))
+            measurementId = str(userInputWrapper("Select measurement by id to run [1]: "))
             if (len(str(measurementId)) == 0):
                 measurementId = '1')
             while(measurementId not in measurementids):
                 print(Fore.YELLOW +"Please select  measurement from above list"+Fore.RESET) 
-                measurementId = str(input("Select measurement by id to run [1]:"))
-            executionTime = str(input("Execution time delay (in minutes) [0]: "))
+                measurementId = str(userInputWrapper("Select measurement by id to run [1]:"))
+            executionTime = str(userInputWrapper("Execution time delay (in minutes) [0]: "))
             if (len(str(executionTime)) == 0):
                 executionTime = '0'
 
@@ -195,20 +193,20 @@ def doValidate():
     elif testType == '2':
         resultCount = printmeasurementtable(dataValidatorServiceHost)
         if resultCount > 0:
-            measurementIdA = str(input("Select 1st measurement Id for comparison : "))
+            measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison : "))
             if (len(str(measurementIdA)) == 0):
                 measurementIdA = '1'
             while(measurementIdA not in measurementids):
                print(Fore.YELLOW +"Please select  1st measurement Id  from above list"+Fore.RESET) 
-               measurementIdA = str(input("Select 1st measurement Id for comparison : "))
-            measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
+               measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison : "))
+            measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison : "))
             if (len(str(measurementIdB)) == 0):
                 measurementIdB = '1'
             while(measurementIdB not in measurementids):
               print(Fore.YELLOW +"Please select  2nd measurement Id  from above list"+Fore.RESET) 
-              measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
+              measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison : "))
 
-            executionTime = str(input("Execution time delay (in minutes) [0]: "))
+            executionTime = str(userInputWrapper("Execution time delay (in minutes) [0]: "))
             if (len(str(executionTime)) == 0):
                 executionTime = '0'
 
@@ -233,66 +231,66 @@ def doValidate():
 
 
     elif testType == '22':
-        test = str(input("Test type (avg/count/min/max) [count]: "))
+        test = str(userInputWrapper("Test type (avg/count/min/max) [count]: "))
         if (len(str(test)) == 0):
             test = 'count'
-        dataSource1Type = str(input("DataSource1 Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        dataSource1Type = str(userInputWrapper("DataSource1 Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
-        dataSource1HostIp = str(input("DataSource1 Host Ip [localhost]: "))
+        dataSource1HostIp = str(userInputWrapper("DataSource1 Host Ip [localhost]: "))
         if (len(str(dataSource1HostIp)) == 0):
             dataSource1HostIp = 'localhost'
-        dataSource1Port = str(input("DataSource1 Port [" + getPort(dataSource1Type) + "]: "))
+        dataSource1Port = str(userInputWrapper("DataSource1 Port [" + getPort(dataSource1Type) + "]: "))
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
-        username1 = str(input("User name1 []: "))
+        username1 = str(userInputWrapper("User name1 []: "))
         if (len(str(username1)) == 0):
             username1 = ''
-        password1 = str(input("Password1 []: "))
+        password1 = str(userInputWrapper("Password1 []: "))
         if (len(str(password1)) == 0):
             password1 = ''
-        schemaName1 = str(input("Schema Name 1 [demo]: "))
+        schemaName1 = str(userInputWrapper("Schema Name 1 [demo]: "))
         if (len(str(schemaName1)) == 0):
             schemaName1 = 'demo'
 
-        tableName1 = str(input("Table Name1 : "))
+        tableName1 = str(userInputWrapper("Table Name1 : "))
         if (len(str(tableName1)) == 0):
             tableName1 = '0'
-        fieldName1 = str(input("Field Name1 : "))
+        fieldName1 = str(userInputWrapper("Field Name1 : "))
         if (len(str(fieldName1)) == 0):
             fieldName1 = 'demo'
 
         verboseHandle.printConsoleWarning('');
-        dataSource2Type = str(input("DataSource2 Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        dataSource2Type = str(userInputWrapper("DataSource2 Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
         if (len(str(dataSource2Type)) == 0):
             dataSource2Type = 'gigaspaces'
-        dataSource2HostIp = str(input("DataSource2 Host Ip [localhost]: "))
+        dataSource2HostIp = str(userInputWrapper("DataSource2 Host Ip [localhost]: "))
         if (len(str(dataSource2HostIp)) == 0):
             dataSource2HostIp = 'localhost'
-        dataSource2Port = str(input("DataSource2 Port [" + getPort(dataSource2Type) + "]: "))
+        dataSource2Port = str(userInputWrapper("DataSource2 Port [" + getPort(dataSource2Type) + "]: "))
         if (len(str(dataSource2Port)) == 0):
             dataSource2Port = getPort(dataSource2Type)
-        username2 = str(input("User name2 []: "))
+        username2 = str(userInputWrapper("User name2 []: "))
         if (len(str(username2)) == 0):
             username2 = ''
-        password2 = str(input("Password2 []: "))
+        password2 = str(userInputWrapper("Password2 []: "))
         if (len(str(password2)) == 0):
             password2 = ''
-        schemaName2 = str(input("Schema Name 2 [demo]: "))
+        schemaName2 = str(userInputWrapper("Schema Name 2 [demo]: "))
         if (len(str(schemaName2)) == 0):
             schemaName2 = 'demo'
 
-        tableName2 = str(input("Table Name2 : "))
+        tableName2 = str(userInputWrapper("Table Name2 : "))
         if (len(str(tableName2)) == 0):
             tableName2 = '0'
-        fieldName2 = str(input("Field Name2 : "))
+        fieldName2 = str(userInputWrapper("Field Name2 : "))
         if (len(str(fieldName2)) == 0):
             fieldName2 = 'demo'
 
-        whereCondition = str(input("Where Condition [''] : "))
+        whereCondition = str(userInputWrapper("Where Condition [''] : "))
         if (len(str(whereCondition)) == 0):
             whereCondition = ''
-        executionTime = str(input("Execution time delay (in minutes) [0]: "))
+        executionTime = str(userInputWrapper("Execution time delay (in minutes) [0]: "))
         if (len(str(executionTime)) == 0):
             executionTime = '0'
 

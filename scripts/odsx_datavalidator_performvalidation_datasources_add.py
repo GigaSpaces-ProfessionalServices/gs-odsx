@@ -8,6 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig
 
@@ -59,7 +60,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -77,31 +78,31 @@ def doValidate():
         verboseHandle.printConsoleWarning('');
         verboseHandle.printConsoleWarning('Add new DataSource:');
 
-        dataSourceName = str(input("DataSource Name:"))
+        dataSourceName = str(userInputWrapper("DataSource Name:"))
         while(len(dataSourceName) == 0):
              print(Fore.YELLOW +"DataSource Name is invalid (Empty)"+Fore.RESET)
-             dataSourceName = str(input("DataSource Name:"))
+             dataSourceName = str(userInputWrapper("DataSource Name:"))
         while(dataSourceName in dataSourceNames):
              print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
-             dataSourceName = str(input("DataSource Name:"))
+             dataSourceName = str(userInputWrapper("DataSource Name:"))
 
-        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
         while(dataSource1Type not in dataSourceTypes):
             print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
-            dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
 
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
-        dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
+        dataSource1HostIp = str(userInputWrapper("DataSource Host Ip [localhost]: "))
         if (len(str(dataSource1HostIp)) == 0):
             dataSource1HostIp = 'localhost'
-        dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
+        dataSource1Port = str(userInputWrapper("DataSource Port [" + getPort(dataSource1Type) + "]: "))
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
-        username1 = str(input("User name []: "))
+        username1 = str(userInputWrapper("User name []: "))
         if (len(str(username1)) == 0):
             username1 = ''
-        password1 = str(input("Password []: "))
+        password1 = str(userInputWrapper("Password []: "))
         if (len(str(password1)) == 0):
             password1 = ''
 
@@ -111,17 +112,17 @@ def doValidate():
         if (dataSource1Type == 'ms-sql'):
          print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
 
-         IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
+         IntegratedSecurity = str(userInputWrapper("IntegratedSecurity [true/false]:"))
          while(IntegratedSecurity not in trueFalse):
           print(Fore.YELLOW +"Please select IntegratedSecurity's value from given list"+Fore.RESET)
-          IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
+          IntegratedSecurity = str(userInputWrapper("IntegratedSecurity [true/false]:"))
 
-         AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
+         AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM]:"))
          while(AuthenticationScheme not in authenticationSchemes):
           print(Fore.YELLOW +"Please select AuthenticationScheme's value from given list"+Fore.RESET)
-          AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
+          AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM]:"))
 
-         Properties = str(input("Connection properties( ex.Key=value;):"))
+         Properties = str(userInputWrapper("Connection properties( ex.Key=value;):"))
 
         verboseHandle.printConsoleWarning('');
         data = {

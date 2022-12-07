@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform
-from scripts.logManager import LogManager
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from utils.ods_app_config import readValuefromAppConfig
+import argparse
+import os
+import platform
+import sys
+
 from colorama import Fore
-from scripts.odsx_servers_manager_list import listFileFromDirectory
-from utils.ods_cluster_config import config_get_manager_listWithStatus, config_get_manager_node
+
+from scripts.logManager import LogManager
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
+from utils.ods_cluster_config import config_get_manager_listWithStatus, config_get_manager_node
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -104,14 +107,14 @@ if __name__ == '__main__':
             verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start current Configuration. \nPress [99] for exit.: "+Fore.RESET))
         if(serverStartType=='1'):
-            optionMainMenu = int(input("Enter your host number to start: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to start: "))
             logger.info("Enter your host number to start:"+str(optionMainMenu))
             if(optionMainMenu != 99):
                 if len(managerDict) >= optionMainMenu:
                     spaceStart = managerDict.get(optionMainMenu)
                     choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     #print("coice start server:"+str(choice))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
@@ -187,7 +190,7 @@ if __name__ == '__main__':
             confirm=''
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_manager_node()#config_get_space_hosts_list()

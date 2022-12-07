@@ -11,7 +11,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
     set_value_in_property_file as config_set_value_in_property_file
 from utils.ods_manager import getManagerHost, getManagerInfo
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -85,7 +85,7 @@ def setUserInputs1():
             counter = counter + 1
 
     selectedOption = str(
-        input(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
     if (selectedOption.isnumeric() == True):    
         if len(selectedOption) <= 0 or int(selectedOption) not in ddlfileOptions:
             verboseHandle.printConsoleError("Invalid Option!")
@@ -137,7 +137,7 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
 
     propertiesFileNameDefault = tableNameFromddlFileName + ".properties"
     propertiesFileName = str(
-        input(
+        userInputWrapper(
             Fore.YELLOW + "Properties filename to edit [" + propertiesFileNameDefault + "] :" + Fore.RESET))
     if (len(str(propertiesFileName)) == 0):
         propertiesFileName = propertiesFileNameDefault
@@ -152,11 +152,11 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     if spaceIdDefault is None:
         spaceIdDefault = ""
         spaceIdValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Space ID :" + Fore.RESET))
     else:
         spaceIdValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Space ID [" + spaceIdDefault + "] :" + Fore.RESET))
     if (len(str(spaceIdValue)) == 0):
         spaceIdValue = spaceIdDefault
@@ -164,12 +164,12 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     if spaceIdTypeDefault is None:
         spaceIdTypeDefault = ""
         spaceIdTypeValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Space ID Type :" + Fore.RESET))
 
     else:
         spaceIdTypeValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Space ID Type [" + spaceIdTypeDefault + "] :" + Fore.RESET))
     if (len(str(spaceIdTypeValue)) == 0):
         spaceIdTypeValue = spaceIdTypeDefault
@@ -177,11 +177,11 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     if routingDefault is None:
         routingDefault = ""
         routingValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Routing Value :" + Fore.RESET))
     else:
         routingValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Routing Value [" + routingDefault + "] :" + Fore.RESET))
     if (len(str(routingValue)) == 0):
         routingValue = routingDefault
@@ -189,11 +189,11 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     if indexDefault is None:
         indexDefault = ""
         indexValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Index :" + Fore.RESET))
     else:
         indexValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Index [" + indexDefault + "] :" + Fore.RESET))
     if (len(str(indexValue)) == 0):
         indexValue = indexDefault
@@ -201,11 +201,11 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     if indexTypeDefault is None:
         indexTypeDefault = ""
         indexTypeValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Index Type :" + Fore.RESET))
     else:
         indexTypeValue = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Index Type [" + indexTypeDefault + "] :" + Fore.RESET))
     if (len(str(indexTypeValue)) == 0):
         indexTypeValue = indexTypeDefault
@@ -213,11 +213,11 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     if supportDynamicPropertiesDefault is None:
         supportDynamicPropertiesDefault = ""
         supportDynamicProperties = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Support Dynamic Properties :" + Fore.RESET))
     else:
         supportDynamicProperties = str(
-            input(
+            userInputWrapper(
                 Fore.YELLOW + "Support Dynamic Properties [" + supportDynamicPropertiesDefault + "] :" + Fore.RESET))
     if (len(str(supportDynamicPropertiesDefault)) == 0):
         supportDynamicProperties = supportDynamicPropertiesDefault
@@ -232,10 +232,10 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     # verboseHandle.printConsoleInfo("6. Support Dynamic Properties : " + supportDynamicProperties)
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
-    confirm = str(input(
+    confirm = str(userInputWrapper(
         Fore.YELLOW + "Are you sure want to edit " + propertiesFileName + " ? [yes (y)] / [no (n)]" + Fore.RESET))
     while (len(str(confirm)) == 0):
-        confirm = str(input(
+        confirm = str(userInputWrapper(
             Fore.YELLOW + "Are you sure want to edit " + propertiesFileName + " ? [yes (y)] / [no (n)]" + Fore.RESET))
     print(confirm)
     if confirm.lower() == "y" or confirm.lower() == "yes":
@@ -288,7 +288,7 @@ def setInputs(isSandbox):
             counter = counter + 1
 
     selectedOption = str(
-        input(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
     if (selectedOption.isnumeric() == True):
         if len(selectedOption) <= 0 or int(selectedOption) not in ddlfileOptions:
             verboseHandle.printConsoleError("Invalid Option!")
@@ -317,10 +317,10 @@ def setInputs(isSandbox):
         displaySummary(lookupLocator, lookupGroup, objectMgmtHost, spaceName, selectedddlFilename,
                        tableNameFromddlFileName)
 
-    summaryConfirm = str(input(
+    summaryConfirm = str(userInputWrapper(
         Fore.YELLOW + "Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: " + Fore.RESET))
     while (len(str(summaryConfirm)) == 0):
-        summaryConfirm = str(input(
+        summaryConfirm = str(userInputWrapper(
             Fore.YELLOW + "Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: " + Fore.RESET))
 
     if (str(summaryConfirm).casefold() == 'n' or str(summaryConfirm).casefold() == 'no'):

@@ -10,17 +10,14 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetVersionOldGS
-from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from scripts.odsx_servers_manager_install import getManagerHostFromEnv
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from requests.auth import HTTPBasicAuth
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -225,7 +222,7 @@ if __name__ == '__main__':
     hostsConfig = hostsConfig.replace('"', '')
     if (len(str(hostsConfig)) > 0):
         verboseHandle.printConsoleWarning("Current cluster configuration : [" + hostsConfig + "] ")
-    # hostConfiguration = str(input(Fore.YELLOW + "Select server to upgrade : " + Fore.RESET))
+    # hostConfiguration = str(userInputWrapper(Fore.YELLOW + "Select server to upgrade : " + Fore.RESET))
     # logger.info("hostConfiguration" + str(hostConfiguration))
 
     try:
@@ -289,18 +286,18 @@ if __name__ == '__main__':
                     if inputChoice=='99':
                         quit(0)
                     if inputChoice=='1':
-                        inputHostNuber = str(input(Fore.YELLOW+"Enter host number to upgrade. :"+Fore.RESET))
+                        inputHostNuber = str(userInputWrapper(Fore.YELLOW+"Enter host number to upgrade. :"+Fore.RESET))
                         managerIP = managerDict.get(int(inputHostNuber))
                         managerIP = os.getenv(managerIP.ip)
                         managerStatus = managerRunningStatusDict.get(managerIP)
-                        confirm = str(input(Fore.YELLOW + "Are you sure want to continue gs manager upgradation upgrade? [yes (y)] / [no (n)] : " + Fore.RESET))
+                        confirm = str(userInputWrapper(Fore.YELLOW + "Are you sure want to continue gs manager upgradation upgrade? [yes (y)] / [no (n)] : " + Fore.RESET))
                         if confirm == 'yes' or confirm == 'y':
                             proceedForManagerUpgrade(managerIP,managerStatus)
                     if inputChoice=='':
-                        confirm = str(input(Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
+                        confirm = str(userInputWrapper(Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
                         if managerCount >= 2:
                             while (len(str(confirm)) == 0):
-                                confirm = str(input(Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
+                                confirm = str(userInputWrapper(Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)] : " + Fore.RESET))
                             logger.info("confirm :" + str(confirm))
                             if confirm == 'yes' or confirm == 'y':
                                 for managerStatusIP, managerStatus in managerRunningStatusDict.items():

@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform
-from scripts.logManager import LogManager
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from utils.ods_app_config import readValuefromAppConfig
+import argparse
+import os
+import platform
+import sys
+
 from colorama import Fore
-from scripts.odsx_servers_manager_list import listFileFromDirectory
+
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_listWithStatus
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -109,12 +113,12 @@ if __name__ == '__main__':
             logger.info("Menudriven..")
             args.append(menuDrivenFlag)
             if(hostConfiguration=='1'):
-                optionMenu = str(input("Enter your host number to start : "))
+                optionMenu = str(userInputWrapper("Enter your host number to start : "))
                 while(len(optionMenu)==0):
-                    optionMenu = str(input("Enter your host number to start : "))
+                    optionMenu = str(userInputWrapper("Enter your host number to start : "))
                 confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)]"+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)]"+Fore.RESET))
+                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)]"+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     managerStart = managerDict.get(int(optionMenu))
@@ -122,7 +126,7 @@ if __name__ == '__main__':
                     args.append(str(managerStart.ip))
                     # changed : 25-Aug hence systemctl always with root no need to ask
                     #userConfig = readValuefromAppConfig("app.server.user")
-                    #user = str(input("Enter your user ["+userConfig+"]: "))
+                    #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
                     #if(len(str(user))==0):
                     #    user=userConfig
                     user='root'
@@ -141,13 +145,13 @@ if __name__ == '__main__':
             else:
                 confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     logger.info("Starting Cluster")
                     # changed : 25-Aug hence systemctl always with root no need to ask
                     #userConfig = readValuefromAppConfig("app.server.user")
-                    #user = str(input("Enter your user ["+userConfig+"]: "))
+                    #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
                     #if(len(str(user))==0):
                     #    user=userConfig
                     user='root'

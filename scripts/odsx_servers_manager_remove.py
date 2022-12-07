@@ -1,14 +1,17 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform
-from scripts.logManager import LogManager
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput,connectExecuteSSH
-from utils.ods_app_config import readValuefromAppConfig
+import argparse
+import os
+import sys
+
 from colorama import Fore
-from utils.ods_cluster_config import config_get_manager_listWithStatus,config_remove_manager_nodeByIP
-from scripts.spinner import Spinner
+
+from scripts.logManager import LogManager
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_manager_listWithStatus
+from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -104,25 +107,25 @@ if __name__ == '__main__':
         logger.info("Menudriven..")
         args.append(menuDrivenFlag)
         if(hostConfiguration=='1'):
-            optionMenu = str(input("Enter your host number to remove : "))
+            optionMenu = str(userInputWrapper("Enter your host number to remove : "))
             while(len(optionMenu)==0):
-                optionMenu = str(input("Enter your host number to remove : "))
-            removeJava = str(input(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+                optionMenu = str(userInputWrapper("Enter your host number to remove : "))
+            removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
             if(len(str(removeJava))==0):
                 removeJava='n'
-            removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+            removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
             if(len(str(removeUnzip))==0):
                 removeUnzip='n'
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 managerStart = managerDict.get(int(optionMenu))
                 args.append('--host')
                 args.append(str(managerStart.ip))
                 #userConfig = readValuefromAppConfig("app.server.user")
-                #user = str(input("Enter your user [root]: "))
+                #user = str(userInputWrapper("Enter your user [root]: "))
                 #if(len(str(user))==0):
                 user="root"
                 logger.info("app.server.user: "+str(user))
@@ -142,21 +145,21 @@ if __name__ == '__main__':
         elif(hostConfiguration=='99'):
             logger.info("99 - Exist stop")
         else:
-            removeJava = str(input(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+            removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
             if(len(str(removeJava))==0):
                 removeJava='n'
-            removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+            removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
             if(len(str(removeUnzip))==0):
                 removeUnzip='n'
 
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 logger.info("Removing Cluster")
                 #userConfig = readValuefromAppConfig("app.server.user")
-                #user = str(input("Enter your user [root]: "))
+                #user = str(userInputWrapper("Enter your user [root]: "))
                 #if(len(str(user))==0):
                 user='root'
                 logger.info("app.server.user: "+str(user))

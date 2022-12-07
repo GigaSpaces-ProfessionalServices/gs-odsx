@@ -2,14 +2,16 @@
 import argparse
 import os
 import sys
-import sqlite3
+
 from colorama import Fore
+
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from scripts.spinner import Spinner
-from scripts.odsx_datavalidator_install_list import listDVAgents, listDVServers, getConsolidatedStatus, \
+from scripts.odsx_datavalidator_install_list import listDVServers, getConsolidatedStatus, \
     isServiceInstalled
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -67,7 +69,7 @@ def startDataValidationService(args):
         listDVServers()
         #listDVAgents()
         nodes = getDVServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to start data validation service for ["+str(nodes)+"] ? (y/n) [y]: "+Fore.RESET))
+        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure, you want to start data validation service for ["+str(nodes)+"] ? (y/n) [y]: "+Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataValidation_nodes():

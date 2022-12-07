@@ -10,13 +10,12 @@ from requests.auth import HTTPBasicAuth
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
-from utils.odsx_keypress import userInputWithEscWrapper
-from utils.odsx_print_tabular_data import printTabular, printTabularGrid
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
+from utils.odsx_print_tabular_data import printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -118,12 +117,12 @@ def getContainersbyZone():
         response = requests.get("http://"+managerHost+":8090/v2/containers",auth = HTTPBasicAuth(username, password))
         logger.info("response.text : "+str(response.text))
         jsonArray = json.loads(response.text)
-        # zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to Show [bll] : " + Fore.RESET))
+        # zoneGSC = str(userInputWrapper(Fore.YELLOW + "Enter zone of GSC to Show [bll] : " + Fore.RESET))
 
         zoneList = getZoneList()
-        zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to Show : " + Fore.RESET))
+        zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to Show : " + Fore.RESET))
         while (len(str(zoneGSCNo)) == 0):
-            zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET))
+            zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET))
 
         zoneGSC = zoneList.get(int(zoneGSCNo))
 
@@ -153,7 +152,7 @@ def getContainersbyZone():
         handleException(e)
 
 def getContainersbyHost():
-    hostName = str(input(Fore.YELLOW + "Enter host  : " + Fore.RESET))
+    hostName = str(userInputWrapper(Fore.YELLOW + "Enter host  : " + Fore.RESET))
     logger.info("host  :" + str(hostName))
 
     commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container list "+str(hostName)

@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import os
-import sys
 
 from colorama import Fore
 
+from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
 from scripts.spinner import Spinner
-from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -83,14 +82,14 @@ if __name__ == '__main__':
         serverStopType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStopType:"+str(serverStopType))
         if(serverStopType=='1'):
-            optionMainMenu = int(input("Enter your host number to stop: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to stop: "))
             logger.info("Enter your host number to stop:"+str(optionMainMenu))
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     host = streamDict.get(optionMainMenu)
-                    choice = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
                         if(isMenuDriven=='m'):
@@ -104,9 +103,9 @@ if __name__ == '__main__':
             logger.info("99 - Exist stop")
         else:
             confirm=''
-            confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 for host in streamDict:

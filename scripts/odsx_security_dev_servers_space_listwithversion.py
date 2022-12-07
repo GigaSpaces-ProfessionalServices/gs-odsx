@@ -1,18 +1,21 @@
 # to remove space
 import argparse
 import os
+import socket
 import sys
-from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+
+import json
+import requests
 from colorama import Fore
-import socket, platform
-from utils.ods_validation import getSpaceServerStatus
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from utils.ods_app_config import readValuefromAppConfig
-import requests, json
 from requests.auth import HTTPBasicAuth
+
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -150,7 +153,7 @@ def listSpaceServer():
         data=[]
         userConfig = readValuefromAppConfig("app.server.user")
         # changed : 25-Aug hence systemctl always with root no need to ask
-        #user = str(input("Enter your user ["+userConfig+"]: "))
+        #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
         #if(len(str(user))==0):
         #    user=userConfig
         user='root'

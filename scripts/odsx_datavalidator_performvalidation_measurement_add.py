@@ -8,6 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig
 
@@ -59,7 +60,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -76,10 +77,10 @@ def doValidate():
     if registernew == 'yes':
         verboseHandle.printConsoleWarning('');
         verboseHandle.printConsoleWarning('Add new Measurement:');
-        test = str(input("Test type (count/avg/min/max/sum) [count]: "))
+        test = str(userInputWrapper("Test type (count/avg/min/max/sum) [count]: "))
         while(test not in testTypes):
             print(Fore.YELLOW +"Please select Test type from given list"+Fore.RESET)
-            test = str(input("Test type (count/avg/min/max/sum) [count]: "))
+            test = str(userInputWrapper("Test type (count/avg/min/max/sum) [count]: "))
             
         if (len(str(test)) == 0):
             test = 'count'
@@ -90,28 +91,28 @@ def doValidate():
           verboseHandle.printConsoleWarning("No Datasource available. Please add atleast one datasources")
           return
         
-        DataSourceId = str(input("Select DataSource Id from above table: ")) 
+        DataSourceId = str(userInputWrapper("Select DataSource Id from above table: ")) 
         while(DataSourceId not in dataSourceIds):
             print(Fore.YELLOW +"Invalid DataSource Id "+Fore.RESET)
-            DataSourceId = str(input("DataSource Id from above table: ")) 
+            DataSourceId = str(userInputWrapper("DataSource Id from above table: ")) 
         
             
-        schemaName1 = str(input("Schema Name [demo]: "))
+        schemaName1 = str(userInputWrapper("Schema Name [demo]: "))
         if (len(str(schemaName1)) == 0):
             schemaName1 = 'demo'
 
-        tableName1 = str(input("Table Name : "))
+        tableName1 = str(userInputWrapper("Table Name : "))
         while (len(str(tableName1)) == 0):
             print(Fore.YELLOW +"Table Name is invalid (Empty)"+Fore.RESET)
-            tableName1 = str(input("Table Name : "))
+            tableName1 = str(userInputWrapper("Table Name : "))
         
-        fieldName1 = str(input("Field Name : "))
+        fieldName1 = str(userInputWrapper("Field Name : "))
         while (len(str(fieldName1)) == 0):
             print(Fore.YELLOW +"Field Name is invalid (Empty)"+Fore.RESET)
-            fieldName1 = str(input("Field Name : "))
+            fieldName1 = str(userInputWrapper("Field Name : "))
          
         if test != 'lastvalue':
-            whereCondition = str(input("Where Condition [''] : "))
+            whereCondition = str(userInputWrapper("Where Condition [''] : "))
             if (len(str(whereCondition)) == 0):
                 whereCondition = ''
 

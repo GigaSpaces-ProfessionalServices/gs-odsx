@@ -63,7 +63,7 @@ def doValidate():
     #    return
 
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -104,7 +104,7 @@ def doValidate():
         dataSourceIds = str(userInputWithEscWrapper("Select data source id from list.You can specify multiple Ids with comma separated \n OR [99] ESC:"))
         #while(dataSourceName in dataSourceNames):
         #     print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
-        #     dataSourceName = str(input("DataSource Name:"))
+        #     dataSourceName = str(userInputWrapper("DataSource Name:"))
     if(dataSourceIds=='99'):
         return
 

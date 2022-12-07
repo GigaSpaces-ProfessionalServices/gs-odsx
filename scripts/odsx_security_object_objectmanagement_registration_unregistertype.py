@@ -10,7 +10,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.odsx_print_tabular_data import printTabular
 
@@ -111,10 +111,10 @@ def validateUserInput():
             selectedSpace = dataSpaceDict.get(objectMgmtTableInput)
             selectedType = dataTableDict.get(objectMgmtTableInput)
             displaySummary()
-            summaryConfirm = str(input(
+            summaryConfirm = str(userInputWrapper(
                 Fore.YELLOW + "Do you want to unregister object with above inputs ? [Yes (y) / No (n)] [n]: " + Fore.RESET))
             # while(len(str(summaryConfirm))==0):
-            #    summaryConfirm = str(input(Fore.YELLOW+"Do you want to unregister object with above inputs ? [Yes (y) / No (n)] [n]: "+Fore.RESET))
+            #    summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to unregister object with above inputs ? [Yes (y) / No (n)] [n]: "+Fore.RESET))
             if len(str(summaryConfirm)) == 0:
                 summaryConfirm = "n"
             if (str(summaryConfirm).casefold() == 'n' or str(summaryConfirm).casefold() == 'no'):

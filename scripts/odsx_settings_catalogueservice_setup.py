@@ -4,15 +4,15 @@ import os
 import signal
 import sys
 
-from utils.ods_app_config import getYamlFilePathInsideFolder
-from utils.ods_cleanup import signal_handler
-from utils.ods_scp import scp_upload
+from colorama import Fore
+
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
-from colorama import Fore
+from utils.ods_app_config import getYamlFilePathInsideFolder
+from utils.ods_cleanup import signal_handler
+from utils.ods_cluster_config import config_get_grafana_list, config_get_nb_list
 from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_get_grafana_list,config_get_nb_list
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -118,7 +118,8 @@ def setupService():
     verboseHandle.printConsoleWarning("-----------------------------------------")
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Catalogue service ? (y/n) [y]:" + Fore.RESET
-    choice = str(input(confirmMsg))
+    from utils.odsx_keypress import userInputWrapper
+    choice = str(userInputWrapper(confirmMsg))
     if choice.casefold() == 'n':
         exit(0)
 

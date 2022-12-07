@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import os
-import platform
-from os import path
+
 from colorama import Fore
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_ssh import connectExecuteSSH
-from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_get_grafana_node
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -88,7 +87,7 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Monitors -> Alerts -> Services -> Kapacitor -> Install')
     try:
         installUserAndTargetDirectory()
-        confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Kapacitor (y/n) [y]: "+Fore.RESET))
+        confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install Kapacitor (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
             confirmInstall='y'
         if(confirmInstall=='y'):

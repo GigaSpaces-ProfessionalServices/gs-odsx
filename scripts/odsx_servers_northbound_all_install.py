@@ -1,18 +1,16 @@
 #!/usr/bin/env python3
 
 import os
-import platform
-from os import path
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
-from colorama import Fore
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_add_nb_node, config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, config_get_manager_node
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, \
+    config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

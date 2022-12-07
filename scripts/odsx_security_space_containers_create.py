@@ -13,7 +13,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabularGrid, printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -81,25 +81,25 @@ def createContainers(managerHost,hostData):
     try:
         hostName = ''
         while (len(str(hostName)) == 0):
-            hostName=str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
+            hostName=str(userInputWrapper(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
             hostId = hostData.get(int(hostName))
             logger.info("host  :" + str(hostId))
 
-        numberOfGSC = str(input(Fore.YELLOW + "Enter number of GSCs [1] : " + Fore.RESET))
+        numberOfGSC = str(userInputWrapper(Fore.YELLOW + "Enter number of GSCs [1] : " + Fore.RESET))
         while (len(str(numberOfGSC)) == 0):
             numberOfGSC = 1
         logger.info("numberOfGSC :" + str(numberOfGSC))
 
-        zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to create [bll] : " + Fore.RESET))
+        zoneGSC = str(userInputWrapper(Fore.YELLOW + "Enter zone of GSC to create [bll] : " + Fore.RESET))
         while (len(str(zoneGSC)) == 0):
             zoneGSC = 'bll'
         logger.info("zoneGSC :" + str(zoneGSC))
 
-        memoryGSC = str(input(Fore.YELLOW + "Enter memory of GSC [4g] : " + Fore.RESET))
+        memoryGSC = str(userInputWrapper(Fore.YELLOW + "Enter memory of GSC [4g] : " + Fore.RESET))
         while (len(str(memoryGSC)) == 0):
             memoryGSC = '4g'
 
-        confirmCreateContainer = str(input(Fore.YELLOW + "Do you want to create container ? (y/n) [y] : "))
+        confirmCreateContainer = str(userInputWrapper(Fore.YELLOW + "Do you want to create container ? (y/n) [y] : "))
 
         if (len(str(confirmCreateContainer)) == 0 or confirmCreateContainer == 'y' or confirmCreateContainer == 'yes'):
 

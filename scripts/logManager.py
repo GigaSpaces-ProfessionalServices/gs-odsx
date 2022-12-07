@@ -1,8 +1,11 @@
 #!/usr/bin/python3
 
+import argparse
+import logging
+import logging.config
 ###########################################################################
 # put below code in ~/.bashrc file to redirect all stderr to this function.
-# From any script or program, when there is any print to stderr, it will 
+# From any script or program, when there is any print to stderr, it will
 # print in RED color
 #
 # exec 9>&2
@@ -17,12 +20,8 @@
 # PROMPT_COMMAND='undirect;'
 ###########################################################################
 import os.path
-from os import path
-import logging
-import logging.config
-import argparse
-import sys
-from colorama import init, Fore, Back, Style
+
+from colorama import init, Fore
 
 LOGGING_CONFIG = 'config/logging.conf'
 logging.config.fileConfig(LOGGING_CONFIG)

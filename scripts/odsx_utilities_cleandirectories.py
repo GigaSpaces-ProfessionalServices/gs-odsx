@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
-import os, time
+import os
 import sys
 
 from colorama import Fore
-import requests, json, math
+
 from scripts.logManager import LogManager
-from utils.ods_validation import port_check_config
-from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
-from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_validation import port_check_config
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

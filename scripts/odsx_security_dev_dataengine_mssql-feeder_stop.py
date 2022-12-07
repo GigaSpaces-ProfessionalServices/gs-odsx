@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json, subprocess, glob,sqlite3
+import glob
+import json
+import os
+import requests
+import sqlite3
+import subprocess
+
 from colorama import Fore
-from scripts.logManager import LogManager
-from utils.odsx_keypress import userInputWithEscWrapper
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import readValuefromAppConfig,readValueByConfigObj
-from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite
 from requests.auth import HTTPBasicAuth
+
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj
+from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -155,9 +162,9 @@ def inputParam():
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):
-        inputNumberToStop = str(input(Fore.YELLOW+"Enter serial number to stop mssql-feeder : "+Fore.RESET))
+        inputNumberToStop = str(userInputWrapper(Fore.YELLOW+"Enter serial number to stop mssql-feeder : "+Fore.RESET))
         if(len(str(inputNumberToStop))==0):
-            inputNumberToStop = str(input(Fore.YELLOW+"Enter serial number to stop mssql-feeder : "+Fore.RESET))
+            inputNumberToStop = str(userInputWrapper(Fore.YELLOW+"Enter serial number to stop mssql-feeder : "+Fore.RESET))
         proceedToStopMSSQLFeeder(inputNumberToStop)
     if(len(str(inputChoice))==0):
         elements = len(fileNameDict)

@@ -1,26 +1,21 @@
 #!/usr/bin/env python3
-import concurrent
-import os, time, sqlite3
-import re
+import logging
+import os
 import signal
-from concurrent.futures.thread import ThreadPoolExecutor
+import sqlite3
 
+import json
+import requests
 from colorama import Fore
-from scripts.logManager import LogManager
-import requests, json, math
 
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValueByConfigObj,readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from scripts.spinner import Spinner
-import logging
-from utils.ods_scp import scp_upload
-from datetime import datetime as dt
+from utils.odsx_print_tabular_data import printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -285,9 +280,9 @@ def listGSC(managerHost):
     global spaceName
     managerHostConfig = managerHost
     try:
-        spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+        spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         while(len(str(spaceNumber))==0 or (not spaceNumber.isdigit())):
-            spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+            spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         logger.info("spaceNumber : "+str(spaceNumber))
         logger.info("SpaceName = "+str(gs_space_host_dictionary_obj.get(str(spaceNumber))))
         spaceName = str(gs_space_host_dictionary_obj.get(str(spaceNumber)))

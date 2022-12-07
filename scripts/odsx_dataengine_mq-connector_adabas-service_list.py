@@ -1,13 +1,16 @@
 
-import argparse, subprocess
+import argparse
 import os
+import subprocess
 import sys
-from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes, isInstalledAdabasService
+
 from colorama import Fore
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_cluster_config import config_get_dataEngine_nodes, isInstalledAdabasService
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

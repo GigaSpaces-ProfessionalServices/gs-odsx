@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 
-import os, time, subprocess
+import os
+
 from colorama import Fore
+
 from scripts.logManager import LogManager
-import requests, json, math
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
-from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, connectExecuteSSH
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_scp import scp_upload
-import logging
+from utils.ods_ssh import connectExecuteSSH
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -72,7 +71,7 @@ def proceedForInputParam(configXapLogLocation):
     #verboseHandle.printConsoleInfo("xap_logging.properties location ["+configXapLogLocation+"]")
     global sourceCefLogInput
     sourceCefLogConfig = str(readValuefromAppConfig("app.manager.cefXapLogging.source.file"))
-    sourceCefLogInput = str(input(Fore.YELLOW+"Enter source CEF configured xap_logging.properties file ["+sourceCefLogConfig+"] :"))
+    sourceCefLogInput = str(userInputWrapper(Fore.YELLOW+"Enter source CEF configured xap_logging.properties file ["+sourceCefLogConfig+"] :"))
     if(len(str(sourceCefLogInput))==0):
         sourceCefLogInput = sourceCefLogConfig
     set_value_in_property_file("app.manager.cefXapLogging.source.file",sourceCefLogInput)
@@ -80,20 +79,20 @@ def proceedForInputParam(configXapLogLocation):
     global targetCefLogInput
     if(os.path.isfile(sourceCefLogInput)):
         targetCefLogConfig = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file"))
-        targetCefLogInput = str(input(Fore.YELLOW+"Enter target CEF configured xap_logging.properties file ["+targetCefLogConfig+"] : "))
+        targetCefLogInput = str(userInputWrapper(Fore.YELLOW+"Enter target CEF configured xap_logging.properties file ["+targetCefLogConfig+"] : "))
         if(len(str(targetCefLogInput))==0):
             targetCefLogInput=targetCefLogConfig
     else:
         verboseHandle.printConsoleInfo("Source file does not exist")
         logger.info("Source file does not exist")
 
-    confirmManagerInstall = str(input(Fore.YELLOW+"Are you sure want to enable CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
+    confirmManagerInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to enable CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):
         confirmManagerInstall='y'
     if(confirmManagerInstall=='y'):
         managerNodes = config_get_manager_node()
         proceedForNodeConfiguration("enable",managerNodes,sourceCefLogInput,targetCefLogInput)
-    confirmManagerInstall = str(input(Fore.YELLOW+"Are you sure want to enable CEF logs for space servers ? (y/n) [y]: "+Fore.RESET))
+    confirmManagerInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to enable CEF logs for space servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):
         confirmManagerInstall='y'
     if(confirmManagerInstall=='y'):

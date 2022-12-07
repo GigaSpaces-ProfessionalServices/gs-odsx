@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 
-import os, time
+import os
+import time
+
+import json
+import requests
 from colorama import Fore
-from scripts.logManager import LogManager
-import requests, json, math
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
-from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.ods_scp import scp_upload
-import logging
 from requests.auth import HTTPBasicAuth
+
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_scp import scp_upload
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.odsx_keypress import userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -233,35 +237,35 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global individualHostConfirm
     try:
 
-        confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc"))#str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+        confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
         #if(len(confirmCreateGSC)==0):
         #    confirmCreateGSC='y'
         if(confirmCreateGSC=='y'):
             #global space_dict_obj
             #space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
-            individualHostConfirm = str(readValuefromAppConfig("app.spacejar.creategsc.specifichost"))#str(input(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
+            individualHostConfirm = str(readValuefromAppConfig("app.spacejar.creategsc.specifichost"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
             #if(len(str(individualHostConfirm))==0):
             #    individualHostConfirm = 'n'
             if(individualHostConfirm=='y'):
-                hostToCreateGSC = str(input("Enter space host serial number to create gsc [1] :"+Fore.RESET))
+                hostToCreateGSC = str(userInputWrapper("Enter space host serial number to create gsc [1] :"+Fore.RESET))
                 if(len(hostToCreateGSC)==0):
                     hostToCreateGSC="1"
                 specificHost = space_dict_obj.get(hostToCreateGSC)
                 verboseHandle.printConsoleInfo("GSC will be created on :"+str(specificHost))
             logger.info("individualHostConfirm : "+str(individualHostConfirm))
 
-            numberOfGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscperhost"))#str(input(Fore.YELLOW+"Enter number of GSC per host  :"+Fore.RESET))
+            numberOfGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscperhost"))#str(userInputWrapper(Fore.YELLOW+"Enter number of GSC per host  :"+Fore.RESET))
             #if(len(str(numberOfGSC))==0):
             #    numberOfGSC=2
             logger.info("numberofGSC :"+str(numberOfGSC))
 
-            memoryGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory"))#str(input(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
+            memoryGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory"))#str(userInputWrapper(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
             #if(len(memoryGSC)==0):
             #    memoryGSC="12g"
 
-            zoneGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone"))#str(input(Fore.YELLOW+"Enter zone :"+Fore.RESET))
+            zoneGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone"))#str(userInputWrapper(Fore.YELLOW+"Enter zone :"+Fore.RESET))
             #while(len(str(zoneGSC))==0):
-            #    zoneGSC = str(input("Enter zone :"+Fore.RESET))
+            #    zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
 
             size = 1024
             type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
@@ -366,11 +370,11 @@ def uploadFileRest(managerHostConfig):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
-        # pathOfSourcePUInput = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
+        # pathOfSourcePUInput = str(userInputWrapper(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
        # if(len(str(pathOfSourcePUInput))>0):
        #     pathOfSourcePU = pathOfSourcePUInput
        # while(len(str(pathOfSourcePU))==0):
-       #     pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+       #     pathOfSourcePU = str(userInputWrapper(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
         #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
 
@@ -384,7 +388,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
     logger.info("dataPuREST()")
     try:
         global isSpacePropertyRequired
-        isSpacePropertyRequired = str(readValuefromAppConfig("app.spacejar.wantspaceproperty"))#str(input(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
+        isSpacePropertyRequired = str(readValuefromAppConfig("app.spacejar.wantspaceproperty"))#str(userInputWrapper(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
         #if(len(isSpacePropertyRequired)==0):
         #    isSpacePropertyRequired='y'
         logger.info("isSpacePropertyRequired : "+str(isSpacePropertyRequired))
@@ -395,30 +399,30 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         if(isSpacePropertyRequired=='y'):
             spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.space.spacepropertyfile"))
             logger.info("gs.config.ts.spaceproperty :"+str(spacePropertyConfigFilePath))
-            #spacePropertyConfigFilePathInput = str(input(Fore.YELLOW+"Enter space.property.filePath ["+str(spacePropertyConfigFilePath)+"]: "+Fore.RESET))
+            #spacePropertyConfigFilePathInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath ["+str(spacePropertyConfigFilePath)+"]: "+Fore.RESET))
             #if(len(str(spacePropertyConfigFilePathInput))>0):
             #    spacePropertyConfigFilePath = spacePropertyConfigFilePathInput
             #while(len(str(spacePropertyConfigFilePath))==0):
-            #    spacePropertyConfigFilePath = str(input(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
+            #    spacePropertyConfigFilePath = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
             logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
             #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
 
             spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.spacejar.spaceproperty.filepath.target")).replace('"','')
             logger.info("app.spacejar.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
-            #spacePropertyConfigFilePathTargetInput = str(input(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
+            #spacePropertyConfigFilePathTargetInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
             #if(len(str(spacePropertyConfigFilePathTargetInput))>0):
             #    spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
             #while(len(str(spacePropertyConfigFilePathTarget))==0):
-            #    spacePropertyConfigFilePathTarget = str(input(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
+            #    spacePropertyConfigFilePathTarget = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
             logger.info("spacePropertyConfigFilePathTarget :"+str(spacePropertyConfigFilePathTarget))
             #set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
         else:
             logger.info("Skipping space property configure.")
 
         global spaceNameCfg
-        spaceNameCfg = str(readValuefromAppConfig("app.spacejar.space.name"))#str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
+        spaceNameCfg = str(readValuefromAppConfig("app.spacejar.space.name"))#str(userInputWrapper(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
         #while(len(str(spaceNameCfg))==0):
-        #    spaceNameCfg = str(input(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
+        #    spaceNameCfg = str(userInputWrapper(Fore.YELLOW+"Enter space name to set space.name : "+Fore.RESET))
         logger.info("space.name :"+str(spaceNameCfg))
 
         data={
@@ -479,7 +483,7 @@ def copyFile(hostips, srcPath, destPath, dryrun=False):
     username = "root"
     '''
     if not dryrun:
-        username = input("Enter username for host [root] : ")
+        username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
             username = "root"
     else:
@@ -531,36 +535,36 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         logger.info("resource :"+str(resource))
 
         global resourceName
-        resourceName = str(readValuefromAppConfig("app.spacejar.pu.name"))#str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
+        resourceName = str(readValuefromAppConfig("app.spacejar.pu.name"))#str(userInputWrapper(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
         #while(len(str(resourceName))==0):
-        #    resourceName = str(input(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
+        #    resourceName = str(userInputWrapper(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
         #logger.info("nameOfPU :"+str(resourceName))
 
         global partition
-        partition = str(readValuefromAppConfig("app.spacejar.pu.partitions"))#str(input(Fore.YELLOW+"Enter partition required [1] :"+Fore.RESET))
+        partition = str(readValuefromAppConfig("app.spacejar.pu.partitions"))#str(userInputWrapper(Fore.YELLOW+"Enter partition required [1] :"+Fore.RESET))
         #if(len(str(partition))==0):
         #    partition='1'
         #while( not partition.isdigit()):
-        #    partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
+        #    partition = str(userInputWrapper(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
         logger.info("Enter partition required :"+str(partition))
 
         global zoneOfPU
-        zoneOfPU = str(readValuefromAppConfig("app.spacejar.pu.zone"))#str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
+        zoneOfPU = str(readValuefromAppConfig("app.spacejar.pu.zone"))#str(userInputWrapper(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
         #while(len(str(zoneOfPU))==0):
-        #    zoneOfPU = str(input(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
+        #    zoneOfPU = str(userInputWrapper(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
         logger.info("Zone Of PU :"+str(zoneOfPU))
 
         global maxInstancesPerMachine
-        maxInstancesPerMachine = str(readValuefromAppConfig("app.spacejar.pu.maxinstancepermachine"))#str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1] :"+Fore.RESET))
+        maxInstancesPerMachine = str(readValuefromAppConfig("app.spacejar.pu.maxinstancepermachine"))#str(userInputWrapper(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1] :"+Fore.RESET))
         #if(len(str(maxInstancesPerMachine))==0):
         #    maxInstancesPerMachine = '1'
         #while(not maxInstancesPerMachine.isdigit()):
-        #    maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
+        #    maxInstancesPerMachine = str(userInputWrapper(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
         logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
         global backUpRequired
         global backUpRequiredStr
-        backUpRequired = str(readValuefromAppConfig("app.spacejar.pu.backuprequired"))#str(input(Fore.YELLOW+"SLA [HA] ? (y/n) [y] :"+Fore.RESET))
+        backUpRequired = str(readValuefromAppConfig("app.spacejar.pu.backuprequired"))#str(userInputWrapper(Fore.YELLOW+"SLA [HA] ? (y/n) [y] :"+Fore.RESET))
         backUpRequiredStr = backUpRequired
         if(len(str(backUpRequired))==0 or backUpRequired=='y'):
             backUpRequired=1
@@ -570,7 +574,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         data = dataPuREST(resource,resourceName,zoneOfPU,partition,maxInstancesPerMachine,backUpRequired)
 
         displaySummaryOfInputParam(confirmCreateGSC)
-        finalConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
         if(len(str(finalConfirm))==0):
             finalConfirm='y'
         if(finalConfirm=='y'):

@@ -59,7 +59,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -73,10 +73,12 @@ def doValidate():
         verboseHandle.printConsoleWarning("No measurement available.")
         return
 
-    measurementId = str(input(Fore.YELLOW + "Enter measurement id to edit: " + Fore.RESET))
+    from utils.odsx_keypress import userInputWrapper
+    measurementId = str(userInputWrapper(Fore.YELLOW + "Enter measurement id to edit: " + Fore.RESET))
     while (measurementId not in measurementIds):
         print(Fore.YELLOW +"Enter measurement id from above list"+Fore.RESET)
-        measurementId = str(input(Fore.YELLOW + "Enter measurement id to edit: " + Fore.RESET))
+        from utils.odsx_keypress import userInputWrapper
+        measurementId = str(userInputWrapper(Fore.YELLOW + "Enter measurement id to edit: " + Fore.RESET))
 
     if response:
         for measurement in response:
@@ -85,11 +87,11 @@ def doValidate():
                 verboseHandle.printConsoleWarning('Update values for measurement id:' + measurementId);
                 verboseHandle.printConsoleWarning('Note: Leave blank new value if you do not want to change the value');
                 verboseHandle.printConsoleWarning('')
-                test = str(input("Test type (count/avg/min/max/sum) [Current value: '" + measurement["type"] + "'] New value: "))
+                test = str(userInputWrapper("Test type (count/avg/min/max/sum) [Current value: '" + measurement["type"] + "'] New value: "))
 
                 while(test not in testTypes):
                   print(Fore.YELLOW +"Please select Test type from given list"+Fore.RESET)
-                  test = str(input("Test type (count/avg/min/max/sum) [Current value: '" + measurement["type"] + "'] New value: "))
+                  test = str(userInputWrapper("Test type (count/avg/min/max/sum) [Current value: '" + measurement["type"] + "'] New value: "))
                 if (len(str(test)) == 0):
                     test = measurement["type"]
 
@@ -98,28 +100,29 @@ def doValidate():
                     verboseHandle.printConsoleWarning("No Datasource available. Please add atleast one datasource")
                     return
 
-                DataSourceId = str(input("DataSource Id [Current value: '" +str(measurement["dataSourceId"])+ " '] New value: "))
+                DataSourceId = str(userInputWrapper("DataSource Id [Current value: '" +str(measurement["dataSourceId"])+ " '] New value: "))
                 while(DataSourceId not in dataSourceIds):
                   if (len(str(DataSourceId)) == 0 or DataSourceId ==  measurement["dataSourceId"]):
                     DataSourceId = str(measurement["dataSourceId"])
                     break
                   print(Fore.YELLOW +"Invalid DataSource Id "+Fore.RESET)
-                  DataSourceId = str(input("DataSource Id [Current value: '" + str(measurement["dataSourceId"]) + " '] New value: "))
+                  DataSourceId = str(userInputWrapper("DataSource Id [Current value: '" + str(measurement["dataSourceId"]) + " '] New value: "))
 
 
-                schemaName1 = str(input("Schema Name [Current value: '" + measurement["schemaName"] + " '] New value: "))
+                schemaName1 = str(userInputWrapper("Schema Name [Current value: '" + measurement["schemaName"] + " '] New value: "))
                 if (len(str(schemaName1)) == 0):
                     schemaName1 = measurement["schemaName"]
 
-                tableName1 = str(input("Table Name [Current value: '" + measurement["tableName"] + "'] New value: "))
+                tableName1 = str(userInputWrapper("Table Name [Current value: '" + measurement["tableName"] + "'] New value: "))
                 if (len(str(tableName1)) == 0):
                     tableName1 = measurement["tableName"]
-                fieldName1 = str(input("Field Name [Current value: '" + measurement["fieldName"] + "'] New value: "))
+                fieldName1 = str(userInputWrapper("Field Name [Current value: '" + measurement["fieldName"] + "'] New value: "))
                 if (len(str(fieldName1)) == 0):
                     fieldName1 = measurement["fieldName"]
                 if test != 'lastvalue':
+                    from utils.odsx_keypress import userInputWrapper
                     whereCondition = str(
-                        input("Where Condition [Current value: '" + measurement["whereCondition"] + "'] New value: "))
+                        userInputWrapper("Where Condition [Current value: '" + measurement["whereCondition"] + "'] New value: "))
                     if (len(str(whereCondition)) == 0):
                         whereCondition = measurement["whereCondition"]
 

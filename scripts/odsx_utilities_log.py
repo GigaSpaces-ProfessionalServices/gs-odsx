@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import os
-from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj, getYamlFilePathInsideFolder
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
-from scripts.spinner import Spinner
+
 from colorama import Fore
-from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
-from scripts.odsx_servers_influxdb_stop import getInfluxdbServerHostList
-from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
+
+from scripts.logManager import LogManager
 from scripts.odsx_servers_space_install import getSpaceHostFromEnv
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -70,7 +70,7 @@ def configureLicenseManagerAndSpace():
     verboseHandle.printConsoleInfo("Manager hosts : "+managerHosts)
     verboseHandle.printConsoleInfo("Space hosts : "+spaceHosts)
     #licenseConfig='"\\"{}\\""'.format(licenseConfig)
-    confirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
+    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
     if confirm=='y' or confirm=='':
         #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  /dbagiga/gigaspaces-smart-ods/bin/setenv-overrides.sh"
 

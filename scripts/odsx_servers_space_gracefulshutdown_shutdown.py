@@ -1,26 +1,16 @@
 #!/usr/bin/env python3
 
 import argparse
-from logging import exception
 import os
-from shutil import ExecError
 import sys
-import time
-from utils.ods_space import getAllObjPrimaryCount, verifyPrimaryBackupObjCount
-from utils.odsx_dataengine_utilities import getAllFeeders
-import pexpect
-from utils.ods_app_config import readValuefromAppConfig
-from utils.odsx_db2feeder_utilities import deleteDB2EntryFromSqlLite, deleteMSSqlEntryFromSqlLite
-from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_manager_node, config_get_nb_list, config_get_space_hosts_list
-from colorama import Fore
-from utils.ods_validation import getSpaceServerStatus
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput 
-import requests, json
 
-from utils.odsx_space_shutdown_reload_utilities import displayPus, getManagerHost, getProcessingUnitList, getServiceListFromConsul, printSuccessSummary, shutdownSpaceServers, undeployFeeders, undeployMicroservices, undeploySpace, validateBeforeShutdown, validateTierSpace
+from colorama import Fore
+
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig
+from utils.odsx_space_shutdown_reload_utilities import displayPus, getManagerHost, getProcessingUnitList, \
+    getServiceListFromConsul, printSuccessSummary, shutdownSpaceServers, undeployFeeders, undeployMicroservices, \
+    undeploySpace, validateBeforeShutdown, validateTierSpace
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -110,14 +100,17 @@ def shutdownServers():
         
         printSuccessSummary(puList)
         confirmMsg = Fore.YELLOW + "Do you really want to shutdown ? (Yes(y)/No(n)):" + Fore.RESET
-        choice = str(input(confirmMsg))
+        from utils.odsx_keypress import userInputWrapper
+        choice = str(userInputWrapper(confirmMsg))
         while(len(choice) == 0):
-            choice = str(input(confirmMsg))
+            from utils.odsx_keypress import userInputWrapper
+            choice = str(userInputWrapper(confirmMsg))
 
         while(choice.casefold()!='yes' and choice.casefold()!='no' and choice.casefold()!='y' and choice.casefold()!='n'):
          
             verboseHandle.printConsoleError("Invalid input")
-            choice = str(input(confirmMsg))
+            from utils.odsx_keypress import userInputWrapper
+            choice = str(userInputWrapper(confirmMsg))
 
         if (choice.casefold() == 'no' or choice.casefold()=='n'):
             logger.info("Exiting without performing shutdown")

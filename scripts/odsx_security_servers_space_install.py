@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform,socket
-from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
-    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
-    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
+import argparse
+import os
+import socket
+import sys
+
 from colorama import Fore
 
-from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
-from utils.ods_scp import scp_upload, scp_upload_multiple
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
-    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputValuePython36
-from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts, \
-    isInstalledAndGetVersion, config_get_manager_node
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_scp import scp_upload,scp_upload_specific_extension
+from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj, \
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
+from utils.ods_cluster_config import config_get_cluster_airgap, config_get_space_hosts, \
+    isInstalledAndGetVersion
+from utils.ods_list import configureMetricsXML, validateRPMS, getManagerHostFromEnv
+from utils.ods_scp import scp_upload
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
+    executeRemoteCommandAndGetOutputValuePython36
+from utils.odsx_keypress import userInputWrapper
+
 #from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -91,7 +95,7 @@ def getHostConfiguration():
         hostsConfig =getManagerHostFromEnv()
         logger.info("Manager hostConfig : "+str(hostsConfig))
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        #applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
+        #applicativeUser = str(userInputWrapper(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
         #if(len(str(applicativeUser))==0):
         applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
@@ -164,7 +168,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
-        #gsLicenseFile = str(input(Fore.YELLOW+'GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
+        #gsLicenseFile = str(userInputWrapper(Fore.YELLOW+'GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
         #if(len(str(gsLicenseFile))==0):
         gsLicenseFile = licenseConfig
         #else:
@@ -232,18 +236,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
-        #noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
+        #noOfHost = str(userInputWrapper(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
         #while (len(str(noOfHost))==0):
-        #    noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
+        #    noOfHost = str(userInputWrapper(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
         noOfHost=len(getSpaceHostFromEnv().split(','))
         logger.debug("No of space host :"+str(noOfHost))
         host_nic_dict_obj = host_nic_dictionary()
         spaceHostConfig=getSpaceHostFromEnv()
         for host in getSpaceHostFromEnv().split(','):
             '''
-            host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
+            host = str(userInputWrapper(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
             while(len(str(host))==0):
-                host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
+                host = str(userInputWrapper(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
             if(len(str(spaceHostConfig))>0):
                 spaceHostConfig = spaceHostConfig+','+host
             else:
@@ -252,12 +256,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             host_nic_dict_obj.add(host,'')
         #set_value_in_property_file('app.space.hosts',spaceHostConfig)
         wantNicAddress = str(readValuefromAppConfig("app.space.gsNicAddress"))
-        #str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
+        #str(userInputWrapper(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantNicAddress))==0):
             wantNicAddress='n'
         if(wantNicAddress=="yes" or wantNicAddress=="y"):
             for host in host_nic_dict_obj:
-                nicAddr = str(input(Fore.YELLOW+"Enter GS_NIC_ADDRESS of space host"+str(host)+" :"+Fore.RESET))
+                nicAddr = str(userInputWrapper(Fore.YELLOW+"Enter GS_NIC_ADDRESS of space host"+str(host)+" :"+Fore.RESET))
                 logger.debug("host enter:"+host+" nicAddr :"+nicAddr)
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
@@ -389,9 +393,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
-        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+        summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
-            summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+            summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
             for host in host_nic_dict_obj:
@@ -494,11 +498,11 @@ if __name__ == '__main__':
         isValidRPMs = validateRPMS()
         if(isValidRPMs):
             args.append(menuDrivenFlag)
-            #host = str(input("Enter your host: "))
+            #host = str(userInputWrapper("Enter your host: "))
             #args.append('--host')
             #args.append(host)
             #user = readValuefromAppConfig("app.server.user")
-            #user = str(input("Enter your user [root]: "))
+            #user = str(userInputWrapper("Enter your user [root]: "))
             #if(len(str(user))==0):
             user="root"
             args.append('-u')

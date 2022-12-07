@@ -33,7 +33,8 @@ def update_app_config_file(linePatternToReplace, inputMsg, passedArg):
     if passedArg is None:
         previousValue = lines[lineNo].replace("\n", "").replace(linePatternToReplace + "=",
                                                                 "")
-        selectedValue = str(input(
+        from utils.odsx_keypress import userInputWrapper
+        selectedValue = str(userInputWrapper(
             inputMsg + " [current '" + previousValue + "'] : "))
     else:
         selectedValue = passedArg

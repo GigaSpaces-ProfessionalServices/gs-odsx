@@ -1,13 +1,17 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json
+import json
+import os
+import requests
+
 from colorama import Fore
+
 from scripts.logManager import LogManager
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_validation import getSpaceServerStatus
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import os
 import sys
-from utils.ods_ssh import connectExecuteSSH
+
+from colorama import Fore
+
 from scripts.logManager import LogManager
-from utils.ods_validation import validateClusterCsvHost
 from utils.ods_cluster_config import config_remove_nb_streamByNameIP, config_get_nb_list
+from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
-from colorama import Fore
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -129,7 +130,7 @@ if __name__ == '__main__':
         logger.info("serverNodes : "+str(serverNodes))
         if(len(str(serverNodes))>0):
             verboseHandle.printConsoleInfo("Applicative servers going to remove ["+serverNodes+"]")
-            #confirmServerRemove = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative server un-installation ? (y/n) [y]:"+Fore.RESET))
+            #confirmServerRemove = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed above NB applicative server un-installation ? (y/n) [y]:"+Fore.RESET))
             #if(len(str(confirmServerRemove))==0):
             confirmServerRemove='y'
         else:
@@ -140,7 +141,7 @@ if __name__ == '__main__':
         logger.info("agentNodes : "+str(agentNodes))
         if(len(agentNodes)>0):
             verboseHandle.printConsoleInfo("Agent servers going to remove ["+agentNodes+"]")
-            #confirmAgentRemove = str(input(Fore.YELLOW+"Are you sure want to proceed above NB applicative agent un-installation ? (y/n) [y]:"+Fore.RESET))
+            #confirmAgentRemove = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed above NB applicative agent un-installation ? (y/n) [y]:"+Fore.RESET))
             #if(len(str(confirmAgentRemove))==0):
             confirmAgentRemove='y'
         else:
@@ -150,7 +151,7 @@ if __name__ == '__main__':
         logger.info("managementNodes :"+str(managementNodes))
         if(len(managementNodes)>0):
             verboseHandle.printConsoleInfo("Management server going to remove ["+managementNodes+"]")
-            #confirmManagementRemove = str(input(Fore.YELLOW+"Are you sure want to proceed above NB management server un-installation ? (y/n) [y] :"+Fore.RESET))
+            #confirmManagementRemove = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed above NB management server un-installation ? (y/n) [y] :"+Fore.RESET))
             #if(len(str(confirmManagementRemove))==0):
             confirmManagementRemove='y'
         else:

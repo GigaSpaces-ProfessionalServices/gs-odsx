@@ -1,19 +1,27 @@
 #!/usr/bin/env python3
 
-import os,time,subprocess,requests, json, math, glob, sqlite3
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
-from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
+import glob
+import json
+import os
+import requests
+import sqlite3
+import subprocess
+import time
+
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
+
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from requests.auth import HTTPBasicAuth
-from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -232,12 +240,12 @@ def createGSCInputParam():
     global numberOfGSC
     global memoryGSC
 
-    numberOfGSC = str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
+    numberOfGSC = str(userInputWrapper(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
     while(len(str(numberOfGSC))==0):
         numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
-    memoryGSC = str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
+    memoryGSC = str(userInputWrapper(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
     while(len(str(memoryGSC))==0):
         memoryGSC='1g'
 
@@ -433,14 +441,14 @@ def proceedToDeployPUInputParam(managerHost):
 
     global sourceMSSQLJarFilePath
     sourceMSSQLJarFileConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.jar"))
-    sourceMSSQLJarFilePath = str(input(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET))
+    sourceMSSQLJarFilePath = str(userInputWrapper(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET))
     if(len(str(sourceMSSQLJarFilePath))==0):
         sourceMSSQLJarFilePath = sourceMSSQLJarFileConfig
     set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceMSSQLJarFilePath)
 
     global sourceMSSQLFeederShFilePath
     sourceMSSQLFeederShFilePathConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.filePath.shFile"))
-    sourceMSSQLFeederShFilePath = str(input(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceMSSQLFeederShFilePathConfig+"] : "+Fore.RESET))
+    sourceMSSQLFeederShFilePath = str(userInputWrapper(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceMSSQLFeederShFilePathConfig+"] : "+Fore.RESET))
     if(len(str(sourceMSSQLFeederShFilePath))==0):
         sourceMSSQLFeederShFilePath = sourceMSSQLFeederShFilePathConfig
     lastChar = str(sourceMSSQLFeederShFilePath[-1])
@@ -459,24 +467,24 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
     global spaceName
-    spaceName = str(input(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
+    spaceName = str(userInputWrapper(Fore.YELLOW+"Enter space.name [bllspace] : "+Fore.RESET))
     if(len(str(spaceName))==0):
         spaceName='bllspace'
 
     global mssqlServer
     mssqlServerConfig = str(readValueByConfigObj("app.dataengine.mssql-feeder.mssql.server"))
-    mssqlServer = str(input(Fore.YELLOW+"Enter mssql.server ["+mssqlServerConfig+"]: "+Fore.RESET))
+    mssqlServer = str(userInputWrapper(Fore.YELLOW+"Enter mssql.server ["+mssqlServerConfig+"]: "+Fore.RESET))
     if(len(str(mssqlServer))==0):
         mssqlServer = mssqlServerConfig
     set_value_in_property_file("app.dataengine.mssql-feeder.mssql.server",mssqlServer)
 
     global feederWriteBatchSize
-    feederWriteBatchSize = str(input(Fore.YELLOW+"Enter feeder.writeBatchSize [10000] :"+Fore.RESET))
+    feederWriteBatchSize = str(userInputWrapper(Fore.YELLOW+"Enter feeder.writeBatchSize [10000] :"+Fore.RESET))
     if(len(feederWriteBatchSize)==0):
         feederWriteBatchSize='10000'
 
     global feederSleepAfterWrite
-    feederSleepAfterWrite = str(input(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis [500] :"+Fore.RESET))
+    feederSleepAfterWrite = str(userInputWrapper(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis [500] :"+Fore.RESET))
     if(len(feederSleepAfterWrite)==0):
         feederSleepAfterWrite='500'
 
@@ -515,7 +523,7 @@ if __name__ == '__main__':
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
-                        confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
+                        confirmCreateGSC = str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
                             createGSCInputParam()

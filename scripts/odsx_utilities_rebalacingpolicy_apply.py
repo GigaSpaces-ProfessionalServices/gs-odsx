@@ -1,19 +1,19 @@
 #!/usr/bin/env python3
 
-import os, socket
+import os
 import signal
-import subprocess,shlex
+import socket
+import subprocess
+
 from colorama import Fore
+
 from scripts.logManager import LogManager
+from scripts.odsx_servers_space_list import getGSCForHost
+from scripts.odsx_tieredstorage_deploy import displaySpaceHostWithNumber
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH
 from utils.ods_validation import getSpaceServerStatus
-from scripts.odsx_tieredstorage_deploy import displaySpaceHostWithNumber
-from scripts.odsx_servers_space_list import getGSCForHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -87,12 +87,15 @@ def getInputParam():
     spaceNodes = config_get_space_hosts()
     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
     logger.info("space_dict_obj : "+str(space_dict_obj))
-    hostNumberToRebalance = str(input(Fore.YELLOW+"Enter host/IP number to rebalance : "+Fore.RESET))
+    from utils.odsx_keypress import userInputWrapper
+    hostNumberToRebalance = str(userInputWrapper(Fore.YELLOW+"Enter host/IP number to rebalance : "+Fore.RESET))
     while(len(str(hostNumberToRebalance))==0):
-        hostNumberToRebalance = str(input(Fore.YELLOW+"Enter host/IP number to rebalance : "+Fore.RESET))
+        from utils.odsx_keypress import userInputWrapper
+        hostNumberToRebalance = str(userInputWrapper(Fore.YELLOW+"Enter host/IP number to rebalance : "+Fore.RESET))
     hostToRebalance = space_dict_obj.get(hostNumberToRebalance)
 
-    zone = str(input(Fore.YELLOW+"Enter zone to rebalance [bll] : "+Fore.RESET))
+    from utils.odsx_keypress import userInputWrapper
+    zone = str(userInputWrapper(Fore.YELLOW+"Enter zone to rebalance [bll] : "+Fore.RESET))
     while(len(str(zone))==0):
         zone='bll'
     host_gsc_dict_obj = getGSCForHost()

@@ -1,22 +1,16 @@
 #!/usr/bin/env python3
-import argparse
 import os
 import signal
-import sys
 
-from utils.ods_cleanup import signal_handler
-from utils.odsx_objectmanagement_utilities import getManagerHost
-from utils.ods_manager import getManagerInfo
-from utils.ods_scp import scp_upload
+from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from colorama import Fore
-from utils.ods_scp import scp_upload
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_manager import getManagerInfo
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getManagerHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -68,14 +62,14 @@ def setupService():
     displaySummary(managerServer, spaceName, ddlAndPropertiesBasePath, tableListfilePath)
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Object Management service ? (Yes/No) [Yes]:" + Fore.RESET
-    choice = str(input(confirmMsg))
+    choice = str(userInputWrapper(confirmMsg))
     while(len(choice) == 0):
         choice = 'y'
 
     while (
             choice.casefold() != 'yes' and choice.casefold() != 'no' and choice.casefold() != 'y' and choice.casefold() != 'n'):
         verboseHandle.printConsoleError("Invalid input")
-        choice = str(input(confirmMsg))
+        choice = str(userInputWrapper(confirmMsg))
 
     if (choice.casefold() == 'no' or choice.casefold() == 'n'):
         logger.info("Exiting without registering object management service")

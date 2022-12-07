@@ -1,14 +1,23 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform,socket
-from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
+import argparse
+import os
+import platform
+import socket
+import sys
+
 from colorama import Fore
-from utils.ods_scp import scp_upload,scp_upload_multiple
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput, executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36,connectExecuteSSH
-from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section
+from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap, \
+    config_get_dataIntegration_nodes
+from utils.ods_scp import scp_upload, scp_upload_multiple
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -99,7 +108,7 @@ def getHostConfiguration():
         hostConfigArray=hostsConfig.replace('"','').split(",")
 
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
+        applicativeUser = str(userInputWrapper(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
         if(len(str(applicativeUser))==0):
             applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
@@ -114,9 +123,9 @@ def getHostConfiguration():
         if(len(str(hostsConfig))>0):
             logger.info("hostsConfig>0 : "+str(hostsConfig))
             verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
-            hostConfiguration = str(input("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
+            hostConfiguration = str(userInputWrapper("press [1] if you want to modify cluster configuration. \nPress [Enter] to continue with current Configuration. : "+Fore.RESET))
             logger.info("hostConfiguration : "+str(hostConfiguration))
-            wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
+            wantNicAddress = str(userInputWrapper(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
             while(len(str(wantNicAddress))==0):
                 wantNicAddress = 'n'
             logger.info("wantNicAddress  : "+str(wantNicAddress))
@@ -126,9 +135,9 @@ def getHostConfiguration():
                     logger.info("host  : "+str(host))
                     if(wantNicAddress=="yes" or wantNicAddress=="y"):
                         logger.info("wantNicAddress  : "+str(wantNicAddress))
-                        gsNICAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
+                        gsNICAddress = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
                         while(len(str(gsNICAddress))==0):
-                            gsNICAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
+                            gsNICAddress = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
                         host_nic_dict_obj.add(host,gsNICAddress)
                         logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
                     if(wantNicAddress=="no" or wantNicAddress=="n"):
@@ -141,22 +150,22 @@ def getHostConfiguration():
             gsNicAddress1=""
             gsNicAddress2=""
             gsNicAddress3 =""
-            managerType = int(input("Enter manager installation type: "+Fore.YELLOW+"\n[1] Single \n[2] Cluster : "+Fore.RESET))
+            managerType = int(userInputWrapper("Enter manager installation type: "+Fore.YELLOW+"\n[1] Single \n[2] Cluster : "+Fore.RESET))
             logger.info("managerType  : "+str(managerType))
             if(managerType==1):
                 logger.info("managerType  : "+str(managerType))
-                hostsConfig = str(input(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
+                hostsConfig = str(userInputWrapper(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
                 while(len(str(hostsConfig))==0):
-                    hostsConfig = str(input(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
+                    hostsConfig = str(userInputWrapper(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
                 logger.info("hostsConfig  : "+str(hostsConfig))
                 if(len(str(wantNicAddress))==0):
-                    wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
+                    wantNicAddress = str(userInputWrapper(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
                 if(len(str(wantNicAddress))==0):
                     wantNicAddress='n'
                 logger.info("wantNicAddress  : "+str(wantNicAddress))
                 if(wantNicAddress=="yes" or wantNicAddress=="y"):
                     logger.info("wantNicAddress  Y")
-                    gsNicAddress = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+hostsConfig+" :"+Fore.RESET))
+                    gsNicAddress = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+hostsConfig+" :"+Fore.RESET))
                     logger.info("gsNicAddress  for host "+str(hostsConfig)+ ": "+str(gsNicAddress))
                 if(wantNicAddress=="no" or wantNicAddress=="n"):
                     logger.info("wantNicAddress  N")
@@ -169,28 +178,28 @@ def getHostConfiguration():
                     #break
             elif(managerType==2):
                 logger.info("managerType==2  : "+str(managerType))
-                host1 = str(input(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
+                host1 = str(userInputWrapper(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
                 while(len(str(host1))==0):
-                    host1 = str(input(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
-                host2 = str(input(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
+                    host1 = str(userInputWrapper(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
+                host2 = str(userInputWrapper(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
                 while(len(str(host2))==0):
-                    host2 = str(input(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
-                host3 = str(input(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
+                    host2 = str(userInputWrapper(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
+                host3 = str(userInputWrapper(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
                 while(len(str(host3))==0):
-                    host3 = str(input(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
-                #wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
+                    host3 = str(userInputWrapper(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
+                #wantNicAddress = str(userInputWrapper(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
                 logger.info("wantNicAddress  : "+str(wantNicAddress))
                 if(wantNicAddress=="yes" or wantNicAddress=="y"):
                     logger.info("wantNicAddress  : "+str(wantNicAddress))
-                    gsNicAddress1 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
+                    gsNicAddress1 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
                     while(len(str(gsNicAddress1))==0):
-                        gsNicAddress1 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
-                    gsNicAddress2 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
+                        gsNicAddress1 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
+                    gsNicAddress2 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
                     while(len(str(gsNicAddress2))==0):
-                        gsNicAddress2 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
-                    gsNicAddress3 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
+                        gsNicAddress2 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
+                    gsNicAddress3 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
                     while(len(str(gsNicAddress3))==0):
-                        gsNicAddress3 = str(input(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
+                        gsNicAddress3 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
                 host_nic_dict_obj.add(host1,gsNicAddress1)
                 host_nic_dict_obj.add(host2,gsNicAddress2)
                 host_nic_dict_obj.add(host3,gsNicAddress3)
@@ -223,13 +232,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
         if(len(additionalParam)==0):
             targetDir='/dbagiga'
         else:
             targetDir=additionalParam
         if(gsOptionExtFromConfig.__contains__('<DI servers>')):
-            kafkaConfirm = str(input(Fore.YELLOW+"Do you want to configure kafka servers? (y/n) [y] : "+Fore.RESET))
+            kafkaConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to configure kafka servers? (y/n) [y] : "+Fore.RESET))
             if(len(str(kafkaConfirm))==0):
                 kafkaConfirm='y'
             if(kafkaConfirm=='y'):
@@ -244,7 +253,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 set_value_in_property_file("app.manager.kafka.host",kafkaHost)
                 gsOptionExtFromConfig = gsOptionExtFromConfig.replace('<DI servers>:9092',kafkaHosts)
 
-        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
+        gsOptionExt = str(userInputWrapper(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
             gsOptionExt=gsOptionExtFromConfig
@@ -255,7 +264,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+''+gsManagerOptionsFromConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsManagerOptions = str(userInputWrapper(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+''+gsManagerOptionsFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsManagerOptions))==0):
             #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
             gsManagerOptions=gsManagerOptionsFromConfig
@@ -266,7 +275,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsLogsConfigFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLogsConfigFile))==0):
             #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
             gsLogsConfigFile=gsLogsConfigFileFromConfig
@@ -277,7 +286,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         licenseConfig = readValueByConfigObj("app.manager.license")
         #licenseConfig='"{}"'.format(licenseConfig)
-        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+''+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsLicenseFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+''+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLicenseFile))==0):
             gsLicenseFile = licenseConfig
         #else:
@@ -288,7 +297,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+''+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
+        nofileLimitFile = str(userInputWrapper(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+''+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
         if(len(str(nofileLimitFile))==0):
             nofileLimitFile = nofileLimit
@@ -296,26 +305,26 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
-        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "))
+        wantToInstallJava = str(userInputWrapper(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "))
         if(len(str(wantToInstallJava))==0):
             wantToInstallJava='n'
 
-        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "))
+        wantToInstallUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "))
         if(len(str(wantToInstallUnzip))==0):
             wantToInstallUnzip='n'
 
-        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy files [/dbagiga] : "+Fore.RESET))
+        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy files [/dbagiga] : "+Fore.RESET))
         if(len(str(sourceDirectoryForJar))==0):
             sourceDirectoryForJar='/dbagiga'
 
         usernameDevConfig = str(readValueByConfigObj("app.manager.dev.security.username")).replace('[','').replace(']','').replace('"','')
-        usernameDev = str(input(Fore.YELLOW+"Enter username for Dev env ["+usernameDevConfig+"] : "+Fore.RESET))
+        usernameDev = str(userInputWrapper(Fore.YELLOW+"Enter username for Dev env ["+usernameDevConfig+"] : "+Fore.RESET))
         if(len(str(usernameDev))==0):
             usernameDev = usernameDevConfig
         set_value_in_property_file("app.manager.dev.security.username",usernameDev)
 
         passwordDevConfig = str(readValueByConfigObj("app.manager.dev.security.password")).replace('[','').replace(']','').replace('"','')
-        passwordDev = str(input(Fore.YELLOW+"Enter password for Dev env ["+passwordDevConfig+"] : "+Fore.RESET))
+        passwordDev = str(userInputWrapper(Fore.YELLOW+"Enter password for Dev env ["+passwordDevConfig+"] : "+Fore.RESET))
         if(len(str(passwordDev))==0):
             passwordDev = passwordDevConfig
         set_value_in_property_file("app.manager.dev.security.password",passwordDev)
@@ -398,9 +407,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
-        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+        summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
-            summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+            summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
@@ -512,7 +521,7 @@ if __name__ == '__main__':
            # print('install :',args)
         elif(sys.argv[1]==menuDrivenFlag):
             args.append(menuDrivenFlag)
-            user = str(input("Enter your user [root]: "))
+            user = str(userInputWrapper("Enter your user [root]: "))
             if(len(str(user))==0):
                 user="root"
             args.append('-u')

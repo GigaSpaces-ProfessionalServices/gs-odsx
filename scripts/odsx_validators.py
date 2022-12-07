@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 
-import os.path,  argparse, sys
-from scripts.logManager import LogManager
+import os.path
+
+import json
+import requests
+import subprocess
 from colorama import Fore
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts, config_get_nb_list, config_get_grafana_list,config_get_influxdb_node
-from utils.ods_validation import getSpaceServerStatus
-import requests, json, subprocess
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from subprocess import Popen, PIPE
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts, config_get_nb_list, \
+    config_get_grafana_list, config_get_influxdb_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_validation import getSpaceServerStatus
 from utils.ods_validation import isValidHost, getTelnetStatus
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

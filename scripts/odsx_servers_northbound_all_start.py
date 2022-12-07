@@ -1,14 +1,15 @@
 #!/usr/bin/env python3
 #!/usr/bin/python
-import os, sys, argparse
-import platform
-from os import path
+import argparse
+import os
+import sys
+
 from colorama import Fore
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_nb_list
-from utils.ods_ssh import connectExecuteSSH,executeRemoteCommandAndGetOutputPython36
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -101,7 +102,7 @@ def startInputUserAndHost():
         #if(len(str(hostCLI))>0):
         #    host=hostCLI
         #logger.info("HOSTCLI: "+str(host))
-        #user = str(input(Fore.YELLOW+"Enter user to connect to NB [root]:"+Fore.RESET))
+        #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to NB [root]:"+Fore.RESET))
         #if(len(str(user))==0):
         #    user="root"
         user = 'root'
@@ -130,7 +131,7 @@ def executeCommandForStart():
             confirm='y'
         if confirm.casefold() == 'y':
             if(len(nodes)>0):
-                #confirm = str(input(Fore.YELLOW+"Are you sure want to start NB applicative servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
+                #confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start NB applicative servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 #if(len(str(confirm))==0):
                 confirm='y'
                 logger.info("confirm :"+str(confirm))
@@ -151,7 +152,7 @@ def executeCommandForStart():
             spaceHostsConfig = getAgentHostList()
             logger.info("spaceHostsConfig : "+str(spaceHostsConfig))
             if(len(spaceHostsConfig)>0):
-                #confirm = str(input(Fore.YELLOW+"Are you sure want to start NB Agent ["+spaceHostsConfig+"] (y/n) [y]: "+Fore.RESET))
+                #confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start NB Agent ["+spaceHostsConfig+"] (y/n) [y]: "+Fore.RESET))
                 #if(len(str(confirm))==0):
                 confirm='y'
                 logger.info("confirm :"+str(confirm))
@@ -172,7 +173,7 @@ def executeCommandForStart():
             nodesManagement = getManagementHostList()
             logger.info("nodesManagement :"+str(len(nodesManagement)))
             if(len(nodesManagement)>0):
-                #confirm = str(input(Fore.YELLOW+"Are you sure want to start NB Management servers ["+nodesManagement+"] (y/n) [y]: "+Fore.RESET))
+                #confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start NB Management servers ["+nodesManagement+"] (y/n) [y]: "+Fore.RESET))
                 #if(len(str(confirm))==0):
                 confirm='y'
                 logger.info("confirm :"+str(confirm))

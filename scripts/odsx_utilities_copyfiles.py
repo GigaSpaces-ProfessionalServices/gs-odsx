@@ -5,7 +5,7 @@ import platform
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_node, config_get_nb_list, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -74,7 +74,7 @@ def getServerIps(optionSelected):
         for node in nodes:
                 ips.append(os.getenv(node.ip))
     if optionSelected == 1 or optionSelected == 4:
-        inputServer = str(input("[1] For applicative \n[2] For agent \n[3] For management \n[Enter] For all : "))
+        inputServer = str(userInputWrapper("[1] For applicative \n[2] For agent \n[3] For management \n[Enter] For all : "))
         logger.info("inputServer :"+str(inputServer))
         nodes = config_get_nb_list()
         if inputServer == "":
@@ -87,7 +87,7 @@ def getServerIps(optionSelected):
         for node in nodes:
             ips.append(os.getenv(node.ip))
     if optionSelected == 6:
-        enteredIp = input("Enter host to copy : ")
+        enteredIp = userInputWrapper("Enter host to copy : ")
         if enteredIp == "":
             verboseHandle.printConsoleWarning("invalid host name")
             logger.error("invalid host name : " + enteredIp)
@@ -103,7 +103,7 @@ def getServerIps(optionSelected):
 def copyFile(hostips, srcPath, destPath, dryrun=False):
     username = ""
     if not dryrun:
-        username = input("Enter username for host [gsods] : ")
+        username = userInputWrapper("Enter username for host [gsods] : ")
         if username == "":
             username = "gsods"
     else:
@@ -126,8 +126,8 @@ def showAndSelectOption():
         verboseHandle.printConsoleError("Invalid option selected")
         exit(0)
     #print(optionSelected)
-    srcPath = input("Enter source file absolute path: ")
-    destPath = input("Enter destination file absolute path: ")
+    srcPath = userInputWrapper("Enter source file absolute path: ")
+    destPath = userInputWrapper("Enter destination file absolute path: ")
     if srcPath == "" or destPath == "":
         verboseHandle.printConsoleError("Invalid path selected")
         logger.error("Invalid path selected")
