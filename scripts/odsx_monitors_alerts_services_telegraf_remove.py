@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import os
-from colorama import Fore
-
-from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
-from scripts.spinner import Spinner
-from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
-from utils.ods_cluster_config import config_get_space_node
 import os.path
 
-from utils.odsx_keypress import userInputWithEscWrapper
+from colorama import Fore
+
+from scripts.logManager import LogManager
+from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_space_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -54,7 +54,7 @@ def removeInputUserAndHost():
     try:
         global user
         global host
-        user = str(input(Fore.YELLOW+"Enter user to connect to Telegraf [root]:"+Fore.RESET))
+        user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to Telegraf [root]:"+Fore.RESET))
         if(len(str(user))==0):
             user="root"
         logger.info(" user: "+str(user))
@@ -148,14 +148,14 @@ if __name__ == '__main__':
         serverRemoveType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverRemoveType:"+str(serverRemoveType))
         if(serverRemoveType=='1'):
-            optionMainMenu = int(input("Enter your host number to remove: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to remove: "))
             logger.info("Enter your host number to remove:"+str(optionMainMenu))
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     host = streamDict.get(optionMainMenu)
-                    choice = str(input(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
                         if(isMenuDriven=='m'):
@@ -169,9 +169,9 @@ if __name__ == '__main__':
             logger.info("99 - Exist remove")
         else:
             confirm=''
-            confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
 
             if(confirm=='yes' or confirm=='y'):

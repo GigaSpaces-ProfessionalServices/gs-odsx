@@ -100,7 +100,7 @@ def setUserInputs():
     
     summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
     while(len(str(summaryConfirm))==0):
-        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+        summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
 
     if(str(summaryConfirm).casefold()=='n' or str(summaryConfirm).casefold()=='no'):
         logger.info("Exiting without registering object")

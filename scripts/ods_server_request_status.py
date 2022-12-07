@@ -24,7 +24,7 @@ def getRequestStatus(requestId, host="localhost", verbose=False):
     if verbose:
         verboseHandle.setVerboseFlag()
     # print(requestId)
-    # requestId = input("Enter request Id: ")
+    # requestId = userInputWrapper("Enter request Id: ")
     response = requests.get(_url(host, "8090", requestId), headers={'Accept': 'application/json'})
     # print(response)
     if response.status_code == 200:

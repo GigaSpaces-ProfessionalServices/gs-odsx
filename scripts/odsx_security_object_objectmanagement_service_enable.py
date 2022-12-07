@@ -43,7 +43,7 @@ def startService(args):
 
     while(len(choice) > 0 and choice.casefold()!='yes' and choice.casefold()!='no'):
         verboseHandle.printConsoleError("Invalid input")
-        choice = str(input(confirmMsg))
+        choice = str(userInputWrapper(confirmMsg))
 
     if choice.casefold() == 'no':
         exit(0)

@@ -1,6 +1,9 @@
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse
+import argparse
+import os
+import sys
+
 
 def check_arg(args=None):
     parser = argparse.ArgumentParser(description='Script to learn basic argparse')

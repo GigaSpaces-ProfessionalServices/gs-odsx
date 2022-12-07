@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
-import os.path,  argparse, sys
+import argparse
 import json
-import logging.config
+import os.path
+import sys
 
-from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
-from utils.ods_cluster_config import config_get_manager_node,isInstalledAndGetVersion
-from scripts.logManager import LogManager
-from utils.odsx_print_tabular_data import printTabular
+import requests
 from colorama import Fore
-import socket, platform, requests
-from utils.ods_validation import getSpaceServerStatus, port_check_config
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetVersion
+from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
+from utils.ods_validation import getSpaceServerStatus, port_check_config
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

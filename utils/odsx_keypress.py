@@ -6,7 +6,9 @@ from colorama import Fore
 from utils.ods_app_config import readValuefromAppConfig
 
 def userInputWrapper(inputStr):
-    userInput = input(inputStr)
+    userInput = userInputWithEscWrapper(inputStr)
+    if userInput == "99":
+        exit(0)
     return userInput
 
 # Moving to different branch -f param
@@ -20,7 +22,7 @@ def userInputWrapper1(inputStr):
     if cmdlist.__contains__("-f"):
         userInput = "y"
     else:
-        userInput = input(inputStr)
+        userInput = userInputWrapper(inputStr)
     print(cmdlist)
     return userInput
 
@@ -39,7 +41,7 @@ def userInputWithEscWrapper(inputStr):
             os.system("stty erase ^H")
             return "99"
     else:
-        userInput = input(inputStr)
+        userInput = userInputWrapper(inputStr)
         return userInput
 
 
@@ -66,6 +68,7 @@ def userInputWithEsc():
             k = ord(b)
         this_key = key_mapping.get(k, chr(k))
         if this_key == 'return':
+            sys.stdout.write("\n")
             break
         if this_key == 'esc':
             user_input.clear()

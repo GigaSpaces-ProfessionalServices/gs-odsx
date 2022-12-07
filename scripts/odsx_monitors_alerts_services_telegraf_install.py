@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import os
+
 from colorama import Fore
 
+from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
 from scripts.spinner import Spinner
-from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_ssh import connectExecuteSSH
-from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_space_node, config_get_manager_node
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.ods_ssh import connectExecuteSSH
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -189,15 +189,15 @@ if __name__ == '__main__':
         serverInstallType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverInstallType:"+str(serverInstallType))
         if(serverInstallType=='1'):
-            optionMainMenu = int(input("Enter your host number to install: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to install: "))
             logger.info("Enter your host number to install:"+str(optionMainMenu))
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     host = streamDict.get(optionMainMenu)
                     summaryInstall(host)
-                    choice = str(input(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
                         if(isMenuDriven=='m'):
@@ -216,9 +216,9 @@ if __name__ == '__main__':
             logger.info("99 - Exist install")
         else:
             confirm=''
-            confirm = str(input(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 for host in streamDict:

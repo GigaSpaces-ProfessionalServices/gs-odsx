@@ -2,16 +2,17 @@
 import argparse
 import os
 import sys
-from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_space_hosts
+
+import json
+import requests
 from colorama import Fore
-import socket, platform
-from utils.ods_validation import getSpaceServerStatus
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from utils.ods_app_config import readValuefromAppConfig
-import requests, json
+from utils.ods_cluster_config import config_get_space_hosts
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

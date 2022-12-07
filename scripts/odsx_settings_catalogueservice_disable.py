@@ -33,13 +33,15 @@ def checkServiceExists():
 
 def stopCatalogueService(args):
 
-    confirmMsg = Fore.YELLOW + "Are you sure, you want to stop Catalogue service ? (Yes/No) [Yes] :"+Fore.RESET 
+    confirmMsg = Fore.YELLOW + "Are you sure, you want to stop Catalogue service ? (Yes/No) [Yes] :"+Fore.RESET
 
-    choice = str(input(confirmMsg))
+    from utils.odsx_keypress import userInputWrapper
+    choice = str(userInputWrapper(confirmMsg))
 
     while(len(choice) > 0 and choice.casefold()!='yes' and choice.casefold()!='no'):
         verboseHandle.printConsoleError("Invalid input")
-        choice = str(input(confirmMsg))
+        from utils.odsx_keypress import userInputWrapper
+        choice = str(userInputWrapper(confirmMsg))
 
     if choice.casefold() == 'no':
         exit(0)

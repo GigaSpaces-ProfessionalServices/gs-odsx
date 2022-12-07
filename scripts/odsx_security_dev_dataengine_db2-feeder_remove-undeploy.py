@@ -1,19 +1,22 @@
 #!/usr/bin/env python3
 
-import os, time
+import os
+import time
+
+import json
+import requests
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
+
 from scripts.logManager import LogManager
-import requests, json, math
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite, deleteDB2EntryFromSqlLite
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
-from scripts.spinner import Spinner
-from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite, deleteDB2EntryFromSqlLite
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from requests.auth import HTTPBasicAuth
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -98,9 +101,9 @@ def listUndeployedPUsOnServer(managerHost):
 def proceedForIndividualUndeployed(managerHost):
     logger.info("proceedForIndividualUndeployed()")
     try:
-        puSrNumber = str(input("Enter PU number to remove :"))
+        puSrNumber = str(userInputWrapper("Enter PU number to remove :"))
         while(len(str(puSrNumber))==0 or (not puSrNumber.isdigit())):
-            puSrNumber = str(input("Enter PU number to remove :"))
+            puSrNumber = str(userInputWrapper("Enter PU number to remove :"))
         logger.info("puSrNumber :"+str(puSrNumber))
         spaceTobeUndeploy = gs_pu_dictionary_obj.get(puSrNumber)
         logger.info("spaceTobeUndeploy :"+str(spaceTobeUndeploy))
@@ -230,7 +233,7 @@ def proceedForAllUndeploy(managerHost):
                 logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
                 verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeploy.")
             if(len(gscRemove)==0):
-                gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+                gscRemove = str(userInputWrapper(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
             if(len(str(gscRemove))==0):
                 gscRemove='y'
             if(gscRemove=='y'):
@@ -244,13 +247,13 @@ def proceedToUndeployPU(managerHost):
     logger.info("proceedToUndeployPU()")
     try:
         global spaceNumberTobeRemove
-        typeOfRemove = str(input(Fore.YELLOW+"[1] For individual undeploy PU\n[Enter] For all above PUs \n[99] For exist. :"+Fore.RESET))
+        typeOfRemove = str(userInputWrapper(Fore.YELLOW+"[1] For individual undeploy PU\n[Enter] For all above PUs \n[99] For exist. :"+Fore.RESET))
         logger.info("typeOfRemove : "+str(typeOfRemove))
 
         if(typeOfRemove=='1'):
-            spaceNumberTobeRemove = str(input(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
+            spaceNumberTobeRemove = str(userInputWrapper(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
             while(len(str(spaceNumberTobeRemove))==0 or (not spaceNumberTobeRemove.isdigit())):
-                spaceNumberTobeRemove = str(input(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
+                spaceNumberTobeRemove = str(userInputWrapper(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
             logger.info("spaceNumberTobeRemove :"+str(spaceNumberTobeRemove))
             spaceTobeUndeploy = gs_space_dictionary_obj.get(spaceNumberTobeRemove)
 
@@ -283,7 +286,7 @@ def proceedToUndeployPU(managerHost):
                     verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
                     proceedForPersistUndeploy()
 
-            gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+            gscRemove = str(userInputWrapper(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
             if(len(str(gscRemove))==0):
                 gscRemove='y'
             if(gscRemove=='y'):
@@ -315,13 +318,13 @@ def proceedForInputParams():
 
     #drainMode = "ATTEMPT"
     drainMode = readValuefromAppConfig("app.tieredstorage.drainmode")
-    drainModeConfirm = str(input(Fore.YELLOW+"Enter drain mode ["+str(drainMode)+"] :" +Fore.RESET))
+    drainModeConfirm = str(userInputWrapper(Fore.YELLOW+"Enter drain mode ["+str(drainMode)+"] :" +Fore.RESET))
     if(len(str(drainModeConfirm))>0):
         drainMode = drainModeConfirm
     logger.info("drainMode : "+str(drainMode))
 
     drainTimeout = readValuefromAppConfig("app.tieredstorage.drainTimeout")
-    drainTimeoutConfirm = str(input(Fore.YELLOW+"Enter drain mode timeout ["+str(drainTimeout)+"] : "+Fore.RESET))
+    drainTimeoutConfirm = str(userInputWrapper(Fore.YELLOW+"Enter drain mode timeout ["+str(drainTimeout)+"] : "+Fore.RESET))
     if(len(str(drainTimeoutConfirm))>0):
         drainTimeout = drainTimeoutConfirm
     logger.info("drainTimeout : "+str(drainTimeout))
@@ -333,7 +336,7 @@ def removeGSC(managerHost,spaceNumberTobeRemove,flag):
     zoneToRemove = str(zoneToRemove).replace("'","").replace(']','').replace('[','')
     zoneToDeleteGSC=''
     if(str(flag)!='all'):
-        zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC ["+str(zoneToRemove)+"] : "+Fore.RESET))
+        zoneToDeleteGSC = str(userInputWrapper(Fore.YELLOW+"Enter the zone to delete GSC ["+str(zoneToRemove)+"] : "+Fore.RESET))
         if(len(zoneToDeleteGSC)==0):
             zoneToDeleteGSC=zoneToRemove
         logger.info("zoneToDeleteGSC : "+str(zoneToDeleteGSC))
@@ -376,7 +379,7 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
-                managerHostConfig = str(input(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
+                managerHostConfig = str(userInputWrapper(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
                 if(len(str(managerHostConfig))>0):
                     managerHost = managerHostConfig
                 logger.info("Manager Host :"+str(managerHost))

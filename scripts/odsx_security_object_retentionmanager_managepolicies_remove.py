@@ -2,16 +2,14 @@
 import json
 import os
 import signal
-import sys
-import re
-from colorama import Fore
+
 import requests
+from colorama import Fore
+
 from scripts.logManager import LogManager
-from scripts.spinner import Spinner
 from utils.ods_cleanup import signal_handler
-from utils.ods_ssh import executeLocalCommandAndGetOutput
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_retentionmanager_utilities import validateRetentionPolicy,getLocalHostName
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -72,14 +70,14 @@ def editRetentionPolicy():
     verboseHandle.printConsoleWarning('');
     verboseHandle.printConsoleWarning('Remove Retention Period:')
     idInput = Fore.GREEN +"Enter an id of object type to update retention Policy: "+Fore.RESET
-    id = str(input(idInput))
+    id = str(userInputWrapper(idInput))
     
     while(len(str(id))==0):
-        id = str(input(idInput))
+        id = str(userInputWrapper(idInput))
 
-    confirmInput = str(input(Fore.YELLOW+"Are you sure want to remove this retention Policy ? [Yes (y) / No (n)]: "+Fore.RESET))
+    confirmInput = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove this retention Policy ? [Yes (y) / No (n)]: "+Fore.RESET))
     while(len(str(confirmInput))==0):
-        confirmInput = str(input(Fore.YELLOW+"Are you sure want to remove this retention Policy ? [Yes (y) / No (n)]: "+Fore.RESET))
+        confirmInput = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove this retention Policy ? [Yes (y) / No (n)]: "+Fore.RESET))
 
     if(str(confirmInput).casefold()=='n' or str(confirmInput).casefold()=='no'):
         logger.info("Exiting without removing policy")

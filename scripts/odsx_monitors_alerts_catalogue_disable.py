@@ -1,20 +1,15 @@
 #!/usr/bin/env python3
 import glob
 import os
-import platform
-from os import path
+
 from colorama import Fore
 
+from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_catalogue_list import listCatalogue
 from scripts.odsx_monitors_alerts_services_kapacitor_list import getStatusOfKapacitor
 from scripts.spinner import Spinner
-from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36, \
-    executeRemoteCommandAndGetOutputValuePython36
-from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_get_grafana_node
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -109,17 +104,17 @@ if __name__ == '__main__':
             if choice=='99':
                 quit()
             if choice=='1':
-                alertNumber = str(input(Fore.YELLOW+"Enter alert id you want to disable : "+Fore.RESET))
+                alertNumber = str(userInputWrapper(Fore.YELLOW+"Enter alert id you want to disable : "+Fore.RESET))
                 while(len(alertNumber)==0):
-                    alertNumber = str(input(Fore.YELLOW+"Enter alert id you want to disable : "+Fore.RESET))
+                    alertNumber = str(userInputWrapper(Fore.YELLOW+"Enter alert id you want to disable : "+Fore.RESET))
                 alertName = alertDict.get(int(alertNumber))
-                confirmInstall = str(input(Fore.YELLOW+"Are you sure want to disable alert ["+alertName+"] (y/n) [y]: "+Fore.RESET))
+                confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to disable alert ["+alertName+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmInstall))==0):
                     confirmInstall='y'
                 if(confirmInstall=='y'):
                     disableKapacitorServiceByHost(alertName)
             if choice=="":
-                confirmInstall = str(input(Fore.YELLOW+"Are you sure want to disable alert (y/n) [y]: "+Fore.RESET))
+                confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to disable alert (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmInstall))==0):
                     confirmInstall='y'
                 if(confirmInstall=='y'):

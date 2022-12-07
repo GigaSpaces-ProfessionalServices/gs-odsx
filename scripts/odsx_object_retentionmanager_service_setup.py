@@ -1,20 +1,14 @@
 #!/usr/bin/env python3
-import argparse
 import os
 import signal
-import sys
 
-from utils.ods_cleanup import signal_handler
-from utils.ods_scp import scp_upload
-from utils.odsx_keypress import userInputWithEscWrapper
-from utils.odsx_retentionmanager_utilities import isTimeFormat, setupOrReloadService,getManagerHost
-from scripts.logManager import LogManager
-from scripts.spinner import Spinner
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
 from colorama import Fore
-from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_get_manager_node
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
+
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_cleanup import signal_handler
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
+from utils.odsx_retentionmanager_utilities import isTimeFormat, setupOrReloadService, getManagerHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -39,11 +33,11 @@ def setupService():
     #spaceNameInput = Fore.YELLOW + "Enter space name ["+defaultSpaceName+"] :" + Fore.RESET
     schedulerConfInput = Fore.YELLOW + "Please select scheduler configuration from below options \n [1]-Regular Interval\n [2]-Specific time in a day\n [99]-Exit: " + Fore.RESET
     
-    #managerServer = str(input(managerServerInput))
+    #managerServer = str(userInputWrapper(managerServerInput))
     #if(len(managerServer) == 0):
     managerServer=defaultManagerServer
 
-    #spaceName = str(input(spaceNameInput))
+    #spaceName = str(userInputWrapper(spaceNameInput))
     #if(len(spaceName) == 0):
     spaceName=defaultSpaceName
    
@@ -59,7 +53,7 @@ def setupService():
     if(schedulerConf=='2'):
         schedulerIntervalInput = Fore.YELLOW + "Enter time to run scheduler in HH:MM (24 hours) format [10:00]: " + Fore.RESET
 
-    schedulerInterval = str(input(schedulerIntervalInput))
+    schedulerInterval = str(userInputWrapper(schedulerIntervalInput))
     if(schedulerConf=='1'):
         if(len(str(schedulerInterval))==0):
             schedulerInterval='10'
@@ -67,7 +61,7 @@ def setupService():
         isIntervalNum = str(schedulerInterval).isnumeric()
         while(isIntervalNum==False):
             verboseHandle.printConsoleError("Please enter valid number")
-            schedulerInterval = str(input(schedulerIntervalInput))
+            schedulerInterval = str(userInputWrapper(schedulerIntervalInput))
             if(len(str(schedulerInterval))==0):
                 schedulerInterval = '10'
                 isIntervalNum= True
@@ -80,7 +74,7 @@ def setupService():
         isTimeInput = isTimeFormat(schedulerInterval)
         while(isTimeInput==False):
             verboseHandle.printConsoleError("Please enter valid time format (HH:MM)")
-            schedulerInterval = str(input(schedulerIntervalInput))
+            schedulerInterval = str(userInputWrapper(schedulerIntervalInput))
             if(len(str(schedulerInterval))==0):
                 schedulerInterval = '10:10'
                 isTimeInput= True
@@ -90,13 +84,13 @@ def setupService():
     displaySummary(managerServer,spaceName,schedulerInterval)
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup Retention Manager service ? (Yes/No) [yes]:" + Fore.RESET
-    choice = str(input(confirmMsg))
+    choice = str(userInputWrapper(confirmMsg))
     while(len(choice) == 0):
         choice = 'y'
 
     while(choice.casefold()!='yes' and choice.casefold()!='no' and choice.casefold()!='y' and choice.casefold()!='n'):
         verboseHandle.printConsoleError("Invalid input")
-        choice = str(input(confirmMsg))
+        choice = str(userInputWrapper(confirmMsg))
 
     if (choice.casefold() == 'no' or choice.casefold()=='n'):
         logger.info("Exiting without registering policy")

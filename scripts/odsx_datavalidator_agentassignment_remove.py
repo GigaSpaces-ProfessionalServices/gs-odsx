@@ -1,16 +1,16 @@
 #!/usr/bin/env python3
 
 import os.path
-from scripts.logManager import LogManager
+
+import json
+import requests
 from colorama import Fore
 
+from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_agentassignment_list import printAssignmentTable
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_dataValidation_nodes
-from utils.ods_validation import getSpaceServerStatus
-import requests, json, subprocess
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataValidation_nodes
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -58,7 +58,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -72,17 +72,19 @@ def doValidate():
         verboseHandle.printConsoleWarning("No Assignment available.")
         return
 
-    '''datasourceId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
+    '''datasourceId = str(userInputWrapper(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
     while (len(str(datasourceId)) == 0 or datasourceId not in datasourceIds):
         if(datasourceId not in datasourceIds):
          print(Fore.YELLOW +"Please select Agent Id from above list"+Fore.RESET)
-         datasourceId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
+         datasourceId = str(userInputWrapper(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
         else:
-         datasourceId = str(input(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
+         datasourceId = str(userInputWrapper(Fore.YELLOW + "Enter Agent id to remove: " + Fore.RESET))
 '''
-    agentId = str(input(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
+    from utils.odsx_keypress import userInputWrapper
+    agentId = str(userInputWrapper(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
     while (len(str(agentId)) == 0):
-        agentId = str(input(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
+        from utils.odsx_keypress import userInputWrapper
+        agentId = str(userInputWrapper(Fore.YELLOW + "Enter Data Source id to disassociate from Agent: " + Fore.RESET))
 
 
     response = requests.delete(

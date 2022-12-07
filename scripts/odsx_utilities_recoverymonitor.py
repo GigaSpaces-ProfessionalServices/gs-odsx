@@ -6,14 +6,14 @@ import sys
 
 import requests
 from colorama import Fore
+
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes, \
-    config_get_manager_node, config_get_space_hosts
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, \
-    executeRemoteCommandAndGetOutput
-from scripts.spinner import Spinner
 from scripts.odsx_datavalidator_list import listDVServers
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataValidation_nodes, \
+    config_get_manager_node, config_get_space_hosts
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import host_dictionary_obj
 from utils.odsx_print_tabular_data import printTabular
@@ -70,7 +70,8 @@ def startDataValidationService(args):
     try:
         listDVServers()
         nodes = getDVServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to start data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
+        from utils.odsx_keypress import userInputWrapper
+        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure, you want to start data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataValidation_nodes():

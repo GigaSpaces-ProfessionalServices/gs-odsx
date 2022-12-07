@@ -1,21 +1,24 @@
 #!/usr/bin/env python3
 
-import os, time
-from colorama import Fore
-from scripts.logManager import LogManager
-import requests, json, math
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
-from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
-from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from scripts.spinner import Spinner
 import logging
-from utils.ods_scp import scp_upload
+import os
+import time
 from datetime import datetime as dt
+
+import json
+import requests
+from colorama import Fore
 from requests.auth import HTTPBasicAuth
+
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_scp import scp_upload
+from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
+from utils.odsx_print_tabular_data import printTabularGrid, printTabularGridWrap
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -282,7 +285,7 @@ def listUpdatedGSCStatus(display):
 def confirmAndProceedForAll():
     logger.info("confirmAndProceedForAll()")
     try:
-        confirmRollingUpdate = str(input(Fore.YELLOW+"Are you sure want to proceed for rolling update all SrNo ? (y/n) [y]: "+Fore.RESET))
+        confirmRollingUpdate = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed for rolling update all SrNo ? (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmRollingUpdate))==0 ):
             confirmRollingUpdate = 'y'
         logger.info("confirmRollingUpdate : "+str(confirmRollingUpdate)) # instead of serial number couple need to be restarted.
@@ -499,11 +502,11 @@ def proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate):
 def confirmAndProceedForIndividualRestartGSC():
     logger.info("confirmAndProceedForIndividualRestartGSC()")
     try:
-        gscNumberToBeRestarted = str(input(Fore.YELLOW+"Enter SrNo number to be rolling update : "+Fore.RESET))
+        gscNumberToBeRestarted = str(userInputWrapper(Fore.YELLOW+"Enter SrNo number to be rolling update : "+Fore.RESET))
         while(len(str(gscNumberToBeRestarted))==0 ):
-            gscNumberToBeRestarted = str(input(Fore.YELLOW+"Enter SrNo number to be rolling update : "+Fore.RESET))
+            gscNumberToBeRestarted = str(userInputWrapper(Fore.YELLOW+"Enter SrNo number to be rolling update : "+Fore.RESET))
         logger.info("gscNumberToBeRestarted : "+str(gscNumberToBeRestarted)) # instead of serial number couple need to be restarted.
-        confirmRestart = str(input(Fore.YELLOW+"Are you sure want to rolling update for Sr No "+str(gscNumberToBeRestarted)+" (y/n) [y] : "+Fore.RESET))
+        confirmRestart = str(userInputWrapper(Fore.YELLOW+"Are you sure want to rolling update for Sr No "+str(gscNumberToBeRestarted)+" (y/n) [y] : "+Fore.RESET))
         if(len(str(confirmRestart))==0):
             confirmRestart='y'
         logger.info("confirmRestart :"+str(confirmRestart))
@@ -525,14 +528,14 @@ def inputParams():
     try:
         '''
         restartcontainerSleeptimeConfig = str(readValuefromAppConfig("app.tieredstorage.restartcontainer.sleeptime")).replace('"','')
-        restartContainerSleeptime = str(input(Fore.YELLOW+"Enter restart container sleeptime ["+restartcontainerSleeptimeConfig+"]: "))
+        restartContainerSleeptime = str(userInputWrapper(Fore.YELLOW+"Enter restart container sleeptime ["+restartcontainerSleeptimeConfig+"]: "))
         if(len(str(restartContainerSleeptime))==0):
             restartContainerSleeptime = restartcontainerSleeptimeConfig
         logger.info("restartcontainerSleeptime : "+str(restartContainerSleeptime))
 
 
         demoteSleeptimeConfig = str(readValuefromAppConfig("app.tieredstorage.demote.sleeptime")).replace('"','')
-        demoteSleeptime = str(input(Fore.YELLOW+"Enter demote sleeptime ["+demoteSleeptimeConfig+"]: "))
+        demoteSleeptime = str(userInputWrapper(Fore.YELLOW+"Enter demote sleeptime ["+demoteSleeptimeConfig+"]: "))
         if(len(str(demoteSleeptime))==0):
             demoteSleeptime = demoteSleeptimeConfig
         logger.info("demoteSleeptimeConfig : "+str(demoteSleeptimeConfig))
@@ -545,7 +548,7 @@ def copyFile(hostips, srcPath, destPath, dryrun=False):
     username = "root"
     '''
     if not dryrun:
-        username = input("Enter username for host [root] : ")
+        username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
             username = "root"
     else:
@@ -617,9 +620,9 @@ def listGSC(managerHost):
     global spaceName
     managerHostConfig = managerHost
     try:
-        spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+        spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         while(len(str(spaceNumber))==0 or (not spaceNumber.isdigit())):
-            spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+            spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         logger.info("spaceNumber : "+str(spaceNumber))
         logger.info("SpaceName = "+str(gs_space_host_dictionary_obj.get(str(spaceNumber))))
         spaceName = str(gs_space_host_dictionary_obj.get(str(spaceNumber)))
@@ -628,7 +631,7 @@ def listGSC(managerHost):
         displayOnlyGSC()
 
         typeOfRestart=''
-        #typeOfRestart = str(input("[1] For individual GSC restart \n[Enter] For all GSCs \n[99] For Exit. \nEnter your choice : "))
+        #typeOfRestart = str(userInputWrapper("[1] For individual GSC restart \n[Enter] For all GSCs \n[99] For Exit. \nEnter your choice : "))
         while(str(typeOfRestart)!='99'):
             typeOfRestart = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For List \n[2] For SrNo rolling update \n[Enter] For rolling update all \n[99] For Exit. \nEnter your choice : "+Fore.RESET))
             logger.info("typeOfRestart : "+str(typeOfRestart))

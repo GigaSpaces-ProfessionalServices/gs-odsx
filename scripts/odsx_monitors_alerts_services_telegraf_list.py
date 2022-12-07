@@ -1,16 +1,14 @@
-
-import argparse, subprocess
 import os
-import sys
 
-from utils.ods_app_config import readValuefromAppConfig
-from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_nb_list
 from colorama import Fore
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutputValuePython36
-from utils.ods_cluster_config import config_get_manager_node,config_get_space_hosts
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_nb_list
+from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

@@ -1,20 +1,18 @@
 #!/usr/bin/env python3
 
 import os
+
 import requests
-from os import path
 from colorama import Fore
 
-from scripts.odsx_datavalidator_install_list  import listDVServers
-from scripts.spinner import Spinner
 from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
-    config_get_dataValidation_nodes, config_remove_dataValidation_byNameIP
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
-from scripts.odsx_servers_di_list import listDIServers
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
-from utils.odsx_keypress import userInputWithEscWrapper
+from scripts.odsx_datavalidator_install_list import listDVServers
+from scripts.spinner import Spinner
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataValidation_nodes, config_remove_dataValidation_byNameIP
+from utils.ods_ssh import connectExecuteSSH
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -63,7 +61,7 @@ def removeInputUserAndHost():
     try:
         global user
         global host
-        user = str(input(Fore.YELLOW+"Enter user to connect to Data validation server [root]:"+Fore.RESET))
+        user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to Data validation server [root]:"+Fore.RESET))
         if(len(str(user))==0):
             user="root"
         logger.info(" user: "+str(user))
@@ -73,11 +71,11 @@ def removeInputUserAndHost():
 
 def proceedForIndividualRemove(host_dict_obj, nodes):
     logger.info("proceedForIndividualRemove :")
-    hostNumer = str(input(Fore.YELLOW+"Enter serial number to remove : "+Fore.RESET))
+    hostNumer = str(userInputWrapper(Fore.YELLOW+"Enter serial number to remove : "+Fore.RESET))
     while(len(str(hostNumer))==0):
-        hostNumer = str(input(Fore.YELLOW+"Enter serial number to remove : "+Fore.RESET))
+        hostNumer = str(userInputWrapper(Fore.YELLOW+"Enter serial number to remove : "+Fore.RESET))
     host = host_dict_obj.get(hostNumer)
-    confirm = str(input(Fore.YELLOW+"Are you sure want to remove "+str(host)+" ? (y/n) [y]"+Fore.RESET))
+    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove "+str(host)+" ? (y/n) [y]"+Fore.RESET))
     if(confirm=='y' or len(str(confirm))==0 ):
         logger.info("Individual host : "+str(host))
         commandToExecute="scripts/servers_datavalidation_remove.sh"

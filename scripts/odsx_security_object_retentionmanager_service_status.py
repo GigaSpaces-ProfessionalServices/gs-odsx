@@ -1,8 +1,6 @@
 #!/usr/bin/env python3
-import argparse
 import os
 import signal
-import sys
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner

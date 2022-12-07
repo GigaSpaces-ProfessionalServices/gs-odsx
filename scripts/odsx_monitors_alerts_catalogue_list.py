@@ -1,18 +1,11 @@
 #!/usr/bin/env python3
-import glob
 import os
-import platform
-from os import path
+
 from colorama import Fore
 
-from scripts.odsx_monitors_alerts_services_kapacitor_list import getStatusOfKapacitor
-from scripts.spinner import Spinner
 from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36, \
-    executeRemoteCommandAndGetOutputValuePython36
-from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_get_grafana_node
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+from scripts.odsx_monitors_alerts_services_kapacitor_list import getStatusOfKapacitor
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

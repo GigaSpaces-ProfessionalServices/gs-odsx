@@ -1,13 +1,10 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json, subprocess, glob,sqlite3
-from colorama import Fore
+import os
+import sqlite3
+
 from scripts.logManager import LogManager
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
-from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
+from utils.ods_app_config import readValueByConfigObj
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

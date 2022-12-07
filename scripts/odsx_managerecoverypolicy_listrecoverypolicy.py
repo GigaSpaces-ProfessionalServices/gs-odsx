@@ -7,7 +7,6 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_policyConfigurations
-from utils.ods_ssh import executeLocalCommandAndGetOutput
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))

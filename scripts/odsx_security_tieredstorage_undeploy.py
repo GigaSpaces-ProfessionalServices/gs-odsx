@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 
-import os, time
+import os
 import signal
+import time
 
+import json
+import requests
 from colorama import Fore
-from scripts.logManager import LogManager
-import requests, json, math
+from requests.auth import HTTPBasicAuth
 
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput,executeRemoteCommandAndGetOutput
-from scripts.spinner import Spinner
-from requests.auth import HTTPBasicAuth
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -113,9 +115,9 @@ def listUndeployedPUsOnServer(managerHost):
 def proceedForIndividualUndeployed(managerHost):
     logger.info("proceedForIndividualUndeployed()")
     try:
-        puSrNumber = str(input("Enter PU number to remove :"))
+        puSrNumber = str(userInputWrapper("Enter PU number to remove :"))
         while(len(str(puSrNumber))==0 or (not puSrNumber.isdigit())):
-            puSrNumber = str(input("Enter PU number to remove :"))
+            puSrNumber = str(userInputWrapper("Enter PU number to remove :"))
         logger.info("puSrNumber :"+str(puSrNumber))
         spaceTobeUndeploy = gs_pu_dictionary_obj.get(puSrNumber)
         logger.info("spaceTobeUndeploy :"+str(spaceTobeUndeploy))
@@ -258,15 +260,15 @@ def proceedToUndeployPU(managerHost):
         logger.info("typeOfRemove : "+str(typeOfRemove))
 
         if(typeOfRemove=='1'):
-            spaceNumberTobeRemove = str(input(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
+            spaceNumberTobeRemove = str(userInputWrapper(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
             while(len(str(spaceNumberTobeRemove))==0 or (not spaceNumberTobeRemove.isdigit())):
-                spaceNumberTobeRemove = str(input(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
+                spaceNumberTobeRemove = str(userInputWrapper(Fore.YELLOW+"Enter space / pu number to be remove : "+Fore.RESET))
             logger.info("spaceNumberTobeRemove :"+str(spaceNumberTobeRemove))
             spaceTobeUndeploy = gs_space_dictionary_obj.get(spaceNumberTobeRemove)
 
             proceedForInputParams()
 
-            confirmToRemoveSpace = str(input(Fore.YELLOW+"Are you sure want to remove "+str(spaceTobeUndeploy)+" ? (y/n) [y] :"))
+            confirmToRemoveSpace = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove "+str(spaceTobeUndeploy)+" ? (y/n) [y] :"))
             logger.info("confirmToRemoveSpace : "+str(confirmToRemoveSpace))
             if(len(str(confirmToRemoveSpace))==0):
                 confirmToRemoveSpace='y'
@@ -319,13 +321,13 @@ def proceedForInputParams():
 
     #drainMode = "ATTEMPT"
     drainMode = readValuefromAppConfig("app.tieredstorage.drainmode")
-    drainModeConfirm = str(input(Fore.YELLOW+"Enter drain mode ["+str(drainMode)+"] :" +Fore.RESET))
+    drainModeConfirm = str(userInputWrapper(Fore.YELLOW+"Enter drain mode ["+str(drainMode)+"] :" +Fore.RESET))
     if(len(str(drainModeConfirm))>0):
         drainMode = drainModeConfirm
     logger.info("drainMode : "+str(drainMode))
 
     drainTimeout = readValuefromAppConfig("app.tieredstorage.drainTimeout")
-    drainTimeoutConfirm = str(input(Fore.YELLOW+"Enter drain mode timeout ["+str(drainTimeout)+"] : "+Fore.RESET))
+    drainTimeoutConfirm = str(userInputWrapper(Fore.YELLOW+"Enter drain mode timeout ["+str(drainTimeout)+"] : "+Fore.RESET))
     if(len(str(drainTimeoutConfirm))>0):
         drainTimeout = drainTimeoutConfirm
     logger.info("drainTimeout : "+str(drainTimeout))
@@ -340,11 +342,11 @@ def printProgressBar(i,max,postText):
 
 def removeGSC(managerHost):
     logger.info("removeGSC()")
-    zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
+    zoneToDeleteGSC = str(userInputWrapper(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
     while(len(str(zoneToDeleteGSC))==0):
-        zoneToDeleteGSC = str(input(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
+        zoneToDeleteGSC = str(userInputWrapper(Fore.YELLOW+"Enter the zone to delete GSC : "+Fore.RESET))
     logger.info("zoneToDeleteGSC : "+str(zoneToDeleteGSC))
-    confirmRemoveGSC = str(input(Fore.YELLOW+"Are you sure want to remove GSCs under zone ["+str(zoneToDeleteGSC)+"] ? (y/n) [y] :"))
+    confirmRemoveGSC = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove GSCs under zone ["+str(zoneToDeleteGSC)+"] ? (y/n) [y] :"))
     if(len(str(confirmRemoveGSC))==0):
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
@@ -406,7 +408,7 @@ if __name__ == '__main__':
                 if(len(gs_pu_dictionary_obj)>0):
                     userInput = getUserInput(managerHost)
                     if(userInput!="99"):
-                        gscRemove = str(input(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
+                        gscRemove = str(userInputWrapper(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
                         if(len(str(gscRemove))==0):
                             gscRemove='y'
                         if(gscRemove=='y'):

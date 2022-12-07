@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform,socket
-from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, set_value_in_property_file_generic, read_value_in_property_file_generic_section
+import argparse
+import os
+import platform
+import socket
+import sys
+
 from colorama import Fore
-from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteShCommandAndGetOutput,connectExecuteSSH
-from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_scp import scp_upload,scp_upload_multiple
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section
+from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
+from utils.ods_scp import scp_upload, scp_upload_multiple
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -73,7 +80,7 @@ def getHostConfiguration():
         hostsConfig = readValuefromAppConfig("app.manager.hosts")
 
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        applicativeUser = str(input(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
+        applicativeUser = str(userInputWrapper(Fore.YELLOW+"Applicative user ["+applicativeUserFile+"]: "+Fore.RESET))
         if(len(str(applicativeUser))==0):
             applicativeUser = str(applicativeUserFile)
         logger.info("Applicative user : "+str(applicativeUser))
@@ -112,12 +119,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         targetDirectory=''
         gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(input(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
         targetDirectory=str(additionalParam)
         if(len(additionalParam)==0):
             targetDirectory='/dbagiga'
         logger.info("targetDirecory :"+str(targetDirectory))
-        gsOptionExt = str(input(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
+        gsOptionExt = str(userInputWrapper(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
             #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
             gsOptionExt=gsOptionExtFromConfig
@@ -128,7 +135,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsManagerOptionsFromConfig = str(readValueByConfigObj("app.manager.gsManagerOptions")).replace('[','').replace(']','')
         #gsManagerOptionsFromConfig = '"{}"'.format(gsManagerOptionsFromConfig)
-        gsManagerOptions = str(input(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
+        gsManagerOptions = str(userInputWrapper(Fore.YELLOW+'Enter GS_MANAGER_OPTIONS  ['+Fore.GREEN+str(gsManagerOptionsFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsManagerOptions))==0):
             #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
             gsManagerOptions=gsManagerOptionsFromConfig
@@ -139,7 +146,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
-        gsLogsConfigFile = str(input(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsLogsConfigFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLogsConfigFile))==0):
             #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
             gsLogsConfigFile=gsLogsConfigFileFromConfig
@@ -150,7 +157,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         licenseConfig = readValueByConfigObj("app.manager.license")
         #licenseConfig='"{}"'.format(licenseConfig)
-        gsLicenseFile = str(input(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
+        gsLicenseFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LICENSE ['+Fore.GREEN+licenseConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLicenseFile))==0):
             gsLicenseFile = licenseConfig
         #else:
@@ -161,7 +168,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print("Applicative User: "+str(applicativeUser))
 
         nofileLimit = str(readValuefromAppConfig("app.user.nofile.limit"))
-        nofileLimitFile = str(input(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
+        nofileLimitFile = str(userInputWrapper(Fore.YELLOW+'Enter user level open file limit : ['+Fore.GREEN+nofileLimit+Fore.YELLOW+']: '+Fore.RESET))
         logger.info("hardNofileLimitFile : "+str(nofileLimitFile))
         if(len(str(nofileLimitFile))==0):
             nofileLimitFile = nofileLimit
@@ -169,33 +176,33 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.user.hard.nofile',hardNofileLimitFile)
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
-        wantToInstallJava = str(input(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "+Fore.RESET))
+        wantToInstallJava = str(userInputWrapper(Fore.YELLOW+"Do you want to install Java ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantToInstallJava))==0):
             wantToInstallJava='n'
 
-        wantToInstallUnzip = str(input(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "+Fore.RESET))
+        wantToInstallUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to install unzip ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantToInstallUnzip))==0):
             wantToInstallUnzip='n'
         global gscCount
         global memoryGSC
         global zoneGSC
         gscCountConfig = str(readValuefromAppConfig("app.space.gsc.count"))
-        gscCount = str(input(Fore.YELLOW+"Enter number of GSC to create ["+str(gscCountConfig)+"]: "+Fore.RESET))
+        gscCount = str(userInputWrapper(Fore.YELLOW+"Enter number of GSC to create ["+str(gscCountConfig)+"]: "+Fore.RESET))
         if(len(str(gscCount))==0):
             gscCount = gscCountConfig
         set_value_in_property_file("app.space.gsc.count",str(gscCount))
 
         memoryGSCConfig = str(readValuefromAppConfig("app.space.gsc.memory"))
-        memoryGSC = str(input(Fore.YELLOW+"Enter memory required to create GSC ["+str(memoryGSCConfig)+"]: "+Fore.RESET))
+        memoryGSC = str(userInputWrapper(Fore.YELLOW+"Enter memory required to create GSC ["+str(memoryGSCConfig)+"]: "+Fore.RESET))
         if(len(str(memoryGSC))==0):
             memoryGSC = memoryGSCConfig
         set_value_in_property_file("app.space.gsc.memory",memoryGSC)
 
-        zoneGSC = str(input(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
+        zoneGSC = str(userInputWrapper(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
         if(len(str(zoneGSC))==0):
             zoneGSC = 'bll'
 
-        sourceDirectoryForJar = str(input(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
+        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
         if(len(str(sourceDirectoryForJar))==0):
             sourceDirectoryForJar='/dbagiga'
 
@@ -208,17 +215,17 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
 
-        noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
+        noOfHost = str(userInputWrapper(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
         while (len(str(noOfHost))==0):
-            noOfHost = str(input(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
+            noOfHost = str(userInputWrapper(Fore.YELLOW+"Enter number of space hosts you want to create : "+Fore.RESET))
         logger.debug("No of space host :"+str(noOfHost))
         host_nic_dict_obj = host_nic_dictionary()
         noOfHost=int(noOfHost)
         spaceHostConfig=""
         for x in range(1,noOfHost+1):
-            host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
+            host = str(userInputWrapper(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
             while(len(str(host))==0):
-                host = str(input(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
+                host = str(userInputWrapper(Fore.YELLOW+"Enter space host"+str(x)+" :"+Fore.RESET))
             if(len(str(spaceHostConfig))>0):
                 spaceHostConfig = spaceHostConfig+','+host
             else:
@@ -226,12 +233,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             host_nic_dict_obj.add(host,'')
         set_value_in_property_file('app.space.hosts',spaceHostConfig)
         #print("hostnic without"+str(host_nic_dict_obj))
-        wantNicAddress = str(input(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
+        wantNicAddress = str(userInputWrapper(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? (y/n) [n] : "+Fore.RESET))
         if(len(str(wantNicAddress))==0):
             wantNicAddress='n'
         if(wantNicAddress=="yes" or wantNicAddress=="y"):
             for host in host_nic_dict_obj:
-                nicAddr = str(input(Fore.YELLOW+"Enter GS_NIC_ADDRESS of space host"+str(host)+" :"+Fore.RESET))
+                nicAddr = str(userInputWrapper(Fore.YELLOW+"Enter GS_NIC_ADDRESS of space host"+str(host)+" :"+Fore.RESET))
                 logger.debug("host enter:"+host+" nicAddr :"+nicAddr)
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
@@ -350,9 +357,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
-        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+        summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
-            summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+            summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
             for host in host_nic_dict_obj:
@@ -434,11 +441,11 @@ if __name__ == '__main__':
         # print('install :',args)
         elif(sys.argv[1]==menuDrivenFlag):
             args.append(menuDrivenFlag)
-            #host = str(input("Enter your host: "))
+            #host = str(userInputWrapper("Enter your host: "))
             #args.append('--host')
             #args.append(host)
             #user = readValuefromAppConfig("app.server.user")
-            user = str(input("Enter your user [root]: "))
+            user = str(userInputWrapper("Enter your user [root]: "))
             if(len(str(user))==0):
                 user="root"
             args.append('-u')

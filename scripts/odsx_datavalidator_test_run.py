@@ -8,6 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig
 
@@ -59,7 +60,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -73,16 +74,16 @@ def doValidate():
         return
 
     verboseHandle.printConsoleWarning('');
-    measurementId = str(input("Select measurement by id to run [1] : "))
+    measurementId = str(userInputWrapper("Select measurement by id to run [1] : "))
     if (len(str(measurementId)) == 0):
         measurementId = '1'
     while(measurementId not in measurementids):
       print(Fore.YELLOW +"Please select measurement Id from above list"+Fore.RESET)
-      measurementId = str(input("Select measurement by id to run [1]:"))
+      measurementId = str(userInputWrapper("Select measurement by id to run [1]:"))
 
 
 
-    executionTime = str(input("Execution time delay (in minutes) [0]: "))
+    executionTime = str(userInputWrapper("Execution time delay (in minutes) [0]: "))
     if (len(str(executionTime)) == 0):
         executionTime = '0'
 

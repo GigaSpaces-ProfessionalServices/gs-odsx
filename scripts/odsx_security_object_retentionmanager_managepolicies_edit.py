@@ -2,16 +2,15 @@
 import json
 import os
 import signal
-import sys
-import re
-from colorama import Fore
+
 import requests
+from colorama import Fore
+
 from scripts.logManager import LogManager
-from scripts.spinner import Spinner
 from utils.ods_cleanup import signal_handler
-from utils.ods_ssh import executeLocalCommandAndGetOutput
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_retentionmanager_utilities import validateRetentionPolicy,getLocalHostName
+from utils.odsx_retentionmanager_utilities import validateRetentionPolicy
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -82,10 +81,10 @@ def editRetentionPolicy():
     
     
 
-    id = str(input(idInput))
+    id = str(userInputWrapper(idInput))
     
     while(len(str(id))==0):
-        id = str(input(idInput))
+        id = str(userInputWrapper(idInput))
 
     object_type = ""
     contraintField = ""
@@ -104,28 +103,28 @@ def editRetentionPolicy():
         verboseHandle.printConsoleError("Id does not exists. Please enter valid id from list.")
         exit(0) 
 
-    retention_policy = str(input(retentionPolicyInput))
+    retention_policy = str(userInputWrapper(retentionPolicyInput))
     while(len(str(retention_policy))==0):
-        retention_policy = str(input(retentionPolicyInput))
+        retention_policy = str(userInputWrapper(retentionPolicyInput))
     
     isPolicyValid = validateRetentionPolicy(retention_policy)
    
     while(isPolicyValid==False):
         verboseHandle.printConsoleError('Retention Policy must start with number and end with [d/M/y]')
-        retention_policy = str(input(retentionPolicyInput))
+        retention_policy = str(userInputWrapper(retentionPolicyInput))
         isPolicyValid = validateRetentionPolicy(retention_policy)
     
     contraintFieldInput = Fore.GREEN +"Enter Constraint Field ["+contraintField+"]: "+Fore.RESET 
-    newContraintField = str(input(contraintFieldInput))
+    newContraintField = str(userInputWrapper(contraintFieldInput))
     if(len(str(newContraintField))>0):
         contraintField=newContraintField;
 
     displaySummary(object_type,retention_policy,contraintField)
 
     
-    confirmInput = str(input(Fore.YELLOW+"Are you sure want to edit this retention Policy with above inputs? [Yes (y) / No (n)]: "+Fore.RESET))
+    confirmInput = str(userInputWrapper(Fore.YELLOW+"Are you sure want to edit this retention Policy with above inputs? [Yes (y) / No (n)]: "+Fore.RESET))
     while(len(str(confirmInput))==0):
-        confirmInput = str(input(Fore.YELLOW+"Are you sure want to edit this retention Policy with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+        confirmInput = str(userInputWrapper(Fore.YELLOW+"Are you sure want to edit this retention Policy with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
 
     if(str(confirmInput).casefold()=='n' or str(confirmInput).casefold()=='no'):
         logger.info("Exiting without editing policy")

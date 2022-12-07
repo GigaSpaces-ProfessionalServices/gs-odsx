@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
 
-import os.path, argparse
-from scripts.logManager import LogManager
+import os.path
+
+import json
+import requests
 from colorama import Fore
 
+from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_dataValidation_nodes
-import requests, json
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -56,7 +58,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -65,20 +67,25 @@ def doValidate():
     verboseHandle.printConsoleWarning('Measurement List:');
     resultCount = printmeasurementtable(dataValidatorServiceHost)
     if resultCount > 0:
-        measurementIdA = str(input("Select 1st measurement Id for comparison : "))
+        from utils.odsx_keypress import userInputWrapper
+        measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison : "))
         while(measurementIdA not in measurementids):
           print(Fore.YELLOW +"Please select 1st measurement Id from above list"+Fore.RESET)
-          measurementIdA = str(input("Select 1st measurement Id for comparison :"))
+          from utils.odsx_keypress import userInputWrapper
+          measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison :"))
         if (len(str(measurementIdA)) == 0):
           measurementIdA = '1'
-        measurementIdB = str(input("Select 2nd measurement Id for comparison : "))
+        from utils.odsx_keypress import userInputWrapper
+        measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison : "))
         while(measurementIdB not in measurementids):
            print(Fore.YELLOW +"Please select 2nd measurement Id from above list"+Fore.RESET)
-           measurementIdB = str(input("Select 2nd measurement Id for comparison :"))
+           from utils.odsx_keypress import userInputWrapper
+           measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison :"))
         if (len(str(measurementIdB)) == 0):
           measurementIdB = '1'
 
-        executionTime = str(input("Execution time delay (in minutes) [0]: "))
+        from utils.odsx_keypress import userInputWrapper
+        executionTime = str(userInputWrapper("Execution time delay (in minutes) [0]: "))
         if (len(str(executionTime)) == 0):
             executionTime = '0'
 

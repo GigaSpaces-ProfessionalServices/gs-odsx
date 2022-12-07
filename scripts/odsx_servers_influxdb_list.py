@@ -3,13 +3,14 @@
 import argparse
 import os
 import sys
-from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_influxdb_node,config_get_grafana_list
+
 from colorama import Fore
-from utils.ods_validation import getTelnetStatus
-from utils.ods_list import getGrafanaServerDetails, getInfluxdbServerDetails
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_influxdb_node, config_get_grafana_list
+from utils.ods_list import getGrafanaServerDetails, getInfluxdbServerDetails
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

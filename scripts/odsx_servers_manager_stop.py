@@ -1,14 +1,18 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig
+import argparse
+import os
+import platform
+import sys
+
 from colorama import Fore
-from utils.ods_cluster_config import config_get_manager_listWithStatus, config_get_manager_node
+
+from scripts.logManager import LogManager
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.ods_cluster_config import config_get_manager_listWithStatus, config_get_manager_node
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -102,9 +106,9 @@ if __name__ == '__main__':
             if(optionMainMenu != 99):
                 if len(managerDict) >= optionMainMenu:
                     spaceStart = managerDict.get(optionMainMenu)
-                    choice = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice :"+str(choice))
                     print(str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
@@ -177,9 +181,9 @@ if __name__ == '__main__':
         elif(serverStartType =='99'):
             logger.info("99 - Exist stop")
         else:
-            confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 mangerHosts = config_get_manager_node()#config_get_space_hosts_list()

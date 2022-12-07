@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_agentassignment_list import printAssignmentTable
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig
 
@@ -60,7 +61,7 @@ def doValidate():
             "Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    # dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    # dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     # if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 
@@ -74,9 +75,9 @@ def doValidate():
         verboseHandle.printConsoleWarning("No assignments available.")
         return
 
-    editAgentId = str(input(Fore.YELLOW + "Enter agent id to edit: " + Fore.RESET))
+    editAgentId = str(userInputWrapper(Fore.YELLOW + "Enter agent id to edit: " + Fore.RESET))
     while (len(str(editAgentId)) == 0):
-        editAgentId = str(input(Fore.YELLOW + "Enter agent id to edit: " + Fore.RESET))
+        editAgentId = str(userInputWrapper(Fore.YELLOW + "Enter agent id to edit: " + Fore.RESET))
 
 
     if response:
@@ -99,7 +100,7 @@ def doValidate():
             verboseHandle.printConsoleWarning('Existing DataSources:');
             printDatasourcetable(dataValidatorServiceHost)
 
-            dataSourceIds= str(input("Assign DataSources [Current value: '" + assignDataSources + "'] New value: "))
+            dataSourceIds= str(userInputWrapper("Assign DataSources [Current value: '" + assignDataSources + "'] New value: "))
             if (len(str(dataSourceIds)) == 0):
                 dataSourceIds = assignDataSources
 

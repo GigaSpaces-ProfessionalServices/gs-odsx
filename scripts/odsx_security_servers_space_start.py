@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse, platform
-from scripts.logManager import LogManager
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list
+import argparse
+import os
+import sys
+
 from colorama import Fore
-from utils.ods_app_config import readValuefromAppConfig
+
+from scripts.logManager import LogManager
+from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -61,7 +63,7 @@ if __name__ == '__main__':
         # changed : 25-Aug hence systemctl always with root no need to ask
         #userConfig = readValuefromAppConfig("app.server.user")
         #logger.info("userConfig :"+str(userConfig))
-        #user = str(input("Enter your user ["+userConfig+"]: "))
+        #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
         #if(len(str(user))==0):
         #    user=userConfig
         user='root'
@@ -77,7 +79,7 @@ if __name__ == '__main__':
                     spaceStart = streamDict.get(optionMainMenu)
                     choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     #print("coice start server:"+str(choice))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
@@ -113,7 +115,7 @@ if __name__ == '__main__':
             confirm=''
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()

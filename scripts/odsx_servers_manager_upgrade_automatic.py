@@ -16,6 +16,7 @@ from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
@@ -157,7 +158,7 @@ if __name__ == '__main__':
     hostsConfig = hostsConfig.replace('"', '')
     if (len(str(hostsConfig)) > 0):
         verboseHandle.printConsoleWarning("Current cluster configuration : [" + hostsConfig + "] ")
-    # hostConfiguration = str(input(Fore.YELLOW + "Select server to upgrade : " + Fore.RESET))
+    # hostConfiguration = str(userInputWrapper(Fore.YELLOW + "Select server to upgrade : " + Fore.RESET))
     # logger.info("hostConfiguration" + str(hostConfiguration))
 
     try:
@@ -166,8 +167,8 @@ if __name__ == '__main__':
             args.append(menuDrivenFlag)
             # if managerDict.get(int(hostConfiguration)) is not None:
             #    managerUpgrade = managerDict.get(int(hostConfiguration))
-            sourcePath = str(input(Fore.YELLOW + "Enter source directory for new GS build : " + Fore.RESET))
-            destPath = str(input(
+            sourcePath = str(userInputWrapper(Fore.YELLOW + "Enter source directory for new GS build : " + Fore.RESET))
+            destPath = str(userInputWrapper(
                 Fore.YELLOW + "Enter destination directory to install new GS build [/dbagiga] : " + Fore.RESET))
             if len(str(destPath)) == 0:
                 destPath = "/dbagiga"
@@ -216,12 +217,12 @@ if __name__ == '__main__':
                             verboseHandle.printConsoleError(
                                 str(managerCountStorage) + ". Enough storage space is not available in [" + managerIp + "] : " + str(
                                     managerStorageSpace) + " % free")
-                    confirm = str(input(
+                    confirm = str(userInputWrapper(
                         Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
 
                     if managerCount >= 2:
                         while (len(str(confirm)) == 0):
-                            confirm = str(input(
+                            confirm = str(userInputWrapper(
                                 Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
                         logger.info("confirm :" + str(confirm))
                         if confirm == 'yes' or confirm == 'y':

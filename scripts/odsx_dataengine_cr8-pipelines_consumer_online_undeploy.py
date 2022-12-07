@@ -12,6 +12,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -170,7 +171,7 @@ def listSpacesOnServer(managerNodes):
 def proceedToKillResource(managerHost):
     logger.info("proceedToUndeployResource()")
     resourceName = str(
-        input(Fore.YELLOW + "Enter name of zone kill [consumer] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter name of zone kill [consumer] :" + Fore.RESET))
     if (len(str(resourceName)) == 0):
         resourceName = 'consumer'
     logger.info("resourceName :" + str(resourceName))
@@ -188,7 +189,7 @@ def proceedToKillResource(managerHost):
 def proceedToUndeployResource(managerHost):
     logger.info("proceedToUndeployResource()")
     resourceNames = str(
-        input(Fore.YELLOW + "Enter name of resource to undeploy [consumer-fullsync,consumer-online] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter name of resource to undeploy [consumer-fullsync,consumer-online] :" + Fore.RESET))
     if (len(str(resourceNames)) == 0):
         resourceNames = 'consumer-fullsync,consumer-online'
     logger.info("resourceNames :" + str(resourceNames))

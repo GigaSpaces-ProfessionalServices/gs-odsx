@@ -11,6 +11,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -170,19 +171,19 @@ def listSpacesOnServer(managerNodes):
 def proceedTostartConsumer(spaceNodes):
     logger.info("proceedTostartConsumer()")
     offsetVal = str(
-        input(Fore.YELLOW + "Enter offset [end] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter offset [end] :" + Fore.RESET))
     if (len(str(offsetVal)) == 0):
         offsetVal = 'end'
     consumerName = str(
-        input(Fore.YELLOW + "Enter pipeline name [cdc_tables] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter pipeline name [cdc_tables] :" + Fore.RESET))
     if (len(str(consumerName)) == 0):
         consumerName = 'cdc_tables'
     parallelism = str(
-        input(Fore.YELLOW + "parallelism [12] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "parallelism [12] :" + Fore.RESET))
     if (len(str(parallelism)) == 0):
         parallelism = 12
     cleanStart = str(
-        input(Fore.YELLOW + "cleanStart [false] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "cleanStart [false] :" + Fore.RESET))
     if (len(str(cleanStart)) == 0):
         cleanStart = "false"
     if cleanStart.lower() == "true":

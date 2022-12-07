@@ -1,14 +1,16 @@
 #!/usr/bin/env python3
-import os, requests,json
+import json
+import os
+import requests
 import signal
 
 from colorama import Fore
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from scripts.odsx_tieredstorage_undeploy import getManagerHost
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cleanup import signal_handler
 
+from scripts.logManager import LogManager
+from scripts.odsx_tieredstorage_undeploy import getManagerHost
+from utils.ods_cleanup import signal_handler
+from utils.ods_cluster_config import config_get_manager_node
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
