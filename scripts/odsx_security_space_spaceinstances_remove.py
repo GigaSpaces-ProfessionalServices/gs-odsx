@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import os, requests, json
 import signal
+import time
 
 from colorama import Fore
 from requests.auth import HTTPBasicAuth
@@ -317,17 +318,49 @@ def instancelistFromHosts(managerNodes):
         handleException(e)
     return instanceList
 
+def validateResponseGetDescription(responseCode):
+    logger.info("validateResponse() "+str(responseCode))
+    response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode),auth = HTTPBasicAuth(username,password))
+    jsonData = json.loads(response.text)
+    logger.info("response : "+str(jsonData))
+    if(str(jsonData["status"]).__contains__("failed")):
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["error"])
+    else:
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
+
 
 def removeInstanceContainer(hosts):
     logger.info("removeInstanceContainer")
     try:
         for instance in hosts:
-            commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+ " --password="+password+" container kill " + str(instance['containerId'])
-            logger.info(commandToExecute)
-            with Spinner():
-                output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
-                logger.info("Output:" + str(output))
-                print(output)
+            response = requests.delete("http://" + managerHost + ":8090/v2/containers/"+str(instance['containerId']),auth = HTTPBasicAuth(username,password))
+            logger.info("response.text : " + str(response.text))
+            deployResponseCode = str(response.content.decode('utf-8'))
+            logger.info("removeResponseCode :"+str(deployResponseCode))
+            status = validateResponseGetDescription(deployResponseCode)
+            logger.info("response.status_code :"+str(response.status_code))
+            logger.info("response.content :"+str(response.content))
+            if(response.status_code==202):
+                logger.info("Response :"+str(status))
+                retryCount=5
+                while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                    status = validateResponseGetDescription(deployResponseCode)
+                    verboseHandle.printConsoleInfo("Response :"+str(status))
+                    retryCount = retryCount-1
+                    time.sleep(2)
+                    if(str(status).casefold().__contains__('successful')):
+                        return
+                    elif(str(status).casefold().__contains__('failed')):
+                        return
+            else:
+                logger.info("Unable to remove container :"+str(status))
+                verboseHandle.printConsoleInfo("Unable to remove container : "+str(status))
+            # commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+ " --password="+password+" container kill " + str(instance['containerId'])
+            # logger.info(commandToExecute)
+            # with Spinner():
+            #     output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+            #     logger.info("Output:" + str(output))
+            #     print(output)
     except Exception as e:
         handleException(e)
 
