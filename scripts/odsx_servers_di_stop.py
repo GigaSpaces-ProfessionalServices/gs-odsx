@@ -102,7 +102,7 @@ def stopTelegrafServiceByHost(host):
 
 def stopDIMServices(host):
     logger.info("stopTelegrafServiceByHost()")
-    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;/dbagiga/di-flink/latest-flink/bin/stop-cluster.sh"
+    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;/dbagiga/di-flink/latest-flink/bin/stop-cluster.sh;systemctl start di-flink-taskmanager.service;systemctl start di-flink-jobmanager.service"
     logger.info("Getting status.. di :"+str(cmd))
     user = 'root'
     with Spinner():
