@@ -7,9 +7,10 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
-from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_cluster_config import config_get_dataValidation_nodes,config_get_manager_node
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig
+from scripts.odsx_servers_manager_list import getManagerHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -86,15 +87,7 @@ def doValidate():
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
 
-        if (dataSource1Type == 'ms-sql'):
-            dataSourceNameDefault = "DB_Central"
-            dataSourceName = str(input("DataSource Name ["+dataSourceNameDefault+"]:"))
-            if (len(str(dataSourceName)) == 0):
-                dataSourceName = dataSourceNameDefault
-        else:
-            dataSourceNameDefault = ""
-            dataSourceName = str(input("DataSource Name:"))
-
+        dataSourceName = str(input("DataSource Name:"))
         while(len(dataSourceName) == 0):
              print(Fore.YELLOW +"DataSource Name is invalid (Empty)"+Fore.RESET)
              dataSourceName = str(input("DataSource Name:"))
@@ -104,6 +97,9 @@ def doValidate():
 
         if (dataSource1Type == 'ms-sql'):
             dataSource1HostIpDefault = str(readValuefromAppConfig("app.dataengine.mssql-feeder.mssql.server"))
+        elif dataSource1Type == 'gigaspaces':
+            managerNodes = config_get_manager_node()
+            dataSource1HostIpDefault  = getManagerHost(managerNodes)
         else:
             dataSource1HostIpDefault = 'localhost'
         dataSource1HostIp = str(input("DataSource Host Ip ["+dataSource1HostIpDefault+"]: "))
@@ -122,14 +118,18 @@ def doValidate():
         username1=''
         password1=''
         if (dataSource1Type == 'ms-sql'):
-         print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
+         #print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
 
-         IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
+         IntegratedSecurity = str(input("IntegratedSecurity [true/false] [default:true]:"))
+         if (len(str(IntegratedSecurity)) == 0):
+             IntegratedSecurity = 'true'
          while(IntegratedSecurity not in trueFalse):
           print(Fore.YELLOW +"Please select IntegratedSecurity's value from given list"+Fore.RESET)
           IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
 
-         AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
+         AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM] [default:JavaKerberos]:"))
+         if (len(str(AuthenticationScheme)) == 0):
+             AuthenticationScheme = 'JavaKerberos'
          while(AuthenticationScheme not in authenticationSchemes):
           print(Fore.YELLOW +"Please select AuthenticationScheme's value from given list"+Fore.RESET)
           AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))

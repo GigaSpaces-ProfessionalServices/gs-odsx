@@ -96,12 +96,23 @@ def doValidate():
         DataSourceId = str(input("Select DataSource Id from above table: ")) 
         while(DataSourceId not in dataSourceIds):
             print(Fore.YELLOW +"Invalid DataSource Id "+Fore.RESET)
-            DataSourceId = str(input("DataSource Id from above table: ")) 
-        
-            
-        schemaName1 = str(input("Schema Name [demo]: "))
+            DataSourceId = str(input("DataSource Id from above table: "))
+
+
+        for idx, x in enumerate(dataSourceIds):
+            if DataSourceId == x:
+                dataSType = dataSourceTypes[idx]
+        #print("dataSType"+dataSType)
+
+        schemaNameDefault = 'demo'
+        if dataSType == 'gigaspaces':
+            schemaNameDefault = str(readValuefromAppConfig("app.dataengine.mssql-feeder.space.name"))
+        elif dataSType == 'ms-sql':
+            schemaNameDefault = 'DB_Central'
+
+        schemaName1 = str(input("Schema Name["+schemaNameDefault+"]: "))
         if (len(str(schemaName1)) == 0):
-            schemaName1 = 'demo'
+            schemaName1 = schemaNameDefault
 
         tableName1 = str(input("Table Name : "))
         while (len(str(tableName1)) == 0):
@@ -186,6 +197,7 @@ def printmeasurementtable(dataValidatorServiceHost):
     return 0
 
 dataSourceIds=[]
+dataSourceTypes=[]
 testTypes =["count","avg","min","max","sum",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:
@@ -212,7 +224,8 @@ def printDatasourcetable(dataValidatorServiceHost):
                 #print(datasource)
                 if datasource["agentHostIp"] == "-1":
                     continue
-                dataSourceIds.append(str(datasource["id"]))              
+                dataSourceIds.append(str(datasource["id"]))
+                dataSourceTypes.append(datasource["dataSourceType"])
                 dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,
