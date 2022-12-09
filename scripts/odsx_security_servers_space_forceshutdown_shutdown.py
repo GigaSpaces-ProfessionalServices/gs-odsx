@@ -13,7 +13,8 @@ from utils.odsx_dataengine_utilities import getAllFeeders
 from utils.odsx_db2feeder_utilities import deleteDB2EntryFromSqlLite, deleteMSSqlEntryFromSqlLite, getPasswordByHost, getUsernameByHost
 from utils.odsx_print_tabular_data import printTabular
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_manager_node, config_get_nb_list, config_get_space_hosts_list
+from utils.ods_cluster_config import config_get_manager_node, config_get_nb_list, config_get_space_hosts_list, \
+    config_get_space_hosts
 from colorama import Fore
 from utils.ods_validation import getSpaceServerStatus
 from scripts.spinner import Spinner
@@ -120,15 +121,16 @@ def shutdownServers(username,password):
             exit(0)
 
     consulServiceList = getServiceListFromConsul()
-  
-   
+
+    currentPwd= os.getcwd()
     feederMsg = undeployFeeders(True)
+    os.chdir(currentPwd)
     verboseHandle.printConsoleInfo(feederMsg)
 
-    
+
     puMsg = undeployMicroservices(managerHost, puList, consulServiceList,True,username,password)
     verboseHandle.printConsoleInfo(puMsg)
-    
+
 
     shutdownSpaceServers(user,True)
     

@@ -185,7 +185,7 @@ def undeployFeeders(isSecure=False):
 
     feederMsg = ''
     #print("statefulPUList="+str(statefulPUList))
-    
+
     feederPuList = getAllFeeders()
     isDB2Feeder = False
     isMSSQLFeeder = False
@@ -202,25 +202,25 @@ def undeployFeeders(isSecure=False):
         if(str(name).casefold().__contains__("adabasconsumer")):  
             isAdabasFeeder = True
         if(str(name).casefold().__contains__("kafka")):  
-            isKafkaConsumer = True    
-        
+            isKafkaConsumer = True
+
     if(isDB2Feeder == True):
         verboseHandle.printConsoleInfo("Undeploying DB2 Feeders.............")
         cmd = "python3 scripts/odsx_dataengine_db2-feeder_remove-undeploy.py"
         if(isSecure==True):
             cmd = "python3 scripts/odsx_security_dataengine_db2-feeder_remove-undeploy.py"
         child = pexpect.spawn(cmd)
-        child.expect("Proceeding with manager host.*")
-        child.sendline('\r')
+#        child.expect("Proceeding with manager host.*")
+        child.sendline('\n')
 
-        child.expect(".*For all above PUs.*")
-        child.sendline('\r')
+#        child.expect(".*For all above PUs.*")
+        child.sendline('\n')
 
-        child.expect(".*Enter drain mode.*")
-        child.sendline('\r')
+#        child.expect(".*Enter drain mode.*")
+        child.sendline('\n')
 
-        child.expect("Do you want to remove gsc?.*")
-        child.sendline('\r')
+#        child.expect("Do you want to remove gsc?.*")
+        child.sendline('\n')
         child.interact()
         child.close()
 
@@ -233,17 +233,17 @@ def undeployFeeders(isSecure=False):
         if(isSecure==True):
             cmd = "python3 scripts/odsx_security_dataengine_mssql-feeder_remove-undeploy.py"
         child = pexpect.spawn(cmd)
-        child.expect("Proceeding with manager host.*")
-        child.sendline('\r')
+#        child.expect("Proceeding with manager host.*")
+        child.sendline('\n')
 
-        child.expect(".*For all above PUs.*")
-        child.sendline('\r')
+#        child.expect(".*For all above PUs.*")
+        child.sendline('\n')
 
-        child.expect(".*Enter drain mode.*")
-        child.sendline('\r')
+#        child.expect(".*Enter drain mode.*")
+        child.sendline('\n')
 
-        child.expect("Do you want to remove gsc?.*")
-        child.sendline('\r')
+#        child.expect("Do you want to remove gsc?.*")
+        child.sendline('\n')
         child.interact()
         child.close()
 
@@ -256,17 +256,17 @@ def undeployFeeders(isSecure=False):
         if(isSecure==True):
             cmd = "python3 scripts/odsx_security_dataengine_kafka-consumer_undeploy.py"
         child = pexpect.spawn(cmd)
-        child.expect("Proceeding with manager host.*")
-        child.sendline('\r')
+       # child.expect("Proceeding with manager host.*")
+        child.sendline('\n')
 
-        child.expect(".*For all above PUs.*")
-        child.sendline('\r')
+       # child.expect(".*For all above PUs.*")
+        child.sendline('\n')
 
-        child.expect(".*Enter drain mode.*")
-        child.sendline('\r')
+       # child.expect(".*Enter drain mode.*")
+        child.sendline('\n')
 
-        child.expect("Do you want to remove gsc?.*")
-        child.sendline('\r')
+       # child.expect("Do you want to remove gsc?.*")
+        child.sendline('\n')
         child.interact()
         child.close()
         verboseHandle.printConsoleInfo("Kafka feeders undeployed successfully!!")
@@ -278,17 +278,17 @@ def undeployFeeders(isSecure=False):
         if(isSecure==True):
             cmd = "python3 scripts/odsx_security_dataengine_kafka-consumer_undeploy.py"
         child = pexpect.spawn(cmd)
-        child.expect("Proceeding with manager host.*")
-        child.sendline('\r')
+#        child.expect("Proceeding with manager host.*")
+        child.sendline('\n')
 
-        child.expect(".*For all above PUs.*")
-        child.sendline('\r')
+#        child.expect(".*For all above PUs.*")
+        child.sendline('\n')
 
-        child.expect(".*Enter drain mode.*")
-        child.sendline('\r')
+#        child.expect(".*Enter drain mode.*")
+        child.sendline('\n')
 
-        child.expect("Do you want to remove gsc?.*")
-        child.sendline('\r')
+#        child.expect("Do you want to remove gsc?.*")
+        child.sendline('\n')
         child.interact()
         child.close()
         verboseHandle.printConsoleInfo("Adabas undeployed successfully!!")
@@ -655,8 +655,8 @@ def deployTierSpace(isSecure=False):
     if(isSecure==True):
         cmd = "python3 scripts/odsx_security_tieredstorage_deploy.py"
     child = pexpect.spawn(cmd)
-    child.expect(".*Are you sure want to proceed.*")
-    child.sendline('\r')
+#    child.expect(".*Are you sure want to proceed.*")
+    child.sendline('\n')
     child.interact()
     child.close()
     verboseHandle.printConsoleInfo("TierSpace deployed successfully..............")
@@ -670,8 +670,8 @@ def deploySpace(isSecure=False):
     if(isSecure==True):
         cmd = "python3 scripts/odsx_security_space_createspacewithjar.py"
     child = pexpect.spawn(cmd)
-    child.expect(".*Are you sure want to proceed.*")
-    child.sendline('\r')
+   # child.expect(".*Are you sure want to proceed.*")
+    child.sendline('\n')
     child.interact()
     child.close()
     verboseHandle.printConsoleInfo("Space is deployed successfully!!")
@@ -686,8 +686,8 @@ def deployFeeders(isSecure=False):
         cmd = "python3 scripts/odsx_security_dataengine_db2-feeder_install-deploy.py"
     child = pexpect.spawn(cmd)
  
-    child.expect(".*Are you sure want to proceed.*")
-    child.sendline('\r')
+  #  child.expect(".*Are you sure want to proceed.*")
+    child.sendline('\n')
 
     child.interact()
     child.close()
@@ -698,11 +698,11 @@ def deployFeeders(isSecure=False):
     if(isSecure==True):
         cmd = "python3 scripts/odsx_security_dataengine_mssql-feeder_install-deploy.py"
     child = pexpect.spawn(cmd)
-    child.expect(".*Do you want to create GSC.*")
-    child.sendline('\r')
+    #child.expect(".*Do you want to create GSC.*")
+    child.sendline('\n')
 
-    child.expect(".*Are you sure want to proceed.*")
-    child.sendline('\r')
+    #child.expect(".*Are you sure want to proceed.*")
+    child.sendline('\n')
 
     child.interact()
     child.close()
