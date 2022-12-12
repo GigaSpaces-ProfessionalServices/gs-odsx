@@ -2,6 +2,8 @@
 # s6.py
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform
+from concurrent.futures import ThreadPoolExecutor
+
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.ods_app_config import readValuefromAppConfig
@@ -79,6 +81,8 @@ def exitAndDisplay(isMenuDriven):
             cliArgumentsStr+=' '
         os.system('python3 scripts/odsx_servers_manager_start.py'+' '+cliArgumentsStr)
 
+def startManagerServer(argsString):
+    os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
 
 if __name__ == '__main__':
     logger.info("servers - manager - start ")
@@ -191,24 +195,27 @@ if __name__ == '__main__':
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_manager_node()#config_get_space_hosts_list()
-                for host in spaceHosts:
-                    args.append(menuDrivenFlag)
-                    args.append('--host')
-                    args.append(os.getenv(host.ip))
-                    args.append('-u')
-                    args.append(user)
-                    argsString = str(args)
-                    logger.debug('Arguments :'+argsString)
-                    logger.info(argsString)
-                    argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-                    #print(argsString)
-                    os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
-                    args.remove(menuDrivenFlag)
-                    args.remove("--host")
-                    args.remove(os.getenv(host.ip))
-                    args.remove('-u')
-                    args.remove(user)
-                    logger.info(args)
+                hostManagerLength=len(spaceHosts)+1
+                with ThreadPoolExecutor(hostManagerLength) as executor:
+                    for host in spaceHosts:
+                        args.append(menuDrivenFlag)
+                        args.append('--host')
+                        args.append(os.getenv(host.ip))
+                        args.append('-u')
+                        args.append(user)
+                        argsString = str(args)
+                        logger.debug('Arguments :'+argsString)
+                        logger.info(argsString)
+                        argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+                        #print(argsString)
+                        # os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
+                        executor.submit(startManagerServer,argsString)
+                        args.remove(menuDrivenFlag)
+                        args.remove("--host")
+                        args.remove(os.getenv(host.ip))
+                        args.remove('-u')
+                        args.remove(user)
+                        logger.info(args)
             elif(confirm =='no' or confirm=='n'):
                 if(isMenuDriven=='m'):
                     logger.info("menudriven")

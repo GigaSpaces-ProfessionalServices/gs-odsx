@@ -2,6 +2,8 @@
 # s6.py
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform
+from concurrent.futures import ThreadPoolExecutor
+
 from scripts.logManager import LogManager
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,connectExecuteSSH
@@ -79,6 +81,9 @@ def exitAndDisplay(isMenuDriven):
     if(isMenuDriven=='m'):
         logger.info("python3 scripts/odsx_security_manager_remove.py executed")
         os.system('python3 scripts/odsx_security_manager_remove.py'+' '+isMenuDriven)
+
+def removeSecureManagerServer(host):
+    execute_scriptBuilder(host)
 
 if __name__ == '__main__':
     logger.info("security - manager - Remove ")
@@ -159,20 +164,23 @@ if __name__ == '__main__':
                     #if(len(str(user))==0):
                     #    user="ec2-user"
                     hostsConfigArray = hostsConfig.split(",")
-                    for host in hostsConfigArray:
-                        logger.info("Removing host :"+str(host))
-                        verboseHandle.printConsoleInfo("Removing Host :"+str(host))
-                        args.append('--host')
-                        args.append(host)
-                        args.append('-u')
-                        args.append(user)
-                        args.append('--id')
-                        args.append(host)
-                        execute_scriptBuilder(host)
-                        args.remove("--host")
-                        args.remove(host)
-                        args.remove('-u')
-                        args.remove(user)
+                    hostManagerLength=len(hostsConfigArray)+1
+                    with ThreadPoolExecutor(hostManagerLength) as executor:
+                        for host in hostsConfigArray:
+                            logger.info("Removing host :"+str(host))
+                            verboseHandle.printConsoleInfo("Removing Host :"+str(host))
+                            args.append('--host')
+                            args.append(host)
+                            args.append('-u')
+                            args.append(user)
+                            args.append('--id')
+                            args.append(host)
+                            # execute_scriptBuilder(host)
+                            executor.submit(removeSecureManagerServer,host)
+                            args.remove("--host")
+                            args.remove(host)
+                            args.remove('-u')
+                            args.remove(user)
                 elif(confirm =='no' or confirm=='n'):
                     if(menuDrivenFlag=='m'):
                         logger.info("menudriven")
