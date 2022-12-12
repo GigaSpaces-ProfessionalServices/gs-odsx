@@ -4,8 +4,10 @@ import os, time
 from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
+from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from scripts.odsx_tieredstorage_undeploy import listDeployed
@@ -212,30 +214,74 @@ def checkIsMemoryAvailableOnHost(managerNodes,memoryGSC,memoryRequiredGSCInBytes
             return isMemoryAvailable
     return isMemoryAvailable
 
-def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig):
-    logger.info("createGSC()")
-    for i in range(1,len(space_dict_obj)+1):
-        host = space_dict_obj.get(str(i))
-        #isMemoryAvailable = isMemoryAvailableOnHost(managerNodes,host,memoryGSC,memoryRequiredGSCInBytes)
-        #if(isMemoryAvailable):
-        data = dataContainerREST(host,zoneGSC,memoryGSC)
-        logger.info("data:"+str(data))
+def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm):
+    try:
+        logger.info("createGSC()"+str(memoryGSC)+" : "+str(zoneGSC)+" : "+str(numberOfGSC)+" : "+managerHostConfig)
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        # creating 2 GSC by def
-        for i in range(1,int(numberOfGSC)+1):
-            logger.info("numofGSC")
-            logger.info("GSC "+str(i+1)+" url : http://"+str(managerHostConfig)+":8090/v2/containers")
-            response = requests.post("http://"+managerHostConfig+":8090/v2/containers",data=json.dumps(data),headers=headers)
-            logger.info("GSC "+str(i+1)+" response_status_code:"+str(response.status_code))
-            if(response.status_code==202):
-                logger.info("GSC "+str(i+1)+" created on host :"+str(host))
-                #verboseHandle.printConsoleInfo("GSC "+str(i+1)+" created on host :"+str(host))
+        if(individualHostConfirm=='y'):
+            logger.info("specificHost :"+str(specificHost))
+            data = dataContainerREST(specificHost,zoneGSC,memoryGSC)
+            logger.info("data:"+str(data))
+            for i in range(1,int(numberOfGSC)+1):
+                logger.info("numofGSC")
+                logger.info("GSC "+str(i+1)+" url : http://"+str(managerHostConfig)+":8090/v2/containers")
+                response = requests.post("http://"+managerHostConfig+":8090/v2/containers",data=json.dumps(data),headers=headers)
+                logger.info("GSC "+str(i+1)+" response_status_code:"+str(response.status_code))
+                if(response.status_code==202):
+                    logger.info("GSC "+str(i+1)+" created on host :"+str(specificHost))
+                    verboseHandle.printConsoleInfo("GSC "+str(i+1)+" created on host :"+str(specificHost))
+        if(individualHostConfirm=='n'):
+            with Spinner():
+                counter=0
+                for i in range(1,len(space_dict_obj)+1):
+                    host = space_dict_obj.get(str(i))
+                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
+                    logger.info("cmd : "+str(cmd))
+                    with Spinner():
+                        output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
+                    logger.info("Extracting .tar file :"+str(output))
+                    verboseHandle.printConsoleInfo(str(output))
 
-        #else:
-        #    logger.info("No sufficent memory available: Required Memory:"+str(memoryRequiredGSCInBytes)+" Available Memory:"+str(freePhysicalMemorySizeInBytes) +" on host:"+host)
-        #    verboseHandle.printConsoleInfo("No sufficent memory available: Required Memory:"+str(memoryRequiredGSCInBytes)+" Available Memory:"+str(freePhysicalMemorySizeInBytes)+" on host:"+host)
-        #    return isMemoryAvailable
-        verboseHandle.printConsoleInfo("GSC ["+str(numberOfGSC)+"] created on host :"+str(host))
+                    #REST Create GSCFlow
+                    '''
+                    data = dataContainerREST(host,zoneGSC,memoryGSC)
+                    logger.info("data:"+str(data))
+                    # creating 2 GSC by def
+                    for i in range(1,int(numberOfGSC)+1):
+                        counter=counter+1
+                        logger.info("numofGSC")
+                        logger.info("GSC "+str(i)+" url : http://"+str(managerHostConfig)+":8090/v2/containers")
+                        response = requests.post("http://"+managerHostConfig+":8090/v2/containers",data=json.dumps(data),headers=headers)
+                        logger.info("GSC "+str(i)+" response_status_code:"+str(response.status_code))
+                        responseCode = str(response.content.decode('utf-8'))
+                        logger.info("GSC "+str(i)+" response_code_request ::"+str(responseCode))
+                        if(response.status_code==202):
+                            logger.info("GSC "+str(i)+" created on host :"+str(host))
+                        if(responseCode.isdigit()):
+                            status = validateResponseGetDescription(responseCode)
+                            logger.info("response.content :"+str(response.content) )
+                            logger.info("Response :"+str(status))
+                            retryCount=5
+                            while(retryCount>0 or (not str(status).casefold().__contains__('successful'))):
+                                status = validateResponseGetDescription(responseCode)
+                                #verboseHandle.printConsoleInfo("Response create gsc:"+str(status))
+                                logger.info("Response create gsc:"+str(status))
+                                retryCount = retryCount-1
+                                #time.sleep(1)
+                                if(str(status).casefold().__contains__('successful')):
+                                        retryCount=0
+                            logger.info("Response create gsc:"+str(status))
+                            #verboseHandle.printConsoleInfo("Response create gsc:"+str(status))
+                        else:
+                            logger.info("Unable to create container :"+str(status))
+                            verboseHandle.printConsoleInfo("Unable to create container : "+str(status))
+
+
+                        verboseHandle.printConsoleInfo("GSC "+str(i)+" created on host :"+str(host))
+                    '''
+
+    except Exception as e:
+        handleException(e)
 
 def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     logger.info("createGSC()")
@@ -249,6 +295,8 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     host = space_dict_obj.get(hostToCreateGSC)
     '''
     global numberOfGSC
+    global specificHost
+    global individualHostConfirm
     numberOfGSC = str(input("Enter number of GSC per host [2] :"+Fore.RESET))
     if(len(str(numberOfGSC))==0):
         numberOfGSC=2
@@ -263,7 +311,16 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     zoneGSC = str(input("Enter zone :"+Fore.RESET))
     while(len(str(zoneGSC))==0):
         zoneGSC = str(input("Enter zone :"+Fore.RESET))
-
+    individualHostConfirm = str(readValuefromAppConfig("app.spacejar.creategsc.specifichost"))#str(input(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
+    #if(len(str(individualHostConfirm))==0):
+    #    individualHostConfirm = 'n'
+    if(individualHostConfirm=='y'):
+        hostToCreateGSC = str(input("Enter space host serial number to create gsc [1] :"+Fore.RESET))
+        if(len(hostToCreateGSC)==0):
+            hostToCreateGSC="1"
+        specificHost = space_dict_obj.get(hostToCreateGSC)
+        verboseHandle.printConsoleInfo("GSC will be created on :"+str(specificHost))
+    logger.info("individualHostConfirm : "+str(individualHostConfirm))
     size = 1024
     type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
     memoryGSCWithoutSuffix = memoryGSC[0:len(memoryGSC)-1]
@@ -462,7 +519,7 @@ def createNewSpaceREST(managerHostConfig):
             displaySummaryOfInputParameter()
             createConfirm = str(input("Are you sure want to proceed ? (y/n) [y] :"))
             if(confirmCreateGSC == 'y'):
-                createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig)
+                createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
             if(len(str(createConfirm))==0):
                 createConfirm='y'
             if(createConfirm=='y'):

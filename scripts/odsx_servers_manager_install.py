@@ -2,6 +2,8 @@
 # s6.py
 #!/usr/bin/python
 import os, subprocess, sys, argparse, platform,socket
+from concurrent.futures import ThreadPoolExecutor
+
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
@@ -423,53 +425,59 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             with Spinner():
                 status = os.system(cmd)
                 logger.info("Creating tar file status : "+str(status))
+            hostManagerLength=len(hostManager)+1
+            with ThreadPoolExecutor(hostManagerLength) as executor:
+                for host in hostManager:
+                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget)
 
-            for host in hostManager:
-                gsNicAddress = host_nic_dict_obj[host]
-                logger.info("NIC address:"+gsNicAddress+" for host "+host)
-                if(len(str(gsNicAddress))==0):
-                    gsNicAddress='x'     # put dummy param to maintain position of arguments
-                additionalParam=additionalParam+' '+gsNicAddress
-                #print(additionalParam)
-                with Spinner():
-                    scp_upload(host, user, 'install/install.tar', '')
-                    ##scp_upload(host, user, 'install/gs.service', '')
-                verboseHandle.printConsoleInfo(output)
-                cmd = 'tar -xvf install.tar'
-                verboseHandle.printConsoleInfo("Extracting..")
-                with Spinner():
-                    output = executeRemoteCommandAndGetOutput(host, user, cmd)
-                logger.info("Extracting .tar file :"+str(output))
-                verboseHandle.printConsoleInfo(str(output))
-
-                commandToExecute="scripts/servers_manager_install.sh"
-                #print(additionalParam)
-                logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                with Spinner():
-                    outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-                    #print(outputShFile)
-                    #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
-                    #Upload CEF logging jar
-                    #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-                    verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-                    configureMetricsXML(host)
-                serverHost=''
-                try:
-                    serverHost = socket.gethostbyaddr(host).__getitem__(0)
-                except Exception as e:
-                    serverHost=host
-                #managerList = config_add_manager_node(host,host,"admin")
-                logger.info("Installation of manager server "+str(host)+" has been done!")
-                verboseHandle.printConsoleInfo("Installation of manager server "+str(host)+" has been done!")
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
 
     except Exception as e:
         handleException(e)
+
+def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget):
+    gsNicAddress = host_nic_dict_obj[host]
+    logger.info("NIC address:"+gsNicAddress+" for host "+host)
+    if(len(str(gsNicAddress))==0):
+        gsNicAddress='x'     # put dummy param to maintain position of arguments
+    additionalParam=additionalParam+' '+gsNicAddress
+    #print(additionalParam)
+    with Spinner():
+        scp_upload(host, user, 'install/install.tar', '')
+        ##scp_upload(host, user, 'install/gs.service', '')
+    verboseHandle.printConsoleInfo(output)
+    cmd = 'tar -xvf install.tar'
+    verboseHandle.printConsoleInfo("Extracting..")
+    with Spinner():
+        output = executeRemoteCommandAndGetOutput(host, user, cmd)
+    logger.info("Extracting .tar file :"+str(output))
+    verboseHandle.printConsoleInfo(str(output))
+
+    commandToExecute="scripts/servers_manager_install.sh"
+    #print(additionalParam)
+    logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+    logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+    with Spinner():
+        outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+        #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+        #print(outputShFile)
+        #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
+        #Upload CEF logging jar
+        #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+        verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+        configureMetricsXML(host)
+    serverHost=''
+    try:
+        serverHost = socket.gethostbyaddr(host).__getitem__(0)
+    except Exception as e:
+        serverHost=host
+    #managerList = config_add_manager_node(host,host,"admin")
+    logger.info("Installation of manager server "+str(host)+" has been done!")
+    verboseHandle.printConsoleInfo("Installation of manager server "+str(host)+" has been done!")
+
 
 def getPlainOutput(input):
     input = str(input).replace('\\n','').replace("b'","").replace("'","").replace('"','')
