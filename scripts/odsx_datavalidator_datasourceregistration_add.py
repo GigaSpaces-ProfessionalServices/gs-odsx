@@ -110,6 +110,11 @@ def doValidate():
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
 
+        if dataSource1Type == 'gigaspaces':
+            gsLookupGroup = str(input("Enter Lookup Group [xap-16.2.0] :"))
+            if (len(str(gsLookupGroup)) == 0):
+                gsLookupGroup = 'xap-16.2.0'
+
 
         IntegratedSecurity = ''
         AuthenticationScheme=''
@@ -154,7 +159,8 @@ def doValidate():
             "password": password1,
             "integratedSecurity":IntegratedSecurity,
             "authenticationScheme":AuthenticationScheme,
-            "properties":Properties
+            "properties":Properties,
+            "gsLookupGroup":gsLookupGroup
         }
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
         response = requests.post("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/register"

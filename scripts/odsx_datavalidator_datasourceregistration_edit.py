@@ -115,6 +115,12 @@ def doValidate():
                 dataSource1Port = str(input("DataSource Port [Current value: '" + datasource["dataSourcePort"] + "'] New value: "))
                 if (len(str(dataSource1Port)) == 0):
                             dataSource1Port = datasource["dataSourcePort"]
+
+                if dataSource1Type == 'gigaspaces':
+                    gsLookupGroup = str(input("Enter Lookup Group [Current value: '" + datasource["gsLookupGroup"] + "'] New value:"))
+                    if (len(str(gsLookupGroup)) == 0):
+                        gsLookupGroup = datasource["gsLookupGroup"]
+
                 username1 = str(input("User name [Current value: '" + datasource["username"] + "'] New value: "))
                 if (len(str(username1)) == 0):
                             username1 = datasource["username"]
@@ -152,7 +158,8 @@ def doValidate():
                     "password": password1,
                     "integratedSecurity":IntegratedSecurity,
                     "authenticationScheme":AuthenticationScheme,
-                    "properties":Properties
+                    "properties":Properties,
+                    "gsLookupGroup":gsLookupGroup
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
                 response = requests.post("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/update"
