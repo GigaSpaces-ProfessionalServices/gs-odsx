@@ -293,7 +293,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-
+        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -400,14 +400,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength=len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser)
+                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
     except Exception as e:
         handleException(e)
 
-def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser):
+def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc):
     installStatus='No'
     install = isInstalledAndGetVersion(host)
     logger.info("install : "+str(install))
@@ -416,7 +416,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
     if installStatus == 'No':
         gsNicAddress = host_nic_dict_obj[host]
         #print(host+"  "+gsNicAddress)
-        additionalParam=additionalParam+' '+gsNicAddress
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         # print("---------------------"+str(additionalParam))
         logger.info("additionalParam - Installation :")

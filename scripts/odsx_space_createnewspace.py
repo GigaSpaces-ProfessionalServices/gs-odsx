@@ -639,10 +639,11 @@ if __name__ == '__main__':
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                 global confirmCreateGSC
                 confirmCreateGSC = str(input("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
-                isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHostConfig)
+
                 logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
                 logger.info("confirmCreateGSC : "+str(confirmCreateGSC))
                 if(confirmCreateGSC=='y' or len(str(confirmCreateGSC)) == 0):
+                    isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHostConfig)
                     confirmCreateGSC='y'
                     if(isMemoryAvailable):
                         createNewSpaceREST(managerHost)

@@ -225,6 +225,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.info("sourceInstallerDirectory :"+str(sourceInstallerDirectory))
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
+        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory+' '+logSourcePath+' '+logTargetPath
         else:
@@ -359,14 +360,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength = len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
               for host in host_nic_dict_obj:
-                  executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget)
+                  executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
     except Exception as e:
         handleException(e)
 
-def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget):
+def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc):
     installStatus='No'
     install = isInstalledAndGetVersion(host)
     logger.info("install : "+str(install))
@@ -374,8 +375,7 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
         installStatus='Yes'
     if installStatus == 'No':
         gsNicAddress = host_nic_dict_obj[host]
-        #print(host+"  "+gsNicAddress)
-        additionalParam=additionalParam+' '+gsNicAddress
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         logger.info("additionalParam - Installation :")
         logger.info("Building .tar file : tar -cvf install/install.tar install")
