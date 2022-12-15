@@ -2,6 +2,7 @@
 import argparse
 import os
 import sys
+from concurrent.futures import ThreadPoolExecutor
 
 from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
 from utils.odsx_print_tabular_data import printTabular
@@ -66,8 +67,8 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
         response = requests.get(('http://'+managerServerConfig+':8090/v2/containers'), headers={'Accept': 'application/json'})
         output = response.content.decode("utf-8")
         logger.info("Json Response container:"+str(output))
-        data = json.loads(output)
-        for i in data :
+        datas = json.loads(output)
+        for i in datas :
             id=i["id"]
             id = str(id).replace('~'+str(i["pid"]), '')
             logger.info("id : "+str(id))
@@ -115,6 +116,47 @@ def getVersion(ip):
     logger.info("output : "+str(output))
     return output
 
+def checkActiveStatus(server,host_nic_dict_obj,user):
+    if (port_check_config(os.getenv(server.ip),22)):
+        cmd = 'systemctl is-active gs.service'
+        logger.info("server.ip : "+str(os.getenv(server.ip))+" cmd :"+str(cmd))
+        output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
+        logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
+        host_nic_dict_obj.add(os.getenv(server.ip),str(output))
+    else:
+        logger.info(" Host :"+str(os.getenv(server.ip))+" is not reachable")
+
+def printListOfSpace(server,data,host_gsc_dict_obj):
+    host = os.getenv(server.ip)
+    logger.info("server.ip : "+str(server.ip))
+    installStatus='No'
+    install = isInstalledAndGetVersion(os.getenv(str(server.ip)))
+    logger.info("install : "+str(install))
+    if(len(str(install))>8):
+        installStatus='Yes'
+    if (port_check_config(host,22)):
+        status = getStatusOfSpaceHost(str(host))
+        logger.info("status : "+str(status))
+        logger.info("Host:"+str(host))
+        gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+        #gsc = host_gsc_dict_obj.get(str(host))
+        logger.info("GSC : "+str(gsc))
+    else:
+        status="NOT REACHABLE"
+        gsc = host_gsc_dict_obj.get(str(host))
+        logger.info(" Host :"+str(server.ip)+" is not reachable")
+    #version = getVersion(server.ip)
+    influx = validateMetricsXmlInflux(host)
+    grafana = validateMetricsXmlGrafana(host)
+    dataArray=[Fore.GREEN+host+Fore.RESET,
+               Fore.GREEN+str(gsc)+Fore.RESET,
+               Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+               Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
+               Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
+               Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+               Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
+    data.append(dataArray)
+
 def listSpaceServer():
     try:
         logger.debug("listing space server")
@@ -129,6 +171,7 @@ def listSpaceServer():
                    Fore.YELLOW+"Influxdb"+Fore.RESET,
                    Fore.YELLOW+"Grafana"+Fore.RESET
                    ]
+        global data
         data=[]
         userConfig = readValuefromAppConfig("app.server.user")
         # changed : 25-Aug hence systemctl always with root no need to ask
@@ -139,49 +182,18 @@ def listSpaceServer():
         logger.info("app.server.user: "+str(user))
 
         host_gsc_dict_obj = getGSCForHost()
+        global host_nic_dict_obj
         host_nic_dict_obj = host_nic_dictionary()
 
-        for server in spaceServers:
-            if (port_check_config(os.getenv(server.ip),22)):
-                cmd = 'systemctl is-active gs.service'
-                logger.info("server.ip : "+str(os.getenv(server.ip))+" cmd :"+str(cmd))
-                output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
-                logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
-                host_nic_dict_obj.add(os.getenv(server.ip),str(output))
-            else:
-                logger.info(" Host :"+str(os.getenv(server.ip))+" is not reachable")
+        spaceHostsLength = len(spaceServers)+1
+        with ThreadPoolExecutor(spaceHostsLength) as executor:
+           for server in spaceServers:
+               executor.submit(checkActiveStatus,server,host_nic_dict_obj,user)
 
         logger.info("host_nic_dict_obj : "+str(host_nic_dict_obj))
-        for server in spaceServers:
-            host = os.getenv(server.ip)
-            logger.info("server.ip : "+str(server.ip))
-            installStatus='No'
-            install = isInstalledAndGetVersion(os.getenv(str(server.ip)))
-            logger.info("install : "+str(install))
-            if(len(str(install))>8):
-                installStatus='Yes'
-            if (port_check_config(host,22)):
-                status = getStatusOfSpaceHost(str(host))
-                logger.info("status : "+str(status))
-                logger.info("Host:"+str(host))
-                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
-                #gsc = host_gsc_dict_obj.get(str(host))
-                logger.info("GSC : "+str(gsc))
-            else:
-                status="NOT REACHABLE"
-                gsc = host_gsc_dict_obj.get(str(host))
-                logger.info(" Host :"+str(server.ip)+" is not reachable")
-            #version = getVersion(server.ip)
-            influx = validateMetricsXmlInflux(host)
-            grafana = validateMetricsXmlGrafana(host)
-            dataArray=[Fore.GREEN+host+Fore.RESET,
-                       Fore.GREEN+str(gsc)+Fore.RESET,
-                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-                       Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
-                       Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
-                       Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
-                       Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
-            data.append(dataArray)
+        with ThreadPoolExecutor(spaceHostsLength) as executor:
+            for server in spaceServers:
+                    executor.submit(printListOfSpace,server,data,host_gsc_dict_obj)
 
         printTabular(None,headers,data)
     except Exception as e:
