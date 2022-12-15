@@ -5,8 +5,8 @@ from colorama import Fore
 
 from utils.ods_app_config import readValuefromAppConfig
 
-def userInputWrapper(inputStr):
-    userInput = userInputWithEscWrapper(inputStr)
+def userInputWrapper(inputStr,isSingleInputEnabled=False):
+    userInput = userInputWithEscWrapper(inputStr,isSingleInputEnabled)
     if userInput == "99":
         exit(0)
     return userInput
@@ -27,12 +27,12 @@ def userInputWrapper1(inputStr):
     return userInput
 
 #Reverting ESC changes
-def userInputWithEscWrapper(inputStr):
+def userInputWithEscWrapper(inputStr,isSingleInputEnabled=False):
     isEsc = str(readValuefromAppConfig("app.functionality.esc"))
     if(isEsc == 'True'):
         try:
             print(Fore.YELLOW + inputStr)
-            keyPressed = userInputWithEsc()
+            keyPressed = userInputWithEsc(isSingleInputEnabled)
             os.system('stty sane')
             os.system("stty erase ^H")
             return keyPressed
@@ -45,7 +45,7 @@ def userInputWithEscWrapper(inputStr):
         return userInput
 
 
-def userInputWithEsc():
+def userInputWithEsc(isSingleInputEnabled=False):
     import sys, tty, os, termios
     old_settings = termios.tcgetattr(sys.stdin)
     tty.setcbreak(sys.stdin.fileno())
@@ -82,6 +82,8 @@ def userInputWithEsc():
         else:
             user_input.append(this_key)
         print(''.join(user_input), end="\r")
+        if isSingleInputEnabled:
+            break;
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
     # print(''.join(user_input))
     return ''.join(user_input)

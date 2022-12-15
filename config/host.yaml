@@ -1,30 +1,8 @@
 servers :
   manager :
-    host1 : 10.0.0.70
-    host2 : 10.0.0.245
-    host3 : 10.0.0.253
+    host1 : 172.31.34.145
   space :
-    host1 : 10.0.0.247
-    host2 : 10.0.0.4
-  dataIntegration :
-    host1 : 10.0.0.1
-    host2 : 10.0.0.2
-    host3 : 10.0.0.3
-    host4 : 10.0.0.4
-  grafana :
-    host1 : 10.0.0.137
-  influxdb :
-    host1 : 10.0.0.137
-  nb_applicative :
-    host1 : 10.0.0.149
-    host2 : 10.0.0.153
-    host3 : 10.0.0.114
-  nb_management :
-    host1 : 10.0.0.119
-  data_validator_server :
-    host1 : 10.0.0.18
-  data_validator_agent :
-    host1 : 10.0.0.83
-    host2 : 10.0.0.68
+    host1 : 172.31.45.35
+    host2 : 172.31.42.217
   pivot :
     host1 : 127.0.0.1

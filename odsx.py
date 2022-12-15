@@ -81,13 +81,13 @@ def displayMainMenu(menu,currentMenu):
             #print(splittedRow[0])
             elementNumber=1
             for column in splittedRow:
-                if (column.strip() =='EXIT'  or column.strip() == 'ESC' ):
+                if (column.strip() =='EXIT' or column.strip() == 'ESC' ):
                     print('[99]',column)
                 else:
                     print('['+str(elementNumber)+'] '+column)
                 elementNumber+=1
             try:
-                optionMainMenu = int(userInputWithEscWrapper("Enter your option: "))
+                optionMainMenu = int(userInputWithEscWrapper("Enter your option: ",True))
 
                 screen_clear()
             except ValueError:
@@ -98,7 +98,7 @@ def displayMainMenu(menu,currentMenu):
             #print('currMenu',currentMenu)
             #for i in range(0,len(splittedRow)):
             #    print(i)
-            if(optionMainMenu !=99 and optionMainMenu > len(splittedRow)-1 ):
+            if(optionMainMenu !=99 and optionMainMenu > len(splittedRow) ):
                 print("")
                 #break
             else:
@@ -106,7 +106,7 @@ def displayMainMenu(menu,currentMenu):
                 if(optionMainMenu == 99):
                     selectedOption="EXIT"
                 else:
-                    #print("splittedRow:",splittedRow[optionMainMenu])
+                    #print("splittedRow:",splittedRow[optionMainMenu-1])
                     selectedOption = splittedRow[optionMainMenu-1]
                     selectedOption = selectedOption.replace(' ','')
                 #print('selected Option',selectedOption)
