@@ -9,7 +9,7 @@
 
 **content of file**
 
-   __sleep 5
+   sleep 5
    while [[ ! "$(pgrep -f 'java.*services=GSA')" ]] ; do sleep 1 ; done
    gsa_pid=$(pgrep -f 'java.*services=GSA')
    while [[ ! "$(ls -1 /dbagigalogs/*gsa-*${gsa_pid}.log 2>/dev/null)" ]] ; do sleep 1 ; done
@@ -21,4 +21,4 @@
    [[ "$(grep "GSA discovered ServiceID.*${m}" ${gsa_log})" ]] && { manager_not_found=1 ; break ; }
    done
    [[ $manager_not_found -ne 0 ]] && break
-   done__
+   done
