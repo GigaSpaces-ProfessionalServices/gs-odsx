@@ -249,7 +249,24 @@ def getFlinkStatus(host,nodeType):
             if(status==False):
                 logger.info(" Service :di-flink not started."+str(host))
                 return Fore.RED+"OFF"+Fore.RESET
-        return Fore.GREEN+"ON"+Fore.RESET
+    cmd = "systemctl status di-flink-taskmanager.service"
+    with Spinner():
+        user='root'
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        logger.info("output1 : "+str(output))
+        if(output!=0):
+            logger.info(" Service :"+str(cmd)+" not started."+str(host))
+            return Fore.RED+"OFF"+Fore.RESET
+    cmd = "systemctl status di-flink-jobmanager.service"
+    with Spinner():
+        user='root'
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        logger.info("output1 : "+str(output))
+        if(output!=0):
+            logger.info(" Service :"+str(cmd)+" not started."+str(host))
+            return Fore.RED+"OFF"+Fore.RESET
+
+    return Fore.GREEN+"ON"+Fore.RESET
 
 #For all combinations
 def isInstalledNot(host,role):

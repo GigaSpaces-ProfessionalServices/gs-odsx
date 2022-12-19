@@ -107,9 +107,9 @@ function installDIMatadata {
   sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|/dbagigalogs/di-mdm|g' config/di-mdm.service
   sed -i -e 's|/home/gsods|/dbagiga|g' config/di-mdm.service
 
-  sed -i '/^spring.cloud.zookeeper.connectUrl/d' /dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  sed -i '/^zookeeper.connectUrl/d' /dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
   echo "">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-  echo "spring.cloud.zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost3":2181,"$witnessHost":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost3":2181,"$witnessHost":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
 
   cd
   info "\nCopying service file\n"
@@ -142,8 +142,8 @@ function installDIManager {
   info "\ncurrentHost::"$kafkaBrokerHost1
   sed -i '/^mdm.server.url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
   sed -i '/^mdm.server.fallback-url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  echo "mdm.server.url=$kafkaBrokerHost1">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  echo "mdm.server.fallback-url=$kafkaBrokerHost2">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
   cd
   info "\nCopying service file\n"
   cp /dbagiga/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/

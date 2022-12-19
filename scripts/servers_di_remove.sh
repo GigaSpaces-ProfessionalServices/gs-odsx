@@ -32,9 +32,15 @@ fi
 #DIM - Services
 systemctl stop di-mdm.service
 systemctl stop di-manager.service
+
+systemctl stop di-flink-taskmanager.service
+systemctl stop di-flink-jobmanager.service
 systemctl daemon-reload
 /dbagiga/di-flink/latest-flink/bin/stop-cluster.sh
 sleep 5
 
 rm -f /dbagiga/di-mdm/latest-flink /dbagiga/di-mdm/latest-di-mdm /dbagiga/di-mdm/latest-di-manager /etc/systemd/system/di-mdm.service /etc/systemd/system/di-manager.service
 rm -rf /dbagiga/di-flink/* /dbagiga/di-mdm/* /dbagiga/di-manager/*
+rm -f /etc/systemd/system/di-flink-jobmanager.service /etc/systemd/system/di-flink-taskmanager.service
+
+systemctl daemon-reload
