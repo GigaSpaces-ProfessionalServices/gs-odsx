@@ -9,6 +9,7 @@ from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_validation import getSpaceServerStatus
 import requests, json, subprocess
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -77,7 +78,7 @@ def doValidate():
 
 
     response = requests.delete(
-        "http://" + dataValidatorServiceHost + ":7890/measurement/remove/" + measurementId)
+        "http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/remove/" + measurementId)
 
     logger.info(str(response.status_code))
     jsonArray = json.loads(response.text)
@@ -90,7 +91,7 @@ def doValidate():
 measurementIds=[]
 def printmeasurementtable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/measurement/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/list")
     except:
         print("An exception occurred")
 

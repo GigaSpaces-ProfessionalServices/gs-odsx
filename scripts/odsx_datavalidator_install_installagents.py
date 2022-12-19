@@ -18,6 +18,7 @@ from utils.ods_app_config import set_value_in_property_file, readValuefromAppCon
     getYamlFilePathInsideConfigFolder
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
+from utils.ods_app_config import readValuefromAppConfig
 
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -97,7 +98,7 @@ def installSingle():
 
         #open and add properties as per user inputs
         with open('install/data-validation/application.properties', 'w') as f:
-         f.write('server.port=7891')
+         f.write('server.port=3223')
          f.write('\n')
          f.write('logging.file.name='+logFilepath)
          f.write('\n')
@@ -129,7 +130,7 @@ def installSingle():
                     "agentUser": 'gsods',
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
-                response = requests.post("http://" + dataValidationHost + ":7890/agent/register"
+                response = requests.post("http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/agent/register"
                                          , data=json.dumps(data)
                                          , headers=headers)
 
@@ -158,8 +159,8 @@ def buildUploadInstallTarToServer(host):
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
             scp_upload(host, user, 'install/install.tar', targetInstallDir)
-            scp_upload(host, user, "*"+str(getYamlFilePathInsideConfigFolder("..keytab")), targetInstallDir)
-            scp_upload(host, user, str(getYamlFilePathInsideConfigFolder("..sqljdbc")), targetInstallDir)
+            scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvkeytab")), targetInstallDir)
+            scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvJdbc")), targetInstallDir)
             #scp_upload(host, user, 'install/gs_config/SQLJDBCDriver.conf', '/home/gsods')
             #scp_upload(host, user, 'install/gs_config/UTKA02E.keytab', '/home/gsods')
     except Exception as e:

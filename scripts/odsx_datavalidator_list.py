@@ -9,6 +9,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_ge
 from colorama import Fore
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -123,7 +124,7 @@ def getDataValidationHost(dataValidationNodes):
     try:
         logger.info("getDataValidationHost() : dataValidationNodes :" + str(dataValidationNodes))
         for node in dataValidationNodes:
-            status = getDataValidationServerStatus(node.ip,"7890")
+            status = getDataValidationServerStatus(node.ip,str(readValuefromAppConfig("app.dv.server.port")))
             if (status == "ON"):
                 dataValidationHost = node.ip
         return dataValidationHost

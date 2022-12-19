@@ -11,6 +11,7 @@ from colorama import Fore
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, \
     executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -167,7 +168,8 @@ def getDataValidationHost(dataValidationNodes):
         logger.info("getDataValidationHost() : dataValidationNodes :" + str(dataValidationNodes))
         for node in dataValidationNodes:
             if(str(node.type).casefold() == 'server'):
-                status = getDataValidationServerStatus(os.getenv(node.ip),"7890")
+                dvServicePort=str(readValuefromAppConfig("app.dv.server.port"))
+                status = getDataValidationServerStatus(os.getenv(node.ip),dvServicePort)
                 if (status == "ON"):
                     dataValidationHost =os.getenv( node.ip)
         return dataValidationHost

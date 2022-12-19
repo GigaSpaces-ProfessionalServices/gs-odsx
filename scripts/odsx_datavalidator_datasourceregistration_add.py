@@ -7,8 +7,10 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
-from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_cluster_config import config_get_dataValidation_nodes,config_get_manager_node
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig
+from scripts.odsx_servers_manager_list import getManagerHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -77,6 +79,14 @@ def doValidate():
         verboseHandle.printConsoleWarning('');
         verboseHandle.printConsoleWarning('Add new DataSource:');
 
+        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        while(dataSource1Type not in dataSourceTypes):
+            print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
+            dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+
+        if (len(str(dataSource1Type)) == 0):
+            dataSource1Type = 'gigaspaces'
+
         dataSourceName = str(input("DataSource Name:"))
         while(len(dataSourceName) == 0):
              print(Fore.YELLOW +"DataSource Name is invalid (Empty)"+Fore.RESET)
@@ -85,19 +95,25 @@ def doValidate():
              print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
              dataSourceName = str(input("DataSource Name:"))
 
-        dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
-        while(dataSource1Type not in dataSourceTypes):
-            print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
-            dataSource1Type = str(input("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
-
-        if (len(str(dataSource1Type)) == 0):
-            dataSource1Type = 'gigaspaces'
-        dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
+        if (dataSource1Type == 'ms-sql'):
+            dataSource1HostIpDefault = str(readValuefromAppConfig("app.dataengine.mssql-feeder.mssql.server"))
+        elif dataSource1Type == 'gigaspaces':
+            managerNodes = config_get_manager_node()
+            dataSource1HostIpDefault  = getManagerHost(managerNodes)
+        else:
+            dataSource1HostIpDefault = 'localhost'
+        dataSource1HostIp = str(input("DataSource Host Ip ["+dataSource1HostIpDefault+"]: "))
+        #dataSource1HostIp = str(input("DataSource Host Ip [localhost]: "))
         if (len(str(dataSource1HostIp)) == 0):
-            dataSource1HostIp = 'localhost'
+            dataSource1HostIp = dataSource1HostIpDefault
         dataSource1Port = str(input("DataSource Port [" + getPort(dataSource1Type) + "]: "))
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
+
+        if dataSource1Type == 'gigaspaces':
+            gsLookupGroup = str(input("Enter Lookup Group [xap-16.2.0] :"))
+            if (len(str(gsLookupGroup)) == 0):
+                gsLookupGroup = 'xap-16.2.0'
 
 
         IntegratedSecurity = ''
@@ -107,14 +123,18 @@ def doValidate():
         username1=''
         password1=''
         if (dataSource1Type == 'ms-sql'):
-         print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
+         #print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
 
-         IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
+         IntegratedSecurity = str(input("IntegratedSecurity [true/false] [default:true]:"))
+         if (len(str(IntegratedSecurity)) == 0):
+             IntegratedSecurity = 'true'
          while(IntegratedSecurity not in trueFalse):
           print(Fore.YELLOW +"Please select IntegratedSecurity's value from given list"+Fore.RESET)
           IntegratedSecurity = str(input("IntegratedSecurity [true/false]:"))
 
-         AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
+         AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM] [default:JavaKerberos]:"))
+         if (len(str(AuthenticationScheme)) == 0):
+             AuthenticationScheme = 'JavaKerberos'
          while(AuthenticationScheme not in authenticationSchemes):
           print(Fore.YELLOW +"Please select AuthenticationScheme's value from given list"+Fore.RESET)
           AuthenticationScheme = str(input("AuthenticationScheme[JavaKerberos/NTLM]:"))
@@ -139,10 +159,11 @@ def doValidate():
             "password": password1,
             "integratedSecurity":IntegratedSecurity,
             "authenticationScheme":AuthenticationScheme,
-            "properties":Properties
+            "properties":Properties,
+            "gsLookupGroup":gsLookupGroup
         }
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
-        response = requests.post("http://" + dataValidatorServiceHost + ":7890/datasource/register"
+        response = requests.post("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/register"
                                  , data=json.dumps(data)
                                  , headers=headers)
 
@@ -160,7 +181,7 @@ authenticationSchemes = ["JavaKerberos","NTLM",""]
 dataSourceTypes=["gigaspaces","ms-sql","db2","mysql",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/list")
     except:
         print("An exception occurred")
 
