@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -114,6 +115,12 @@ def doValidate():
                 dataSource1Port = str(input("DataSource Port [Current value: '" + datasource["dataSourcePort"] + "'] New value: "))
                 if (len(str(dataSource1Port)) == 0):
                             dataSource1Port = datasource["dataSourcePort"]
+
+                if dataSource1Type == 'gigaspaces':
+                    gsLookupGroup = str(input("Enter Lookup Group [Current value: '" + datasource["gsLookupGroup"] + "'] New value:"))
+                    if (len(str(gsLookupGroup)) == 0):
+                        gsLookupGroup = datasource["gsLookupGroup"]
+
                 username1 = str(input("User name [Current value: '" + datasource["username"] + "'] New value: "))
                 if (len(str(username1)) == 0):
                             username1 = datasource["username"]
@@ -151,10 +158,11 @@ def doValidate():
                     "password": password1,
                     "integratedSecurity":IntegratedSecurity,
                     "authenticationScheme":AuthenticationScheme,
-                    "properties":Properties
+                    "properties":Properties,
+                    "gsLookupGroup":gsLookupGroup
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
-                response = requests.post("http://" + dataValidatorServiceHost + ":7890/datasource/update"
+                response = requests.post("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/update"
                                          , data=json.dumps(data)
                                          , headers=headers)
 
@@ -173,7 +181,7 @@ authenticationSchemes = ["JavaKerberos","NTLM",""]
 dataSourceTypes=["gigaspaces","ms-sql","db2","mysql",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/list")
     except:
         print("An exception occurred")
 

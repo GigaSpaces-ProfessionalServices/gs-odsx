@@ -10,6 +10,7 @@ from utils.ods_ssh import connectExecuteSSH,executeRemoteCommandAndGetOutputPyth
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_add_dataValidation_node, config_get_dataIntegration_nodes
 from utils.ods_app_config import set_value_in_property_file
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -71,7 +72,7 @@ def installSingle():
             logFilepath='datavalidator.log'
         
         with open('install/data-validation/application.properties', 'w') as f:
-         f.write('server.port=7890')
+         f.write('server.port='+str(readValuefromAppConfig("app.dv.server.port")))
          f.write('\n')
          f.write('logging.file.name='+logFilepath)
          f.write('\n')

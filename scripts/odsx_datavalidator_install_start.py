@@ -10,6 +10,7 @@ from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteComma
 from scripts.spinner import Spinner
 from scripts.odsx_datavalidator_install_list import listDVAgents, listDVServers, getConsolidatedStatus, \
     isServiceInstalled
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -64,28 +65,54 @@ def getDVServerHostList():
 
 def startDataValidationService(args):
     try:
-        listDVServers()
+        host_dict_obj = listDVServers()
         #listDVAgents()
-        nodes = getDVServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to start data validation service for ["+str(nodes)+"] ? (y/n) [y]: "+Fore.RESET))
-        if choice.casefold() == 'n':
-            exit(0)
-        for node in config_get_dataValidation_nodes():
-            output = getConsolidatedStatus(os.getenv(node.ip))
-            if (output == 0):
-                continue
-            if len(str(isServiceInstalled(os.getenv(node.ip))))>0:
-                cmd = "systemctl start odsxdatavalidation.service"
-                logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
-                user = 'root'
-                with Spinner():
-                    output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
+        serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all servers. \nPress [99] for exit.: "+Fore.RESET))
+        if(serverStartType=='1'):
+            optionMainMenu = int(input("Enter host Sr Number to start: "))
+            if len(host_dict_obj) >= optionMainMenu:
+                hostToStart = host_dict_obj.get(str(optionMainMenu))
+                # start individual
+                if len(str(isServiceInstalled(hostToStart)))>0:
+                    cmd = "systemctl start odsxdatavalidation.service"
+                    logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                    user = 'root'
+                    with Spinner():
+                        output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
+                        if (output == 0):
+                            verboseHandle.printConsoleInfo("Service data validation started successfully on "+str(hostToStart))
+                        else:
+                            verboseHandle.printConsoleError("Service data validation failed to start on "+str(hostToStart))
+                else:
+                    verboseHandle.printConsoleError("No service installed for host:"+str(hostToStart))
+        elif(serverStartType =='99'):
+            logger.info("99 - Exist start")
+        else:
+            confirm=''
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            while(len(str(confirm))==0):
+                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            logger.info("confirm :"+str(confirm))
+            if(confirm=='yes' or confirm=='y'): # Start all
+                for node in config_get_dataValidation_nodes():
+                    output = getConsolidatedStatus(os.getenv(node.ip))
                     if (output == 0):
-                        verboseHandle.printConsoleInfo("Service data validation started successfully on "+str(os.getenv(node.ip)))
+                        continue
+                    if len(str(isServiceInstalled(os.getenv(node.ip))))>0:
+                        cmd = "systemctl start odsxdatavalidation.service"
+                        logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                        user = 'root'
+                        with Spinner():
+                            output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
+                            if (output == 0):
+                                verboseHandle.printConsoleInfo("Service data validation started successfully on "+str(os.getenv(node.ip)))
+                            else:
+                                verboseHandle.printConsoleError("Service data validation failed to start on "+str(os.getenv(node.ip)))
                     else:
-                        verboseHandle.printConsoleError("Service data validation failed to start on "+str(os.getenv(node.ip)))
+                        verboseHandle.printConsoleError("No service installed for host:"+str(os.getenv(node.ip)))
             else:
-                verboseHandle.printConsoleError("No service installed for host:"+str(os.getenv(node.ip)))
+                exit(0)
+
     except Exception as e:
         handleException(e)
 

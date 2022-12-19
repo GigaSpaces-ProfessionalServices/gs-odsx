@@ -10,6 +10,7 @@ from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_validation import getSpaceServerStatus
 import requests, json, subprocess
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -85,7 +86,7 @@ def doValidate():
 
 
     response = requests.delete(
-        "http://" + dataValidatorServiceHost + ":7890/assignment/remove/" + agentId)
+        "http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/assignment/remove/" + agentId)
 
     logger.info(str(response.status_code))
     jsonArray = json.loads(response.text)

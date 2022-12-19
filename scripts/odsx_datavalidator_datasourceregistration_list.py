@@ -13,6 +13,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommand
 from subprocess import Popen, PIPE
 from scripts.spinner import Spinner
 from utils.ods_validation import isValidHost, getTelnetStatus
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -71,7 +72,7 @@ def doValidate():
 
 def printDatasourcetable(dataValidatorServiceHost):
     try:
-        response = requests.get("http://" + dataValidatorServiceHost + ":7890/datasource/list")
+        response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/list")
     except:
         print("An exception occurred")
 
