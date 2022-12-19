@@ -113,15 +113,16 @@ def shutdownServers(username,password):
             exit(0)
 
     consulServiceList = getServiceListFromConsul()
-  
-   
+
+    currentPwd= os.getcwd()
     feederMsg = undeployFeeders(True)
+    os.chdir(currentPwd)
     verboseHandle.printConsoleInfo(feederMsg)
 
-    
+
     puMsg = undeployMicroservices(managerHost, puList, consulServiceList,True,username,password)
     verboseHandle.printConsoleInfo(puMsg)
-    
+
 
     shutdownSpaceServers(user,True)
     
