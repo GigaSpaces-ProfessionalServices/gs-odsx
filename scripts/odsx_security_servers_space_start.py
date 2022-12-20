@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import argparse
-import os
-import sys
-
-from colorama import Fore
+import os, subprocess, sys, argparse, platform
+from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list
+from colorama import Fore
+from utils.ods_app_config import readValuefromAppConfig
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -46,6 +46,25 @@ def exitAndDisplay(isMenuDriven):
             cliArgumentsStr+=arg
             cliArgumentsStr+=' '
         os.system('python3 scripts/odsx_security_space_start.py'+' '+cliArgumentsStr)
+
+def startSpaceServer(argsString):
+    # args.append(menuDrivenFlag)
+    # args.append('--host')
+    # args.append(os.getenv(host))
+    # args.append('-u')
+    # args.append(user)
+    # argsString = str(args)
+    # logger.debug('Arguments :'+argsString)
+    # logger.info(argsString)
+    # argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+    # #print(argsString)
+    os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
+    # args.remove(menuDrivenFlag)
+    # args.remove("--host")
+    # args.remove(os.getenv(host))
+    # args.remove('-u')
+    # args.remove(user)
+    # logger.info(args)
 
 if __name__ == '__main__':
     logger.info("security - space - start ")
@@ -119,24 +138,27 @@ if __name__ == '__main__':
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()
-                for host in spaceHosts:
-                    args.append(menuDrivenFlag)
-                    args.append('--host')
-                    args.append(os.getenv(host))
-                    args.append('-u')
-                    args.append(user)
-                    argsString = str(args)
-                    logger.debug('Arguments :'+argsString)
-                    logger.info(argsString)
-                    argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-                    #print(argsString)
-                    os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
-                    args.remove(menuDrivenFlag)
-                    args.remove("--host")
-                    args.remove(os.getenv(host))
-                    args.remove('-u')
-                    args.remove(user)
-                    logger.info(args)
+                spaceLength = len(spaceHosts)+1
+                with ThreadPoolExecutor(spaceLength) as executor:
+                    for host in spaceHosts:
+                        args.append(menuDrivenFlag)
+                        args.append('--host')
+                        args.append(os.getenv(host))
+                        args.append('-u')
+                        args.append(user)
+                        argsString = str(args)
+                        logger.debug('Arguments :'+argsString)
+                        logger.info(argsString)
+                        argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+                        executor.submit(startSpaceServer,argsString)
+                        args.remove(menuDrivenFlag)
+                        args.remove("--host")
+                        args.remove(os.getenv(host))
+                        args.remove('-u')
+                        args.remove(user)
+                        logger.info(args)
+                        # executor.submit(startSpaceServer,host,args,menuDrivenFlag,user)
+
             elif(confirm =='no' or confirm=='n'):
                 if(isMenuDriven=='m'):
                     logger.info("menudriven")

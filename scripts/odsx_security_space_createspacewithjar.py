@@ -1,23 +1,20 @@
 #!/usr/bin/env python3
 
-import os
-import time
-
-import json
-import requests
+import os, time
 from colorama import Fore
-from requests.auth import HTTPBasicAuth
-
 from scripts.logManager import LogManager
-from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+import requests, json, math
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
+from scripts.spinner import Spinner
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_scp import scp_upload
+import logging
+from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -236,8 +233,9 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global specificHost
     global individualHostConfirm
     try:
-
-        confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+        confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc"))
+        confirmCreateGSC = str(userInputWrapper("Do you want to create GSC ? (y/n) ["+confirmCreateGSC+"] :"+Fore.RESET))
+        # confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
         #if(len(confirmCreateGSC)==0):
         #    confirmCreateGSC='y'
         if(confirmCreateGSC=='y'):
@@ -254,18 +252,20 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
                 verboseHandle.printConsoleInfo("GSC will be created on :"+str(specificHost))
             logger.info("individualHostConfirm : "+str(individualHostConfirm))
 
-            numberOfGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscperhost"))#str(userInputWrapper(Fore.YELLOW+"Enter number of GSC per host  :"+Fore.RESET))
-            #if(len(str(numberOfGSC))==0):
-            #    numberOfGSC=2
+            numberOfGSC = str(userInputWrapper("Enter number of GSC per host [2] :"+Fore.RESET))
+            if(len(str(numberOfGSC))==0):
+                numberOfGSC=2
             logger.info("numberofGSC :"+str(numberOfGSC))
 
-            memoryGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory"))#str(userInputWrapper(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
-            #if(len(memoryGSC)==0):
-            #    memoryGSC="12g"
+            memoryGSCValue = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory"))#str(userInputWrapper(Fore.YELLOW+"Enter memory to create gsc [12g] :"+Fore.RESET))
+            memoryGSC = str(userInputWrapper("Enter memory to create gsc ["+memoryGSCValue+"] :"+Fore.RESET))
+            if(len(memoryGSC)==0):
+                memoryGSC=memoryGSCValue
 
-            zoneGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone"))#str(userInputWrapper(Fore.YELLOW+"Enter zone :"+Fore.RESET))
-            #while(len(str(zoneGSC))==0):
-            #    zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
+            zoneGSCValue = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone"))#str(userInputWrapper(Fore.YELLOW+"Enter zone :"+Fore.RESET))
+            zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
+            while(len(str(zoneGSC))==0):
+                zoneGSC = zoneGSCValue
 
             size = 1024
             type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
@@ -317,9 +317,8 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                 counter=0
                 for i in range(1,len(space_dict_obj)+1):
                     host = space_dict_obj.get(str(i))
-                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container --username="+username+" --password="+password+" create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
+                    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
                     logger.info("cmd : "+str(cmd))
-                    print(str(cmd))
                     with Spinner():
                         output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
                     logger.info("Extracting .tar file :"+str(output))
@@ -371,10 +370,10 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         #/home/ec2-user/TieredStorageImpl-1.0-SNAPSHOT.jar
         # pathOfSourcePUInput = str(userInputWrapper(Fore.YELLOW+"Enter path including filename of processing unit to deploy ["+str(pathOfSourcePU)+"]:"+Fore.RESET))
-       # if(len(str(pathOfSourcePUInput))>0):
-       #     pathOfSourcePU = pathOfSourcePUInput
-       # while(len(str(pathOfSourcePU))==0):
-       #     pathOfSourcePU = str(userInputWrapper(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+        # if(len(str(pathOfSourcePUInput))>0):
+        #     pathOfSourcePU = pathOfSourcePUInput
+        # while(len(str(pathOfSourcePU))==0):
+        #     pathOfSourcePU = str(userInputWrapper(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
         #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
 
@@ -426,26 +425,26 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         logger.info("space.name :"+str(spaceNameCfg))
 
         data={
-                "resource": ""+resource+"",
-                "topology": {
-                    "schema": "partitioned",
-                    "partitions": int(partition),
-                    "backupsPerPartition": int(backUpRequired)
-                },
-                "name": ""+resourceName+"",
-                "sla": {
-                    "maxInstancesPerMachine": int(maxInstancesPerMachine),
-                    "zones": [
-                        ""+zone+""
-                    ],
-                    "maxInstancesPerVM": 1
-                },
-                "contextProperties": {#"pu.autogenerated-instance-sla" :""+slaProperties+"",
-                                      "tieredCriteriaConfig.filePath" : "",
-                                      "space.propertyFilePath" : ""+spacePropertyConfigFilePathTarget+"",
-                                      "space.name" : ""+spaceNameCfg+""
-                                      }
+            "resource": ""+resource+"",
+            "topology": {
+                "schema": "partitioned",
+                "partitions": int(partition),
+                "backupsPerPartition": int(backUpRequired)
+            },
+            "name": ""+resourceName+"",
+            "sla": {
+                "maxInstancesPerMachine": int(maxInstancesPerMachine),
+                "zones": [
+                    ""+zone+""
+                ],
+                "maxInstancesPerVM": 1
+            },
+            "contextProperties": {
+                "tieredCriteriaConfig.filePath" : "",
+                "space.propertyFilePath" : ""+spacePropertyConfigFilePathTarget+"",
+                "space.name" : ""+spaceName+"",
             }
+        }
 
         return data
     except Exception as e:
@@ -464,16 +463,16 @@ def displaySummaryOfInputParam(confirmCreateGSC):
         verboseHandle.printConsoleInfo("Enter name of resource :"+str(resource))
         verboseHandle.printConsoleInfo("Enter name of PU to deploy :"+str(resourceName))
         verboseHandle.printConsoleInfo("Build zone of resource to deploy :"+str(zoneOfPU))
-        verboseHandle.printConsoleInfo("Enter partitions :"+str(partition))
+        verboseHandle.printConsoleInfo("Enter partitions :"+str(partitions))
         verboseHandle.printConsoleInfo("Enter maxInstancePerVM :"+str(maxInstancesPerMachine))
-        verboseHandle.printConsoleInfo("SLA [HA] ? (y/n) :"+str(str(backUpRequiredStr)))
+        verboseHandle.printConsoleInfo("SLA [HA] ? (y/n) :"+str(str(backUpRequired)))
         #verboseHandle.printConsoleInfo("Enter pu.autogenerated-instance-sla value :"+str(slaProperties))
         #verboseHandle.printConsoleInfo("Enter tieredCriteriaConfig.filePath :"+str(tieredCriteriaConfigFilePath))
         #verboseHandle.printConsoleInfo("Enter tieredCriteriaConfig.filePath.target :"+str(tieredCriteriaConfigFilePathTarget))
         if(isSpacePropertyRequired=='y'):
             verboseHandle.printConsoleInfo("Enter space.property.filePath : "+str(spacePropertyConfigFilePath))
             verboseHandle.printConsoleInfo("Enter space.property.filePath.target : "+str(spacePropertyConfigFilePathTarget))
-        verboseHandle.printConsoleInfo("Enter space name to set space.name : "+str(spaceNameCfg))
+        verboseHandle.printConsoleInfo("Enter space name to set space.name : "+str(spaceName))
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
     except Exception as e:
         handleException(e)
@@ -521,57 +520,66 @@ def copyFilesFromODSXToSpaceServer():
 def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
     logger.info("proceedForTieredStorageDeployment()")
     try:
-        print("\n")
+        # print("\n")
         global pathOfSourcePU
-        pathOfSourcePU =  str(getYamlFilePathInsideFolder(".gs.jars.space.spacejar"))
+        pathOfSourcePUValue =  str(getYamlFilePathInsideFolder(".gs.jars.space.spacejar"))
+        pathOfSourcePU = str(userInputWrapper(Fore.YELLOW+"Name of resource will be deploy ["+str(pathOfSourcePUValue)+"] : "+Fore.RESET))
+        while(len(str(pathOfSourcePU))==0):
+            pathOfSourcePU = pathOfSourcePUValue
 
         head , tail = os.path.split(pathOfSourcePU)
         logger.info("tail :"+str(tail))
         global resource
         resource = str(tail)
-        #print(str(Fore.YELLOW+"Name of resource will be deploy ["+str(tail)+"] "+Fore.RESET))
-        #while(len(str(resource))==0):
-        #    resource = tail
         logger.info("resource :"+str(resource))
 
-        global resourceName
-        resourceName = str(readValuefromAppConfig("app.spacejar.pu.name"))#str(userInputWrapper(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
-        #while(len(str(resourceName))==0):
-        #    resourceName = str(userInputWrapper(Fore.YELLOW+"Enter name of PU to deploy :"+Fore.RESET))
-        #logger.info("nameOfPU :"+str(resourceName))
+        global spaceName
+        sName = str(readValuefromAppConfig("app.newspace.name"))
+        spaceName = str(userInputWrapper("Enter space name  ["+sName+"] :"+Fore.RESET))  #str(userInputWrapper("Enter space name  [mySpace] :"+Fore.RESET))
+        if(len(str(spaceName))==0):
+            spaceName=sName
 
-        global partition
-        partition = str(readValuefromAppConfig("app.spacejar.pu.partitions"))#str(userInputWrapper(Fore.YELLOW+"Enter partition required [1] :"+Fore.RESET))
-        #if(len(str(partition))==0):
-        #    partition='1'
-        #while( not partition.isdigit()):
-        #    partition = str(userInputWrapper(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
-        logger.info("Enter partition required :"+str(partition))
+        global isSpacePropertyRequired
+        isSpacePropertyRequired = str(readValuefromAppConfig("app.spacejar.wantspaceproperty"))
+        # global isBuildGlobally
+        # # isBuildGloballyValue = str(readValuefromAppConfig("app.newspace.createglobally"))
+        # isBuildGlobally = str(userInputWrapper("Build globally over the cluster (y/n) [n] :"+Fore.RESET))
+        # if(len(str(isBuildGlobally))==0):
+        #     isBuildGlobally='n'
 
         global zoneOfPU
-        zoneOfPU = str(readValuefromAppConfig("app.spacejar.pu.zone"))#str(userInputWrapper(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
-        #while(len(str(zoneOfPU))==0):
-        #    zoneOfPU = str(userInputWrapper(Fore.YELLOW+"Enter zone of processing unit to deploy :"+Fore.RESET))
-        logger.info("Zone Of PU :"+str(zoneOfPU))
+        zoneOfPUValue = str(readValuefromAppConfig("app.spacejar.pu.zone"))
+        zoneOfPU = str(userInputWrapper("Enter space zone ["+zoneOfPUValue+"] :"+Fore.RESET))
+        if(len(str(zoneOfPU))==0):
+            zoneOfPU=zoneOfPUValue
 
+        global resourceName
+        resourceNameValue = str(readValuefromAppConfig("app.spacejar.pu.name"))
+        resourceName = str(userInputWrapper("Enter service name ["+resourceNameValue+"] :"+Fore.RESET))
+        if(len(str(resourceName))==0):
+            resourceName=resourceNameValue
+
+        global partitions
+        partitionsValue = str(readValuefromAppConfig("app.newspace.partitions"))
+        partitions = str(userInputWrapper("Enter partitions ["+partitionsValue+"] :"+Fore.RESET))
+        if(len(str(partitions))==0):
+            partitions=partitionsValue
+
+        # global maxInstancesPerMachine
+        # maxInstancesPerMachine = '1'
         global maxInstancesPerMachine
-        maxInstancesPerMachine = str(readValuefromAppConfig("app.spacejar.pu.maxinstancepermachine"))#str(userInputWrapper(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1] :"+Fore.RESET))
-        #if(len(str(maxInstancesPerMachine))==0):
-        #    maxInstancesPerMachine = '1'
-        #while(not maxInstancesPerMachine.isdigit()):
-        #    maxInstancesPerMachine = str(userInputWrapper(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
-        logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
+        maxInstancesPerMachineValue = str(readValuefromAppConfig("app.spacejar.pu.maxinstancepermachine"))
+        maxInstancesPerMachine = str(userInputWrapper("Enter max instance per machine ["+maxInstancesPerMachineValue+"] :"+Fore.RESET))
+        if(len(str(maxInstancesPerMachine))==0):
+            maxInstancesPerMachine=maxInstancesPerMachineValue
 
         global backUpRequired
-        global backUpRequiredStr
-        backUpRequired = str(readValuefromAppConfig("app.spacejar.pu.backuprequired"))#str(userInputWrapper(Fore.YELLOW+"SLA [HA] ? (y/n) [y] :"+Fore.RESET))
-        backUpRequiredStr = backUpRequired
+        backUpRequiredValue = str(readValuefromAppConfig("app.newspace.ha"))#
+        backUpRequired = str(userInputWrapper("SLA [HA] ? (y/n) ["+backUpRequiredValue+"] :"+Fore.RESET))
         if(len(str(backUpRequired))==0 or backUpRequired=='y'):
             backUpRequired=1
         if(str(backUpRequired)=='n'):
             backUpRequired=0
-
-        data = dataPuREST(resource,resourceName,zoneOfPU,partition,maxInstancesPerMachine,backUpRequired)
 
         displaySummaryOfInputParam(confirmCreateGSC)
         finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
@@ -579,6 +587,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
             finalConfirm='y'
         if(finalConfirm=='y'):
             uploadFileRest(managerHostConfig)
+            data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
             print("\n")
             if(confirmCreateGSC=='y'):
                 logger.info("Creating GSC :")
@@ -589,9 +598,8 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             logger.info("url : "+"http://"+managerHostConfig+":8090/v2/pus")
 
-            response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username,password))
+            response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth=HTTPBasicAuth(username,password))
             deployResponseCode = str(response.content.decode('utf-8'))
-            print("deployResponseCode : "+str(deployResponseCode))
             logger.info("deployResponseCode :"+str(deployResponseCode))
             status = validateResponseGetDescription(deployResponseCode)
             logger.info("response.status_code :"+str(response.status_code))
@@ -634,7 +642,7 @@ def validateResponseGetDescription(responseCode):
 if __name__ == '__main__':
     logger.info("Menu -> Space -> Create space with jar")
     #loggerTiered.info("Deploy")
-    verboseHandle.printConsoleWarning("Menu -> Space -> Create space with jar SEC")
+    verboseHandle.printConsoleWarning("Menu -> Space -> Create space with jar")
     username = ""
     password = ""
     appId=""
@@ -647,6 +655,8 @@ if __name__ == '__main__':
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
+        global isMemoryAvailable
+        isMemoryAvailable=False
         if(len(str(managerNodes))>0):
             spaceNodes = config_get_space_hosts()
             logger.info("spaceNodes: main"+str(spaceNodes))
@@ -667,7 +677,8 @@ if __name__ == '__main__':
                         proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
                     else:
                         logger.info("No memeory available double check.")
-                if(confirmCreateGSC=='n'):
+                        verboseHandle.printConsoleInfo("No memeory available double check.")
+                if(confirmCreateGSC=='n' or len(str(confirmCreateGSC)) == 0):
                     proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
             else:
                 logger.info("Please check manager server status.")
@@ -677,6 +688,6 @@ if __name__ == '__main__':
             verboseHandle.printConsoleInfo("No Manager configuration found please check.")
 
     except Exception as e:
-        logger.error("Exception in odsx_space_createspace "+str(e))
-        verboseHandle.printConsoleError("Exception in odsx_space_createspace "+str(e))
+        logger.error("Exception in odsx_security_space_createspace_jar.py "+str(e))
+        verboseHandle.printConsoleError("Exception in odsx_security_space_createspace_jar.py "+str(e))
         handleException(e)

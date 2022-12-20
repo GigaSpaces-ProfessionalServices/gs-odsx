@@ -381,7 +381,8 @@ function gsCreateGSServeice {
   userNameParam=$prefix1$prefix2
   prefix3='(/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='$appId' -p Query="Safe='$safeId';Folder=;Object='$objectId';" -o Password)'
   passwordParam=$prefix1$prefix3
-  cmd="sleep 60;$GS_HOME/bin/gs.sh --username=$userNameParam --password=$passwordParam container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
+  cmd="$GS_HOME/bin/gs.sh --username=$userNameParam --password=$passwordParam container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
+  cat "$startSpaceGsc/start_gsc.sh" >> $start_gsc_file
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
@@ -455,7 +456,8 @@ objectId=${17}
 sourceInstallerDirectory=${18}
 logTargetPath=${19}
 logSourcePath=${20}
-gsNicAddress=${21}
+startSpaceGsc=${21}
+gsNicAddress=${22}
 
 #logTargetPath=${20}
 echo "param1"$1
@@ -476,7 +478,8 @@ echo "param15"$appId
 echo "param16"$safeId
 echo "param17"$objectId
 echo "param18"$sourceInstallerDirectory
-echo "param19"$gsNicAddress
+echo "param19"$startSpaceGsc
+echo "param20"$gsNicAddress
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)
 else

@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import argparse
-import os
-import socket
-import sys
-
-from colorama import Fore
+import os, subprocess, sys, argparse, platform,socket
+from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
-from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
-    set_value_in_property_file_generic, read_value_in_property_file_generic_section, getYamlFilePathInsideFolder
-from utils.ods_cluster_config import config_get_cluster_airgap, config_get_dataIntegration_nodes
-from utils.ods_cluster_config import config_get_manager_node
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
+    getYamlJarFilePath, getYamlFilePathInsideFolder
+from colorama import Fore
+
 from utils.ods_list import configureMetricsXML
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
-    executeLocalCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputValuePython36
+    executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
+    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_manager_node
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -162,7 +162,6 @@ def getHostConfiguration():
                         logger.info("wantNicAddress  : "+str(wantNicAddress))
                         gsNICAddress = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
                         while(len(str(gsNICAddress))==0):
-                            from utils.odsx_keypress import userInputWrapper
                             gsNICAddress = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host+" :"+Fore.RESET))
                         host_nic_dict_obj.add(host,gsNICAddress)
                         logger.info("host_nic_dict_obj  : "+str(host_nic_dict_obj))
@@ -176,26 +175,21 @@ def getHostConfiguration():
             gsNicAddress1=""
             gsNicAddress2=""
             gsNicAddress3 =""
-            from utils.odsx_keypress import userInputWrapper
             managerType = int(userInputWrapper("Enter manager installation type: "+Fore.YELLOW+"\n[1] Single \n[2] Cluster : "+Fore.RESET))
             logger.info("managerType  : "+str(managerType))
             if(managerType==1):
                 logger.info("managerType  : "+str(managerType))
-                from utils.odsx_keypress import userInputWrapper
                 hostsConfig = str(userInputWrapper(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
                 while(len(str(hostsConfig))==0):
-                    from utils.odsx_keypress import userInputWrapper
                     hostsConfig = str(userInputWrapper(Fore.YELLOW+"Enter manager host: "+Fore.RESET))
                 logger.info("hostsConfig  : "+str(hostsConfig))
                 if(len(str(wantNicAddress))==0):
-                    from utils.odsx_keypress import userInputWrapper
                     wantNicAddress = str(userInputWrapper(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)] [n]: "+Fore.RESET))
                 if(len(str(wantNicAddress))==0):
                     wantNicAddress='n'
                 logger.info("wantNicAddress  : "+str(wantNicAddress))
                 if(wantNicAddress=="yes" or wantNicAddress=="y"):
                     logger.info("wantNicAddress  Y")
-                    from utils.odsx_keypress import userInputWrapper
                     gsNicAddress = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+hostsConfig+" :"+Fore.RESET))
                     logger.info("gsNicAddress  for host "+str(hostsConfig)+ ": "+str(gsNicAddress))
                 if(wantNicAddress=="no" or wantNicAddress=="n"):
@@ -209,39 +203,27 @@ def getHostConfiguration():
                     #break
             elif(managerType==2):
                 logger.info("managerType==2  : "+str(managerType))
-                from utils.odsx_keypress import userInputWrapper
                 host1 = str(userInputWrapper(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
                 while(len(str(host1))==0):
-                    from utils.odsx_keypress import userInputWrapper
                     host1 = str(userInputWrapper(Fore.YELLOW+"Enter manager host1: "+Fore.RESET))
-                from utils.odsx_keypress import userInputWrapper
                 host2 = str(userInputWrapper(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
                 while(len(str(host2))==0):
-                    from utils.odsx_keypress import userInputWrapper
                     host2 = str(userInputWrapper(Fore.YELLOW+"Enter manager host2: "+Fore.RESET))
-                from utils.odsx_keypress import userInputWrapper
                 host3 = str(userInputWrapper(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
                 while(len(str(host3))==0):
-                    from utils.odsx_keypress import userInputWrapper
                     host3 = str(userInputWrapper(Fore.YELLOW+"Enter manager host3: "+Fore.RESET))
                 #wantNicAddress = str(userInputWrapper(Fore.YELLOW+"Do you want to configure GS_NIC_ADDRESS for host ? [yes (y) / no (n)]: "+Fore.RESET))
                 logger.info("wantNicAddress  : "+str(wantNicAddress))
                 if(wantNicAddress=="yes" or wantNicAddress=="y"):
                     logger.info("wantNicAddress  : "+str(wantNicAddress))
-                    from utils.odsx_keypress import userInputWrapper
                     gsNicAddress1 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
                     while(len(str(gsNicAddress1))==0):
-                        from utils.odsx_keypress import userInputWrapper
                         gsNicAddress1 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host1+" :"+Fore.RESET))
-                    from utils.odsx_keypress import userInputWrapper
                     gsNicAddress2 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
                     while(len(str(gsNicAddress2))==0):
-                        from utils.odsx_keypress import userInputWrapper
                         gsNicAddress2 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host2+" :"+Fore.RESET))
-                    from utils.odsx_keypress import userInputWrapper
                     gsNicAddress3 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
                     while(len(str(gsNicAddress3))==0):
-                        from utils.odsx_keypress import userInputWrapper
                         gsNicAddress3 = str(userInputWrapper(Fore.YELLOW+'Enter GS_NIC_ADDRESS for host '+host3+" :"+Fore.RESET))
                 host_nic_dict_obj.add(host1,gsNicAddress1)
                 host_nic_dict_obj.add(host2,gsNicAddress2)
@@ -303,7 +285,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsOptionExt = gsOptionExtFromConfig
         #print(Fore.YELLOW+' GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsOptionExt))==0):
-            #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
+        #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
         #gsOptionExt=gsOptionExtFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsOptionExt',gsOptionExt)
@@ -315,7 +297,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsManagerOptions =gsManagerOptionsFromConfig
         #print(Fore.YELLOW+'GS_MANAGER_OPTIONS  ['+Fore.GREEN+''+gsManagerOptionsFromConfig+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsManagerOptions))==0):
-            #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
+        #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
         gsManagerOptions=gsManagerOptionsFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
@@ -327,12 +309,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsLogsConfigFile = gsLogsConfigFileFromConfig
         #print(Fore.YELLOW+'GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsLogsConfigFile))==0):
-            #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
-        gsLogsConfigFile=gsLogsConfigFileFromConfig
+        #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
+        # gsLogsConfigFile=gsLogsConfigFileFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
-        gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
+        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")) #'"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
@@ -341,7 +323,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #if(len(str(gsLicenseFile))==0):
         gsLicenseFile = licenseConfig
         #else:
-            #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
+        #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
         applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
@@ -421,10 +403,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
-        from utils.odsx_keypress import userInputWrapper
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
-            from utils.odsx_keypress import userInputWrapper
             summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
@@ -446,53 +426,59 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             with Spinner():
                 status = os.system(cmd)
                 logger.info("Creating tar file status : "+str(status))
+            hostManagerLength=len(hostManager)+1
+            with ThreadPoolExecutor(hostManagerLength) as executor:
+                for host in hostManager:
+                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget)
 
-            for host in hostManager:
-                gsNicAddress = host_nic_dict_obj[host]
-                logger.info("NIC address:"+gsNicAddress+" for host "+host)
-                if(len(str(gsNicAddress))==0):
-                    gsNicAddress='x'     # put dummy param to maintain position of arguments
-                additionalParam=additionalParam+' '+gsNicAddress
-                #print(additionalParam)
-                with Spinner():
-                    scp_upload(host, user, 'install/install.tar', '')
-                    ##scp_upload(host, user, 'install/gs.service', '')
-                verboseHandle.printConsoleInfo(output)
-                cmd = 'tar -xvf install.tar'
-                verboseHandle.printConsoleInfo("Extracting..")
-                with Spinner():
-                    output = executeRemoteCommandAndGetOutput(host, user, cmd)
-                logger.info("Extracting .tar file :"+str(output))
-                verboseHandle.printConsoleInfo(str(output))
-
-                commandToExecute="scripts/servers_manager_install.sh"
-                #print(additionalParam)
-                logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                with Spinner():
-                    outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-                    #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-                    #print(outputShFile)
-                    #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
-                    #Upload CEF logging jar
-                    #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-                    verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-                    configureMetricsXML(host)
-                serverHost=''
-                try:
-                    serverHost = socket.gethostbyaddr(host).__getitem__(0)
-                except Exception as e:
-                    serverHost=host
-                #managerList = config_add_manager_node(host,host,"admin")
-                logger.info("Installation of manager server "+str(host)+" has been done!")
-                verboseHandle.printConsoleInfo("Installation of manager server "+str(host)+" has been done!")
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
 
     except Exception as e:
         handleException(e)
+
+def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget):
+    gsNicAddress = host_nic_dict_obj[host]
+    logger.info("NIC address:"+gsNicAddress+" for host "+host)
+    if(len(str(gsNicAddress))==0):
+        gsNicAddress='x'     # put dummy param to maintain position of arguments
+    additionalParam=additionalParam+' '+gsNicAddress
+    #print(additionalParam)
+    with Spinner():
+        scp_upload(host, user, 'install/install.tar', '')
+        ##scp_upload(host, user, 'install/gs.service', '')
+    verboseHandle.printConsoleInfo(output)
+    cmd = 'tar -xvf install.tar'
+    verboseHandle.printConsoleInfo("Extracting..")
+    with Spinner():
+        output = executeRemoteCommandAndGetOutput(host, user, cmd)
+    logger.info("Extracting .tar file :"+str(output))
+    verboseHandle.printConsoleInfo(str(output))
+
+    commandToExecute="scripts/servers_manager_install.sh"
+    #print(additionalParam)
+    logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+    logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+    with Spinner():
+        outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+        #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+        #print(outputShFile)
+        #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
+        #Upload CEF logging jar
+        #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
+        verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+        configureMetricsXML(host)
+    serverHost=''
+    try:
+        serverHost = socket.gethostbyaddr(host).__getitem__(0)
+    except Exception as e:
+        serverHost=host
+    #managerList = config_add_manager_node(host,host,"admin")
+    logger.info("Installation of manager server "+str(host)+" has been done!")
+    verboseHandle.printConsoleInfo("Installation of manager server "+str(host)+" has been done!")
+
 
 def getPlainOutput(input):
     input = str(input).replace('\\n','').replace("b'","").replace("'","").replace('"','')
@@ -572,4 +558,3 @@ if __name__ == '__main__':
         handleException(e)
         logger.error("Invalid argument. "+str(e))
         #verboseHandle.printConsoleError("Invalid argument.")
-

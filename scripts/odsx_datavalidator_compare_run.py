@@ -110,6 +110,7 @@ def doValidate():
             else:
                 verboseHandle.printConsoleInfo("Test Result: " + response["result"])
                 verboseHandle.printConsoleInfo("Query: " + response["query"])
+                verboseHandle.printConsoleInfo("Details: "+response["summary"])
             verboseHandle.printConsoleWarning("------------------------------------------------------------")
         else:
             verboseHandle.printConsoleInfo("No measurement available.Please Register first.")
