@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import argparse
-import os
-import sys
-
-from colorama import Fore
+import os, subprocess, sys, argparse, platform
+from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
 from scripts.odsx_servers_manager_install import getManagerHostFromEnv
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput,connectExecuteSSH
+from utils.ods_app_config import readValuefromAppConfig
+from colorama import Fore
+from utils.ods_cluster_config import config_get_manager_listWithStatus,config_remove_manager_nodeByIP
 from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_manager_listWithStatus
-from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -83,6 +82,9 @@ def exitAndDisplay(isMenuDriven):
         logger.info("python3 scripts/odsx_security_manager_remove.py executed")
         os.system('python3 scripts/odsx_security_manager_remove.py'+' '+isMenuDriven)
 
+def removeSecureManagerServer(host):
+    execute_scriptBuilder(host)
+
 if __name__ == '__main__':
     logger.info("security - manager - Remove ")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Remove')
@@ -100,68 +102,70 @@ if __name__ == '__main__':
         verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
     hostConfiguration = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove current Configuration. \nPress [99] for exit.: "+Fore.RESET))
     try:
-            logger.info("Menudriven..")
-            args.append(menuDrivenFlag)
-            if(hostConfiguration=='1'):
+        logger.info("Menudriven..")
+        args.append(menuDrivenFlag)
+        if(hostConfiguration=='1'):
+            optionMenu = str(userInputWrapper("Enter your host number to remove : "))
+            while(len(optionMenu)==0):
                 optionMenu = str(userInputWrapper("Enter your host number to remove : "))
-                while(len(optionMenu)==0):
-                    optionMenu = str(userInputWrapper("Enter your host number to remove : "))
-                removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
-                if(len(str(removeJava))==0):
-                    removeJava='n'
-                removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
-                if(len(str(removeUnzip))==0):
-                    removeUnzip='n'
+            removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+            if(len(str(removeJava))==0):
+                removeJava='n'
+            removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+            if(len(str(removeUnzip))==0):
+                removeUnzip='n'
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
+            while(len(str(confirm))==0):
                 confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
-                while(len(str(confirm))==0):
-                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? (y/n) : "+Fore.RESET))
-                logger.info("confirm :"+str(confirm))
-                if(confirm=='yes' or confirm=='y'):
-                    managerStart = managerDict.get(int(optionMenu))
-                    args.append('--host')
-                    args.append(str(os.getenv(managerStart.ip)))
-                    #userConfig = readValuefromAppConfig("app.server.user")
-                    #user = str(userInputWrapper("Enter your user [root]: "))
-                    #if(len(str(user))==0):
-                    user="root"
-                    logger.info("app.server.user: "+str(user))
-                    #if(len(str(user))==0):
-                    #    user="ec2-user"
-                    args.append('-u')
-                    args.append(user)
-                    args.append('--id')
-                    args.append(str(os.getenv(managerStart.ip)))
-                    args.append(removeJava)
-                    args.append(removeUnzip)
-                    execute_scriptBuilder(str(os.getenv(managerStart.ip)))
-                elif(confirm =='no' or confirm=='n'):
-                    if(menuDrivenFlag=='m'):
-                        logger.info("menudriven")
-                        os.system('python3 scripts/odsx_security_manager_remove.py'+' '+menuDrivenFlag)
-            elif(hostConfiguration=='99'):
-                logger.info("99 - Exist stop")
-            else:
-                removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
-                if(len(str(removeJava))==0):
-                    removeJava='n'
-                removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
-                if(len(str(removeUnzip))==0):
-                    removeUnzip='n'
+            logger.info("confirm :"+str(confirm))
+            if(confirm=='yes' or confirm=='y'):
+                managerStart = managerDict.get(int(optionMenu))
+                args.append('--host')
+                args.append(str(os.getenv(managerStart.ip)))
+                #userConfig = readValuefromAppConfig("app.server.user")
+                #user = str(userInputWrapper("Enter your user [root]: "))
+                #if(len(str(user))==0):
+                user="root"
+                logger.info("app.server.user: "+str(user))
+                #if(len(str(user))==0):
+                #    user="ec2-user"
+                args.append('-u')
+                args.append(user)
+                args.append('--id')
+                args.append(str(os.getenv(managerStart.ip)))
+                args.append(removeJava)
+                args.append(removeUnzip)
+                execute_scriptBuilder(str(os.getenv(managerStart.ip)))
+            elif(confirm =='no' or confirm=='n'):
+                if(menuDrivenFlag=='m'):
+                    logger.info("menudriven")
+                    os.system('python3 scripts/odsx_security_manager_remove.py'+' '+menuDrivenFlag)
+        elif(hostConfiguration=='99'):
+            logger.info("99 - Exist stop")
+        else:
+            removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+            if(len(str(removeJava))==0):
+                removeJava='n'
+            removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+            if(len(str(removeUnzip))==0):
+                removeUnzip='n'
 
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? (y/n) : "+Fore.RESET))
+            while(len(str(confirm))==0):
                 confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? (y/n) : "+Fore.RESET))
-                while(len(str(confirm))==0):
-                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? (y/n) : "+Fore.RESET))
-                logger.info("confirm :"+str(confirm))
-                if(confirm=='yes' or confirm=='y'):
-                    logger.info("Removing Cluster")
-                    #userConfig = readValuefromAppConfig("app.server.user")
-                    #user = str(userInputWrapper("Enter your user [root]: "))
-                    #if(len(str(user))==0):
-                    user='root'
-                    logger.info("app.server.user: "+str(user))
-                    #if(len(str(user))==0):
-                    #    user="ec2-user"
-                    hostsConfigArray = hostsConfig.split(",")
+            logger.info("confirm :"+str(confirm))
+            if(confirm=='yes' or confirm=='y'):
+                logger.info("Removing Cluster")
+                #userConfig = readValuefromAppConfig("app.server.user")
+                #user = str(userInputWrapper("Enter your user [root]: "))
+                #if(len(str(user))==0):
+                user='root'
+                logger.info("app.server.user: "+str(user))
+                #if(len(str(user))==0):
+                #    user="ec2-user"
+                hostsConfigArray = hostsConfig.split(",")
+                hostManagerLength=len(hostsConfigArray)+1
+                with ThreadPoolExecutor(hostManagerLength) as executor:
                     for host in hostsConfigArray:
                         logger.info("Removing host :"+str(host))
                         verboseHandle.printConsoleInfo("Removing Host :"+str(host))
@@ -171,15 +175,16 @@ if __name__ == '__main__':
                         args.append(user)
                         args.append('--id')
                         args.append(host)
-                        execute_scriptBuilder(host)
+                        # execute_scriptBuilder(host)
+                        executor.submit(removeSecureManagerServer,host)
                         args.remove("--host")
                         args.remove(host)
                         args.remove('-u')
                         args.remove(user)
-                elif(confirm =='no' or confirm=='n'):
-                    if(menuDrivenFlag=='m'):
-                        logger.info("menudriven")
-                        os.system('python3 scripts/odsx_security_manager_remove.py'+' '+menuDrivenFlag)
+            elif(confirm =='no' or confirm=='n'):
+                if(menuDrivenFlag=='m'):
+                    logger.info("menudriven")
+                    os.system('python3 scripts/odsx_security_manager_remove.py'+' '+menuDrivenFlag)
     except Exception as e:
         logger.error("Invalid argument "+str(e))
         verboseHandle.printConsoleError("Invalid argumentss")

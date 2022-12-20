@@ -86,7 +86,7 @@ def listDeployed_old(managerHost):
                    Fore.YELLOW+"Name"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
-                   Fore.YELLOW+"Query Status"+Fore.RESET,
+                   # Fore.YELLOW+"Query Status"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET,
                    ]
         gs_space_dictionary_obj = host_dictionary_obj()
@@ -110,7 +110,7 @@ def listDeployed_old(managerHost):
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
+                             # Fore.GREEN+str(queryStatus)+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -141,7 +141,7 @@ def listDeployed_old(managerHost):
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str("-")+Fore.RESET,
+                             # Fore.GREEN+str("-")+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -171,7 +171,7 @@ def listDeployed_old(managerHost):
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
                              Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             Fore.GREEN+str(queryStatus)+Fore.RESET,
+                             # Fore.GREEN+str(queryStatus)+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -191,7 +191,7 @@ def listDeployed(managerHost):
                    Fore.YELLOW+"Name"+Fore.RESET,
                    Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"Zone"+Fore.RESET,
-                   Fore.YELLOW+"Query Status"+Fore.RESET,
+                   # Fore.YELLOW+"Query Status"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET
                    ]
 

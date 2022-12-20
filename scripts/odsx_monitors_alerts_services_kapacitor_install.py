@@ -1,13 +1,15 @@
 #!/usr/bin/env python3
 
 import os
-
+import platform
+from os import path
 from colorama import Fore
-
-from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig
+from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_scp import scp_upload
+from utils.ods_cluster_config import config_get_grafana_node
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -40,6 +42,16 @@ def handleException(e):
         'message': str(e),
         'trace': trace
     })))
+
+def rpmExitsOrNot():
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    rpmPath=sourceInstallerDirectory+"/kapacitor/"
+    rpmFile = [f for f in os.listdir(str(rpmPath)+"/") if f.endswith('.rpm')]
+    files = [i for i in rpmFile if i.lower().startswith(("jq","kapacitor"))]
+    if(len(files) == 2 ):
+        return "Yes"
+    else:
+        return "No"
 
 def installUserAndTargetDirectory():
     logger.info("installUserAndTargetDirectory():")
@@ -88,10 +100,14 @@ if __name__ == '__main__':
     try:
         installUserAndTargetDirectory()
         confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install Kapacitor (y/n) [y]: "+Fore.RESET))
-        if(len(str(confirmInstall))==0):
-            confirmInstall='y'
-        if(confirmInstall=='y'):
-            #buildUploadInstallTarToServer()
-            executeCommandForInstall()
+        rpmStatus = rpmExitsOrNot()
+        if(rpmStatus == "Yes"):
+            if(len(str(confirmInstall))==0):
+                confirmInstall='y'
+                if(confirmInstall=='y'):
+                    #buildUploadInstallTarToServer()
+                    executeCommandForInstall()
+        else:
+            verboseHandle.printConsoleError(" jq or kapacitor rpm File not exists")
     except Exception as e:
         handleException(e)

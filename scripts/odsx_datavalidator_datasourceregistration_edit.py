@@ -69,7 +69,7 @@ def doValidate():
     verboseHandle.printConsoleWarning('');
     verboseHandle.printConsoleWarning('Existing DataSource:');
     response = printDatasourcetable(dataValidatorServiceHost)
-    
+
     if len(response) < 0:
         verboseHandle.printConsoleWarning("No dataSource available.")
         return
@@ -77,7 +77,7 @@ def doValidate():
     datasourceId = str(userInputWrapper(Fore.YELLOW + "Enter dataSource id to edit: " + Fore.RESET))
     while (len(str(datasourceId)) == 0):
         datasourceId = str(userInputWrapper(Fore.YELLOW + "Enter dataSource id to edit: " + Fore.RESET))
-    
+
     if response:
         for datasource in response:
             if str(datasource["id"]) == datasourceId:
@@ -85,63 +85,69 @@ def doValidate():
                 verboseHandle.printConsoleWarning('Update values for datasource id:' + datasourceId);
                 verboseHandle.printConsoleWarning('Note: Leave blank new value if you do not want to change the value');
                 verboseHandle.printConsoleWarning('')
-                
+
                 dataSourceName= str(userInputWrapper("DataSource Name [Current value: '" + datasource["dataSourceName"] + "'] New value: "))
                 if (len(str(dataSourceName)) == 0):
                     dataSourceName = datasource["dataSourceName"]
-                else:    
-                 while(dataSourceName in dataSourceNames):
-                   if (len(str(dataSourceName)) == 0 or dataSourceName == datasource["dataSourceName"]):
-                    dataSourceName = datasource["dataSourceName"]   
-                    break
-                   print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
-                   dataSourceName = str(userInputWrapper("DataSource Name [Current value: '" + datasource["dataSourceName"] + "'] New value:"))
-                      
-                
+                else:
+                    while(dataSourceName in dataSourceNames):
+                        if (len(str(dataSourceName)) == 0 or dataSourceName == datasource["dataSourceName"]):
+                            dataSourceName = datasource["dataSourceName"]
+                            break
+                        print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
+                        dataSourceName = str(userInputWrapper("DataSource Name [Current value: '" + datasource["dataSourceName"] + "'] New value:"))
+
+
                 dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [Current value: '" + datasource["dataSourceType"] + "'] New value: "))
                 if (len(str(dataSource1Type)) == 0):
-                           dataSource1Type = datasource["dataSourceType"]
-                else:
-                 while(dataSource1Type not in dataSourceTypes):
-                   if (len(str(dataSource1Type)) == 0 or dataSource1Type == datasource["dataSourceType"]):
                     dataSource1Type = datasource["dataSourceType"]
-                    break
-                   print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
-                   dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [Current value: '" + datasource["dataSourceType"] + "'] New value: "))
-                  
-                            
+                else:
+                    while(dataSource1Type not in dataSourceTypes):
+                        if (len(str(dataSource1Type)) == 0 or dataSource1Type == datasource["dataSourceType"]):
+                            dataSource1Type = datasource["dataSourceType"]
+                            break
+                        print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
+                        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [Current value: '" + datasource["dataSourceType"] + "'] New value: "))
+
+
                 dataSource1HostIp = str(userInputWrapper("DataSource Host Ip [Current value: '" + datasource["dataSourceHostIp"] + "'] New value: "))
                 if (len(str(dataSource1HostIp)) == 0):
-                            dataSource1HostIp = datasource["dataSourceHostIp"]
+                    dataSource1HostIp = datasource["dataSourceHostIp"]
                 dataSource1Port = str(userInputWrapper("DataSource Port [Current value: '" + datasource["dataSourcePort"] + "'] New value: "))
                 if (len(str(dataSource1Port)) == 0):
-                            dataSource1Port = datasource["dataSourcePort"]
+                    dataSource1Port = datasource["dataSourcePort"]
+
+                if dataSource1Type == 'gigaspaces':
+                    gsLookupGroup = str(userInputWrapper("Enter Lookup Group [Current value: '" + datasource["gsLookupGroup"] + "'] New value:"))
+                    if (len(str(gsLookupGroup)) == 0):
+                        gsLookupGroup = datasource["gsLookupGroup"]
+
                 username1 = str(userInputWrapper("User name [Current value: '" + datasource["username"] + "'] New value: "))
                 if (len(str(username1)) == 0):
-                            username1 = datasource["username"]
+                    username1 = datasource["username"]
                 password1 = str(userInputWrapper("Password [Current value: '" + datasource["password"] + "'] New value: "))
                 if (len(str(password1)) == 0):
-                            password1 = datasource["password"]
-                
+                    password1 = datasource["password"]
+
                 IntegratedSecurity = ''
                 AuthenticationScheme=''
                 Properties=''
                 if (dataSource1Type == 'ms-sql'):
-                 print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
-                
-                 IntegratedSecurity = str(userInputWrapper("IntegratedSecurity [true/false] [Current value: '" + datasource["integratedSecurity"] + "'] New value:"))
-                 while(IntegratedSecurity not in trueFalse):
-                  print(Fore.YELLOW +"Please select IntegratedSecurity's value from given list"+Fore.RESET)
-                  IntegratedSecurity = str(userInputWrapper("IntegratedSecurity [true/false] [Current value: '" + datasource["integratedSecurity"] + "'] New value:"))
-                
-                 AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM] [Current value: '" + datasource["authenticationScheme"] + "'] New value:"))
-                 while(AuthenticationScheme not in authenticationSchemes):
-                  print(Fore.YELLOW +"Please select AuthenticationScheme's value from given list"+Fore.RESET)
-                  AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM] [Current value: '" + datasource["authenticationScheme"] + "'] New value:"))
-                 
-                 Properties = str(userInputWrapper("Connection properties( ex.Key=value;) [Current value: '" + datasource["properties"] + "'] New value:"))
-                
-                
+                    print(Fore.YELLOW +"If not use below properties , leave it blank"+Fore.RESET)
+
+                    IntegratedSecurity = str(userInputWrapper("IntegratedSecurity [true/false] [Current value: '" + datasource["integratedSecurity"] + "'] New value:"))
+                    while(IntegratedSecurity not in trueFalse):
+                        print(Fore.YELLOW +"Please select IntegratedSecurity's value from given list"+Fore.RESET)
+                        IntegratedSecurity = str(userInputWrapper("IntegratedSecurity [true/false] [Current value: '" + datasource["integratedSecurity"] + "'] New value:"))
+
+                    AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM] [Current value: '" + datasource["authenticationScheme"] + "'] New value:"))
+                    while(AuthenticationScheme not in authenticationSchemes):
+                        print(Fore.YELLOW +"Please select AuthenticationScheme's value from given list"+Fore.RESET)
+                        AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM] [Current value: '" + datasource["authenticationScheme"] + "'] New value:"))
+
+                    Properties = str(userInputWrapper("Connection properties( ex.Key=value;) [Current value: '" + datasource["properties"] + "'] New value:"))
+
+
                 verboseHandle.printConsoleWarning('');
                 data = {
                     "dataSourceId":datasourceId,
@@ -153,7 +159,8 @@ def doValidate():
                     "password": password1,
                     "integratedSecurity":IntegratedSecurity,
                     "authenticationScheme":AuthenticationScheme,
-                    "properties":Properties
+                    "properties":Properties,
+                    "gsLookupGroup":gsLookupGroup
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
                 response = requests.post("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/update"
@@ -188,7 +195,7 @@ def printDatasourcetable(dataValidatorServiceHost):
 
         headers = [Fore.YELLOW + "Datasource Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
-                   Fore.YELLOW + "Type" + Fore.RESET , 
+                   Fore.YELLOW + "Type" + Fore.RESET ,
                    Fore.YELLOW + "Host Ip" + Fore.RESET
                    ]
         data = []
@@ -196,7 +203,7 @@ def printDatasourcetable(dataValidatorServiceHost):
             for datasource in response:
                 #print(datasource)
                 dataSourceNames.append(datasource["dataSourceName"] )
-                
+
                 dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,

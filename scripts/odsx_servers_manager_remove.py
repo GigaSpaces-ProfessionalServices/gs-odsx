@@ -1,17 +1,16 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import argparse
-import os
-import sys
-
-from colorama import Fore
+import os, subprocess, sys, argparse, platform
+from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
-from scripts.odsx_servers_manager_install import getManagerHostFromEnv
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput,connectExecuteSSH
+from utils.ods_app_config import readValuefromAppConfig
+from colorama import Fore
+from utils.ods_cluster_config import config_get_manager_listWithStatus,config_remove_manager_nodeByIP
 from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_manager_listWithStatus
-from utils.ods_ssh import connectExecuteSSH
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -83,6 +82,8 @@ def exitAndDisplay(isMenuDriven):
         logger.info("python3 scripts/odsx_servers_manager_remove.py executed")
         os.system('python3 scripts/odsx_servers_manager_remove.py'+' '+isMenuDriven)
 
+def removeManagerServer(host):
+    execute_scriptBuilder(str(host))
 if __name__ == '__main__':
     logger.info("servers - manager - Remove ")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Remove')
@@ -166,20 +167,22 @@ if __name__ == '__main__':
                 #if(len(str(user))==0):
                 #    user="ec2-user"
                 hostsConfigArray = hostsConfig.split(",")
-                for host in hostsConfigArray:
-                    logger.info("Removing host :"+str(host))
-                    verboseHandle.printConsoleInfo("Removing Host :"+str(host))
-                    args.append('--host')
-                    args.append(host)
-                    args.append('-u')
-                    args.append(user)
-                    args.append('--id')
-                    args.append(host)
-                    execute_scriptBuilder(str(host))
-                    args.remove("--host")
-                    args.remove(host)
-                    args.remove('-u')
-                    args.remove(user)
+                hostManagerLength=len(hostsConfigArray)+1
+                with ThreadPoolExecutor(hostManagerLength) as executor:
+                    for host in hostsConfigArray:
+                        logger.info("Removing host :"+str(host))
+                        verboseHandle.printConsoleInfo("Removing Host :"+str(host))
+                        args.append('--host')
+                        args.append(host)
+                        args.append('-u')
+                        args.append(user)
+                        args.append('--id')
+                        args.append(host)
+                        executor.submit(removeManagerServer,host)
+                        args.remove("--host")
+                        args.remove(host)
+                        args.remove('-u')
+                        args.remove(user)
             elif(confirm =='no' or confirm=='n'):
                 if(menuDrivenFlag=='m'):
                     logger.info("menudriven")

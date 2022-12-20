@@ -16,6 +16,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -67,8 +68,8 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     global password
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        username = "gs-admin"#str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
-        password = "gs-admin"#str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
         status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})

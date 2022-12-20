@@ -1,27 +1,25 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import argparse
-import os
-import signal
-import socket
-import sys
-
-from colorama import Fore
+import os, subprocess, sys, argparse, platform,socket,signal
+from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
 from scripts.odsx_security_servers_space_install import configureMetricsXML
-from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
-    set_value_in_property_file_generic, read_value_in_property_file_generic_section, getYamlFilePathInsideFolder, \
-    getYamlFilePathInsideConfigFolder
+    set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
+from colorama import Fore
+
 from utils.ods_cleanup import signal_handler
-from utils.ods_cluster_config import config_get_cluster_airgap, config_get_dataIntegration_nodes
-from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_list import validateRPMS
-from utils.ods_scp import scp_upload
+from utils.ods_scp import scp_upload,scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputValuePython36
+    executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
+    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_manager_node
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -289,7 +287,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsOptionExt = gsOptionExtFromConfig
         #print(Fore.YELLOW+' GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsOptionExt))==0):
-            #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
+        #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
         #gsOptionExt=gsOptionExtFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsOptionExt',gsOptionExt)
@@ -301,7 +299,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsManagerOptions =gsManagerOptionsFromConfig
         #print(Fore.YELLOW+'GS_MANAGER_OPTIONS  ['+Fore.GREEN+''+gsManagerOptionsFromConfig+Fore.YELLOW+']: '+Fore.RESET)
         #if(len(str(gsManagerOptions))==0):
-            #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
+        #gsManagerOptions="-Dcom.gs.hsqldb.all-metrics-recording.enabled=false"
         gsManagerOptions=gsManagerOptionsFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
@@ -312,12 +310,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         #gsLogsConfigFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         #if(len(str(gsLogsConfigFile))==0):
-            #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
+        #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
         gsLogsConfigFile=gsLogsConfigFileFromConfig
         #else:
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
-        gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
+        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")) #'"\\"{}\\""'.format(gsLogsConfigFile)
+        # gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
@@ -326,7 +325,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #if(len(str(gsLicenseFile))==0):
         gsLicenseFile = licenseConfig
         #else:
-            #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
+        #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
         applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
@@ -374,7 +373,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-    #To Display Summary ::
+        #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
         print(Fore.GREEN+"1. "+
@@ -438,8 +437,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"20. "+
-          Fore.GREEN+"Log target file path : "+Fore.RESET,
-          Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
+              Fore.GREEN+"Log target file path : "+Fore.RESET,
+              Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -464,55 +463,59 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             with Spinner():
                 status = os.system(cmd)
                 logger.info("Creating tar file status : "+str(status))
-
-            for host in hostManager:
-                gsNicAddress = host_nic_dict_obj[host]
-                logger.info("NIC address:"+gsNicAddress+" for host "+host)
-                if(len(str(gsNicAddress))==0):
-                    gsNicAddress='x'     # put dummy param to maintain position of arguments
-                additionalParam=additionalParam+' '+gsNicAddress
-                with Spinner():
-                    scp_upload(host, user, 'install/install.tar', '')
-                    ##scp_upload(host, user, 'install/gs.service', '')
-                verboseHandle.printConsoleInfo(output)
-                cmd = 'tar -xvf install.tar'
-                verboseHandle.printConsoleInfo("Extracting..")
-                with Spinner():
-                    output = executeRemoteCommandAndGetOutput(host, user, cmd)
-                logger.info("Extracting .tar file :"+str(output))
-                verboseHandle.printConsoleInfo(str(output))
-
-                commandToExecute="scripts/security_manager_install.sh"
-                #print(additionalParam)
-                logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                with Spinner():
-                    outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
-                    #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
-                    #print("cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
-                    #print("chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
-                    executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
-                    configureMetricsXML(host)
-                serverHost=''
-                try:
-                    serverHost = socket.gethostbyaddr(host).__getitem__(0)
-                except Exception as e:
-                    serverHost=host
-                #managerList = config_add_manager_node(host,host,"admin")
-                logger.info("Installation of manager server "+str(host)+" has been done!")
-                verboseHandle.printConsoleInfo("Installation of manager server "+host+" has been done!")
+            hostManagerLength=len(hostManager)+1
+            with ThreadPoolExecutor(hostManagerLength) as executor:
+                for host in hostManager:
+                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
 
     except Exception as e:
         handleException(e)
+
+def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser):
+    gsNicAddress = host_nic_dict_obj[host]
+    logger.info("NIC address:"+gsNicAddress+" for host "+host)
+    if(len(str(gsNicAddress))==0):
+        gsNicAddress='x'     # put dummy param to maintain position of arguments
+    additionalParam=additionalParam+' '+gsNicAddress
+    with Spinner():
+        scp_upload(host, user, 'install/install.tar', '')
+        ##scp_upload(host, user, 'install/gs.service', '')
+    verboseHandle.printConsoleInfo(output)
+    cmd = 'tar -xvf install.tar'
+    verboseHandle.printConsoleInfo("Extracting..")
+    with Spinner():
+        output = executeRemoteCommandAndGetOutput(host, user, cmd)
+    logger.info("Extracting .tar file :"+str(output))
+    verboseHandle.printConsoleInfo(str(output))
+
+    commandToExecute="scripts/security_manager_install.sh"
+    #print(additionalParam)
+    logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+    logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+    with Spinner():
+        outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+        #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+        #print("cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
+        #print("chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
+        configureMetricsXML(host)
+    serverHost=''
+    try:
+        serverHost = socket.gethostbyaddr(host).__getitem__(0)
+    except Exception as e:
+        serverHost=host
+    #managerList = config_add_manager_node(host,host,"admin")
+    logger.info("Installation of manager server "+str(host)+" has been done!")
+    verboseHandle.printConsoleInfo("Installation of manager server "+host+" has been done!")
 
 if __name__ == '__main__':
     logger.info("odsx_security_manager -> install")

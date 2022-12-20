@@ -81,7 +81,7 @@ def doValidate():
         while(test not in testTypes):
             print(Fore.YELLOW +"Please select Test type from given list"+Fore.RESET)
             test = str(userInputWrapper("Test type (count/avg/min/max/sum) [count]: "))
-            
+
         if (len(str(test)) == 0):
             test = 'count'
 
@@ -91,18 +91,29 @@ def doValidate():
         datasourceRowCount = printDatasourcetable(dataValidatorServiceHost)
 
         if datasourceRowCount <= 0:
-          verboseHandle.printConsoleWarning("No Datasource available. Please add atleast one datasources")
-          return
-        
-        DataSourceId = str(userInputWrapper("Select DataSource Id from above table: ")) 
+            verboseHandle.printConsoleWarning("No Datasource available. Please add atleast one datasources")
+            return
+
+        DataSourceId = str(userInputWrapper("Select DataSource Id from above table: "))
         while(DataSourceId not in dataSourceIds):
             print(Fore.YELLOW +"Invalid DataSource Id "+Fore.RESET)
-            DataSourceId = str(userInputWrapper("DataSource Id from above table: ")) 
-        
-            
-        schemaName1 = str(userInputWrapper("Schema Name [demo]: "))
+            DataSourceId = str(userInputWrapper("DataSource Id from above table: "))
+
+
+        for idx, x in enumerate(dataSourceIds):
+            if DataSourceId == x:
+                dataSType = dataSourceTypes[idx]
+        #print("dataSType"+dataSType)
+
+        schemaNameDefault = 'demo'
+        if dataSType == 'gigaspaces':
+            schemaNameDefault = str(readValuefromAppConfig("app.dataengine.mssql-feeder.space.name"))
+        elif dataSType == 'ms-sql':
+            schemaNameDefault = 'DB_Central'
+
+        schemaName1 = str(userInputWrapper("Schema Name["+schemaNameDefault+"]: "))
         if (len(str(schemaName1)) == 0):
-            schemaName1 = 'demo'
+            schemaName1 = schemaNameDefault
 
         tableName1 = str(userInputWrapper("Table Name : "))
         while (len(str(tableName1)) == 0):
@@ -124,14 +135,14 @@ def doValidate():
 
         verboseHandle.printConsoleWarning('');
         data = {
-            "test":test,      
+            "test":test,
             "dataSourceId": DataSourceId,
             "schemaName": schemaName1,
             "tableName": tableName1,
             "fieldName": fieldName1,
             "whereCondition": whereCondition,
         }
-        
+
         headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
         response = requests.post("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/register"
                                  , data=json.dumps(data)
@@ -187,6 +198,7 @@ def printmeasurementtable(dataValidatorServiceHost):
     return 0
 
 dataSourceIds=[]
+dataSourceTypes=[]
 testTypes =["count","avg","min","max","sum",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:
@@ -213,7 +225,8 @@ def printDatasourcetable(dataValidatorServiceHost):
                 #print(datasource)
                 if datasource["agentHostIp"] == "-1":
                     continue
-                dataSourceIds.append(str(datasource["id"]))              
+                dataSourceIds.append(str(datasource["id"]))
+                dataSourceTypes.append(datasource["dataSourceType"])
                 dataArray = [Fore.GREEN + str(datasource["id"]) + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceName"] + Fore.RESET,
                              Fore.GREEN + datasource["dataSourceType"] + Fore.RESET,

@@ -367,7 +367,8 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  cmd="sleep 60;$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
+  cmd="$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
+  cat "$startSpaceGsc/start_gsc.sh" >> $start_gsc_file
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
@@ -438,7 +439,8 @@ zoneGSC=${14}
 sourceInstallerDirectory=${15}
 logSourcePath=${16}
 logTargetPath=${17}
-gsNicAddress=${18}
+startSpaceGsc=${18}
+gsNicAddress=${19}
 
 echo "param1"$1
 echo "param2"$targetDir
@@ -455,7 +457,8 @@ echo "param12"$gscCount
 echo "param13"$memoryGSC
 echo "param14"$zoneGSC
 echo "param15"$sourceInstallerDirectory
-echo "param16"$gsNicAddress
+echo "param16"$startSpaceGsc
+echo "param17"$gsNicAddress
 
 if [ -z "$targetDir" ]; then
   targetDir=$(pwd)

@@ -1,18 +1,17 @@
 #!/usr/bin/env python3
-import argparse
+import os.path,  argparse, sys
 import json
-import os.path
-import sys
+import logging.config
+from concurrent.futures import ThreadPoolExecutor
 
-import requests
-from colorama import Fore
-
-from scripts.logManager import LogManager
-from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetVersion
 from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
-from utils.ods_validation import getSpaceServerStatus, port_check_config
+from utils.ods_cluster_config import config_get_manager_node,isInstalledAndGetVersion
+from scripts.logManager import LogManager
 from utils.odsx_print_tabular_data import printTabular
+from colorama import Fore
+import socket, platform, requests
+from utils.ods_validation import getSpaceServerStatus, port_check_config
+from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -82,6 +81,26 @@ def getGSInfo(managerHost):
     verboseHandle.printConsoleWarning("Revision : "+str(jsonArray["revision"]))
     print()
 
+def printManagerList(node):
+    installStatus='No'
+    if (port_check_config(os.getenv(str(node.ip)),22)):
+        status = getSpaceServerStatus(os.getenv(str(node.ip)))
+    else:
+        status="NOT REACHABLE"
+    install = isInstalledAndGetVersion(os.getenv(str(node.ip)))
+    logger.info("install : "+str(install))
+    influx = validateMetricsXmlInflux(os.getenv(str(node.ip)))
+    grafana = validateMetricsXmlGrafana(os.getenv(str(node.ip)))
+    if(len(str(install))>8):
+        installStatus='Yes'
+    dataArray=[Fore.GREEN+os.getenv(str(node.ip))+Fore.RESET,
+               Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+               Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
+               Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
+               Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+               Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
+    data.append(dataArray)
+
 def listFileFromDirectory():
     logger.info("servers - manager - list")
     managerNodes = config_get_manager_node()
@@ -102,28 +121,15 @@ def listFileFromDirectory():
                        Fore.YELLOW+"Version"+Fore.RESET,
                        Fore.YELLOW+"Influxdb"+Fore.RESET,
                        Fore.YELLOW+"Grafana"+Fore.RESET]
+            global data
             data=[]
             managerNodes = config_get_manager_node()
 
-            for node in managerNodes:
-                installStatus='No'
-                if (port_check_config(os.getenv(str(node.ip)),22)):
-                    status = getSpaceServerStatus(os.getenv(str(node.ip)))
-                else:
-                    status="NOT REACHABLE"
-                install = isInstalledAndGetVersion(os.getenv(str(node.ip)))
-                logger.info("install : "+str(install))
-                influx = validateMetricsXmlInflux(os.getenv(str(node.ip)))
-                grafana = validateMetricsXmlGrafana(os.getenv(str(node.ip)))
-                if(len(str(install))>8):
-                    installStatus='Yes'
-                dataArray=[Fore.GREEN+os.getenv(str(node.ip))+Fore.RESET,
-                           Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-                           Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
-                           Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
-                           Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
-                           Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
-                data.append(dataArray)
+            managerNodesLength=len(managerNodes)+1
+            with ThreadPoolExecutor(managerNodesLength) as executor:
+                for node in managerNodes:
+                    executor.submit(printManagerList,node)
+
         printTabular(None,headers,data)
     except Exception as e:
         handleException(e)

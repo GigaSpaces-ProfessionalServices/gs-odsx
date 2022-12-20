@@ -1,15 +1,15 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import argparse
-import os
-import sys
+import os, subprocess, sys, argparse, platform
+from concurrent.futures import ThreadPoolExecutor
 
-from colorama import Fore
-
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from scripts.logManager import LogManager
-from scripts.odsx_servers_manager_install import getManagerHostFromEnv
+from utils.ods_app_config import readValuefromAppConfig
+from colorama import Fore
 from utils.ods_cluster_config import config_get_manager_listWithStatus, config_get_manager_node
+from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -50,6 +50,9 @@ def exitAndDisplay(isMenuDriven):
     if(isMenuDriven=='m'):
         os.system('python3 scripts/odsx_security_manager_stop.py'+' '+isMenuDriven)
         logger.info("python3 scripts/odsx_security_manager_stop.py executed")
+
+def stopSecureManagerServer(argsString):
+    os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
 
 if __name__ == '__main__':
     logger.info("odsx_security_manager_Stop")
@@ -116,23 +119,25 @@ if __name__ == '__main__':
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 mangerHosts = config_get_manager_node()#config_get_space_hosts_list()
-                for host in mangerHosts:
-                    args.append(menuDrivenFlag)
-                    args.append('--host')
-                    args.append(os.getenv(host.ip))
-                    args.append('-u')
-                    args.append(user)
-                    argsString = str(args)
-                    logger.debug('Arguments :'+argsString)
-                    argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-                    logger.info(argsString)
-                    os.system('python3 scripts/servers_manager_scriptbuilder.py '+argsString)
-                    args.remove(menuDrivenFlag)
-                    args.remove("--host")
-                    args.remove(os.getenv(host.ip))
-                    args.remove('-u')
-                    args.remove(user)
-                    logger.info(args)
+                hostManagerLength=len(mangerHosts)+1
+                with ThreadPoolExecutor(hostManagerLength) as executor:
+                    for host in mangerHosts:
+                        args.append(menuDrivenFlag)
+                        args.append('--host')
+                        args.append(os.getenv(host.ip))
+                        args.append('-u')
+                        args.append(user)
+                        argsString = str(args)
+                        logger.debug('Arguments :'+argsString)
+                        argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+                        logger.info(argsString)
+                        executor.submit(stopSecureManagerServer,argsString)
+                        args.remove(menuDrivenFlag)
+                        args.remove("--host")
+                        args.remove(os.getenv(host.ip))
+                        args.remove('-u')
+                        args.remove(user)
+                        logger.info(args)
             elif(confirm =='no' or confirm=='n'):
                 if(isMenuDriven=='m'):
                     logger.info("menudriven")

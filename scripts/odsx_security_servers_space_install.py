@@ -1,24 +1,24 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import argparse
-import os
-import socket
-import sys
-
-from colorama import Fore
+import os, subprocess, sys, argparse, platform,socket
+from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
-from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj, \
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
-from utils.ods_cluster_config import config_get_cluster_airgap, config_get_space_hosts, \
-    isInstalledAndGetVersion
-from utils.ods_list import configureMetricsXML, validateRPMS, getManagerHostFromEnv
-from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
+from colorama import Fore
+
+from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
+from utils.ods_scp import scp_upload, scp_upload_multiple
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
+    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
     executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts, \
+    isInstalledAndGetVersion, config_get_manager_node
+from scripts.spinner import Spinner
+from utils.ods_scp import scp_upload,scp_upload_specific_extension
 from utils.odsx_keypress import userInputWrapper
 
 #from scripts.odsx_servers_manager_install import getManagerHostFromEnv
@@ -164,7 +164,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #else:
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
-        gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
+        # gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
+        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")) #'"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
@@ -294,7 +295,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-
+        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -398,87 +399,91 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
-            for host in host_nic_dict_obj:
-                installStatus='No'
-                install = isInstalledAndGetVersion(host)
-                logger.info("install : "+str(install))
-                if(len(str(install))>8):
-                    installStatus='Yes'
-                if installStatus == 'No':
-                    gsNicAddress = host_nic_dict_obj[host]
-                    #print(host+"  "+gsNicAddress)
-                    additionalParam=additionalParam+' '+gsNicAddress
-                    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
-                    # print("---------------------"+str(additionalParam))
-                    logger.info("additionalParam - Installation :")
-                    logger.info("Building .tar file : tar -cvf install/install.tar install")
-                    '''
-                    userCMD = os.getlogin()
-                    if userCMD == 'ec2-user':
-                        cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
-                    else:
-                        cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
-                    with Spinner():
-                        status = os.system(cmd)
-                    '''
-                    cmd = 'tar -cvf install/install.tar install'
-                    with Spinner():
-                        status = os.system(cmd)
-                        logger.info("Creating tar file status : "+str(status))
-                    with Spinner():
-                        scp_upload(host, user, 'install/install.tar', '')
-                        #scp_upload(host, user, 'install/gs.service', '')
-                    cmd = 'tar -xvf install.tar'
-                    verboseHandle.printConsoleInfo("Extracting..")
-                    logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
-                    output = executeRemoteCommandAndGetOutput(host, user, cmd)
-                    logger.debug("Execute RemoteCommand output:"+str(output))
-                    verboseHandle.printConsoleInfo(output)
-                    # additionalParam=additionalParam+' '+logSourcePath+' '+logTargetPath
-                    commandToExecute="scripts/security_space_install.sh"
-                    logger.info("additionalParam : "+str(additionalParam))
-                    logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-                    with Spinner():
-                        outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-                        #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-                        logger.debug("script output"+str(outputShFile))
-                        #print(outputShFile)
-                        #Upload CEF logging jar
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
-
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
-                        #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
-                        #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..keytab")+msSqlFeederFileTarget)
-                        #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+msSqlFeederFileTarget)
-                        #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
-                        #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
-                        #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
-                        executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
-                        configureMetricsXML(host)
-                    serverHost=''
-                    try:
-                        serverHost = socket.gethostbyaddr(host).__getitem__(0)
-                    except Exception as e:
-                        serverHost=host
-                    #managerList = config_add_space_node(host, host, "N/A", "true")
-                    logger.info("Installation of space server "+str(host)+" has been done!")
-                    verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
-                else:
-                    verboseHandle.printConsoleInfo("Found installation. skipping installation for host "+host)
-                    logger.info("Found installation. skipping installation for host "+host)
+            hostListLength=len(host_nic_dict_obj)+1
+            with ThreadPoolExecutor(hostListLength) as executor:
+                for host in host_nic_dict_obj:
+                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
     except Exception as e:
         handleException(e)
 
+def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc):
+    installStatus='No'
+    install = isInstalledAndGetVersion(host)
+    logger.info("install : "+str(install))
+    if(len(str(install))>8):
+        installStatus='Yes'
+    if installStatus == 'No':
+        gsNicAddress = host_nic_dict_obj[host]
+        #print(host+"  "+gsNicAddress)
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
+        # print("---------------------"+str(additionalParam))
+        logger.info("additionalParam - Installation :")
+        logger.info("Building .tar file : tar -cvf install/install.tar install")
+        '''
+        userCMD = os.getlogin()
+        if userCMD == 'ec2-user':
+            cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+        else:
+            cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+        with Spinner():
+            status = os.system(cmd)
+        '''
+        cmd = 'tar -cvf install/install.tar install'
+        with Spinner():
+            status = os.system(cmd)
+            logger.info("Creating tar file status : "+str(status))
+        with Spinner():
+            scp_upload(host, user, 'install/install.tar', '')
+            #scp_upload(host, user, 'install/gs.service', '')
+        cmd = 'tar -xvf install.tar'
+        verboseHandle.printConsoleInfo("Extracting..")
+        logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
+        output = executeRemoteCommandAndGetOutput(host, user, cmd)
+        logger.debug("Execute RemoteCommand output:"+str(output))
+        verboseHandle.printConsoleInfo(output)
+        # additionalParam=additionalParam+' '+logSourcePath+' '+logTargetPath
+        commandToExecute="scripts/security_space_install.sh"
+        logger.info("additionalParam : "+str(additionalParam))
+        logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+        with Spinner():
+            outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+            #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+            logger.debug("script output"+str(outputShFile))
+            #print(outputShFile)
+            #Upload CEF logging jar
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
+            #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
+            #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..keytab")+msSqlFeederFileTarget)
+            #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+msSqlFeederFileTarget)
+            #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
+            #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+            #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
+            configureMetricsXML(host)
+        serverHost=''
+        try:
+            serverHost = socket.gethostbyaddr(host).__getitem__(0)
+        except Exception as e:
+            serverHost=host
+        #managerList = config_add_space_node(host, host, "N/A", "true")
+        logger.info("Installation of space server "+str(host)+" has been done!")
+        verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
+    else:
+        verboseHandle.printConsoleInfo("Found installation. skipping installation for host "+host)
+        logger.info("Found installation. skipping installation for host "+host)
 if __name__ == '__main__':
     logger.info("odsx_security_space-install")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Install')
@@ -522,6 +527,5 @@ if __name__ == '__main__':
             pass
     except Exception as e:
         handleException(e)
-
 
 
