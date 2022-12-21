@@ -169,6 +169,7 @@ wantInstallJava=${12}
 sourceInstallerDirectory=${13}
 flinkJobManagerMemoryMetaspaceSize=${15}
 flinkTaskManagerMemoryProcessSize=${16}
+dimMdmFlinkInstallon1bFlag=${17}
 
 if [ "$wantInstallJava" == "y" ]; then
     echo "Setup AirGapJava"
@@ -298,10 +299,17 @@ if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
     echo "export RMI_HOSTNAME=127.0.0.1" >> $KAFKAPATH/bin/kafka-server-start.sh
     echo 'export KAFKA_JMX_OPTS="-javaagent:'$KAFKAPATH'/libs/jolokia-agent.jar=port=8778,host=$RMI_HOSTNAME -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$RMI_HOSTNAME -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT"' >> $KAFKAPATH/bin/kafka-server-start.sh
     echo 'exec $base_dir/kafka-run-class.sh $EXTRA_ARGS kafka.Kafka "$@"' >> $KAFKAPATH/bin/kafka-server-start.sh
+    if [ $id != 2 ] ; then
+      installFlink
+      installDIMatadata
+      installDIManager
+    fi
+    if [ $id == 2 ] && [ $dimMdmFlinkInstallon1bFlag == "y" ] ; then
+      installFlink
+      installDIMatadata
+      installDIManager
+    fi
 
-    installFlink
-    installDIMatadata
-    installDIManager
   fi
   if [[ $id == 1 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$kafkaBrokerHost1':9092|g' $KAFKAPATH/config/server.properties
