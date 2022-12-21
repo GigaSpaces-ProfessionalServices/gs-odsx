@@ -242,6 +242,8 @@ if __name__ == '__main__':
                 dir_list = os.listdir(sourcePath)
                 if (len(dir_list) > 1):
                     verboseHandle.printConsoleError("multiple packages exist in source path " + str(dir_list))
+                elif (len(dir_list) < 1):
+                    verboseHandle.printConsoleError("no packages exist in source path " + str(dir_list))
                 else:
                     packageName = dir_list[0]
                     user = 'root'
@@ -266,7 +268,7 @@ if __name__ == '__main__':
 
                     # print("freeStoragePerc: " + str(freeStoragePerc) + ", managerCount: " + str(managerCount))
 
-                    verboseHandle.printConsoleInfo("1. Enough manager are available : " + str(managerCount))
+                    verboseHandle.printConsoleInfo("1. Manager available count : " + str(managerCount))
                     verboseHandle.printConsoleInfo(
                         "2. Source path is proper. New package to upload : " + str(dir_list))
                     managerCountStorage = 2
