@@ -62,14 +62,14 @@ def execute_scriptBuilder(host):
     commandToExecute="scripts/security_space_remove.sh"
     additionalParam = removeJava+' '+removeUnzip
     logger.info("additionalParam : "+str(additionalParam))
-    with Spinner():
-        #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)
-        outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-        print(outputShFile)
-        logger.info("Output : scripts/security_space_remove.sh :"+str(outputShFile))
-        #config_remove_space_nodeByIP(host)
-        logger.debug(str(host)+" has been removed.")
-        verboseHandle.printConsoleInfo(str(host)+" has been removed.")
+    # with Spinner():
+    #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)
+    outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+    print(outputShFile)
+    logger.info("Output : scripts/security_space_remove.sh :"+str(outputShFile))
+    #config_remove_space_nodeByIP(host)
+    logger.debug(str(host)+" has been removed.")
+    verboseHandle.printConsoleInfo(str(host)+" has been removed.")
 
 def exitAndDisplay(isMenuDriven):
     logger.info("exitAndDisplay(isMenuDriven)")
@@ -198,9 +198,10 @@ if __name__ == '__main__':
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()
                 spaceHostsLength = len(spaceHosts)+1
-                with ThreadPoolExecutor(spaceHostsLength) as executor:
-                    for host in spaceHosts:
-                        executor.submit(removeSecureSpaceServer,host,args,menuDrivenFlag,user)
+                with Spinner():
+                    with ThreadPoolExecutor(spaceHostsLength) as executor:
+                        for host in spaceHosts:
+                            executor.submit(removeSecureSpaceServer,host,args,menuDrivenFlag,user)
 
             elif(confirm =='no' or confirm=='n'):
                 if(isMenuDriven=='m'):

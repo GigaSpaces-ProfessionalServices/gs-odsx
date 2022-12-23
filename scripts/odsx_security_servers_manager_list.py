@@ -107,7 +107,7 @@ def listFileFromDirectory():
     managerHost = getManagerHost(managerNodes)
     logger.info("managerHost : "+str(managerHost))
     try:
-        with Spinner():
+        # with Spinner():
             inputDirectory='backup'
             if(len(str(managerHost))>0):
                 getGSInfo(managerHost)
@@ -130,7 +130,7 @@ def listFileFromDirectory():
                 for node in managerNodes:
                     executor.submit(printManagerList,node)
 
-        printTabular(None,headers,data)
+            printTabular(None,headers,data)
     except Exception as e:
         handleException(e)
 

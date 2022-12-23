@@ -123,8 +123,7 @@ def getStatusOfHost(host_nic_dict_obj,server):
 
 def getStatusOfSpaceHost(server):
     commandToExecute = "ps -ef | grep GSA"
-    with Spinner():
-        output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
+    output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
     if(str(output).__contains__('services=GSA')):
         logger.info("services=GSA")
         return "ON"
@@ -259,8 +258,7 @@ if __name__ == '__main__':
         logger.info("managerHost : main"+str(managerHost))
         username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
         password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
-        with Spinner():
-            listSpaceServer()
+        listSpaceServer()
     except Exception as e:
         handleException(e)
 

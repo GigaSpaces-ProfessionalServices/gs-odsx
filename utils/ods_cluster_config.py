@@ -7,6 +7,8 @@ from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from json import JSONEncoder
+from time import sleep
+
 from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_validation import getSpaceServerStatus
@@ -467,13 +469,13 @@ def config_get_space_hosts_list(filePath='config/cluster.config'):
 def config_get_space_list_with_threading(server,host_nic_dict_obj):
     spaceHost = str(os.getenv(server.ip))
     cmd = 'ps -ef | grep GSA'
-    with Spinner():
-        output = executeRemoteCommandAndGetOutput(spaceHost, 'root', cmd)
-        #output = executeRemoteShCommandAndGetOutput(server.ip,user,cmd)
-        if(str(output).__contains__('services=GSA')):
+    # with Spinner():
+    output = executeRemoteCommandAndGetOutput(spaceHost, 'root', cmd)
+    #output = executeRemoteShCommandAndGetOutput(server.ip,user,cmd)
+    if(str(output).__contains__('services=GSA')):
             logger.info("services=GSA")
             host_nic_dict_obj.add(spaceHost,"ON")
-        else:
+    else:
             logger.info("services!=GSA")
             host_nic_dict_obj.add(spaceHost,"OFF")
     return host_nic_dict_obj
@@ -541,44 +543,36 @@ def isInstalledAndGetVersionOldGS(host):
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 
-def config_get_manager_with_threading(node,managerCounter,managerThreadDict):
-    installStatus='No'
-    status = getSpaceServerStatus(os.getenv(str(node.ip)))
-    counter = managerCounter + 1
-    managerThreadDict.update({counter: node})
-    install = isInstalledAndGetVersion(os.getenv(str(node.ip)))
-    logger.info("install : "+str(install))
-    if(len(str(install))>0):
-        installStatus='Yes'
-    dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
-               Fore.GREEN+os.getenv(node.name)+Fore.RESET,
-               #Fore.GREEN+os.getenv(node.ip)+Fore.RESET,
-               Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-               Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
-    data.append(dataArray)
-
 def config_get_manager_listWithStatus(filePath='config/cluster.config'):
-    with Spinner():
+    # with Spinner():
         try:
             headers = [Fore.YELLOW+"SrNo."+Fore.RESET,
                        Fore.YELLOW+"Manager Name"+Fore.RESET,
                        #Fore.YELLOW+"IP"+Fore.RESET,
                        Fore.YELLOW+"Install"+Fore.RESET,
                        Fore.YELLOW+"Status"+Fore.RESET]
-            global data
-            global managerThreadDict
-            global managerCounter
             data=[]
-            managerThreadDict = {}
-            managerCounter = 0
+            managerDict = {}
+            counter = 0
             managerNodes = config_get_manager_node()
-            managerNodesLength=len(managerNodes)+1
-            with ThreadPoolExecutor(managerNodesLength) as executor:
-                for node in managerNodes:
-                    executor.submit(config_get_manager_with_threading,node,managerCounter,managerThreadDict)
+            for node in managerNodes:
+                installStatus='No'
+                status = getSpaceServerStatus(os.getenv(str(node.ip)))
+                counter = counter + 1
+                managerDict.update({counter: node})
+                install = isInstalledAndGetVersion(os.getenv(str(node.ip)))
+                logger.info("install : "+str(install))
+                if(len(str(install))>0):
+                    installStatus='Yes'
+                dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                           Fore.GREEN+os.getenv(node.name)+Fore.RESET,
+                           #Fore.GREEN+os.getenv(node.ip)+Fore.RESET,
+                           Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                           Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
+                data.append(dataArray)
             printTabular(None,headers,data)
             verboseHandle.printConsoleInfo(str(99) + ". ESC" " (Escape from menu.)")
-            return  managerThreadDict
+            return  managerDict
         except Exception as e:
             handleException(e)
 
@@ -1288,8 +1282,8 @@ def cleanDIHostFronConfig():
         else:
             nodes = nodes + ',' + node.ip
     logger.info("nodes :"+str(nodes))
-    with Spinner():
-        for host in nodes.split(','):
+    # with Spinner():
+    for host in nodes.split(','):
             config_remove_dataIntegration_byNameIP(host,host)
             config_remove_dataEngine_byNameIP(host,host)
     logger.info("Clean DI host completed.")
@@ -1304,8 +1298,8 @@ def cleanSpaceHostFronConfig():
         else:
             nodes = nodes + ',' + node.ip
     logger.info("nodes :"+str(nodes))
-    with Spinner():
-        for host in nodes.split(','):
+    # with Spinner():
+    for host in nodes.split(','):
             config_remove_space_nodeById(host,host)
     logger.info("Clean space host completed.")
 
@@ -1319,8 +1313,8 @@ def cleanManagerHostFronConfig():
         else:
             nodes = nodes + ',' + node.ip
     logger.info("nodes :"+str(nodes))
-    with Spinner():
-        for host in nodes.split(','):
+    # with Spinner():
+    for host in nodes.split(','):
             config_remove_manager_nodeByIP(host)
     logger.info("Clean DI host completed.")
 

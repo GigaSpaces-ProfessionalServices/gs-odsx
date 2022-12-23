@@ -353,7 +353,11 @@ def displaySummaryOfInputParameter():
         verboseHandle.printConsoleWarning("Enter resource file name :"+str(resource))
         verboseHandle.printConsoleWarning("Enter partitions :"+str(partitions))
         verboseHandle.printConsoleWarning("Enter max instance per machine :"+str(maxInstancesPerMachine))
-        verboseHandle.printConsoleWarning("SLA [HA] ? (y/n) :"+str(str(backUpRequired)))
+        if(backUpRequired==1):
+            haStatus=True
+        else:
+            haStatus=False
+        verboseHandle.printConsoleWarning("SLA [HA] ? (y/n) :"+str(str(haStatus)))
 
 
 def proceedForValidateResponse(response):

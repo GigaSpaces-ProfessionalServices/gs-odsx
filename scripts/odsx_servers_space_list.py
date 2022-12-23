@@ -98,8 +98,8 @@ def getStatusOfHost(host_nic_dict_obj,server):
 
 def getStatusOfSpaceHost(server):
     commandToExecute = "ps -ef | grep GSA"
-    with Spinner():
-        output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
+    # with Spinner():
+    output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
     if(str(output).__contains__('services=GSA')):
         logger.info("services=GSA")
         return "ON"
@@ -152,10 +152,11 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
                Fore.GREEN+str(gsc)+Fore.RESET,
                Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
-               Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
-               Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
-               Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
+               Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET]
+               # Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+               # Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
     data.append(dataArray)
+
 
 def listSpaceServer():
     try:
@@ -167,9 +168,9 @@ def listSpaceServer():
                    Fore.YELLOW+"GSC"+Fore.RESET,
                    Fore.YELLOW+"Installed"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET,
-                   Fore.YELLOW+"Version"+Fore.RESET,
-                   Fore.YELLOW+"Influxdb"+Fore.RESET,
-                   Fore.YELLOW+"Grafana"+Fore.RESET
+                   Fore.YELLOW+"Version"+Fore.RESET
+                   # Fore.YELLOW+"Influxdb"+Fore.RESET,
+                   # Fore.YELLOW+"Grafana"+Fore.RESET
                    ]
         global data
         data=[]
@@ -203,5 +204,4 @@ if __name__ == '__main__':
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
     myCheckArg()
-    with Spinner():
-        listSpaceServer()
+    listSpaceServer()

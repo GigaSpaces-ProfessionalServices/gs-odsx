@@ -329,10 +329,9 @@ def validateResponseGetDescription(responseCode):
         return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
 
 
-def removeInstanceContainer(hosts):
+def removeInstanceContainer(instance):
     logger.info("removeInstanceContainer")
     try:
-        for instance in hosts:
             response = requests.delete("http://" + managerHost + ":8090/v2/containers/"+str(instance['containerId']),auth = HTTPBasicAuth(username,password))
             logger.info("response.text : " + str(response.text))
             deployResponseCode = str(response.content.decode('utf-8'))
@@ -413,20 +412,20 @@ if __name__ == '__main__':
                                 firstIndex = int(host[0])
                                 lastIndex = int(host[-1])
                                 for data in range(firstIndex, lastIndex + 1):
-                                    value.append(streamDict.get(int(data)))
-                                removeInstanceContainer(value)
+                                    # value.append(streamDict.get(int(data)))
+                                    removeInstanceContainer(streamDict.get(int(data)))
                                 value.clear()
                             else:
                                 verboseHandle.printConsoleError("Please enter two integer only")
                         elif (',' in str(optionMainMenu)):
                             removeList = [x.strip() for x in optionMainMenu.split(',')]
                             for data in removeList:
-                                value.append(streamDict.get(int(data)))
-                                removeInstanceContainer(value)
+                                # value.append(streamDict.get(int(data)))
+                                removeInstanceContainer(streamDict.get(int(data)))
                                 value.clear()
                         else:
-                            value.append(streamDict.get(int(optionMainMenu)))
-                            removeInstanceContainer(value)
+                            # value.append(streamDict.get(int(optionMainMenu)))
+                            removeInstanceContainer(streamDict.get(int(optionMainMenu)))
                             value.clear()
                     elif (confirm == 'no' or confirm == 'n'):
                         if (isMenuDriven == 'm'):

@@ -4,6 +4,7 @@
 import os, subprocess, sys, argparse, platform
 from concurrent.futures import ThreadPoolExecutor
 
+from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
@@ -120,24 +121,25 @@ if __name__ == '__main__':
             if(confirm=='yes' or confirm=='y'):
                 mangerHosts = config_get_manager_node()#config_get_space_hosts_list()
                 hostManagerLength=len(mangerHosts)+1
-                with ThreadPoolExecutor(hostManagerLength) as executor:
-                    for host in mangerHosts:
-                        args.append(menuDrivenFlag)
-                        args.append('--host')
-                        args.append(os.getenv(host.ip))
-                        args.append('-u')
-                        args.append(user)
-                        argsString = str(args)
-                        logger.debug('Arguments :'+argsString)
-                        argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
-                        logger.info(argsString)
-                        executor.submit(stopSecureManagerServer,argsString)
-                        args.remove(menuDrivenFlag)
-                        args.remove("--host")
-                        args.remove(os.getenv(host.ip))
-                        args.remove('-u')
-                        args.remove(user)
-                        logger.info(args)
+                with Spinner():
+                    with ThreadPoolExecutor(hostManagerLength) as executor:
+                        for host in mangerHosts:
+                            args.append(menuDrivenFlag)
+                            args.append('--host')
+                            args.append(os.getenv(host.ip))
+                            args.append('-u')
+                            args.append(user)
+                            argsString = str(args)
+                            logger.debug('Arguments :'+argsString)
+                            argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+                            logger.info(argsString)
+                            executor.submit(stopSecureManagerServer,argsString)
+                            args.remove(menuDrivenFlag)
+                            args.remove("--host")
+                            args.remove(os.getenv(host.ip))
+                            args.remove('-u')
+                            args.remove(user)
+                            logger.info(args)
             elif(confirm =='no' or confirm=='n'):
                 if(isMenuDriven=='m'):
                     logger.info("menudriven")

@@ -66,14 +66,13 @@ def execute_scriptBuilder(host):
 
     additionalParam = removeJava+' '+removeUnzip
     logger.info("additionalParam : "+str(additionalParam))
-    with Spinner():
         #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)
-        outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-        print(outputShFile)
-        logger.info("Output : scripts/servers_manager_remove.sh :"+str(outputShFile))
-        #config_remove_manager_nodeByIP(host)
-        logger.debug(str(host)+" has been removed.")
-        verboseHandle.printConsoleInfo(str(host)+" has been removed.")
+    outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+    print(outputShFile)
+    logger.info("Output : scripts/servers_manager_remove.sh :"+str(outputShFile))
+    #config_remove_manager_nodeByIP(host)
+    logger.debug(str(host)+" has been removed.")
+    verboseHandle.printConsoleInfo(str(host)+" has been removed.")
 
 
 def exitAndDisplay(isMenuDriven):
@@ -168,21 +167,22 @@ if __name__ == '__main__':
                 #    user="ec2-user"
                 hostsConfigArray = hostsConfig.split(",")
                 hostManagerLength=len(hostsConfigArray)+1
-                with ThreadPoolExecutor(hostManagerLength) as executor:
-                    for host in hostsConfigArray:
-                        logger.info("Removing host :"+str(host))
-                        verboseHandle.printConsoleInfo("Removing Host :"+str(host))
-                        args.append('--host')
-                        args.append(host)
-                        args.append('-u')
-                        args.append(user)
-                        args.append('--id')
-                        args.append(host)
-                        executor.submit(removeManagerServer,host)
-                        args.remove("--host")
-                        args.remove(host)
-                        args.remove('-u')
-                        args.remove(user)
+                with Spinner():
+                    with ThreadPoolExecutor(hostManagerLength) as executor:
+                        for host in hostsConfigArray:
+                            logger.info("Removing host :"+str(host))
+                            verboseHandle.printConsoleInfo("Removing Host :"+str(host))
+                            args.append('--host')
+                            args.append(host)
+                            args.append('-u')
+                            args.append(user)
+                            args.append('--id')
+                            args.append(host)
+                            executor.submit(removeManagerServer,host)
+                            args.remove("--host")
+                            args.remove(host)
+                            args.remove('-u')
+                            args.remove(user)
             elif(confirm =='no' or confirm=='n'):
                 if(menuDrivenFlag=='m'):
                     logger.info("menudriven")

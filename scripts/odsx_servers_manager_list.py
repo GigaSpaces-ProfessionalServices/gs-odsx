@@ -11,7 +11,6 @@ from utils.odsx_print_tabular_data import printTabular
 from colorama import Fore
 import socket, platform, requests
 from utils.ods_validation import getSpaceServerStatus, port_check_config
-from scripts.spinner import Spinner
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -107,7 +106,6 @@ def listFileFromDirectory():
     managerHost = getManagerHost(managerNodes)
     logger.info("managerHost : "+str(managerHost))
     try:
-        with Spinner():
             inputDirectory='backup'
             if(len(str(managerHost))>0):
                 getGSInfo(managerHost)
@@ -130,7 +128,7 @@ def listFileFromDirectory():
                 for node in managerNodes:
                     executor.submit(printManagerList,node)
 
-        printTabular(None,headers,data)
+            printTabular(None,headers,data)
     except Exception as e:
         handleException(e)
 

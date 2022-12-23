@@ -182,8 +182,8 @@ def remote_run(arguments,cmdFile):
             streamResumeStream=''
             streamStatus=''
 
-            with Spinner():
-                if(cmdFile.__contains__('streams_startonline')):
+            # with Spinner():
+            if(cmdFile.__contains__('streams_startonline')):
                     cmd = ssh + type + ' -s '+additionalParam+' < scripts/streams_validator.sh'
                     print(cmd)
                     logger.info("cmd to validate stream:"+cmd)
@@ -197,7 +197,7 @@ def remote_run(arguments,cmdFile):
                     if(streamStatus=='Running'):
                         verboseHandle.printConsoleWarning('Stream is already in running mode.')
                         os.system('python3 scripts/odsx_streams_list.py')
-                else:
+            else:
                     status = os.system(cmd)
             # POST command execution Business process / status update /  display details
             if(cmdFile.__contains__('servers_manager_install') and status ==0):
