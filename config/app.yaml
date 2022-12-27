@@ -99,6 +99,3 @@ env_config:
   sqljdbc: SQLJDBCDriver.conf
   keytab: keytab
   ldapsourcefile: ldap-security-config.xml
-utilities:
-  check_manager_sync-sh: check_manager_sync.sh
-  check_manager_sync-conf: check_manager_sync.conf
