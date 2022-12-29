@@ -176,6 +176,7 @@ if [ "$kafkaBrokerCount" == 1 ]; then
   currentHost=${12}
   flinkJobManagerMemoryMetaspaceSize=${13}
   flinkTaskManagerMemoryProcessSize=${14}
+  dimMdmFlinkInstallon1bFlag="y"
   echo " dataFolderKafka "$6" dataFolderZK "$7" logsFolderKafka "$8" logsFolderZK "$9" currentHost:"$currentHost
 fi
 if [ "$kafkaBrokerCount" == 3 ]; then
@@ -195,6 +196,8 @@ if [ "$kafkaBrokerCount" == 3 ]; then
   currentHost=${14}
   flinkJobManagerMemoryMetaspaceSize=${15}
   flinkTaskManagerMemoryProcessSize=${16}
+  dimMdmFlinkInstallon1bFlag=${17}
+
   echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "${10}" logsFolderZK "${11}" currentHost:"$currentHost
   echo "flinkJobManagerMemoryMetaspaceSize $flinkJobManagerMemoryMetaspaceSize, flinkTaskManagerMemoryProcessSize=$flinkTaskManagerMemoryProcessSize"
 fi
@@ -415,10 +418,16 @@ if [[ $id != 4 ]]; then
   mv /tmp/st*_kafka.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_kafka.sh
   mv /tmp/$kafka_service_file /etc/systemd/system/
-
-  installFlink
-  installDIMatadata
-  installDIManager
+  if [ $id != 2 ] ; then
+    installFlink
+    installDIMatadata
+    installDIManager
+  fi
+  if [ $id == 2 ] && [ $dimMdmFlinkInstallon1bFlag == "y" ] ; then
+    installFlink
+    installDIMatadata
+    installDIManager
+  fi
 fi
 
 if [[ $installtelegrafFlag == "y" ]]; then

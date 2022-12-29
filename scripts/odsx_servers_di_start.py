@@ -93,7 +93,7 @@ def startZookeeperServiceByHost(host):
 
 def startKafkaServiceByHost(host):
     logger.info("startKafkaServiceByHost()")
-    cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service;/dbagiga/di-flink/latest-flink/bin/start-cluster.sh;systemctl start di-flink-taskmanager.service;systemctl start di-flink-jobmanager.service"
+    cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service;systemctl start di-flink-taskmanager.service;systemctl start di-flink-jobmanager.service"
     logger.info("Getting status.. odsxkafka :"+str(cmd))
     user = 'root'
     with Spinner():
