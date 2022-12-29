@@ -357,7 +357,7 @@ def listDeployed():
     global gs_space_dictionary_obj
     try:
         dataTable = getAllFeeders()
-        # print(dataTable)
+        print(dataTable)
         return dataTable
 
     except Exception as e:
