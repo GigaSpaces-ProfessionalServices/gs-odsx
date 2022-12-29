@@ -91,6 +91,7 @@ def installCluster():
     global wantJava
     global flinkTaskManagerMemoryProcessSize
     global flinkJobManagerMemoryMetaspaceSize
+    global dimMdmFlinkInstallon1bFlag
 
     kafkaBrokerHost1 = str(os.getenv("di1"))
     logger.info("kafkaBrokerHost1 : " + str(kafkaBrokerHost1))
@@ -183,6 +184,9 @@ def installCluster():
     srNo=srNo+1
     flinkJobManagerMemoryMetaspaceSize = str(readValuefromAppConfig("app.di.flink.jobmanager.memory.jvm-metaspace.size"))
     verboseHandle.printConsoleInfo(str(srNo)+". DI-Flink jobmanager.memory.jvm-metaspace.size : "+str(flinkJobManagerMemoryMetaspaceSize))
+    srNo=srNo+1
+    dimMdmFlinkInstallon1bFlag = str(readValuefromAppConfig("app.di.flink.dim.mdm.install1b.confirm"))
+    verboseHandle.printConsoleInfo(str(srNo)+". Install Flink/DIM/MDM on kafka broker 1b : "+ str(dimMdmFlinkInstallon1bFlag))
 
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
@@ -238,10 +242,10 @@ def executeCommandForInstall(host, type, count,nodeListSize):
         additionalParam = telegrafInstallFlag + ' '
         if (len(clusterHosts) == 4):
             commandToExecute = "scripts/servers_di_install.sh"
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
             additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize
