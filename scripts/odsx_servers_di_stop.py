@@ -102,7 +102,7 @@ def stopTelegrafServiceByHost(host):
 
 def stopDIMServices(host):
     logger.info("stopTelegrafServiceByHost()")
-    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;/dbagiga/di-flink/latest-flink/bin/stop-cluster.sh;systemctl stop di-flink-taskmanager.service;systemctl stop di-flink-jobmanager.service"
+    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;systemctl stop di-flink-taskmanager.service;systemctl stop di-flink-jobmanager.service"
     logger.info("Getting status.. di :"+str(cmd))
     user = 'root'
     with Spinner():
@@ -110,7 +110,7 @@ def stopDIMServices(host):
         if (output == 0):
             verboseHandle.printConsoleInfo("Services di-manager/di-mdm/di-flink stopped successfully on "+str(host))
         else:
-            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink failed to start on "+str(host))
+            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink failed to stop or service not installed on "+str(host))
 
 def stopKafkaService(args):
     logger.info("stopKafkaService()")
