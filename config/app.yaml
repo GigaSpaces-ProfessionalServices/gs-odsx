@@ -39,6 +39,8 @@ current:
         tieredStorageBuild: tiered_storage_jar-0.1.jar
       space:
         spacejar: in_memory_jar-0.1.jar
+      spaceupdatecachepolicy:
+        jar: tierdirectcall.jar
     upgrade:
   iidr:
     watchdog:
