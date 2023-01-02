@@ -10,6 +10,7 @@ from utils.ods_ssh import connectExecuteSSH
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_node
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -48,9 +49,9 @@ def rpmExitsOrNot():
     rpmFile = [f for f in os.listdir(str(rpmPath)+"/") if f.endswith('.rpm')]
     files = [i for i in rpmFile if i.lower().startswith(("jq","kapacitor"))]
     if(len(files) == 2 ):
-           return "Yes"
+        return "Yes"
     else:
-           return "No"
+        return "No"
 
 def installUserAndTargetDirectory():
     logger.info("installUserAndTargetDirectory():")
@@ -98,7 +99,7 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Monitors -> Alerts -> Services -> Kapacitor -> Install')
     try:
         installUserAndTargetDirectory()
-        confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Kapacitor (y/n) [y]: "+Fore.RESET))
+        confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install Kapacitor (y/n) [y]: "+Fore.RESET))
         rpmStatus = rpmExitsOrNot()
         if(rpmStatus == "Yes"):
             if(len(str(confirmInstall))==0):

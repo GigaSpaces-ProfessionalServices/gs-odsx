@@ -69,7 +69,7 @@ def startDataValidationService(args):
         #listDVAgents()
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all servers. \nPress [99] for exit.: "+Fore.RESET))
         if(serverStartType=='1'):
-            optionMainMenu = int(input("Enter host Sr Number to start: "))
+            optionMainMenu = int(userInputWrapper("Enter host Sr Number to start: "))
             if len(host_dict_obj) >= optionMainMenu:
                 hostToStart = host_dict_obj.get(str(optionMainMenu))
                 # start individual
@@ -91,7 +91,7 @@ def startDataValidationService(args):
             confirm=''
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'): # Start all
                 for node in config_get_dataValidation_nodes():

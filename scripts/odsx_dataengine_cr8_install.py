@@ -9,9 +9,10 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, \
-    config_get_dataEngine_nodes, config_add_dataEngine_node
+    config_get_dataEngine_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteShCommandAndGetOutput
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -73,9 +74,9 @@ def getDEServerHostList():
 def getDEServerTypeInstall():
     logger.info("getDEServerTypeInstall()")
 
-    serverType = "1" #str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
+    serverType = "1" #str(userInputWrapper(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
     #while (len(serverType) == 0):
-    #    serverType = str(input(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
+    #    serverType = str(userInputWrapper(Fore.YELLOW + "[1] Single\n[2] Cluster\n[99] Exit : " + Fore.RESET))
     nodeList = config_get_dataEngine_nodes()
     nodes = 0
     for node in nodeList:
@@ -90,16 +91,16 @@ def installSingle():
     try:
         global user
 
-        host = os.getenv("dataEngine1")#str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
+        host = os.getenv("dataEngine1")#str(userInputWrapper(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
         #while (len(str(host)) == 0):
-        #    host = str(input(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
+        #    host = str(userInputWrapper(Fore.YELLOW + "Enter host to install DE: " + Fore.RESET))
         logger.info("Enter host to install cr8: " + str(host))
-        #user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
+        #user = str(userInputWrapper(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
         #if (len(str(user)) == 0):
         user = "root"
         logger.info(" user: " + str(user))
 
-        confirmInstall = str(input(Fore.YELLOW + "Are you sure want to install DE servers (y/n) [y]: " + Fore.RESET))
+        confirmInstall = str(userInputWrapper(Fore.YELLOW + "Are you sure want to install DE servers (y/n) [y]: " + Fore.RESET))
         if (len(str(confirmInstall)) == 0):
             confirmInstall = 'y'
         if (confirmInstall == 'y'):
@@ -118,19 +119,19 @@ def installCluster():
     global standByHost
     global witnessHost
 
-    masterHost = os.getenv("dataEngine1")#str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
+    masterHost = os.getenv("dataEngine1")#str(userInputWrapper(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
     #while (len(masterHost) == 0):
-    #    masterHost = str(input(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
+    #    masterHost = str(userInputWrapper(Fore.YELLOW + "Enter host1  :" + Fore.RESET))
     logger.info("masterHost : " + str(masterHost))
-    standByHost = os.getenv("dataEngine2")#str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
+    standByHost = os.getenv("dataEngine2")#str(userInputWrapper(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
     #while (len(standByHost) == 0):
-    #    standByHost = str(input(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
+    #    standByHost = str(userInputWrapper(Fore.YELLOW + "Enter host2 :" + Fore.RESET))
     logger.info("standByHost : " + str(standByHost))
-    witnessHost = os.getenv("dataEngine3")#str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
+    witnessHost = os.getenv("dataEngine3")#str(userInputWrapper(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
     #while (len(witnessHost) == 0):
-    #    witnessHost = str(input(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
+    #    witnessHost = str(userInputWrapper(Fore.YELLOW + "Enter host3 :" + Fore.RESET))
     logger.info("witnessHost :" + str(witnessHost))
-    #user = str(input(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
+    #user = str(userInputWrapper(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
     #if (len(str(user)) == 0):
     user = "root"
     logger.info(" user: " + str(user))
@@ -145,7 +146,7 @@ def installCluster():
     host_type_dictionary_obj.add(witnessHost, 'Witness')
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
-    confirmInstall = str(input(
+    confirmInstall = str(userInputWrapper(
         Fore.YELLOW + "Are you sure want to install DE servers on " + str(clusterHosts) + " (y/n) [y]: " + Fore.RESET))
     if (len(str(confirmInstall)) == 0):
         confirmInstall = 'y'
@@ -190,21 +191,21 @@ def executeCommandForInstall(host, type, count):
         installCr8 = True
         # IS_CR8_INSTALL= 1 -> install, 2-> installed version is lower, 3-> installed version is higher, 4-> installed version is same
         if output == "2":
-            confirmInstall = str(input(
+            confirmInstall = str(userInputWrapper(
                 Fore.YELLOW + "Lower version of cr8 is installed. Do you want to continue installation (y/n) [y]: " + Fore.RESET))
             if (len(str(confirmInstall)) == 0):
                 confirmInstall = 'y'
             if (confirmInstall != 'y'):
                 installCr8 = False
         if output == "3":
-            confirmInstall = str(input(
+            confirmInstall = str(userInputWrapper(
                 Fore.YELLOW + "Higher version of cr8 is installed. Do you want to continue installation (y/n) [y]: " + Fore.RESET))
             if (len(str(confirmInstall)) == 0):
                 confirmInstall = 'y'
             if (confirmInstall != 'y'):
                 installCr8 = False
         if output == "4":
-            confirmInstall = str(input(
+            confirmInstall = str(userInputWrapper(
                 Fore.YELLOW + "Same version of cr8 is installed. Do you want to continue installation (y/n) [y]: " + Fore.RESET))
             if (len(str(confirmInstall)) == 0):
                 confirmInstall = 'y'
@@ -275,21 +276,21 @@ def addNodeToCluster(nodes):
         if (str(node.type) == 'Witness'):
             witnessHost = str(node.ip)
     if (len(str(masterHost)) == 0):
-        masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
+        masterHost = str(userInputWrapper(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
         while (len(masterHost) == 0):
-            masterHost = str(input(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
+            masterHost = str(userInputWrapper(Fore.YELLOW + "Enter Masterhost  :" + Fore.RESET))
     logger.info("masterHost : " + str(masterHost))
     if (len(str(standByHost)) == 0):
-        standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
+        standByHost = str(userInputWrapper(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
         while (len(standByHost) == 0):
-            standByHost = str(input(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
+            standByHost = str(userInputWrapper(Fore.YELLOW + "Enter StandbyHost :" + Fore.RESET))
     logger.info("standByHost : " + str(standByHost))
     if (len(str(witnessHost)) == 0):
-        witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
+        witnessHost = str(userInputWrapper(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
         while (len(witnessHost) == 0):
-            witnessHost = str(input(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
+            witnessHost = str(userInputWrapper(Fore.YELLOW + "Enter WitnessHost :" + Fore.RESET))
         logger.info("witnessHost :" + str(witnessHost))
-    user = str(input(Fore.YELLOW + "Enter user to connect DE cr8 servers [root]:" + Fore.RESET))
+    user = str(userInputWrapper(Fore.YELLOW + "Enter user to connect DE cr8 servers [root]:" + Fore.RESET))
 
 
 if __name__ == '__main__':

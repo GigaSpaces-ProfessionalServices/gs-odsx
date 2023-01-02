@@ -1,19 +1,23 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
-import os, subprocess, sys, argparse
-from os import  path
-from utils.ods_cluster_config import config_get_cluster_airgap, config_add_manager_node, config_add_space_node,config_remove_manager_nodeById,config_get_space_listWithoutDisplay,config_remove_space_nodeByIP, \
-    config_add_cdc_stream, config_update_stream_statusByCreationDate,getStreamIdByStreamCreationDateTime, config_get_manager_listWithoutDisplay, config_update_stream_statusById,config_get_manager_list,config_remove_manager_nodeByIP, \
-    config_remove_space_nodeById,config_add_cdc_node,config_update_space_gsc_byHost,config_get_streamName_statusById,config_update_stream_statusByHost,config_get_cdc_streams,getStreamIdAndNameWithoutDisplay, getStreamIdAndName
+import argparse
+import os
+import socket
+import sys
+from datetime import datetime
+from os import path
+
+from colorama import Fore
+
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_cluster_airgap, config_add_manager_node, config_add_space_node, \
+    config_remove_space_nodeByIP, \
+    getStreamIdByStreamCreationDateTime, config_update_stream_statusById, config_remove_manager_nodeByIP, \
+    config_add_cdc_node, config_get_streamName_statusById
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-import socket
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.ods_app_config import readValuefromAppConfig, writeToFile, set_value_in_property_file
-from datetime import datetime
-from colorama import Fore
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

@@ -9,7 +9,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from scripts.odsx_tieredstorage_undeploy import getManagerHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_cleanup import signal_handler
 
@@ -114,7 +114,7 @@ def listDeployed(managerHost, spaceName):
                     dataModeTable.append(dataArray)
                 printTabular(None, headers, dataModeTable)
 
-                modeMenu = str(input("Enter your mode srno.: "))
+                modeMenu = str(userInputWrapper("Enter your mode srno.: "))
 
                 if len(modeDict) >= int(modeMenu):
                     modeName= modeDict.get(int(modeMenu))
@@ -211,7 +211,7 @@ def listDeployed(managerHost, spaceName):
         #             dataModeTable.append(dataArray)
         #         printTabular(None, headers, dataModeTable)
         #
-        #         modeMenu = str(input("Enter your host srno.: "))
+        #         modeMenu = str(userInputWrapper("Enter your host srno.: "))
         #
         #         if len(modeDict) >= int(modeMenu):
         #             modeName= modeDict.get(int(modeMenu))
@@ -382,10 +382,10 @@ if __name__ == '__main__':
 
                 if optionMainMenu != '99':
                     confirm = ''
-                    confirm = str(input(
+                    confirm = str(userInputWrapper(
                         Fore.YELLOW + "Are you sure want to remove instance container ? [yes (y)] / [no (n)] : " + Fore.RESET))
                     while (len(str(confirm)) == 0):
-                        confirm = str(input(
+                        confirm = str(userInputWrapper(
                             Fore.YELLOW + "Are you sure want to remove instance container ? [yes (y)] / [no (n)] : " + Fore.RESET))
                     logger.info("confirm :" + str(confirm))
                     if (confirm == 'yes' or confirm == 'y'):

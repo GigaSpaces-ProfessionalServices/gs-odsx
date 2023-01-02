@@ -1,17 +1,12 @@
 #!/usr/bin/env python3
-import argparse
 import os
 import signal
-import sys
 
-from utils.ods_cleanup import signal_handler
-from utils.ods_scp import scp_upload
-from scripts.logManager import LogManager
-from scripts.spinner import Spinner
 from colorama import Fore
-from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_get_manager_node
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cleanup import signal_handler
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

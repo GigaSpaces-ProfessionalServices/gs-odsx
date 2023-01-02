@@ -7,6 +7,7 @@ import requests
 
 from scripts import ods_server_request_status
 from scripts.logManager import LogManager
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -64,7 +65,7 @@ def unquiesceSpace(space_name, host, dryRun):
 if __name__ == '__main__':
     args = check_arg(sys.argv[1:])
     if args.m == "m":
-        tmpHost = str(input("host ip: "))
+        tmpHost = str(userInputWrapper("host ip: "))
         if tmpHost != "" or tmpHost is not None:
             args.host = tmpHost
 

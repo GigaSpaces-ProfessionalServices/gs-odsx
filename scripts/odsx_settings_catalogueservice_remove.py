@@ -4,14 +4,13 @@ import os
 import signal
 import sys
 
-from utils.ods_cleanup import signal_handler
-from utils.ods_cluster_config import config_get_grafana_list,config_get_nb_list
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
-from utils.ods_scp import scp_upload
-from scripts.logManager import LogManager
-from scripts.spinner import Spinner
 from colorama import Fore
 
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_cleanup import signal_handler
+from utils.ods_cluster_config import config_get_grafana_list, config_get_nb_list
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -70,12 +69,14 @@ def removeService():
     logger.info("removeService() : start")
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to remove Catalogue service ? (Yes/No) [Yes]:" + Fore.RESET
-    
-    choice = str(input(confirmMsg))
+
+    from utils.odsx_keypress import userInputWrapper
+    choice = str(userInputWrapper(confirmMsg))
 
     while(len(choice) > 0 and choice.casefold()!='yes' and choice.casefold()!='no'):
         verboseHandle.printConsoleError("Invalid input")
-        choice = str(input(confirmMsg))
+        from utils.odsx_keypress import userInputWrapper
+        choice = str(userInputWrapper(confirmMsg))
 
     if choice.casefold() == 'no':
         exit(0)

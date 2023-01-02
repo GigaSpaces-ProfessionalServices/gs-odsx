@@ -9,7 +9,7 @@ from utils.odsx_keypress import userInputWithEscWrapper
 
 cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from utils.ods_cluster_config import config_get_dataEngine_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

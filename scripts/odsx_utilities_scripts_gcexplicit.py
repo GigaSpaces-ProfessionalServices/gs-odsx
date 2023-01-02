@@ -14,6 +14,7 @@ from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import host_dictionary_obj, getUsernameByHost, getPasswordByHost
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabularGrid, printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -175,8 +176,8 @@ def getZoneList():
         safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
         objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-        username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
+        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
     try:
         if profile == 'security':
             response = requests.get("http://"+managerHost+":8090/v2/containers",auth = HTTPBasicAuth(username, password))
@@ -228,25 +229,25 @@ if __name__ == '__main__':
             if (len(str(managerHost)) > 0):
                 displaySummary()
                 zoneList = getZoneList()
-                zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone Srno. : " + Fore.RESET))
+                zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Zone Srno. : " + Fore.RESET))
                 while (len(str(zoneGSCNo)) == 0):
-                    zoneGSCNo = str(input(Fore.YELLOW + "Enter Zone  Srno. : " + Fore.RESET))
+                    zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Zone  Srno. : " + Fore.RESET))
                 zoneAddr=zoneList.get(int(zoneGSCNo))
-                hostSpecific = str(input(Fore.YELLOW + "Do you want to run on specific host [y/n] [n]: " + Fore.RESET))
+                hostSpecific = str(userInputWrapper(Fore.YELLOW + "Do you want to run on specific host [y/n] [n]: " + Fore.RESET))
                 while (len(str(hostSpecific)) == 0):
                     hostSpecific = 'n'
                 if(hostSpecific == 'y' or hostSpecific == "Y"):
                     hostList=managerHostList(spaceNodes)
-                    hostNo = str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
+                    hostNo = str(userInputWrapper(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
                     while (len(str(hostNo)) == 0):
-                        hostNo = str(input(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
+                        hostNo = str(userInputWrapper(Fore.YELLOW + "Enter host Srno. : " + Fore.RESET))
                     hostAddr=hostList.get(int(hostNo))
                     executeCommandForInstall(zoneAddr,hostAddr)
 
                 elif(hostSpecific == 'n' or hostSpecific == "N"):
                     hostList=managerHostList(spaceNodes)
                     for node in hostList:
-                      executeCommandForInstall(zoneAddr,hostList.get(int(node)))
+                        executeCommandForInstall(zoneAddr,hostList.get(int(node)))
             else:
                 logger.info("Please check manager server status.")
                 verboseHandle.printConsoleInfo("Please check manager server status.")

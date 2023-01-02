@@ -66,7 +66,15 @@ function installFlink() {
   sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|taskmanager.numberOfTaskSlots: 1|taskmanager.numberOfTaskSlots: 10|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  echo "jobmanager.memory.jvm-metaspace.size: 1500m" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+
+  if [ "$flinkJobManagerMemoryMetaspaceSize" != "None" ] ; then
+    sed -i '/^jobmanager.memory.jvm-metaspace.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+    echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  fi
+  if [ "$flinkTaskManagerMemoryProcessSize" != "None" ] ; then
+    sed -i '/^taskmanager.memory.process.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+    echo "taskmanager.memory.process.size: $flinkTaskManagerMemoryProcessSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  fi
   sed -i -e 's|jobmanager.memory.process.size: 1600m|jobmanager.memory.process.size: 4000m|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-jobmanager.service
   sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-taskmanager.service
@@ -96,10 +104,13 @@ function installDIMatadata {
   sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|/dbagigalogs/di-mdm|g' config/di-mdm.service
   sed -i -e 's|/home/gsods|/dbagiga|g' config/di-mdm.service
 
-  sed -i '/^spring.cloud.zookeeper.connectUrl/d' /dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  sed -i '/^zookeeper.connectUrl/d' /dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
   echo "">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-  echo "spring.cloud.zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-
+  if [ "$kafkaBrokerCount" == 1 ]; then
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  else
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  fi
   cd
   info "\nCopying service file\n"
   cp /dbagiga/di-mdm/latest-di-mdm/config/di-mdm.service /etc/systemd/system/
@@ -133,9 +144,12 @@ function installDIManager {
 
   sed -i '/^mdm.server.url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
   sed -i '/^mdm.server.fallback-url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  echo "mdm.server.url=$kafkaBrokerHost1">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  echo "mdm.server.fallback-url=$kafkaBrokerHost2">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-
+  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  if [ "$kafkaBrokerCount" == 1 ]; then
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  else
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  fi
   cd
   info "\nCopying service file\n"
   cp /dbagiga/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/
@@ -160,6 +174,9 @@ if [ "$kafkaBrokerCount" == 1 ]; then
   wantInstallJava=${10}
   sourceInstallerDirectory=${11}
   currentHost=${12}
+  flinkJobManagerMemoryMetaspaceSize=${13}
+  flinkTaskManagerMemoryProcessSize=${14}
+  dimMdmFlinkInstallon1bFlag="y"
   echo " dataFolderKafka "$6" dataFolderZK "$7" logsFolderKafka "$8" logsFolderZK "$9" currentHost:"$currentHost
 fi
 if [ "$kafkaBrokerCount" == 3 ]; then
@@ -177,7 +194,12 @@ if [ "$kafkaBrokerCount" == 3 ]; then
   wantInstallJava=${12}
   sourceInstallerDirectory=${13}
   currentHost=${14}
+  flinkJobManagerMemoryMetaspaceSize=${15}
+  flinkTaskManagerMemoryProcessSize=${16}
+  dimMdmFlinkInstallon1bFlag=${17}
+
   echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "${10}" logsFolderZK "${11}" currentHost:"$currentHost
+  echo "flinkJobManagerMemoryMetaspaceSize $flinkJobManagerMemoryMetaspaceSize, flinkTaskManagerMemoryProcessSize=$flinkTaskManagerMemoryProcessSize"
 fi
 
 if [ "$wantInstallJava" == "y" ]; then
@@ -396,10 +418,16 @@ if [[ $id != 4 ]]; then
   mv /tmp/st*_kafka.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_kafka.sh
   mv /tmp/$kafka_service_file /etc/systemd/system/
-
-  installFlink
-  installDIMatadata
-  installDIManager
+  if [ $id != 2 ] ; then
+    installFlink
+    installDIMatadata
+    installDIManager
+  fi
+  if [ $id == 2 ] && [ $dimMdmFlinkInstallon1bFlag == "y" ] ; then
+    installFlink
+    installDIMatadata
+    installDIManager
+  fi
 fi
 
 if [[ $installtelegrafFlag == "y" ]]; then

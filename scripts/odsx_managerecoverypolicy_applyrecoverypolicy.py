@@ -11,7 +11,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_policyConfigurations, get_spaces_servers, config_add_policy_association, \
     config_get_manager_node
 from utils.ods_ssh import executeLocalCommandAndGetOutput
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -212,7 +212,7 @@ def show_policy_info(args):
         exit(0)
 
     verboseHandle.printConsoleWarning("Are you sure want to apply policy ? [Yes][No][Cancel]")
-    choice = str(input(""))
+    choice = str(userInputWrapper(""))
     if choice.casefold() == 'no':
         exit(0)
 

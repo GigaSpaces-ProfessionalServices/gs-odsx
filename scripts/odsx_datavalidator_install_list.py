@@ -1,17 +1,18 @@
-import argparse, subprocess
+import argparse
 import os
-import sys
 import sqlite3
+import sys
 
-from utils.ods_validation import getSpaceServerStatus, getDataValidationServerStatus
-from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
 from colorama import Fore
+
+from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, \
-    executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, \
+    executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_validation import getDataValidationServerStatus
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

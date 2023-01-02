@@ -1,15 +1,15 @@
 import argparse
-import json
 import os
 import sys
+
 import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, set_value_in_property_file
 from utils.ods_manager import getManagerHost, getManagerInfo
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
-from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -145,7 +145,7 @@ def setInputs():
             counter = counter + 1
 
     selectedOption = str(
-        input(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
     if(selectedOption.isnumeric()==True):
         if len(selectedOption) <= 0 or int(selectedOption) not in ddlfileOptions:
             verboseHandle.printConsoleError("Invalid Option!")
@@ -165,9 +165,9 @@ def setInputs():
     
     displaySummary()
 
-    summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue validation with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+    summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue validation with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
     while(len(str(summaryConfirm))==0):
-        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue validation with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+        summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue validation with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
 
     if(str(summaryConfirm).casefold()=='n' or str(summaryConfirm).casefold()=='no'):
         logger.info("Exiting without validation")

@@ -5,8 +5,10 @@ from colorama import Fore
 
 from utils.ods_app_config import readValuefromAppConfig
 
-def userInputWrapper(inputStr):
-    userInput = input(inputStr)
+def userInputWrapper(inputStr,isSingleInputEnabled=False):
+    userInput = userInputWithEscWrapper(inputStr,isSingleInputEnabled)
+    if userInput == "99":
+        exit(0)
     return userInput
 
 # Moving to different branch -f param
@@ -20,17 +22,17 @@ def userInputWrapper1(inputStr):
     if cmdlist.__contains__("-f"):
         userInput = "y"
     else:
-        userInput = input(inputStr)
+        userInput = userInputWrapper(inputStr)
     print(cmdlist)
     return userInput
 
 #Reverting ESC changes
-def userInputWithEscWrapper(inputStr):
+def userInputWithEscWrapper(inputStr,isSingleInputEnabled=False):
     isEsc = str(readValuefromAppConfig("app.functionality.esc"))
     if(isEsc == 'True'):
         try:
             print(Fore.YELLOW + inputStr)
-            keyPressed = userInputWithEsc()
+            keyPressed = userInputWithEsc(isSingleInputEnabled)
             os.system('stty sane')
             os.system("stty erase ^H")
             return keyPressed
@@ -39,11 +41,11 @@ def userInputWithEscWrapper(inputStr):
             os.system("stty erase ^H")
             return "99"
     else:
-        userInput = input(inputStr)
+        userInput = userInputWrapper(inputStr)
         return userInput
 
 
-def userInputWithEsc():
+def userInputWithEsc(isSingleInputEnabled=False):
     import sys, tty, os, termios
     old_settings = termios.tcgetattr(sys.stdin)
     tty.setcbreak(sys.stdin.fileno())
@@ -66,6 +68,7 @@ def userInputWithEsc():
             k = ord(b)
         this_key = key_mapping.get(k, chr(k))
         if this_key == 'return':
+            sys.stdout.write("\n")
             break
         if this_key == 'esc':
             user_input.clear()
@@ -79,6 +82,8 @@ def userInputWithEsc():
         else:
             user_input.append(this_key)
         print(''.join(user_input), end="\r")
+        if isSingleInputEnabled:
+            break;
     termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
     # print(''.join(user_input))
     return ''.join(user_input)

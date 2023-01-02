@@ -1,23 +1,24 @@
 #!/usr/bin/env python3
 
-import os,time,subprocess,requests, json, math
+import json
+import os
+import requests
+import time
+
 from colorama import Fore
-from scripts.logManager import LogManager
-from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, getYamlFilePathInsideFolder
-from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
-from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH
-from colorama import Fore
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
-from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.ods_scp import scp_upload
 from requests.auth import HTTPBasicAuth
+
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFolder
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_scp import scp_upload
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -272,7 +273,7 @@ def uploadFileRest(managerHostConfig):
         #if(len(str(pathOfSourcePUInput))>0):
         #pathOfSourcePU = pathOfSourcePUInput
         #while(len(str(pathOfSourcePU))==0):
-        #    pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+        #    pathOfSourcePU = str(userInputWrapper(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
         #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
 
@@ -421,7 +422,7 @@ def proceedToDeployPUInputParam(managerHost):
     #print(data)
     displaySummaryOfInputParam()
 
-    finalConfirm = str(input(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
+    finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
     if(len(str(finalConfirm))==0):
         finalConfirm='y'
     if(finalConfirm=='y'):
@@ -480,7 +481,7 @@ if __name__ == '__main__':
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
                         confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.mq.kafka.consumer.gsc.create"))
-                        #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
+                        #str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
                             createGSCInputParam(managerHost,spaceNodes)

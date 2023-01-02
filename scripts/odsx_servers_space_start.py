@@ -85,23 +85,23 @@ if __name__ == '__main__':
         # changed : 25-Aug hence systemctl always with root no need to ask
         #userConfig = readValuefromAppConfig("app.server.user")
         #logger.info("userConfig :"+str(userConfig))
-        #user = str(input("Enter your user ["+userConfig+"]: "))
+        #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
         #if(len(str(user))==0):
         #    user=userConfig
         user='root'
         logger.info("user :"+str(user))
         streamDict = config_get_space_list_with_status(user)
-        serverStartType = str(input(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all. \nPress [99] for exit.: "+Fore.RESET))
+        serverStartType = str(userInputWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStartType:"+str(serverStartType))
         if(serverStartType=='1'):
-            optionMainMenu = int(input("Enter your host number to start: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to start: "))
             logger.info("Enter your host number to start:"+str(optionMainMenu))
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     spaceStart = streamDict.get(optionMainMenu)
                     choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     #print("coice start server:"+str(choice))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
@@ -177,7 +177,7 @@ if __name__ == '__main__':
             confirm=''
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()

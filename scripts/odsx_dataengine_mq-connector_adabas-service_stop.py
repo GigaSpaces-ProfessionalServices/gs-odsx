@@ -6,11 +6,10 @@ import sys
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -140,14 +139,14 @@ def stopAdabusService(args):
         listDEServers()
         inputChoice = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual stop \n[Enter] For stop all servers \n[99] For exit \nEnter your choice : "+Fore.RESET))
         if(inputChoice=='1'):
-            hostNumber = str(input(Fore.YELLOW+"Enter host number to stop : "+Fore.RESET))
+            hostNumber = str(userInputWrapper(Fore.YELLOW+"Enter host number to stop : "+Fore.RESET))
             while(len(str(hostNumber))==0):
-                hostNumber = str(input(Fore.YELLOW+"Enter host number to stop : "+Fore.RESET))
+                hostNumber = str(userInputWrapper(Fore.YELLOW+"Enter host number to stop : "+Fore.RESET))
             host = adbas_host_dict.get(hostNumber)
             executeService(host)
         elif(len(str(inputChoice))==0):
             nodes = getDEServerHostList()
-            choice = str(input(Fore.YELLOW + "Are you sure, you want to stop adabus service for [" + str(
+            choice = str(userInputWrapper(Fore.YELLOW + "Are you sure, you want to stop adabus service for [" + str(
                 nodes) + "] ? (y/n) [y]: " + Fore.RESET))
             if choice.casefold() == 'n':
                 exit(0)

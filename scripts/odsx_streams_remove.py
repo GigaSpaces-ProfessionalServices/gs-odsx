@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-import os,sys
+import os
+import sys
 
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_cdc_streams, config_remove_cdc_stream, config_remove_cdc_streamById,getStreamIdAndName
-from datetime import datetime
+from utils.ods_cluster_config import config_get_cdc_streams, config_remove_cdc_streamById, getStreamIdAndName
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -23,13 +23,15 @@ def display_stream_list(args,menuDrivenFlag):
     streams = config_get_cdc_streams()
     verboseHandle.printConsoleWarning("MENU -> STREAMS -> Remove\n")
     streamDict = getStreamIdAndName()
-    optionMainMenu = int(input("Enter your option: "))
+    from utils.odsx_keypress import userInputWrapper
+    optionMainMenu = int(userInputWrapper("Enter your option: "))
     if(optionMainMenu != 99):
         cliArguments = args[1:]
         if len(streamDict) >= optionMainMenu:
             stream = streamDict.get(optionMainMenu)
             verboseHandle.printConsoleWarning("Are you sure want to remove stream ? [Yes][No][Cancel]")
-            choice = str(input(""))
+            from utils.odsx_keypress import userInputWrapper
+            choice = str(userInputWrapper(""))
             if(choice.casefold()=='no'):
                 if(isMenuDriven=='m'):
                     os.system('python3 scripts/odsx_streams_remove.py'+' '+isMenuDriven)

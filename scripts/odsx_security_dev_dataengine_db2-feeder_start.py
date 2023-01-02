@@ -1,15 +1,22 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json, subprocess, glob,sqlite3
+import glob
+import json
+import os
+import requests
+import sqlite3
+import subprocess
+
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
+
 from scripts.logManager import LogManager
-from utils.odsx_keypress import userInputWithEscWrapper
-from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.ods_app_config import readValuefromAppConfig,readValueByConfigObj
 from utils.odsx_db2feeder_utilities import getQueryStatusFromSqlLite
-from requests.auth import HTTPBasicAuth
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -154,9 +161,9 @@ def inputParam():
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):
-        inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
+        inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
         if(len(str(inputNumberToStart))==0):
-            inputNumberToStart = str(input(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
+            inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start db2-feeder : "+Fore.RESET))
         proceedToStartDB2Feeder(inputNumberToStart)
     if(len(str(inputChoice))==0):
         elements = len(fileNameDict)

@@ -5,19 +5,19 @@ import argparse
 import json
 import os
 import sys
+
 import requests
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
+
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
-from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from requests.auth import HTTPBasicAuth
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -163,15 +163,15 @@ if __name__ == '__main__':
     if inputChoice=='99':
         quit(0)
     if inputChoice=='1':
-        confirm = str(input(Fore.YELLOW + "Are you sure want to continue gs manager upgradation rollback? [yes (y)] / [no (n)] : " + Fore.RESET))
+        confirm = str(userInputWrapper(Fore.YELLOW + "Are you sure want to continue gs manager upgradation rollback? [yes (y)] / [no (n)] : " + Fore.RESET))
         if confirm == 'yes' or confirm == 'y':
-            inputHostNuber = str(input(Fore.YELLOW+"Enter host number to rollback. :"+Fore.RESET))
+            inputHostNuber = str(userInputWrapper(Fore.YELLOW+"Enter host number to rollback. :"+Fore.RESET))
             host = managerDict.get(int(inputHostNuber))
             host = os.getenv(host.ip)
             proceedForRollback(host)
     if inputChoice=='':
      try:
-         confirm = str(input(Fore.YELLOW + "Are you sure want to continue gs manager upgradation rollback? [yes (y)] / [no (n)] : " + Fore.RESET))
+         confirm = str(userInputWrapper(Fore.YELLOW + "Are you sure want to continue gs manager upgradation rollback? [yes (y)] / [no (n)] : " + Fore.RESET))
          if confirm == 'yes' or confirm == 'y':
             for host in hostsConfig.split(','):
                 proceedForRollback(host)

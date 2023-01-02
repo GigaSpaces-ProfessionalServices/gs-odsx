@@ -12,6 +12,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_ge
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -248,20 +249,20 @@ def createGSCInputParam(managerHost, spaceNode, confirmCreateGSC):
     else:
         createGsc = False
     if createGsc:
-        numberOfGSC = str(input(Fore.YELLOW + "Enter number of GSCs per host [1] : " + Fore.RESET))
+        numberOfGSC = str(userInputWrapper(Fore.YELLOW + "Enter number of GSCs per host [1] : " + Fore.RESET))
         while (len(str(numberOfGSC)) == 0):
             numberOfGSC = 1
         logger.info("numberOfGSC :" + str(numberOfGSC))
 
-        zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to create [consumer] : " + Fore.RESET))
+        zoneGSC = str(userInputWrapper(Fore.YELLOW + "Enter zone of GSC to create [consumer] : " + Fore.RESET))
         while (len(str(zoneGSC)) == 0):
             zoneGSC = 'consumer'
         logger.info("zoneGSC :" + str(zoneGSC))
-        memoryGSC = str(input(Fore.YELLOW + "Enter memory of GSC [4g] : " + Fore.RESET))
+        memoryGSC = str(userInputWrapper(Fore.YELLOW + "Enter memory of GSC [4g] : " + Fore.RESET))
         while (len(str(memoryGSC)) == 0):
             memoryGSC = '4g'
     else:
-        zoneGSC = str(input(Fore.YELLOW + "Enter zone of GSC to deploy PU [consumer] : " + Fore.RESET))
+        zoneGSC = str(userInputWrapper(Fore.YELLOW + "Enter zone of GSC to deploy PU [consumer] : " + Fore.RESET))
         while (len(str(zoneGSC)) == 0):
             zoneGSC = 'consumer'
         logger.info("zoneGSC :" + str(zoneGSC))
@@ -413,43 +414,43 @@ def proceedToDeployPUInputParam(managerHost):
     dEHostIp = getDEServerHost()
     kafkaHosts = getDIServerHostList()
     cdchostname = str(
-        input(
+        userInputWrapper(
             Fore.YELLOW + "Enter cdc host name to load configuration [" + dEHostIp + "] :" + Fore.RESET))
     if (len(str(cdchostname)) == 0):
         cdchostname = dEHostIp
     kafkabrokers = str(
-        input(
+        userInputWrapper(
             Fore.YELLOW + "Enter kafka brokers to load configuration [" + kafkaHosts + "] :" + Fore.RESET))
     if (len(str(kafkabrokers)) == 0):
         kafkabrokers = kafkaHosts
     kafkatopicPartitions = str(
-        input(Fore.YELLOW + "Enter kafka topic partitions to load configuration [12] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter kafka topic partitions to load configuration [12] :" + Fore.RESET))
     if (len(str(kafkatopicPartitions)) == 0):
         kafkatopicPartitions = 12
     kafkatopicReplicationFactor = str(
-        input(Fore.YELLOW + "Enter kafka topic replication factor to load configuration [1] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter kafka topic replication factor to load configuration [1] :" + Fore.RESET))
     if (len(str(kafkatopicReplicationFactor)) == 0):
         kafkatopicReplicationFactor = 1
     kafkaMaxPollRecords = str(
-        input(Fore.YELLOW + "Enter kafka max poll records to load configuration [100000] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter kafka max poll records to load configuration [100000] :" + Fore.RESET))
     if (len(str(kafkaMaxPollRecords)) == 0):
         kafkaMaxPollRecords = '100000'
     kafkaReceiveBufferConfig = str(
-        input(Fore.YELLOW + "Enter kafka receive buffer to load configuration [16777216] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter kafka receive buffer to load configuration [16777216] :" + Fore.RESET))
     if (len(str(kafkaReceiveBufferConfig)) == 0):
         kafkaReceiveBufferConfig = 16777216
 
     resourceName = str(
-        input(Fore.YELLOW + "Enter name of PU to deploy [cdc_tables-dih-consumer-fullsync.war] :" + Fore.RESET))
+        userInputWrapper(Fore.YELLOW + "Enter name of PU to deploy [cdc_tables-dih-consumer-fullsync.war] :" + Fore.RESET))
     if (len(str(resourceName)) == 0):
         resourceName = 'cdc_tables-dih-consumer-fullsync.war'
     logger.info("nameOfPU :" + str(resourceName))
 
-    resourcePath = str(input(Fore.YELLOW + "Enter path of PU to deploy [/dbagiga] :" + Fore.RESET))
+    resourcePath = str(userInputWrapper(Fore.YELLOW + "Enter path of PU to deploy [/dbagiga] :" + Fore.RESET))
     if (len(str(resourcePath)) == 0):
         resourcePath = '/dbagiga'
     logger.info("nameOfPU :" + str(resourcePath))
-    processingUnitName = str(input(Fore.YELLOW + "Enter Resource Name [consumer-online] : " + Fore.RESET))
+    processingUnitName = str(userInputWrapper(Fore.YELLOW + "Enter Resource Name [consumer-online] : " + Fore.RESET))
     while (len(str(processingUnitName)) == 0):
         processingUnitName = 'consumer-online'
     logger.info("processingUnitName :" + str(processingUnitName))
@@ -484,7 +485,7 @@ if __name__ == '__main__':
                 # listDeployed(managerHost)
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes, spaceNodes)
                 if (len(space_dict_obj) > 0):
-                    confirmCreateGSC = str(input(Fore.YELLOW + "Do you want to create GSC ? (y/n) [y] : "))
+                    confirmCreateGSC = str(userInputWrapper(Fore.YELLOW + "Do you want to create GSC ? (y/n) [y] : "))
                     if (len(str(confirmCreateGSC)) == 0 or confirmCreateGSC == 'y'):
                         confirmCreateGSC = 'y'
                     createGSCInputParam(managerHost, spaceNodes, confirmCreateGSC)

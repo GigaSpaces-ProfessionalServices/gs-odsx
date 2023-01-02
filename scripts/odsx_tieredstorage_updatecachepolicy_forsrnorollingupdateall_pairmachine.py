@@ -1,27 +1,28 @@
 #!/usr/bin/env python3
-import concurrent
-import os, time, sqlite3
-import re
+import logging
+import os
 import signal
+import sqlite3
+import time
 from concurrent.futures.thread import ThreadPoolExecutor
+from datetime import datetime as dt
 
+import json
+import requests
 from colorama import Fore
-from scripts.logManager import LogManager
-import requests, json, math
 
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj, readValuefromAppConfig
+from utils.ods_app_config import set_value_yaml_config, \
+    readValueFromYaml, getYamlFilePathInsideFolder
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, set_value_yaml_config, \
-    readValueFromYaml, getYamlFilePathInsideFolder
-from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from scripts.spinner import Spinner
-import logging
 from utils.ods_scp import scp_upload
-from datetime import datetime as dt
-from utils.ods_app_config import readValueByConfigObj,readValuefromAppConfig
+from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_keypress import userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
+from utils.odsx_print_tabular_data import printTabularGrid, printTabularGridWrap
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -319,7 +320,7 @@ def getNumberOfSpaceInstances():
 def confirmAndProceedForAll():
     logger.info("confirmAndProceedForAll()")
     try:
-        confirmRollingUpdate = str(input(Fore.YELLOW+"Are you sure want to proceed for rolling update all SrNo ? (y/n) [y]: "+Fore.RESET))
+        confirmRollingUpdate = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed for rolling update all SrNo ? (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmRollingUpdate))==0 ):
             confirmRollingUpdate = 'y'
         logger.info("confirmRollingUpdate : "+str(confirmRollingUpdate)) # instead of serial number couple need to be restarted.
@@ -644,14 +645,14 @@ def inputParams():
     try:
         '''
         restartcontainerSleeptimeConfig = str(readValuefromAppConfig("app.tieredstorage.restartcontainer.sleeptime")).replace('"','')
-        restartContainerSleeptime = str(input(Fore.YELLOW+"Enter restart container sleeptime ["+restartcontainerSleeptimeConfig+"]: "))
+        restartContainerSleeptime = str(userInputWrapper(Fore.YELLOW+"Enter restart container sleeptime ["+restartcontainerSleeptimeConfig+"]: "))
         if(len(str(restartContainerSleeptime))==0):
             restartContainerSleeptime = restartcontainerSleeptimeConfig
         logger.info("restartcontainerSleeptime : "+str(restartContainerSleeptime))
 
 
         demoteSleeptimeConfig = str(readValuefromAppConfig("app.tieredstorage.demote.sleeptime")).replace('"','')
-        demoteSleeptime = str(input(Fore.YELLOW+"Enter demote sleeptime ["+demoteSleeptimeConfig+"]: "))
+        demoteSleeptime = str(userInputWrapper(Fore.YELLOW+"Enter demote sleeptime ["+demoteSleeptimeConfig+"]: "))
         if(len(str(demoteSleeptime))==0):
             demoteSleeptime = demoteSleeptimeConfig
         logger.info("demoteSleeptimeConfig : "+str(demoteSleeptimeConfig))
@@ -664,7 +665,7 @@ def copyFile(hostips, srcPath, destPath, dryrun=False):
     username = "root"
     '''
     if not dryrun:
-        username = input("Enter username for host [root] : ")
+        username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
             username = "root"
     else:
@@ -760,9 +761,9 @@ def listGSC(managerHost):
     global spaceName
     managerHostConfig = managerHost
     try:
-        spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+        spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         while(len(str(spaceNumber))==0 or (not spaceNumber.isdigit())):
-            spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+            spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         logger.info("spaceNumber : "+str(spaceNumber))
         logger.info("SpaceName = "+str(gs_space_host_dictionary_obj.get(str(spaceNumber))))
         spaceName = str(gs_space_host_dictionary_obj.get(str(spaceNumber)))

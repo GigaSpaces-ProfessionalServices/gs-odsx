@@ -122,7 +122,7 @@ if __name__ == '__main__':
         cliArguments=''
         isMenuDriven=''
         # changed : 25-Aug hence systemctl always with root no need to ask
-        #user = str(input("Enter your user [root]: "))
+        #user = str(userInputWrapper("Enter your user [root]: "))
         #if(len(str(user))==0):
         #    user="root"
         #logger.info("user :"+str(user))
@@ -130,23 +130,23 @@ if __name__ == '__main__':
         global removeJava
         global removeUnzip
         streamDict = config_get_space_list_with_status(user)
-        serverStartType = str(input(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
+        serverStartType = str(userInputWrapper(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
         logger.info("serverStartType:"+str(serverStartType))
         if(serverStartType=='1'):
-            optionMainMenu = int(input("Enter your host number to remove: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to remove: "))
             logger.info("optionMainMenu:"+str(optionMainMenu))
             if(optionMainMenu != 99):
                 if len(streamDict) >= optionMainMenu:
                     managerRemove = streamDict.get(optionMainMenu)
-                    removeJava = str(input(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+                    removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
                     if(len(str(removeJava))==0):
                         removeJava='n'
-                    removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+                    removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
                     if(len(str(removeUnzip))==0):
                         removeUnzip='n'
                     choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     logger.info("choice remvoe server:"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
                         if(isMenuDriven=='m'):
@@ -224,15 +224,15 @@ if __name__ == '__main__':
         elif(serverStartType =='99'):
             logger.info("99")
         else:
-            removeJava = str(input(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+            removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
             if(len(str(removeJava))==0):
                 removeJava='n'
-            removeUnzip = str(input(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+            removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
             if(len(str(removeUnzip))==0):
                 removeUnzip='n'
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_space_hosts_list()

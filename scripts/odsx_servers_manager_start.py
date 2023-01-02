@@ -109,14 +109,14 @@ if __name__ == '__main__':
             verboseHandle.printConsoleWarning("Current cluster configuration : ["+hostsConfig+"] ")
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start current Configuration. \nPress [99] for exit.: "+Fore.RESET))
         if(serverStartType=='1'):
-            optionMainMenu = int(input("Enter your host number to start: "))
+            optionMainMenu = int(userInputWrapper("Enter your host number to start: "))
             logger.info("Enter your host number to start:"+str(optionMainMenu))
             if(optionMainMenu != 99):
                 if len(managerDict) >= optionMainMenu:
                     spaceStart = managerDict.get(optionMainMenu)
                     choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     while(len(str(choice))==0):
-                        choice = str(input(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                     #print("coice start server:"+str(choice))
                     logger.info("choice :"+str(choice))
                     if(choice.casefold()=='no' or choice.casefold()=='n'):
@@ -192,7 +192,7 @@ if __name__ == '__main__':
             confirm=''
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'):
                 spaceHosts = config_get_manager_node()#config_get_space_hosts_list()

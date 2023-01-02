@@ -10,6 +10,8 @@ from utils.ods_cleanup import signal_handler
 from utils.ods_ssh import executeLocalCommandAndGetOutput
 from colorama import Fore
 
+from utils.odsx_keypress import userInputWrapper
+
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "retention-manager.service";
@@ -37,11 +39,11 @@ def startService(args):
     
     confirmMsg = Fore.YELLOW + "Are you sure, you want to start Retention Manager service ? (Yes/No) [Yes]:" + Fore.RESET
     
-    choice = str(input(confirmMsg))
+    choice = str(userInputWrapper(confirmMsg))
 
     while(len(choice) > 0 and choice.casefold()!='yes' and choice.casefold()!='no'):
         verboseHandle.printConsoleError("Invalid input")
-        choice = str(input(confirmMsg))
+        choice = str(userInputWrapper(confirmMsg))
 
     if choice.casefold() == 'no':
         exit(0)

@@ -44,7 +44,8 @@ def display_stream_json_data(args=None):
     if args.m == None:
         optionMainMenu = args.streamid
     else:
-        optionMainMenu = int(input("Enter your option: "))
+        from utils.odsx_keypress import userInputWrapper
+        optionMainMenu = int(userInputWrapper("Enter your option: "))
     if streamDict.get(optionMainMenu) is None:
         verboseHandle.printConsoleError("please select valid id")
         exit(0)
@@ -54,7 +55,8 @@ def display_stream_json_data(args=None):
     if args.m == None:
         userName = args.username
     else:
-        userName = str(input("username [ec2-user] : "))
+        from utils.odsx_keypress import userInputWrapper
+        userName = str(userInputWrapper("username [ec2-user] : "))
     if userName == "":
         userName = "ec2-user"
     out = executeRemoteCommandAndGetOutput(stream.serverip, userName,

@@ -1,17 +1,14 @@
 #!/usr/bin/env python3
-import glob
 import os
-import sys
-from pathlib import Path
 
 from colorama import Fore
 
-from scripts.odsx_servers_grafana_list import listGrafana
-from scripts.spinner import Spinner
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import getGrafanaServerHostList
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import connectExecuteSSH
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -68,7 +65,7 @@ def reloadSpaceboardServiceByHost():
     verboseHandle.printConsoleInfo("2. Target path : "+str(gsConfigSpaceboardTarget))
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     if(len(nodes)>0):
-        confirm = str(input(Fore.YELLOW+"Are you sure want to reload grafana servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
+        confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to reload grafana servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
         if(len(str(confirm))==0):
             confirm='y'
         logger.info("confirm :"+str(confirm))

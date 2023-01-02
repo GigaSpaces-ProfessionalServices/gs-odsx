@@ -1,26 +1,25 @@
 #!/usr/bin/env python3
 
-import os, time
+import os
 import signal
+import time
 from pathlib import Path
 
+import json
+import requests
 from colorama import Fore
 from configobj import ConfigObj
 
 from scripts.logManager import LogManager
-import requests, json, math
-
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueFromYaml, \
-    getYamlFilePathInsideFolder, set_value_yaml_config
+from utils.ods_scp import scp_upload
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.ods_scp import scp_upload
-import logging
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -222,17 +221,17 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global individualHostConfirm
     try:
         confirmCreateGSC = str(readValuefromAppConfig("app.tieredstorage.gsc.create"))
-        #str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [n] :"+Fore.RESET))
+        #str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [n] :"+Fore.RESET))
         if(len(confirmCreateGSC)==0):
             confirmCreateGSC='n'
         if(confirmCreateGSC=='y'):
             #global space_dict_obj
             #space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
-            #individualHostConfirm = str(input(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
+            #individualHostConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
             #if(len(str(individualHostConfirm))==0):
             individualHostConfirm = 'n'
             if(individualHostConfirm=='y'):
-                hostToCreateGSC = str(input("Enter space host serial number to create gsc [1] :"+Fore.RESET))
+                hostToCreateGSC = str(userInputWrapper("Enter space host serial number to create gsc [1] :"+Fore.RESET))
                 if(len(hostToCreateGSC)==0):
                     hostToCreateGSC="1"
                 specificHost = space_dict_obj.get(hostToCreateGSC)
@@ -253,7 +252,7 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
             zoneGSC = str(readValuefromAppConfig("app.tieredstorage.gsc.zone"))
             #print(Fore.YELLOW+"GSC zone :"+Fore.RESET)
             #while(len(str(zoneGSC))==0):
-            #    zoneGSC = str(input("Enter zone :"+Fore.RESET))
+            #    zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
 
             size = 1024
             type = memoryGSC[len(memoryGSC)-1:len(memoryGSC)]
@@ -327,7 +326,7 @@ def uploadFileRest(managerHostConfig):
         #if(len(str(pathOfSourcePUInput))>0):
         #    pathOfSourcePU = pathOfSourcePUInput
         #while(len(str(pathOfSourcePU))==0):
-        #    pathOfSourcePU = str(input(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
+        #    pathOfSourcePU = str(userInputWrapper(Fore.YELLOW+"Enter path including filename of processing unit to deploy :"+Fore.RESET))
         logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
         #set_value_in_property_file('app.tieredstorage.pu.filepath',str(pathOfSourcePU))
         #set_value_yaml_config("current.gs.jars.ts.currentTs",str(pathOfSourcePU))
@@ -354,7 +353,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         #if(len(str(tieredCriteriaConfigFilePathInput))>0):
         #    tieredCriteriaConfigFilePath = tieredCriteriaConfigFilePathInput
         #while(len(str(tieredCriteriaConfigFilePath))==0):
-        #    tieredCriteriaConfigFilePath = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath : "+Fore.RESET))
+        #    tieredCriteriaConfigFilePath = str(userInputWrapper(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath : "+Fore.RESET))
         logger.info("filePath :"+str(tieredCriteriaConfigFilePath))
         #set_value_in_property_file('app.tieredstorage.criteria.filepath',str(tieredCriteriaConfigFilePath))
 
@@ -365,7 +364,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         #if(len(str(tieredCriteriaConfigFilePathTargetInput))>0):
         #    tieredCriteriaConfigFilePathTarget = tieredCriteriaConfigFilePathTargetInput
         #while(len(str(tieredCriteriaConfigFilePathTarget))==0):
-        #    tieredCriteriaConfigFilePathTarget = str(input(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath.target : "+Fore.RESET))
+        #    tieredCriteriaConfigFilePathTarget = str(userInputWrapper(Fore.YELLOW+"Enter tieredCriteriaConfig.filePath.target : "+Fore.RESET))
         logger.info("filePath.target :"+str(tieredCriteriaConfigFilePathTarget))
         #set_value_in_property_file('app.tieredstorage.criteria.filepath.target',str(tieredCriteriaConfigFilePathTarget))
 
@@ -377,7 +376,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         #if(len(str(spacePropertyConfigFilePathInput))>0):
         #    spacePropertyConfigFilePath = spacePropertyConfigFilePathInput
         #while(len(str(spacePropertyConfigFilePath))==0):
-        #    spacePropertyConfigFilePath = str(input(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
+        #    spacePropertyConfigFilePath = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
         logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
         #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
 
@@ -389,7 +388,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         #if(len(str(spacePropertyConfigFilePathTargetInput))>0):
         #    spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
         #while(len(str(spacePropertyConfigFilePathTarget))==0):
-        #    spacePropertyConfigFilePathTarget = str(input(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
+        #    spacePropertyConfigFilePathTarget = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
         logger.info("spacePropertyConfigFilePathTarget :"+str(spacePropertyConfigFilePathTarget))
         #set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
 
@@ -459,7 +458,7 @@ def copyFile(hostips, srcPath, destPath, dryrun=False):
     username = "root"
     '''
     if not dryrun:
-        username = input("Enter username for host [root] : ")
+        username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
             username = "root"
     else:
@@ -533,7 +532,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         #if(len(str(partition))==0):
         #    partition='50'
         #while( not partition.isdigit()):
-        #    partition = str(input(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
+        #    partition = str(userInputWrapper(Fore.YELLOW+"Enter partition required [1-9] :"+Fore.RESET))
         logger.info("Enter partition required :"+str(partition))
 
         global zoneOfPU
@@ -549,7 +548,7 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
         #if(len(str(maxInstancesPerMachine))==0):
         #    maxInstancesPerMachine = '1'
         #while(not maxInstancesPerMachine.isdigit()):
-        #    maxInstancesPerMachine = str(input(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
+        #    maxInstancesPerMachine = str(userInputWrapper(Fore.YELLOW+"Enter maxInstancesPerMachine to deploy [1-9] :"+Fore.RESET))
         logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
         global backUpRequired

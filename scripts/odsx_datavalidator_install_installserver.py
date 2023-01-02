@@ -1,20 +1,17 @@
 #!/usr/bin/env python3
 
-import os,subprocess
-import sqlite3
-import platform
-from os import path
-import requests
-import json
-from colorama import Fore
-from scripts.spinner import Spinner
-from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH,executeRemoteCommandAndGetOutputPython36
-from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_add_dataValidation_node, config_get_dataIntegration_nodes, \
-    config_get_dataValidation_nodes
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
+import os
+import subprocess
 
+from colorama import Fore
+
+from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_scp import scp_upload
+from utils.ods_ssh import connectExecuteSSH
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -94,19 +91,19 @@ def installSingle():
         global logFilepath
         global dbPath
         targetInstallDir=str(readValuefromAppConfig("app.dv.install.target"))
-        serverHost = getDataValidationServerHostFromEnv()#str(input(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
+        serverHost = getDataValidationServerHostFromEnv()#str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
         #while(len(str(serverHost))==0):
-        #    serverHost = str(input(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
+        #    serverHost = str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
 
-        #user = str(input(Fore.YELLOW+"Enter user to connect Data Validation Service servers [root]:"+Fore.RESET))
+        #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect Data Validation Service servers [root]:"+Fore.RESET))
         #if(len(str(user))==0):
         user="root"
         logger.info(" user: "+str(user))
 
-        dbPath= str(readValuefromAppConfig("app.dv.server.db")) #input(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
+        dbPath= str(readValuefromAppConfig("app.dv.server.db")) #userInputWrapper(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
         #if(len(str(dbPath))==0):
         #    dbPath='/dbagigawork/sqlite/datavalidator.db'
-        logFilepath= str(readValuefromAppConfig("app.dv.server.log")) #input(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
+        logFilepath= str(readValuefromAppConfig("app.dv.server.log")) #userInputWrapper(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
         #if(len(str(logFilepath))==0):
         #    logFilepath='/dbagigalogs/datavalidator.log'
         sourceDvServerJar = str(getYamlFilePathInsideFolder(".data-validator.jars.serverjar"))
@@ -129,7 +126,7 @@ def installSingle():
         verboseHandle.printConsoleInfo("log File path: "+logFilepath)
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
 
-        confirmInstall = str(input(Fore.YELLOW+"Are you sure want to install Data Validation Service server (y/n) [y]: "+Fore.RESET))
+        confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install Data Validation Service server (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
             confirmInstall='y'
         if(confirmInstall=='y'):

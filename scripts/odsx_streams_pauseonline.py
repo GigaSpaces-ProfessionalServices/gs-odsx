@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
-import os, subprocess, sys, argparse
-from scripts.logManager import LogManager
+import argparse
+import os
 import platform
+import sys
+
+from scripts.logManager import LogManager
 from utils.ods_cluster_config import getStreamIdAndName
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -51,13 +55,13 @@ if __name__ == '__main__':
         if(sys.argv[1]==menuDrivenFlag):
             isMenuDriven='m'
         streamDict = getStreamIdAndName()
-        optionMainMenu = int(input("Enter your option: "))
+        optionMainMenu = int(userInputWrapper("Enter your option: "))
         if(optionMainMenu != 99):
             cliArguments = sys.argv[1:]
             if len(streamDict) >= optionMainMenu:
                 streamResumeStream = streamDict.get(optionMainMenu)
                 verboseHandle.printConsoleWarning("Are you sure want to pause selected stream ? [Yes][No][Cancel]")
-                choice = str(input(""))
+                choice = str(userInputWrapper(""))
                 if(choice.casefold()=='no'):
                     if(isMenuDriven=='m'):
                         os.system('python3 scripts/odsx_streams_pauseonline.py'+' '+isMenuDriven)
@@ -98,7 +102,7 @@ if __name__ == '__main__':
                     elif(sys.argv[1]==menuDrivenFlag):
 
                         verboseHandle.printConsoleWarning('Please provide a value for the following, or click ENTER to accept the [default value]')
-                        user = str(input("Enter your user [ec2-user]:"))
+                        user = str(userInputWrapper("Enter your user [ec2-user]:"))
                         if(len(user)==0):
                             user='ec2-user'
                         args.append(menuDrivenFlag)

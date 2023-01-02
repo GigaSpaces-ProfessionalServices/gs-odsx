@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 import os
+
 from colorama import Fore
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig,set_value_in_property_file
+from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_cluster_config import config_get_space_hosts
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -68,18 +70,23 @@ def updateSpaceServersGSC():
             verboseHandle.printConsoleInfo("Available space hosts to update GSCs size : "+str(spaceHosts))
 
             gscFromConfig = str(readValuefromAppConfig("app.space.gsc.count"))
-            gscToBeUpdated = str(input(Fore.YELLOW+"Enter GSC container create count per host to be updated from ["+gscFromConfig+"] : "))
+            from utils.odsx_keypress import userInputWrapper
+            gscToBeUpdated = str(userInputWrapper(Fore.YELLOW+"Enter GSC container create count per host to be updated from ["+gscFromConfig+"] : "))
             while(len(str(gscToBeUpdated))==0):
-                gscToBeUpdated = str(input(Fore.YELLOW+"Enter GSC container create count per host to be updated from ["+gscFromConfig+"] : "))
+                from utils.odsx_keypress import userInputWrapper
+                gscToBeUpdated = str(userInputWrapper(Fore.YELLOW+"Enter GSC container create count per host to be updated from ["+gscFromConfig+"] : "))
             set_value_in_property_file("app.space.gsc.count",str(gscToBeUpdated))
 
             sizeFromConfig = str(readValuefromAppConfig("app.space.gsc.memory"))
-            sizeToBeupdated = str(input(Fore.YELLOW+"Enter GSC container size per host to be updated from ["+sizeFromConfig+"] : "))
+            from utils.odsx_keypress import userInputWrapper
+            sizeToBeupdated = str(userInputWrapper(Fore.YELLOW+"Enter GSC container size per host to be updated from ["+sizeFromConfig+"] : "))
             while(len(str(sizeToBeupdated))==0):
-                sizeToBeupdated = str(input(Fore.YELLOW+"Enter GSC container size per host to be updated from ["+sizeFromConfig+"] : "))
+                from utils.odsx_keypress import userInputWrapper
+                sizeToBeupdated = str(userInputWrapper(Fore.YELLOW+"Enter GSC container size per host to be updated from ["+sizeFromConfig+"] : "))
             set_value_in_property_file("app.space.gsc.memory",sizeToBeupdated)
 
-            confirm = str(input(Fore.YELLOW+"Are you sure want to update container count="+str(gscToBeUpdated)+" and memory="+str(sizeToBeupdated)+" on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
+            from utils.odsx_keypress import userInputWrapper
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to update container count="+str(gscToBeUpdated)+" and memory="+str(sizeToBeupdated)+" on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
             if(confirm=='y' or len(confirm)==0):
                 cmd = 'sed -i -e \'s|--count='+str(gscFromConfig)+'|--count='+str(gscToBeUpdated)+'|g\' /usr/local/bin/start_gsc.sh'
                 cmd2= 'sed -i -e \'s|--memory='+str(sizeFromConfig)+'|--memory='+str(sizeToBeupdated)+'|g\' /usr/local/bin/start_gsc.sh'

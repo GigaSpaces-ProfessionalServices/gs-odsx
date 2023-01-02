@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 
-import os, time, requests,json, subprocess, glob,sqlite3
-from scripts.logManager import LogManager
-from utils.ods_app_config import set_value_in_property_file,readValueByConfigObj
+import os
+import sqlite3
 
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValueByConfigObj
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

@@ -65,7 +65,7 @@ def stopDataValidationService(args):
         #listDVAgents()
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop all servers. \nPress [99] for exit.: "+Fore.RESET))
         if(serverStartType=='1'):
-            optionMainMenu = int(input("Enter host Sr Number to stop: "))
+            optionMainMenu = int(userInputWrapper("Enter host Sr Number to stop: "))
             if len(host_dict_obj) >= optionMainMenu:
                 hostToStart = host_dict_obj.get(str(optionMainMenu))
                 # start individual
@@ -87,7 +87,7 @@ def stopDataValidationService(args):
             confirm=''
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             while(len(str(confirm))==0):
-                confirm = str(input(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'): # Start all
                 for node in config_get_dataValidation_nodes():

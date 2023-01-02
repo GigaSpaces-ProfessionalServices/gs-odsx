@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 
 import os
-import platform
-from os import path
+
 from colorama import Fore
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH
+from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_influxdb_node
+from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -58,7 +58,7 @@ def startInputUserAndHost():
     try:
         global user
         global host
-        #user = str(input(Fore.YELLOW+"Enter user to connect to Influxdb [root]:"+Fore.RESET))
+        #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to Influxdb [root]:"+Fore.RESET))
         #if(len(str(user))==0):
         user="root"
         logger.info(" user: "+str(user))

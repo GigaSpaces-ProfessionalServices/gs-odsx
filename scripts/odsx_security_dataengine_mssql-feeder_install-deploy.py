@@ -1,20 +1,28 @@
 #!/usr/bin/env python3
 
-import os,time,subprocess,requests, json, math, glob, sqlite3
-from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, getYamlFilePathInsideFolder
-from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node
+import glob
+import json
+import os
+import requests
+import sqlite3
+import subprocess
+import time
+
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
+
 from scripts.logManager import LogManager
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFolder
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
+from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
+from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from requests.auth import HTTPBasicAuth
-from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -234,13 +242,13 @@ def createGSCInputParam():
     global memoryGSC
 
     numberOfGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.gscperhost"))
-    #str(input(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
+    #str(userInputWrapper(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
     #while(len(str(numberOfGSC))==0):
     #    numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
     memoryGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.gsc.memory"))
-    #str(input(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
+    #str(userInputWrapper(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
     #while(len(str(memoryGSC))==0):
     #    memoryGSC='1g'
 
@@ -543,7 +551,7 @@ if __name__ == '__main__':
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
                         confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.gsc.create"))
-                        #confirmCreateGSC = str(input(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
+                        #confirmCreateGSC = str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'
                             createGSCInputParam()

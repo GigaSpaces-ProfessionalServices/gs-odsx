@@ -1,7 +1,11 @@
 #!/usr/bin/env python3
-import os, subprocess, sys, argparse
-from scripts.logManager import LogManager
+import argparse
+import os
 import platform
+import sys
+
+from scripts.logManager import LogManager
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -52,10 +56,10 @@ if __name__ == '__main__':
         # print('install :',args)
         elif(sys.argv[1]==menuDrivenFlag):
             args.append(menuDrivenFlag)
-            host = str(input("Enter your host: "))
+            host = str(userInputWrapper("Enter your host: "))
             args.append('--host')
             args.append(host)
-            user = str(input("Enter your user: "))
+            user = str(userInputWrapper("Enter your user: "))
             args.append('-u')
             args.append(user)
         args = str(args)

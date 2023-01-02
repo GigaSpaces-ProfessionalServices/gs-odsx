@@ -15,7 +15,7 @@ from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -134,8 +134,8 @@ if __name__ == '__main__':
             args.append(menuDrivenFlag)
             if managerDict.get(int(hostConfiguration)) is not None:
                 managerUpgrade = managerDict.get(int(hostConfiguration))
-                sourcePath = str(input(Fore.YELLOW + "Enter source directory for new GS build : " + Fore.RESET))
-                destPath = str(input(
+                sourcePath = str(userInputWrapper(Fore.YELLOW + "Enter source directory for new GS build : " + Fore.RESET))
+                destPath = str(userInputWrapper(
                     Fore.YELLOW + "Enter destination directory to install new GS build [/dbagiga] : " + Fore.RESET))
                 if len(str(destPath)) == 0:
                     destPath = "/dbagiga"
@@ -168,10 +168,10 @@ if __name__ == '__main__':
                             verboseHandle.printConsoleInfo("2. Enough manager are available : " + str(managerCount))
                             verboseHandle.printConsoleInfo(
                                 "3. Source path is proper. New package to upload : " + str(dir_list))
-                            confirm = str(input(
+                            confirm = str(userInputWrapper(
                                 Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
                             while (len(str(confirm)) == 0):
-                                confirm = str(input(
+                                confirm = str(userInputWrapper(
                                     Fore.YELLOW + "Are you sure want to continue manager gs upgradation ? [yes (y)] / [no (n)]" + Fore.RESET))
                             logger.info("confirm :" + str(confirm))
                             if confirm == 'yes' or confirm == 'y':

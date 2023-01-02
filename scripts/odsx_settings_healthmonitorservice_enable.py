@@ -19,7 +19,8 @@ def myCheckArg(args=None):
 
 def startHealthmonitorService(args):
     verboseHandle.printConsoleWarning("Are you sure, you want to start monitor service ? [Yes][No][Cancel]")
-    choice = str(input(""))
+    from utils.odsx_keypress import userInputWrapper
+    choice = str(userInputWrapper(""))
     if choice.casefold() == 'no':
         exit(0)
     with Spinner():

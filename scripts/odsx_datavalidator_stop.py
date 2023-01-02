@@ -2,12 +2,15 @@
 import argparse
 import os
 import sys
+
 from colorama import Fore
+
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from scripts.spinner import Spinner
 from scripts.odsx_datavalidator_list import listDVServers
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -61,7 +64,7 @@ def stopDataValidationService(args):
     try:
         listDVServers()
         nodes = getDVServerHostList()
-        choice = str(input(Fore.YELLOW+"Are you sure, you want to stop data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
+        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure, you want to stop data validation service for ["+str(nodes)+"] ? (y/n)"+Fore.RESET))
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataValidation_nodes():

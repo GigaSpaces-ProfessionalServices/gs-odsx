@@ -1,23 +1,28 @@
 #!/usr/bin/env python3
 
-import os.path,  argparse, sys, subprocess
+import argparse
+import os.path
 import signal
+import sys
+
+from colorama import Fore
 
 from scripts.logManager import LogManager
+from scripts.odsx_servers_di_list import isInstalledNot
+from scripts.odsx_servers_northbound_all_list import isInstalledAndGetVersion
+from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_manager_node
-from colorama import Fore
-from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_space_hosts,config_get_nb_list,config_get_grafana_list,config_get_influxdb_node, config_get_dataIntegration_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputValuePython36
-from utils.ods_validation import getTelnetStatus
-from scripts.spinner import Spinner
-from scripts.odsx_servers_northbound_all_list import isInstalledAndGetVersion
+from utils.ods_cluster_config import config_get_space_hosts, config_get_nb_list, config_get_grafana_list, \
+    config_get_influxdb_node, config_get_dataIntegration_nodes
 from utils.ods_list import isInstalledAndGetVersionGrafana
 from utils.ods_list import isInstalledAndGetVersionInflux
-from scripts.odsx_servers_di_list import isInstalledNot
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput, \
+    executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_validation import getSpaceServerStatus
+from utils.ods_validation import getTelnetStatus
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

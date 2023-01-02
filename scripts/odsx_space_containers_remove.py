@@ -12,7 +12,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWithEscWrapper
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import  printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -140,10 +140,10 @@ def getContainersList():
 
         if (str(containerRemoveType) == '1'):
             zoneList = getZoneList()
-            zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+            zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
 
             while (len(str(zoneGSCNo)) == 0):
-                zoneGSCNo = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+                zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
 
             zoneGSC = zoneList.get(int(zoneGSCNo))
 
@@ -218,9 +218,9 @@ def getContainers():
                    ]
         counter = 0
         dataTable = []
-        zoneGSC = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+        zoneGSC = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
         while (len(str(zoneGSC)) == 0):
-            zoneGSC = str(input(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
+            zoneGSC = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to remove : " + Fore.RESET))
 
         logger.info("zoneGSC :" + str(zoneGSC))
         filterArray = [x for x in jsonArray if x['zones'][0] == str(zoneGSC)]
@@ -245,10 +245,10 @@ def getContainers():
 def removeByZone():
     logger.info("removeByZoner")
     try:
-        zoneName = str(input(Fore.YELLOW + "Enter zone : " + Fore.RESET))
-        confirm = str(input(Fore.YELLOW + "Are you sure want to container ? [yes (y)] / [no (n)] : " + Fore.RESET))
+        zoneName = str(userInputWrapper(Fore.YELLOW + "Enter zone : " + Fore.RESET))
+        confirm = str(userInputWrapper(Fore.YELLOW + "Are you sure want to container ? [yes (y)] / [no (n)] : " + Fore.RESET))
         while (len(str(confirm)) == 0):
-            confirm = str(input(Fore.YELLOW + "Are you sure want to container ? [yes (y)] / [no (n)] : " + Fore.RESET))
+            confirm = str(userInputWrapper(Fore.YELLOW + "Are you sure want to container ? [yes (y)] / [no (n)] : " + Fore.RESET))
         logger.info("confirm :" + str(confirm))
         if (confirm == 'yes' or confirm == 'y'):
             commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones=" + str(
@@ -293,10 +293,10 @@ if __name__ == '__main__':
                 optionMainMenu = str(userInputWithEscWrapper("Enter your srno to remove container: "))
                 logger.info("Enter your srno to remove container:" + str(optionMainMenu))
                 if optionMainMenu != 99:
-                    choice = str(input(
+                    choice = str(userInputWrapper(
                         Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
                     while len(str(choice)) == 0:
-                        choice = str(input(
+                        choice = str(userInputWrapper(
                             Fore.YELLOW + "Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :" + Fore.RESET))
                     logger.info("choice :" + str(choice))
                     if choice.casefold() == 'yes' or choice.casefold() == 'y':

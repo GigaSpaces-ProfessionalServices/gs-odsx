@@ -1,17 +1,18 @@
 
-import argparse, subprocess
+import argparse
 import os
+import subprocess
 import sys
 
+from colorama import Fore
+
+from scripts.logManager import LogManager
 from scripts.odsx_servers_di_install import getDIServerHostList
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import isValidHost, port_check
 from utils.odsx_print_tabular_data import printTabular
-from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes
-from colorama import Fore
-from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36,executeRemoteCommandAndGetOutputValuePython36
-
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -248,7 +249,24 @@ def getFlinkStatus(host,nodeType):
             if(status==False):
                 logger.info(" Service :di-flink not started."+str(host))
                 return Fore.RED+"OFF"+Fore.RESET
-        return Fore.GREEN+"ON"+Fore.RESET
+    cmd = "systemctl status di-flink-taskmanager.service"
+    with Spinner():
+        user='root'
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        logger.info("output1 : "+str(output))
+        if(output!=0):
+            logger.info(" Service :"+str(cmd)+" not started."+str(host))
+            return Fore.RED+"OFF"+Fore.RESET
+    cmd = "systemctl status di-flink-jobmanager.service"
+    with Spinner():
+        user='root'
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        logger.info("output1 : "+str(output))
+        if(output!=0):
+            logger.info(" Service :"+str(cmd)+" not started."+str(host))
+            return Fore.RED+"OFF"+Fore.RESET
+
+    return Fore.GREEN+"ON"+Fore.RESET
 
 #For all combinations
 def isInstalledNot(host,role):

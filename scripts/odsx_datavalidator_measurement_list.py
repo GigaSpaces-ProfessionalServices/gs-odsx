@@ -1,19 +1,16 @@
 #!/usr/bin/env python3
 
-import os.path, argparse, sys
-from scripts.logManager import LogManager
+import os.path
+
+import json
+import requests
 from colorama import Fore
 
+from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
-from utils.odsx_print_tabular_data import printTabular
-from utils.ods_cluster_config import config_get_dataValidation_nodes
-from utils.ods_validation import getSpaceServerStatus
-import requests, json, subprocess
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from subprocess import Popen, PIPE
-from scripts.spinner import Spinner
-from utils.ods_validation import isValidHost, getTelnetStatus
 from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -61,7 +58,7 @@ def doValidate():
         verboseHandle.printConsoleError("Failed to connect to the Data validation server. Please check that it is running.")
         return
 
-    #dataValidatorServiceHost = str(input("Data validator service host ["+str(dataValidationHost)+"]: "))
+    #dataValidatorServiceHost = str(userInputWrapper("Data validator service host ["+str(dataValidationHost)+"]: "))
     #if (len(str(dataValidatorServiceHost)) == 0):
     #    dataValidatorServiceHost = dataValidationHost
 

@@ -18,8 +18,9 @@ def myCheckArg(args=None):
 
 
 def list_wan_gateway_info(args):
+    from utils.odsx_keypress import userInputWrapper
     selectedValue = str(
-        input("Enter wan space locators ['127.0.1.1:4166,127.0.1.1:4266'] : "))
+        userInputWrapper("Enter wan space locators ['127.0.1.1:4166,127.0.1.1:4266'] : "))
     if selectedValue == "":
         selectedValue = "127.0.1.1:4166,127.0.1.1:4266"
         # selectedValue = "localhost:4174"

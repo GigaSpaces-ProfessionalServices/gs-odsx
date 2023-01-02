@@ -1,16 +1,13 @@
 #!/usr/bin/env python3
 
 import os
-import platform
-from os import path
+
 from colorama import Fore
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36, \
-    executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput
-from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_get_grafana_node
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
+from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))

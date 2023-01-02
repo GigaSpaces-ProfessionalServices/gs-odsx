@@ -1,15 +1,14 @@
 #!/usr/bin/env python3
 
 import os
-import platform
-from os import path
+
 from colorama import Fore
-from scripts.spinner import Spinner
+
 from scripts.logManager import LogManager
-from utils.ods_ssh import connectExecuteSSH
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_influxdb_node
 from utils.ods_scp import scp_upload
-from utils.ods_cluster_config import config_add_influxdb_node, config_get_influxdb_node
-from utils.ods_app_config import set_value_in_property_file,readValuefromAppConfig
+from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -60,16 +59,16 @@ def installUserAndTargetDirectory():
         global targetDirectory
         host = getInfluxdbHostFromEnv()
         '''
-        = str(input(Fore.YELLOW+"Enter host to install Influxdb: "+Fore.RESET))
+        = str(userInputWrapper(Fore.YELLOW+"Enter host to install Influxdb: "+Fore.RESET))
         while(len(str(host))==0):
-            host = str(input(Fore.YELLOW+"Enter host to install Influxdb: "+Fore.RESET))
+            host = str(userInputWrapper(Fore.YELLOW+"Enter host to install Influxdb: "+Fore.RESET))
         logger.info("Enter host to install Grafana: "+str(host))
-        user = str(input(Fore.YELLOW+"Enter user to connect Influxdb servers [root]:"+Fore.RESET))
+        user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect Influxdb servers [root]:"+Fore.RESET))
         if(len(str(user))==0):
         '''
         user="root"
         logger.info(" user: "+str(user))
-        targetDirectory = str(input(Fore.YELLOW+"Enter data directory Influxdb server [/dbagigainflaxdata]:"+Fore.RESET))
+        targetDirectory = str(userInputWrapper(Fore.YELLOW+"Enter data directory Influxdb server [/dbagigainflaxdata]:"+Fore.RESET))
         if(len(targetDirectory)==0):
             targetDirectory='/dbagigainflaxdata'
         logger.info("targetDirectory : "+str(targetDirectory))

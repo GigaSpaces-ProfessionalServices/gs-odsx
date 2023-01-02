@@ -3,16 +3,13 @@
 import json
 import os
 import signal
-import sys
-import re
-from colorama import Fore
+
 import requests
+from colorama import Fore
+
 from scripts.logManager import LogManager
-from scripts.spinner import Spinner
 from utils.ods_cleanup import signal_handler
-from utils.ods_ssh import executeLocalCommandAndGetOutput
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_retentionmanager_utilities import validateRetentionPolicy,getLocalHostName
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger

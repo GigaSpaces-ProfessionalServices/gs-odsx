@@ -1,27 +1,24 @@
 #!/usr/bin/env python3
 
-import os, time, sqlite3
+import logging
+import os
 import signal
+import sqlite3
 
+import json
+import requests
 from colorama import Fore
-from scripts.logManager import LogManager
-import requests, json, math
+from requests.auth import HTTPBasicAuth
 
+from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, set_value_yaml_config, \
-    readValueFromYaml, getYamlFilePathInsideFolder, readValueByConfigObj
-from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_print_tabular_data import printTabularGrid,printTabularGridWrap
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
-from scripts.spinner import Spinner
-import logging
 from utils.ods_scp import scp_upload
-from datetime import datetime as dt
-from requests.auth import HTTPBasicAuth
+from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
-from concurrent.futures.thread import ThreadPoolExecutor
+from utils.odsx_print_tabular_data import printTabular
+from utils.odsx_print_tabular_data import printTabularGrid
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -325,14 +322,14 @@ def inputParams():
     try:
         '''
         restartcontainerSleeptimeConfig = str(readValuefromAppConfig("app.tieredstorage.restartcontainer.sleeptime")).replace('"','')
-        restartContainerSleeptime = str(input(Fore.YELLOW+"Enter restart container sleeptime ["+restartcontainerSleeptimeConfig+"]: "))
+        restartContainerSleeptime = str(userInputWrapper(Fore.YELLOW+"Enter restart container sleeptime ["+restartcontainerSleeptimeConfig+"]: "))
         if(len(str(restartContainerSleeptime))==0):
             restartContainerSleeptime = restartcontainerSleeptimeConfig
         logger.info("restartcontainerSleeptime : "+str(restartContainerSleeptime))
 
 
         demoteSleeptimeConfig = str(readValuefromAppConfig("app.tieredstorage.demote.sleeptime")).replace('"','')
-        demoteSleeptime = str(input(Fore.YELLOW+"Enter demote sleeptime ["+demoteSleeptimeConfig+"]: "))
+        demoteSleeptime = str(userInputWrapper(Fore.YELLOW+"Enter demote sleeptime ["+demoteSleeptimeConfig+"]: "))
         if(len(str(demoteSleeptime))==0):
             demoteSleeptime = demoteSleeptimeConfig
         logger.info("demoteSleeptimeConfig : "+str(demoteSleeptimeConfig))
@@ -345,7 +342,7 @@ def copyFile(hostips, srcPath, destPath, dryrun=False):
     username = "root"
     '''
     if not dryrun:
-        username = input("Enter username for host [root] : ")
+        username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
             username = "root"
     else:
@@ -378,9 +375,11 @@ def listGSC(managerHost):
     global spaceName
     managerHostConfig = managerHost
     try:
-        spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+        from utils.odsx_keypress import userInputWrapper
+        spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         while(len(str(spaceNumber))==0 or (not spaceNumber.isdigit())):
-            spaceNumber = str(input(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
+            from utils.odsx_keypress import userInputWrapper
+            spaceNumber = str(userInputWrapper(Fore.YELLOW+"Enter space number to get details :"+Fore.RESET))
         logger.info("spaceNumber : "+str(spaceNumber))
         logger.info("SpaceName = "+str(gs_space_host_dictionary_obj.get(str(spaceNumber))))
         spaceName = str(gs_space_host_dictionary_obj.get(str(spaceNumber)))

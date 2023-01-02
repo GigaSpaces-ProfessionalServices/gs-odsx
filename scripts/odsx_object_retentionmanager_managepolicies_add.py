@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
-import argparse
 import json
 import os
 import signal
-import sys
-import re
-from colorama import Fore
+
 import requests
+from colorama import Fore
+
 from scripts.logManager import LogManager
-from scripts.spinner import Spinner
 from utils.ods_cleanup import signal_handler
-from utils.ods_ssh import executeLocalCommandAndGetOutput
-from utils.odsx_retentionmanager_utilities import validateObjectType, validateRetentionPolicy,getLocalHostName
+from utils.odsx_keypress import userInputWrapper
+from utils.odsx_retentionmanager_utilities import validateObjectType, validateRetentionPolicy
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -27,33 +25,33 @@ def addRetentionPolicy():
     retentionPolicyInput = Fore.GREEN +"Enter Retention period [d/M/y]: "+Fore.RESET
     constraintFieldInput = Fore.GREEN +"Enter Constraint Field: "+Fore.RESET
 
-    object_type = str(input(objTypeInput))
+    object_type = str(userInputWrapper(objTypeInput))
     isObjTypeValid = validateObjectType(object_type)
     while(isObjTypeValid==False):
         verboseHandle.printConsoleError("Invalid Object Type")
-        object_type = str(input(objTypeInput))
+        object_type = str(userInputWrapper(objTypeInput))
         isObjTypeValid = validateObjectType(object_type)
 
-    retention_period = str(input(retentionPolicyInput))
+    retention_period = str(userInputWrapper(retentionPolicyInput))
     while(len(str(retention_period))==0):
-        retention_period = str(input(retentionPolicyInput))
+        retention_period = str(userInputWrapper(retentionPolicyInput))
     
     isPolicyValid = validateRetentionPolicy(retention_period)
     
     while(isPolicyValid==False):
         verboseHandle.printConsoleError('Retention Policy must start with number and end with [d/M/y]')
-        retention_period = str(input(retentionPolicyInput))
+        retention_period = str(userInputWrapper(retentionPolicyInput))
         isPolicyValid = validateRetentionPolicy(retention_period)
 
-    contraintField = str(input(constraintFieldInput))
+    contraintField = str(userInputWrapper(constraintFieldInput))
     while(len(str(contraintField))==0):
-        contraintField = str(input(constraintFieldInput))
+        contraintField = str(userInputWrapper(constraintFieldInput))
         
     displaySummary(object_type,retention_period,contraintField)
 
-    summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+    summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
     while(len(str(summaryConfirm))==0):
-        summaryConfirm = str(input(Fore.YELLOW+"Do you want to continue registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
+        summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
 
     if(str(summaryConfirm).casefold()=='n' or str(summaryConfirm).casefold()=='no'):
         logger.info("Exiting without registering policy")

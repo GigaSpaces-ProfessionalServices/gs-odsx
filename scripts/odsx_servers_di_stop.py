@@ -3,13 +3,14 @@ import argparse
 import os
 import sys
 
-from scripts.logManager import LogManager
-from scripts.odsx_servers_di_start import getDIhostTypeDict
-from utils.ods_cluster_config import config_get_dataIntegration_nodes
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from scripts.spinner import Spinner
 from colorama import Fore
+
+from scripts.logManager import LogManager
 from scripts.odsx_servers_di_list import listDIServers
+from scripts.odsx_servers_di_start import getDIhostTypeDict
+from scripts.spinner import Spinner
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -102,7 +103,7 @@ def stopTelegrafServiceByHost(host):
 
 def stopDIMServices(host):
     logger.info("stopTelegrafServiceByHost()")
-    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;/dbagiga/di-flink/latest-flink/bin/stop-cluster.sh"
+    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;systemctl stop di-flink-taskmanager.service;systemctl stop di-flink-jobmanager.service"
     logger.info("Getting status.. di :"+str(cmd))
     user = 'root'
     with Spinner():
@@ -110,13 +111,13 @@ def stopDIMServices(host):
         if (output == 0):
             verboseHandle.printConsoleInfo("Services di-manager/di-mdm/di-flink stopped successfully on "+str(host))
         else:
-            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink failed to start on "+str(host))
+            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink failed to stop or service not installed on "+str(host))
 
 def stopKafkaService(args):
     logger.info("stopKafkaService()")
     try:
         if choiceOption == '1':
-            hostNumber = str(input(Fore.YELLOW+"Enter host number to stop kafka service : "+Fore.RESET))
+            hostNumber = str(userInputWrapper(Fore.YELLOW+"Enter host number to stop kafka service : "+Fore.RESET))
             choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop kafka service on "+str(host_dict_obj.get(hostNumber))+" ? (y/n) [y]: "+Fore.RESET))
             if len(choice)==0:
                 choice='y'

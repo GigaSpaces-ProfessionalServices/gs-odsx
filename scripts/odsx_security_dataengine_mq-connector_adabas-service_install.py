@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 
 import os
-import subprocess
+
 from colorama import Fore
+
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj, readValuefromAppConfig, \
-    getYamlFilePathInsideFolder
-from utils.ods_cluster_config import config_get_dataIntegration_nodes,config_add_dataEngine_node, config_get_influxdb_node
+from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFolder
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -106,7 +107,7 @@ def getInputParam(kafkaHosts):
     targetAdabasJarFile=''
     targetDir = str(readValueByConfigObj("app.dataengine.mq.adabas.targetDir")).replace('[','').replace(']','').replace("'","").replace(', ',',')
     #verboseHandle.printConsoleWarning("MQ-Connector will going to install on hosts ["+str(kafkaHosts)+"] ")
-    #targetDirConfirm = str(input(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
+    #targetDirConfirm = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
     #if(len(str(targetDirConfirm))==0):
     targetDirConfirm=targetDir
 
@@ -202,7 +203,7 @@ def getInfluxdbHost():
 
 def proceedForInstallation(hostConfig):
     logger.info("proceedForInstallation()")
-    confirmInstallation=str(input(Fore.YELLOW+"Are you sure want to proceed for Installation on hosts ["+hostConfig+"] ? (y/n) [y] : "))
+    confirmInstallation=str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed for Installation on hosts ["+hostConfig+"] ? (y/n) [y] : "))
     if(len(str(confirmInstallation))==0):
         buildTarFileToLocalMachine()
         hostList = hostConfig.split(',')
