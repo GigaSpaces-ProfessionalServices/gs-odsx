@@ -426,7 +426,7 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
             verboseHandle.printConsoleInfo("*"+getYamlFilePathInsideConfigFolder("..keytab")+" -> "+msSqlFeederFileTarget)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..keytab")+" "+msSqlFeederFileTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..keytab").replace("keytab","*keytab")+" "+msSqlFeederFileTarget)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
             verboseHandle.printConsoleInfo(getYamlFilePathInsideConfigFolder("..sqljdbc")+" ->"+msSqlFeederFileTarget)
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+" "+msSqlFeederFileTarget)
