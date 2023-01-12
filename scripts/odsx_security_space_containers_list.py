@@ -120,9 +120,9 @@ def getContainersbyZone():
         # zoneGSC = str(userInputWrapper(Fore.YELLOW + "Enter zone of GSC to Show [bll] : " + Fore.RESET))
 
         zoneList = getZoneList()
-        zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to Show : " + Fore.RESET))
+        zoneGSCNo = str(userInputWithEscWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to Show : " + Fore.RESET,True))
         while (len(str(zoneGSCNo)) == 0):
-            zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET))
+            zoneGSCNo = str(userInputWithEscWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET,True))
 
         zoneGSC = zoneList.get(int(zoneGSCNo))
 
@@ -207,7 +207,7 @@ if __name__ == '__main__':
         logger.info(" Container list")
         exitMenu = True
         while exitMenu:
-            containerListType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET))
+            containerListType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET,True))
             logger.info("containerRemoveType:"+str(containerListType))
             username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
             password = str(getPasswordByHost(managerHost,appId,safeId,objectId))

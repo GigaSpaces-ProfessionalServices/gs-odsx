@@ -113,11 +113,9 @@ def getContainersbyZone():
         logger.info("response.text : "+str(response.text))
         jsonArray = json.loads(response.text)
         zoneList = getZoneList()
-
-        zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET))
-
+        zoneGSCNo = str(userInputWithEscWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to Show : " + Fore.RESET,True))
         while (len(str(zoneGSCNo)) == 0):
-            zoneGSCNo = str(userInputWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET))
+            zoneGSCNo = str(userInputWithEscWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET,True))
 
         zoneGSC = zoneList.get(int(zoneGSCNo))
 
@@ -193,7 +191,7 @@ if __name__ == '__main__':
         logger.info(" Container list")
         exitMenu = True
         while exitMenu:
-            containerListType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET))
+            containerListType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET,True))
             logger.info("containerRemoveType:"+str(containerListType))
             if(containerListType=='1'):
                  getContainersbyZone()
