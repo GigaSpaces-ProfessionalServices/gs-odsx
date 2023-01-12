@@ -116,7 +116,8 @@ def getContainersbyZone():
         zoneGSCNo = str(userInputWithEscWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to Show : " + Fore.RESET,True))
         while (len(str(zoneGSCNo)) == 0):
             zoneGSCNo = str(userInputWithEscWrapper(Fore.YELLOW + "Enter Srno. zone of GSC to show : " + Fore.RESET,True))
-
+        if zoneGSCNo=='99':
+            exit(0)
         zoneGSC = zoneList.get(int(zoneGSCNo))
 
         zoneGSC = zoneGSC['zones'][0]
