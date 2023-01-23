@@ -113,7 +113,7 @@ if __name__ == '__main__':
     global host_dict_obj
     host_dict_obj = listspaceServersCachePolicyService()
     choiceOption = str(userInputWithEscWrapper(
-        Fore.YELLOW + "Press [1] Individual start\nPress [Enter] Start current configuration.\nPress [99] For exit.:" + Fore.RESET))
+        Fore.YELLOW + "Press [1] Individual start\nPress [Enter] Start on all servers.\nPress [99] For exit.:" + Fore.RESET))
     if choiceOption == "99":
         exit(0)
     startCachePolicyService(args)
