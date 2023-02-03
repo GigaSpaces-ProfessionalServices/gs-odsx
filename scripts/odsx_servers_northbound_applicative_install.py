@@ -238,7 +238,7 @@ def proceedForApplicativeInstallation():
         logger.info("hostip :"+str(hostip))
         logger.info("Completed Installation for applicative server:"+str(hostip))
         verboseHandle.printConsoleInfo("Completed installation for applicative server:"+str(hostip))
-    cleanNbConfig()
+    #cleanNbConfig()
     logger.info("Completed installation for all applicative servers")
     verboseHandle.printConsoleInfo("Completed installation for all applicative servers")
 
@@ -253,7 +253,7 @@ if __name__ == '__main__':
             confirmInstall='y'
         if(confirmInstall.casefold()=='y'):
             proceedForApplicativeInstallation()
-        if confirmInstall.casefold()=='n':
-            cleanNbConfig()
+        #if confirmInstall.casefold()=='n':
+        #    cleanNbConfig()
     except Exception as e:
         handleException(e)

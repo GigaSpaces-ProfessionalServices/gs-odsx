@@ -299,7 +299,7 @@ def proceedForManagementInstallation():
         #config_add_nb_node(hostip, hostip, "management server", "config/cluster.config")
         logger.info("Completed Installation for management server:"+str(hostip))
         verboseHandle.printConsoleInfo("Completed Installation for management server:"+str(hostip))
-    cleanNbConfig()
+    #cleanNbConfig()
     logger.info("Completed installation for all management server")
     verboseHandle.printConsoleInfo("Completed installation for all management server")
     pass
@@ -319,7 +319,7 @@ if __name__ == '__main__':
             proceedForApplicativeInstallation()
             proceedForAgentInstallation()
             proceedForManagementInstallation()
-        if confirmInstall.casefold()=='n':
-            cleanNbConfig()
+        #if confirmInstall.casefold()=='n':
+         #   cleanNbConfig()
     except Exception as e:
         handleException(e)
