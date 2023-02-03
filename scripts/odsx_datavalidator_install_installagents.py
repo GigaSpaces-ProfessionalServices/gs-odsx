@@ -156,8 +156,10 @@ def buildUploadInstallTarToServer(host):
         with Spinner():
             logger.info("hostip ::"+str(host)+" user :"+str(user))
             scp_upload(host, user, 'install/install.tar', targetInstallDir)
-            scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvkeytab")), targetInstallDir)
-            scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvJdbc")), targetInstallDir)
+            ## [JIRA] (LEUMI-493):
+            ## We have decided that the keytab and the SQLJDBCDriver.conf file will be copied to all Spaces machines during ODSX installation, so this copy while installing the DV Agent is unnecessarys
+            #scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvkeytab")), targetInstallDir)
+            #scp_upload(host, user, str(getYamlFilePathInsideFolder(".data-validator.files.dvJdbc")), targetInstallDir)
             #scp_upload(host, user, 'install/gs_config/SQLJDBCDriver.conf', '/home/gsods')
             #scp_upload(host, user, 'install/gs_config/UTKA02E.keytab', '/home/gsods')
     except Exception as e:
