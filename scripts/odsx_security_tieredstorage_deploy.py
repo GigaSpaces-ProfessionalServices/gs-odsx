@@ -424,8 +424,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
                 "contextProperties": {
                                       "tieredCriteriaConfig.filePath" : ""+tieredCriteriaConfigFilePathTarget+"",
                                       "space.propertyFilePath" : ""+spacePropertyConfigFilePathTarget+"",
-                                      "space.name" : ""+spaceNameCfg+"",
-                                      "tieredCriteriaConfig.dirtyBitFile" : ""+tieredDirtyBitFile +""
+                                      "space.name" : ""+spaceNameCfg+""
                                       }
             }
 
@@ -559,7 +558,6 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
 
         global backUpRequired
         global backUpRequiredStr
-        global tieredDirtyBitFile
         backUpRequired = str(readValuefromAppConfig("app.tieredstorage.pu.backuprequired"))
         backUpRequiredStr = backUpRequired
         #print(Fore.YELLOW+"SLA [HA] :"+backUpRequired+Fore.RESET)
@@ -567,9 +565,6 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
             backUpRequired=1
         if(str(backUpRequired)=='n'):
             backUpRequired=0
-        tieredDirtyBitFile = str(getYamlFilePathInsideFolder(".gs.config.ts.criteria")).replace('"','')
-        fle = Path(tieredDirtyBitFile)
-        fle.touch(exist_ok=True)
         data = dataPuREST(resource,resourceName,zoneOfPU,partition,maxInstancesPerMachine,backUpRequired)
 
         displaySummaryOfInputParam(confirmCreateGSC)
@@ -585,10 +580,6 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
             headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
             logger.info("url : "+"http://"+managerHostConfig+":8090/v2/pus")
             logger.info("dJson Paylod : "+str(data))
-            # set dirty bit file for initial deployment
-            set_value_in_property_file("firstTimedeployment", "true", tieredDirtyBitFile)
-            tieredDirtyBitFileValue = open(tieredDirtyBitFile, "r")
-            print(tieredDirtyBitFileValue.read())
             response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
             deployResponseCode = str(response.content.decode('utf-8'))
             verboseHandle.printConsoleInfo("deployResponseCode : "+str(deployResponseCode))
@@ -606,14 +597,6 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
                     retryCount = retryCount-1
                     time.sleep(2)
                     if(str(status).casefold().__contains__('successful')):
-                        print("Before setting dirty flag false "+str(retryCount))
-                        tieredDirtyBitFileValue = open(tieredDirtyBitFile, "r")
-                        print(tieredDirtyBitFileValue.read())
-
-                        print("Setting dirty flag false")
-                        set_value_in_property_file("firstTimedeployment", "false", tieredDirtyBitFile)
-                        tieredDirtyBitFileValue = open(tieredDirtyBitFile, "r")
-                        print(tieredDirtyBitFileValue.read())
                         serviceName = 'object-management.service'
                         verboseHandle.printConsoleWarning("restarting "+serviceName)
                         os.system('sudo systemctl daemon-reload')
