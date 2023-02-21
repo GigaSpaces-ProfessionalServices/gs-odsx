@@ -182,6 +182,21 @@ def insertDB2EntryInSqlLite(spaceID, hostId, status):
     except Exception as e:
         handleException(e)
 
+def applyCachePolicyAndReadData():
+    data = json.dumps({
+        "partialMemberName": str(spaceName)+"_container",
+        "spaceName": str(spaceName),
+        "isBackup": "false"
+    })
+    spaceServers = config_get_space_hosts()
+    for spacehost in spaceServers:
+        print(">>>str(os.getenv(spacehost.ip)) : "+str(os.getenv(spacehost.ip)) +", data "+str(data))
+        response = requests.post(
+            "http://" + str(os.getenv(spacehost.ip)) + ":7002/policy/update",headers={'Content-type': 'application/json'}, data=data)
+        print("applied update cache policy response 196 : "+str(response.text))
+        response = requests.get(
+            "http://" + str(os.getenv(spacehost.ip)) + ":7002/policy/read",headers={'Content-type': 'application/json'}, data=data)
+        print("read cache policy response 612 : "+str(response.text))
 
 def truncateInSqlLite():
     # print("truncateInSqlLite()")
@@ -489,8 +504,8 @@ def confirmAndProceedForAll():
                     for partitionId in range(1, len(primaryContainerDict) + 1):
                         if partitionId in partitionIdList:
                             ll.remove(partitionId)
-                            print("partitionId 492 : "+str(partitionId))
-                            executor.submit(proceedForBackupRollingUpdate, str(partitionId))
+                            print("partitionId : 492 : "+str(partitionId))
+                            executor.submit(proceedForBackupRollingUpdate1, str(partitionId))
                 if (len(ll) == 0):
                     label = False
             end_time = time.time()
@@ -504,11 +519,21 @@ def confirmAndProceedForAll():
 
 def validateResponse(responseCode):
     logger.info("validateResponse() " + str(responseCode))
-    try:
-        response = requests.get("http://" + managerHost + ":8090/v2/requests/" + str(responseCode),
-                                auth=HTTPBasicAuth(username, password))
-        jsonData = json.loads(response.text)
-        logger.info("response : " + str(jsonData))
+    #try:
+#        response = requests.get("http://" + managerHost + ":8090/v2/requests/" + str(responseCode),
+#                                auth=HTTPBasicAuth(username, password))
+    response = requests.get("http://" + managerHost + ":8090/v2/pus",
+                            auth=HTTPBasicAuth(username, password))
+    jsonData = json.loads(response.text)
+    resourceNameToCheck = str(readValuefromAppConfig("app.tieredstorage.pu.name"))
+    for data in jsonData:
+        puName=data["name"]
+        if puName == resourceNameToCheck and data["status"] == "intact":
+            time.sleep(5)
+            return "successful"
+
+    return "inprogress"
+'''        logger.info("response : " + str(jsonData))
         print("response 508 : " + str(jsonData))
         if len(jsonData) == 0:
             return "successful"
@@ -520,10 +545,20 @@ def validateResponse(responseCode):
                 return "successful"
         return jsonData
         #return str(jsonData[0]["status"])
-    except Exception as e:
-        handleException(e)
+        '''
+    #except Exception as e:
+    #    handleException(e)
 
-
+def validateResponseGetDescriptionOrg(responseCode):
+    logger.info("validateResponse() "+str(responseCode))
+    #print(username+" : "+password)
+    response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode),auth = HTTPBasicAuth(username, password))
+    jsonData = json.loads(response.text)
+    logger.info("response : "+str(jsonData))
+    if(str(jsonData["status"]).__contains__("failed")):
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["error"])
+    else:
+        return "Status :"+str(jsonData["status"])+" Description:"+str(jsonData["description"])
 def validateResponseGetDescription(responseCode):
     logger.info("validateResponse() " + str(responseCode))
     try:
@@ -545,6 +580,7 @@ def updateSpaceIdContainerID():
                                 auth=HTTPBasicAuth(username, password))
         logger.info("response.text : " + str(response.text))
         jsonArray = json.loads(response.text)
+        print("jsonArray : "+str(jsonArray))
         for data in jsonArray:
             spaceIdContainerIdDict[str(data["id"])] = str(data["containerId"])
             if (str(data["mode"]).__contains__("BACKUP")):
@@ -553,7 +589,8 @@ def updateSpaceIdContainerID():
             if (str(data["mode"]).__contains__("PRIMARY")):
                 primaryCounter = primaryCounter + 1
                 primarySpaceIdDict[(str(primaryCounter))] = str(data["id"])
-
+        print("primarySpaceIdDict : " +str(primarySpaceIdDict))
+        print("backupSpaceIdDict : " +str(backupSpaceIdDict))
     except Exception as e:
         handleException(e)
 
@@ -574,89 +611,110 @@ def getSpaceCurrentStatus():
         handleException(e)
 
 
-def proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate):
+def proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate,isUpdate):
     logger.info("proceedForNewBackUpRollingUpdate()")
     try:
         with Spinner():
             time.sleep(5)
         print("proceedForNewBackUpRollingUpdate -> gscNumberToBeRollingUpdate : " + str(gscNumberToBeRollingUpdate))
         updateSpaceIdContainerID()
-        spaceIdToBeRestarted = str(backupSpaceIdDict.get(str(gscNumberToBeRollingUpdate)))
+        spaceIdToBeRestarted = str(primarySpaceIdDict.get(str(gscNumberToBeRollingUpdate)))
         containerIdToBeRestarted = str(spaceIdContainerIdDict.get(str(spaceIdToBeRestarted)))
         logger.info("Space ID to be restarted : " + str(spaceIdToBeRestarted) + " ContainerId :" + str(
             containerIdToBeRestarted))
         # verboseHandle.printConsoleInfo("Space ID to be restarted : "+str(spaceIdToBeRestarted)+" ContainerId :"+str(containerIdToBeRestarted))
-        insertDB2EntryInSqlLite(str(spaceIdToBeRestarted), str("backupContainerId"), "pending")
-        verboseHandle.printConsoleInfo(
-            "Space ID to be restarted : " + str(spaceIdToBeRestarted) + "  ContainerId : " + str(
-                containerIdToBeRestarted))
-        loggerTiered.info("Space ID to be restarted : " + str(spaceIdToBeRestarted) + "  ContainerId : " + str(
-            containerIdToBeRestarted))
-        #newbackUpRestartresponse = requests.post(
-        #    "http://" + str(managerHostConfig) + ":8090/v2/containers/" + str(containerIdToBeRestarted) + "/restart",
-        #    headers=requestHeader, auth=HTTPBasicAuth(username, password))
-       # response = requests.get("http://"+managerHost+":8090/v2/containers")
-      #  jsonArray = json.loads(response.text)
-       # for data in jsonArray:
-        #    response = requests.delete("http://"+managerHost+":8090/v2/containers/"+str(data["id"]),headers=requestHeader, auth=HTTPBasicAuth(username, password))
-        response = requests.delete("http://"+managerHost+":8090/v2/containers/"+str(containerIdToBeRestarted),headers=requestHeader, auth=HTTPBasicAuth(username, password))
-        verboseHandle.printConsoleInfo("Deleted container 590 "+str(containerIdToBeRestarted))
-        data = json.dumps({
-            "partialMemberName": str(spaceName)+"_container",
-            "spaceName": str(spaceName),
-            "isBackup": "false"
-        })
-        hostips = getSpaceNodeIps()
-        for hostip in hostips:
+
+        if isUpdate:
+            data = json.dumps({
+                "partialMemberName": str(spaceName)+"_container",
+                "spaceName": str(spaceName),
+                "isBackup": "false"
+            })
+            print("str(containerIdToBeRestarted).split[0] : "+str(containerIdToBeRestarted).split("~",1)[0] +", data "+str(data))
+            print(backupSpaceIdDict)
+            print(spaceIdContainerIdDict)
             response = requests.post(
-                "http://" + str(hostip) + ":7002/policy/update",headers={'Content-type': 'application/json'}, data=data)
+               "http://" + str(containerIdToBeRestarted).split("~",1)[0] + ":7002/policy/update",headers={'Content-type': 'application/json'}, data=data)
+            print("applied update cache policy response 609 : "+str(response.text))
+            response = requests.get(
+                "http://" + str(containerIdToBeRestarted).split("~",1)[0] + ":7002/policy/read",headers={'Content-type': 'application/json'}, data=data)
+            print("read cache policy response 612 : "+str(response.text))
 
-        print("proceedForNewBackUpRollingUpdate : ")
-        createGSC(str(containerIdToBeRestarted).split("~",1)[0])
-        #logger.info("newbackUpRestartresponse.content : " + str(newbackUpRestartresponse.content))
-        response = requests.get("http://"+managerHost+":8090/v2/requests",auth = HTTPBasicAuth(username,password))
-        jsonArray = json.loads(response.text)
-        backUPResponseCode=""
-        if(len(jsonArray)>1):
+        else:
+            spaceIdToBeRestarted = str(backupSpaceIdDict.get(str(gscNumberToBeRollingUpdate)))
+            containerIdToBeRestarted = str(spaceIdContainerIdDict.get(str(spaceIdToBeRestarted)))
+            insertDB2EntryInSqlLite(str(spaceIdToBeRestarted), str("backupContainerId"), "pending")
+            verboseHandle.printConsoleInfo(
+                "Space ID to be restarted : " + str(spaceIdToBeRestarted) + "  ContainerId : " + str(
+                    containerIdToBeRestarted))
+            loggerTiered.info("Space ID to be restarted : " + str(spaceIdToBeRestarted) + "  ContainerId : " + str(
+                containerIdToBeRestarted))
+            #newbackUpRestartresponse = requests.post(
+            #    "http://" + str(managerHostConfig) + ":8090/v2/containers/" + str(containerIdToBeRestarted) + "/restart",
+            #    headers=requestHeader, auth=HTTPBasicAuth(username, password))
+           # response = requests.get("http://"+managerHost+":8090/v2/containers")
+          #  jsonArray = json.loads(response.text)
+           # for data in jsonArray:
+            #    response = requests.delete("http://"+managerHost+":8090/v2/containers/"+str(data["id"]),headers=requestHeader, auth=HTTPBasicAuth(username, password))
+            response = requests.delete("http://"+managerHost+":8090/v2/containers/"+str(containerIdToBeRestarted),headers=requestHeader, auth=HTTPBasicAuth(username, password))
+            verboseHandle.printConsoleInfo("Deleted container 590 "+str(containerIdToBeRestarted))
+            #data = json.dumps({
+            #    "partialMemberName": str(spaceName)+"_container",
+            #    "spaceName": str(spaceName),
+            #    "isBackup": "false"
+            #})
+            hostips = getSpaceNodeIps()
+            #for hostip in hostips:
+            #response = requests.post(
+             #   "http://" + str(containerIdToBeRestarted).split("~",1)[0] + ":7002/policy/update",headers={'Content-type': 'application/json'}, data=data)
+            #print("applied update cache policy response 613 : "+str(response.text))
+
+            print("proceedForNewBackUpRollingUpdate : ")
+            createGSC(str(containerIdToBeRestarted).split("~",1)[0])
+            #logger.info("newbackUpRestartresponse.content : " + str(newbackUpRestartresponse.content))
+            response = requests.get("http://"+managerHost+":8090/v2/requests",auth = HTTPBasicAuth(username,password))
             jsonArray = json.loads(response.text)
-            backUPResponseCode=jsonArray[0]["id"]
-        #backUPResponseCode = str(newbackUpRestartresponse.content.decode('utf-8'))
-        logger.info("backUPResponseCode : " + str(backUPResponseCode))
-        status = validateResponse(backUPResponseCode)
-        with Spinner():
-            while (status.casefold() != 'successful'):
-                time.sleep(2)
-                status = validateResponse(backUPResponseCode)
-                logger.info("spaceID Restart :" + str(spaceIdToBeRestarted) + " status :" + str(status))
-                # verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
-                updateDB2EntryInSqlLite(str(spaceIdToBeRestarted), str(status))
-                verboseHandle.printConsoleInfo(
-                    "SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                Status : " + str(status))
-                loggerTiered.info(
-                    "SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                Status : " + str(status))
-        verboseHandle.printConsoleInfo(
-            " SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                  Status : " + str(status))
-        loggerTiered.info(
-            "SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                  Status : " + str(status))
+            backUPResponseCode=""
+            if(len(jsonArray)>1):
+                jsonArray = json.loads(response.text)
+                backUPResponseCode=jsonArray[0]["id"]
+            #backUPResponseCode = str(newbackUpRestartresponse.content.decode('utf-8'))
+            logger.info("backUPResponseCode : " + str(backUPResponseCode))
+            status = validateResponse(backUPResponseCode)
+            with Spinner():
+                while (status.casefold() != 'successful'):
+                    time.sleep(2)
+                    status = validateResponse(backUPResponseCode)
+                    logger.info("spaceID Restart :" + str(spaceIdToBeRestarted) + " status :" + str(status))
+                    # verboseHandle.printConsoleInfo("spaceID Restart :"+str(spaceIdToBeRestarted)+" status :"+str(status))
+                    updateDB2EntryInSqlLite(str(spaceIdToBeRestarted), str(status))
+                    verboseHandle.printConsoleInfo(
+                        "SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                Status : " + str(status))
+                    loggerTiered.info(
+                        "SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                Status : " + str(status))
+            verboseHandle.printConsoleInfo(
+                " SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                  Status : " + str(status))
+            loggerTiered.info(
+                "SpaceID Restart        : " + str(spaceIdToBeRestarted) + "                  Status : " + str(status))
 
-        with Spinner():
-            status = 'intact'
-            time.sleep(5)
-            while (status != str(getSpaceCurrentStatus())):
-                verboseHandle.printConsoleInfo(
-                    "Waiting for partition become healthy. Current status : " + str(getSpaceCurrentStatus()))
-                loggerTiered.info("Waiting for partition become. Current status " + getSpaceCurrentStatus())
-                time.sleep(3)
-            verboseHandle.printConsoleInfo("Final status : " + str(getSpaceCurrentStatus()))
-            updateDB2EntryInSqlLite(str(spaceIdToBeRestarted), str(getSpaceCurrentStatus()))
-            logger.info("Final status : " + str(getSpaceCurrentStatus()))
-            time.sleep(2)
-        spaceIdResponseCodeDict[str(spaceIdToBeRestarted)] = str(backUPResponseCode)
-        updateSpaceIdContainerID()
-        logger.info("updated After Restart : spaceIdContainerIdDict" + str(spaceIdContainerIdDict))
-        logger.info("updated After Restart : backupIdDict" + str(backupSpaceIdDict))
-        logger.info("updated After Restart : primaryIdDict" + str(primarySpaceIdDict))
-        logger.info("updated After Restart : spaceIdResponseCodeDict" + str(spaceIdResponseCodeDict))
+            with Spinner():
+                status = 'intact'
+                time.sleep(5)
+                while (status != str(getSpaceCurrentStatus())):
+                    verboseHandle.printConsoleInfo(
+                        "Waiting for partition become healthy. Current status : " + str(getSpaceCurrentStatus()))
+                    loggerTiered.info("Waiting for partition become. Current status " + getSpaceCurrentStatus())
+                    time.sleep(3)
+                verboseHandle.printConsoleInfo("Final status : " + str(getSpaceCurrentStatus()))
+                updateDB2EntryInSqlLite(str(spaceIdToBeRestarted), str(getSpaceCurrentStatus()))
+                logger.info("Final status : " + str(getSpaceCurrentStatus()))
+                time.sleep(2)
+            spaceIdResponseCodeDict[str(spaceIdToBeRestarted)] = str(backUPResponseCode)
+            updateSpaceIdContainerID()
+            logger.info("updated After Restart : spaceIdContainerIdDict" + str(spaceIdContainerIdDict))
+            logger.info("updated After Restart : backupIdDict" + str(backupSpaceIdDict))
+            logger.info("updated After Restart : primaryIdDict" + str(primarySpaceIdDict))
+            logger.info("updated After Restart : spaceIdResponseCodeDict" + str(spaceIdResponseCodeDict))
     except Exception as e:
         handleException(e)
 
@@ -715,14 +773,175 @@ def proceedForDemotePrimaryContainer(gscNumberToBeRollingUpdate):
         spaceIdResponseCodeDict[str(spaceIdToBeDemoted)] = str(primaryDemoteResponseCode)
         updateSpaceIdContainerID()
         logger.info("updated After Demote : spaceIdContainerIdDict :" + str(spaceIdContainerIdDict))
-        proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate)
+#        proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate, True)
+        proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate, False)
 
     except Exception as e:
         handleException(e)
+def uploadFileRest(managerHostConfig):
+    try:
+        logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
+        global pathOfSourcePU
+        pathOfSourcePU = ".gs.jars.ts.tieredStorageBuild"
+        pathOfSourcePU = str(getYamlFilePathInsideFolder(pathOfSourcePU)).replace('"','')
+        logger.info("pathOfSourcePU :"+str(pathOfSourcePU))
+        #logger.info("Upload url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+        #status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
+        #logger.info("status : "+str(status))
+    except Exception as e:
+        handleException(e)
 
+def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backUpRequired):
+    logger.info("dataPuREST()")
+    try:
+        global slaProperties
+        slaProperties = str(readValuefromAppConfig("app.tieredstorage.pu.autogenerated-instance-sla"))
+        logger.info("slaProperties :"+str(slaProperties))
 
-def proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate):
+        global tieredCriteriaConfigFilePathTarget
+        tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','')
+        logger.info("filePath.target :"+str(tieredCriteriaConfigFilePathTarget))
+
+        global spacePropertyConfigFilePath
+        spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.ts.spaceproperty")).replace('"','')
+        logger.info("app.space.property.filePath :"+str(spacePropertyConfigFilePath))
+        logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
+
+        global spacePropertyConfigFilePathTarget
+        spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.space.property.filePath.target")).replace('"','')
+        logger.info("app.space.property.filePath.target :"+str(spacePropertyConfigFilePathTarget))
+
+        global spaceNameCfg
+        spaceNameCfg = str(readValuefromAppConfig("app.tieredstorage.pu.spacename"))
+        logger.info("space.name :"+str(spaceNameCfg))
+
+        data={
+            "resource": ""+resource+"",
+            "topology": {
+                "schema": "partitioned",
+                "partitions": int(partition),
+                "backupsPerPartition": int(backUpRequired)
+            },
+            "name": ""+resourceName+"",
+            "sla": {
+                "maxInstancesPerMachine": int(maxInstancesPerMachine),
+                "zones": [
+                    ""+zone+""
+                ],
+                "maxInstancesPerVM": 1
+            },
+            "contextProperties": {
+                "pu.autogenerated-instance-sla" :""+slaProperties+"",
+                "tieredCriteriaConfig.filePath" : ""+tieredCriteriaConfigFilePathTarget+"",
+                "space.propertyFilePath" : ""+spacePropertyConfigFilePathTarget+"",
+                "space.name" : ""+spaceNameCfg+""
+            }
+        }
+
+        return data
+    except Exception as e:
+        handleException(e)
+def proceedForTieredStorageDeployment(managerHostConfig):
+    logger.info("proceedForTieredStorageDeployment()")
+    try:
+        print("\n")
+        head , tail = os.path.split(pathOfSourcePU)
+        logger.info("tail :"+str(tail))
+        global resource
+        resource = str(tail)
+        logger.info("resource :"+str(resource))
+        global resourceName
+        resourceName = str(readValuefromAppConfig("app.tieredstorage.pu.name"))
+        logger.info("nameOfPU :"+str(resourceName))
+        global partition
+        partition = str(readValuefromAppConfig("app.tieredstorage.gsc.partitions"))
+        logger.info("Enter partition required :"+str(partition))
+
+        global zoneOfPU
+        zoneOfPU = str(readValuefromAppConfig("app.tieredstorage.pu.zone"))
+        logger.info("Zone Of PU :"+str(zoneOfPU))
+
+        global maxInstancesPerMachine
+        maxInstancesPerMachine = str(readValuefromAppConfig("app.tieredstorage.pu.maxInstancesPerMachine"))
+        logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
+
+        global backUpRequired
+        global backUpRequiredStr
+        backUpRequired = str(readValuefromAppConfig("app.tieredstorage.pu.backuprequired"))
+        if(len(str(backUpRequired))==0 or backUpRequired=='y'):
+            backUpRequired=1
+        if(str(backUpRequired)=='n'):
+            backUpRequired=0
+        data = dataPuREST(resource,resourceName,zoneOfPU,partition,maxInstancesPerMachine,backUpRequired)
+
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        logger.info("url : "+"http://"+managerHostConfig+":8090/v2/pus")
+        logger.info("dJson Paylod : "+str(data))
+        response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
+        deployResponseCode = str(response.content.decode('utf-8'))
+        verboseHandle.printConsoleInfo("deployResponseCode : "+str(deployResponseCode))
+        logger.info("deployResponseCode :"+str(deployResponseCode))
+
+        status = validateResponseGetDescriptionOrg(deployResponseCode)
+        logger.info("response.status_code :"+str(response.status_code))
+        logger.info("response.content :"+str(response.content) )
+        if(response.status_code==202):
+            logger.info("Response :"+str(status))
+            retryCount=5
+            while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                status = validateResponseGetDescriptionOrg(deployResponseCode)
+                verboseHandle.printConsoleInfo("Response :"+str(status))
+                retryCount = retryCount-1
+                time.sleep(2)
+                if(str(status).casefold().__contains__('successful')):
+                    serviceName = 'object-management.service'
+                    os.system('sudo systemctl daemon-reload')
+                    os.system('systemctl stop '+serviceName)
+                    os.system('systemctl start '+serviceName)
+                    return
+                elif(str(status).casefold().__contains__('failed')):
+                    return
+
+        else:
+            logger.info("Unable to deploy :"+str(status))
+            verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
+    except Exception as e:
+        handleException(e)
+def redeploySpace():
+    drainMode = readValuefromAppConfig("app.tieredstorage.drainmode")
+    drainTimeout = readValuefromAppConfig("app.tieredstorage.drainTimeout")
+    spacePUName = readValuefromAppConfig("app.spacejar.pu.name")
+
+    response = requests.delete("http://"+str(managerHost)+":8090/v2/pus/"+str(spacePUName)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout),auth = HTTPBasicAuth(username,password))
+    verboseHandle.printConsoleInfo(str(response.status_code))
+    logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
+    if(response.status_code==202):
+        undeployResponseCode = str(response.content.decode('utf-8'))
+        logger.info("backUPResponseCode : "+str(undeployResponseCode))
+        status = validateResponse(undeployResponseCode)
+        with Spinner():
+            while(status.casefold() != 'successful'):
+                time.sleep(2)
+                status = validateResponse(undeployResponseCode)
+                logger.info("UndeployAll :"+str(spacePUName)+"   Status :"+str(status))
+                verboseHandle.printConsoleInfo("Undeploy  : "+str(spacePUName)+"   Status : "+str(status))
+        verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceName)+"   Status : "+str(status))
+        time.sleep(30)
+        uploadFileRest(str(managerHost))
+        proceedForTieredStorageDeployment(str(managerHost))
+    else:
+        logger.info("PU :"+str(spacePUName)+" has not been undeploy.")
+        verboseHandle.printConsoleInfo("PU :"+str(spacePUName)+" has not been undeploy.")
+
+def proceedForBackupRollingUpdate1(gscNumberToBeRollingUpdate):
+    print(">>>>>>>>")
+    applyCachePolicyAndReadData()
+    redeploySpace()
+    #proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate,True)
+    #proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate,False)
+def proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate,isUpdate):
     logger.info("proceedForBackupRollingUpdate()")
+    print("proceedForBackupRollingUpdate >")
     try:
         with Spinner():
             time.sleep(5)
@@ -742,70 +961,88 @@ def proceedForBackupRollingUpdate(gscNumberToBeRollingUpdate):
         # verboseHandle.printConsoleInfo("backupContainerId :"+str(backupContainerId))
         verboseHandle.printConsoleInfo("backupContainerId        : " + str(backupContainerId))
         loggerTiered.info("backupContainerId       : " + str(backupContainerId))
-        insertDB2EntryInSqlLite(str(backupSpaceId), str(backupContainerId), "pending")
-        #backUpIndividualGSCRestartresponse = requests.post(
-        #    "http://" + str(managerHostConfig) + ":8090/v2/containers/" + str(backupContainerId) + "/restart",
-        #    headers=requestHeader, auth=HTTPBasicAuth(username, password))
-        response = requests.delete("http://"+managerHost+":8090/v2/containers/"+str(backupContainerId),headers=requestHeader, auth=HTTPBasicAuth(username, password))
-        verboseHandle.printConsoleInfo("Deleted container 735 "+str(backupContainerId))
-        data = json.dumps({
-            "partialMemberName": str(spaceName)+"_container",
-            "spaceName": str(spaceName),
-            "isBackup": "true"
-        })
-        hostips = getSpaceNodeIps()
-        for hostip in hostips:
-            response = requests.post(
-                "http://" + str(hostip) + ":7002/policy/update",headers={'Content-type': 'application/json'}, data=data)
-            print("response 751 : "+str(response.text))
+        if isUpdate:
+            data = json.dumps({
+                "partialMemberName": str(spaceName)+"_container",
+                "spaceName": str(spaceName),
+                "isBackup": "true"
+            })
+            print("str(backupContainerId).split[0] : "+str(backupContainerId).split("~",1)[0] +", data "+str(data))
+            print(spaceIdContainerIdDict)
+            print(backupSpaceIdDict)
 
-        print("proceedForBackupRollingUpdate : ")
-        createGSC(str(backupContainerId).split("~",1)[0])
-        response = requests.get("http://"+managerHost+":8090/v2/requests",auth = HTTPBasicAuth(username,password))
-        jsonArray = json.loads(response.text)
-        backUPRestartResponseCode=""
-        if(len(jsonArray)>1):
+            response = requests.post(
+                "http://" + str(backupContainerId).split("~",1)[0] + ":7002/policy/update",headers={'Content-type': 'application/json'}, data=data)
+            print("applied update cache policy response 751 : "+str(response.text))
+            response = requests.get(
+                "http://" + str(backupContainerId).split("~",1)[0] + ":7002/policy/read",headers={'Content-type': 'application/json'}, data=data)
+            print("read cache policy response 751 : "+str(response.text))
+            proceedForNewBackUpRollingUpdate(gscNumberToBeRollingUpdate, True)
+        else:
+            insertDB2EntryInSqlLite(str(backupSpaceId), str(backupContainerId), "pending")
+            #backUpIndividualGSCRestartresponse = requests.post(
+            #    "http://" + str(managerHostConfig) + ":8090/v2/containers/" + str(backupContainerId) + "/restart",
+            #    headers=requestHeader, auth=HTTPBasicAuth(username, password))
+            response = requests.delete("http://"+managerHost+":8090/v2/containers/"+str(backupContainerId),headers=requestHeader, auth=HTTPBasicAuth(username, password))
+            verboseHandle.printConsoleInfo("Deleted container 735 "+str(backupContainerId))
+            ##data = json.dumps({
+             #   "partialMemberName": str(spaceName)+"_container",
+             #   "spaceName": str(spaceName),
+             #   "isBackup": "true"
+            #})
+            hostips = getSpaceNodeIps()
+            #for hostip in hostips:
+            #response = requests.post(
+            #    "http://" + str(backupContainerId).split("~",1)[0] + ":7002/policy/update",headers={'Content-type': 'application/json'}, data=data)
+            #print("response 751 : "+str(response.text))
+
+            print("proceedForBackupRollingUpdate : ")
+            createGSC(str(backupContainerId).split("~",1)[0])
+            response = requests.get("http://"+managerHost+":8090/v2/requests",auth = HTTPBasicAuth(username,password))
             jsonArray = json.loads(response.text)
-            backUPRestartResponseCode=jsonArray[0]["id"]
-        #logger.info("backUpIndividualGSCRestartresponse : " + str(backUpIndividualGSCRestartresponse.content))
-        #backUPRestartResponseCode = str(backUpIndividualGSCRestartresponse.content.decode('utf-8'))
-        status = validateResponse(backUPRestartResponseCode)
-        print(">>>>>>>>>>>>>>>")
-        print(status)
-        print(">>>>>>>>>>>>>>>")
-        with Spinner():
-            while (status.casefold() != 'successful'):
+            backUPRestartResponseCode=""
+            if(len(jsonArray)>1):
+                jsonArray = json.loads(response.text)
+                backUPRestartResponseCode=jsonArray[0]["id"]
+            #logger.info("backUpIndividualGSCRestartresponse : " + str(backUpIndividualGSCRestartresponse.content))
+            #backUPRestartResponseCode = str(backUpIndividualGSCRestartresponse.content.decode('utf-8'))
+            status = validateResponse(backUPRestartResponseCode)
+            print(">>>>>>>>>>>>>>>")
+            print(status)
+            print(">>>>>>>>>>>>>>>")
+            with Spinner():
+                while (status.casefold() != 'successful'):
+                    time.sleep(2)
+                    status = validateResponse(backUPRestartResponseCode)
+                    updateDB2EntryInSqlLite(str(backupSpaceId), str(status))
+                    # verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
+                    verboseHandle.printConsoleInfo(
+                        "Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
+                    loggerTiered.info(
+                        "Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
+                    logger.info("Backup : " + str(backupSpaceId) + " Status : " + str(status))
+            # verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
+            verboseHandle.printConsoleInfo(
+                " Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
+            loggerTiered.info(
+                "Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
+            with Spinner():
+                status = 'intact'
+                time.sleep(5)
+                while (status != str(getSpaceCurrentStatus())):
+                    verboseHandle.printConsoleInfo(
+                        "Waiting for partition become healthy. Current status : " + str(getSpaceCurrentStatus()))
+                    loggerTiered.info("Waiting for partition become healthy. Current status " + getSpaceCurrentStatus())
+                    time.sleep(3)
+                verboseHandle.printConsoleInfo("Final status : " + str(getSpaceCurrentStatus()))
+                updateDB2EntryInSqlLite(str(backupSpaceId), str(getSpaceCurrentStatus()))
+                logger.info("Final status : " + str(getSpaceCurrentStatus()))
                 time.sleep(2)
-                status = validateResponse(backUPRestartResponseCode)
-                updateDB2EntryInSqlLite(str(backupSpaceId), str(status))
-                # verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
-                verboseHandle.printConsoleInfo(
-                    "Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
-                loggerTiered.info(
-                    "Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
-                logger.info("Backup : " + str(backupSpaceId) + " Status : " + str(status))
-        # verboseHandle.printConsoleInfo("Backup :"+str(backupSpaceId)+" Restart Status :"+str(status))
-        verboseHandle.printConsoleInfo(
-            " Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
-        loggerTiered.info(
-            "Backup                  : " + str(backupSpaceId) + "          Restart Status : " + str(status))
-        with Spinner():
-            status = 'intact'
-            time.sleep(5)
-            while (status != str(getSpaceCurrentStatus())):
-                verboseHandle.printConsoleInfo(
-                    "Waiting for partition become healthy. Current status : " + str(getSpaceCurrentStatus()))
-                loggerTiered.info("Waiting for partition become healthy. Current status " + getSpaceCurrentStatus())
-                time.sleep(3)
-            verboseHandle.printConsoleInfo("Final status : " + str(getSpaceCurrentStatus()))
-            updateDB2EntryInSqlLite(str(backupSpaceId), str(getSpaceCurrentStatus()))
-            logger.info("Final status : " + str(getSpaceCurrentStatus()))
-            time.sleep(2)
-        updateSpaceIdContainerID()
-        spaceIdResponseCodeDict[str(backupSpaceId)] = str(backUPRestartResponseCode)
-        logger.info("updated After Backup Restart : spaceIdContainerIdDict" + str(spaceIdContainerIdDict))
-        logger.info("updated After Backup Restart : spaceIdResponseCodeDict" + str(spaceIdResponseCodeDict))
-        proceedForDemotePrimaryContainer(gscNumberToBeRollingUpdate)
+            updateSpaceIdContainerID()
+            spaceIdResponseCodeDict[str(backupSpaceId)] = str(backUPRestartResponseCode)
+            logger.info("updated After Backup Restart : spaceIdContainerIdDict" + str(spaceIdContainerIdDict))
+            logger.info("updated After Backup Restart : spaceIdResponseCodeDict" + str(spaceIdResponseCodeDict))
+            proceedForDemotePrimaryContainer(gscNumberToBeRollingUpdate)
     except Exception as e:
         handleException(e)
 
@@ -830,10 +1067,14 @@ def confirmAndProceedForIndividualRestartGSC():
             if (str(gscNumberToBeRestarted).__contains__(',')):
                 for srno in gscNumberToBeRestarted.split(','):
                     print("srno 820 : "+str(srno))
-                    proceedForBackupRollingUpdate(srno)
+                    proceedForBackupRollingUpdate(srno, True)
+                for srno in gscNumberToBeRestarted.split(','):
+                    print("srno 820 : "+str(srno))
+                    proceedForBackupRollingUpdate(srno,False)
             else:
                 print("gscNumberToBeRestarted 823 : "+str(gscNumberToBeRestarted))
-                proceedForBackupRollingUpdate(gscNumberToBeRestarted)
+                proceedForBackupRollingUpdate(gscNumberToBeRestarted, True)
+                proceedForBackupRollingUpdate(gscNumberToBeRestarted, False)
 
     except Exception as e:
         handleException(e)

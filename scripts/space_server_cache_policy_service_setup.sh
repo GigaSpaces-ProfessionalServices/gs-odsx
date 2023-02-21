@@ -12,9 +12,9 @@ function getAppPropertyValue() {
     grep "${1}" $2|cut -d'=' -f2
 }
 
-if [ ! -d "$log_location" ]; then
-  mkdir $log_location
-fi
+#if [ ! -d "$log_location" ]; then
+  mkdir -p $log_location
+#fi
 
 
 
