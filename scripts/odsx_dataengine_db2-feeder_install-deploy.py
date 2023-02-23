@@ -108,6 +108,8 @@ def getManagerHost(managerNodes):
 
 def listDeployed(managerHost):
     global gs_space_dictionary_obj
+    global activefeeder
+    activefeeder=[]
     try:
         logger.info("managerHost :"+str(managerHost))
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
@@ -126,7 +128,7 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            if(str(data["name"]).casefold().__contains__("db2feeder") or str(data["processingUnitType"]).casefold().__contains__("stateful")):
+            if(str(data["name"]).casefold().__contains__("db2feeder")):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,
@@ -135,6 +137,7 @@ def listDeployed(managerHost):
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                activefeeder.append(str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
         printTabular(None,headers,dataTable)
@@ -276,17 +279,20 @@ def uploadFileRest(managerHostConfig):
         os.chdir(sourceDB2FeederShFilePath)
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
-            puName = str(file).replace('load','').replace('.sh','').casefold()
-            pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
-            #print("pathOfSourcePU : "+str(pathOfSourcePU))
-            #print("jarName :"+jarName)
-            zoneGSC = 'db2_'+puName
-            verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
-            logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-            logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-            status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-            print("\n")
-            logger.info("status : "+str(status))
+
+            exitsFeeder = str(file).replace('load','db2feeder').replace('.sh','').casefold()
+            if exitsFeeder not in activefeeder:
+                puName = str(file).replace('load','').replace('.sh','').casefold()
+                pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
+                #print("pathOfSourcePU : "+str(pathOfSourcePU))
+                #print("jarName :"+jarName)
+                zoneGSC = 'db2_'+puName
+                verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
+                logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+                logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+                status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+                print("\n")
+                logger.info("status : "+str(status))
     except Exception as e:
         handleException(e)
 
@@ -377,59 +383,62 @@ def proceedToDeployPU():
         logger.info("Resport : "+str(restPort))
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
-            puName = str(file).replace('load_','').replace('.sh','').casefold()
-            zoneGSC = 'db2_'+puName
-            logger.info("filePrefix : "+filePrefix)
-            resource = filePrefix+'_'+puName+'.jar'
-            puName = 'db2feeder_'+puName
-            port = getPortNotExistInDB2Feeder(restPort)
-            logger.info("dbPort : "+str(port))
-            if(len(str(port))!=0):
-                while(len(str(port))!=0):
-                    restPort = int(port)+1
-                    port = getPortNotExistInDB2Feeder(restPort)
-                #else:
-                #    dbPort = restPort
-            if(confirmCreateGSC=='y'):
-                proceedToCreateGSC(zoneGSC)
-            verboseHandle.printConsoleInfo("Resource : "+resource+" : rest.port : "+str(restPort))
-            data = getDataPUREST(resource,puName,zoneGSC,str(restPort))
-            logger.info("data of payload :"+str(data))
 
-            response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers)
-            deployResponseCode = str(response.content.decode('utf-8'))
-            print("deployResponseCode : "+str(deployResponseCode))
-            logger.info("deployResponseCode :"+str(deployResponseCode))
+            exitsFeeder = str(file).replace('load','db2feeder').replace('.sh','').casefold()
+            if exitsFeeder not in activefeeder:
+                puName = str(file).replace('load_','').replace('.sh','').casefold()
+                zoneGSC = 'db2_'+puName
+                logger.info("filePrefix : "+filePrefix)
+                resource = filePrefix+'_'+puName+'.jar'
+                puName = 'db2feeder_'+puName
+                port = getPortNotExistInDB2Feeder(restPort)
+                logger.info("dbPort : "+str(port))
+                if(len(str(port))!=0):
+                    while(len(str(port))!=0):
+                        restPort = int(port)+1
+                        port = getPortNotExistInDB2Feeder(restPort)
+                    #else:
+                    #    dbPort = restPort
+                if(confirmCreateGSC=='y'):
+                    proceedToCreateGSC(zoneGSC)
+                verboseHandle.printConsoleInfo("Resource : "+resource+" : rest.port : "+str(restPort))
+                data = getDataPUREST(resource,puName,zoneGSC,str(restPort))
+                logger.info("data of payload :"+str(data))
 
-            status = validateResponseGetDescription(deployResponseCode)
-            logger.info("response.status_code :"+str(response.status_code))
-            logger.info("response.content :"+str(response.content) )
-            if(response.status_code==202):
-                logger.info("Response :"+str(status))
-                retryCount=5
-                with Spinner():
-                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                        status = validateResponseGetDescription(deployResponseCode)
-                        verboseHandle.printConsoleInfo("Response :"+str(status))
-                        retryCount = retryCount-1
-                        time.sleep(2)
-                        if(str(status).casefold().__contains__('successful')):
+                response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers)
+                deployResponseCode = str(response.content.decode('utf-8'))
+                print("deployResponseCode : "+str(deployResponseCode))
+                logger.info("deployResponseCode :"+str(deployResponseCode))
+
+                status = validateResponseGetDescription(deployResponseCode)
+                logger.info("response.status_code :"+str(response.status_code))
+                logger.info("response.content :"+str(response.content) )
+                if(response.status_code==202):
+                    logger.info("Response :"+str(status))
+                    retryCount=5
+                    with Spinner():
+                        while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                            status = validateResponseGetDescription(deployResponseCode)
+                            verboseHandle.printConsoleInfo("Response :"+str(status))
+                            retryCount = retryCount-1
                             time.sleep(2)
-                            createDB2EntryInSqlLite(puName,file,restPort)
-                            verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
-                            userCMD = os.getlogin()
-                            if userCMD == 'ec2-user':
-                                cmd = "sudo rm -f "+sourceDB2FeederShFilePath+resource
-                            else:
-                                cmd = "rm -f "+sourceDB2FeederShFilePath+resource
-                            logger.info("cmd : "+str(cmd))
-                            home = executeLocalCommandAndGetOutput(cmd)
-                            break
-                        elif(str(status).casefold().__contains__('failed')):
-                            break
-            else:
-                logger.info("Unable to deploy 1 :"+str(status))
-                verboseHandle.printConsoleInfo("Unable to deploy 1 : "+str(status))
+                            if(str(status).casefold().__contains__('successful')):
+                                time.sleep(2)
+                                createDB2EntryInSqlLite(puName,file,restPort)
+                                verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
+                                userCMD = os.getlogin()
+                                if userCMD == 'ec2-user':
+                                    cmd = "sudo rm -f "+sourceDB2FeederShFilePath+resource
+                                else:
+                                    cmd = "rm -f "+sourceDB2FeederShFilePath+resource
+                                logger.info("cmd : "+str(cmd))
+                                home = executeLocalCommandAndGetOutput(cmd)
+                                break
+                            elif(str(status).casefold().__contains__('failed')):
+                                break
+                else:
+                    logger.info("Unable to deploy 1 :"+str(status))
+                    verboseHandle.printConsoleInfo("Unable to deploy 1 : "+str(status))
     except Exception as e :
         handleException(e)
 

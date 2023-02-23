@@ -1,0 +1,15 @@
+[Unit]
+Description=DataValidator Scheduler Service Application to get endpoint metadata
+After=network.target
+
+[Service]
+User=root
+Type=simple
+ExecStart=/bin/bash /usr/local/bin/servers_datavalidation_schedulerservice.sh $portNumber $timeRestart $ipAddress $measurmentArray
+ExecStop=/bin/kill -15 $MAINPID
+Restart=always
+RestartSec=30
+
+
+[Install]
+WantedBy=multi-user.target

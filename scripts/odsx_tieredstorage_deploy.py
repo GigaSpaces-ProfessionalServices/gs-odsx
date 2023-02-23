@@ -408,7 +408,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
                 },
                 "name": ""+resourceName+"",
                 "sla": {
-                    "maxInstancesPerMachine": int(maxInstancesPerMachine),
+                    # "maxInstancesPerMachine": int(maxInstancesPerMachine),
                     "zones": [
                         ""+zone+""
                     ],
