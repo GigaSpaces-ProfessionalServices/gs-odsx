@@ -79,11 +79,11 @@ def configureLicenseManagerAndSpace():
 
         for host in managerHosts.split(','):
             outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
-            verboseHandle.printConsoleInfo("License configured for host:"+host)
+            verboseHandle.printConsoleInfo("xap_logging.properties configured for host:"+host)
 
         for host in spaceHosts.split(','):
             outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
-            verboseHandle.printConsoleInfo("License configured for host:"+host)
+            verboseHandle.printConsoleInfo("xap_logging.properties configured for host:"+host)
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Utilities -> Log")
