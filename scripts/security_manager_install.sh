@@ -123,12 +123,6 @@ function setGSHome {
   echo "Set GS_HOME - Done!"
 }
 
-function replaceZKJars {
-  targetDir=$1
-  rm -f $targetDir/gigaspaces-smart-ods/lib/platform/zookeeper/*.jar
-  cp
-}
-
 function installAirGapJava {
     echo "Installation of AirGapJava"
     home_dir=$(pwd)

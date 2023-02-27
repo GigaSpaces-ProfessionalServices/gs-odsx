@@ -472,11 +472,11 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
         #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
         #Upload CEF logging jar
         #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-        newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.ts.zookeeper.zkjars")
+        newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
         for newZkJar in newZkJars:
             executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+newZkJar)
 
-        newZkJars = getYamlFilePathInsideFolderList(".gs.jars.ts.zookeeper.zkjars")
+        newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
         for newZkJar in newZkJars:
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
 
