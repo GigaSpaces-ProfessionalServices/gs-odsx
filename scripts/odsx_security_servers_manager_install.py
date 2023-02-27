@@ -8,7 +8,8 @@ from scripts.logManager import LogManager
 from scripts.odsx_security_servers_space_install import configureMetricsXML
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
-    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
+    getYamlFileNamesInsideFolderList
 from colorama import Fore
 
 from utils.ods_cleanup import signal_handler
@@ -373,6 +374,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
+        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -439,6 +442,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"20. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"21. "+
+              Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
+              Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -466,7 +472,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser)
+                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -474,7 +480,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     except Exception as e:
         handleException(e)
 
-def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser):
+def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget):
     gsNicAddress = host_nic_dict_obj[host]
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
@@ -497,7 +503,13 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
     logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
     with Spinner():
         outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+        newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.ts.zookeeper.zkjars")
+        for newZkJar in newZkJars:
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+newZkJar)
 
+        newZkJars = getYamlFilePathInsideFolderList(".gs.jars.ts.zookeeper.zkjars")
+        for newZkJar in newZkJars:
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
@@ -506,7 +518,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         #print("cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
         #print("chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
-        executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"* "+ newZkJarTarget+"*")
         configureMetricsXML(host)
     serverHost=''
     try:

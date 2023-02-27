@@ -7,7 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
-    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
+    getYamlFileNamesInsideFolderList
 from colorama import Fore
 
 from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
@@ -296,6 +297,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
+        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -392,6 +395,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"20. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"21. "+
+              Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
+              Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -402,14 +408,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength=len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc)
+                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
     except Exception as e:
         handleException(e)
 
-def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc):
+def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget):
     installStatus='No'
     install = isInstalledAndGetVersion(host)
     logger.info("install : "+str(install))
@@ -453,6 +459,14 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
             #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
             logger.debug("script output"+str(outputShFile))
+            newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.ts.zookeeper.zkjars")
+            for newZkJar in newZkJars:
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+newZkJar)
+
+            newZkJars = getYamlFilePathInsideFolderList(".gs.jars.ts.zookeeper.zkjars")
+            for newZkJar in newZkJars:
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
+
             #print(outputShFile)
             #Upload CEF logging jar
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)

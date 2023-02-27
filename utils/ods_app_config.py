@@ -120,6 +120,22 @@ def getYamlFilePathInsideFolder(configPath):
     path = str(configPath)[:str(configPath).rindex('.')].replace('.','/')
     return sourceInstallerDirectory+path+'/'+fileName
 
+def getYamlFileNamesInsideFolderList(configPath):
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    fileNames= readValueFromYaml(configPath)
+    return fileNames
+
+def getYamlFilePathInsideFolderList(configPath):
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    fileNames= readValueFromYaml(configPath)
+    path = str(configPath)[:str(configPath).rindex('.')].replace('.','/')
+    fileListWithPath=[]
+    for fileName in fileNames:
+        fileListWithPath.append(sourceInstallerDirectory+path+'/'+fileName)
+    return fileListWithPath
+
 def getYamlFilePathInsideConfigFolder(configPath):
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
