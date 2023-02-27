@@ -456,6 +456,18 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder .jar file including file name : "+str(sourceMSSQLJarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder *.sh file : "+str(sourceMSSQLFeederShFilePath))
+    verboseHandle.printConsoleInfo("Enter source file of mssql-feeder *.sh file : "+str(newInstall))
+
+def newInstallMssqlFeeder():
+    global newInstall
+    newInstall=[]
+    directory = os.getcwd()
+    os.chdir(sourceMSSQLFeederShFilePath)
+    for file in glob.glob("load_*.sh"):
+        os.chdir(directory)
+        exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
+        if exitsFeeder not in activefeeder:
+            newInstall.append(exitsFeeder)
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
@@ -481,6 +493,7 @@ def proceedToDeployPUInputParam(managerHost):
     #set_value_in_property_file("app.dataengine.mssql-feeder.filePath.shFile",sourceMSSQLFeederShFilePath)
 
     #uploadFileRest(managerHost)
+    newInstallMssqlFeeder()
 
     global partition
     partition='1'

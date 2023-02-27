@@ -463,6 +463,18 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter sqlite3 db file : "+str(db_file))
     verboseHandle.printConsoleInfo("Enter source file path of db2-feeder .jar file including file name : "+str(sourceDB2JarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of db2-feeder *.sh file : "+str(sourceDB2FeederShFilePath))
+    verboseHandle.printConsoleInfo("Enter source file of db2-feeder *.sh file : "+str(newInstall))
+
+def newInstallDB2Feeder():
+    global newInstall
+    newInstall=[]
+    directory = os.getcwd()
+    os.chdir(sourceDB2FeederShFilePath)
+    for file in glob.glob("load_*.sh"):
+        os.chdir(directory)
+        exitsFeeder = str(file).replace('load','db2feeder').replace('.sh','').casefold()
+        if exitsFeeder not in activefeeder:
+            newInstall.append(exitsFeeder)
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
@@ -487,7 +499,7 @@ def proceedToDeployPUInputParam(managerHost):
     #set_value_in_property_file("app.dataengine.db2-feeder.filePath.shFile",sourceDB2FeederShFilePath)
 
     #uploadFileRest(managerHost)
-
+    newInstallDB2Feeder()
     global partition
     partition='1'
 

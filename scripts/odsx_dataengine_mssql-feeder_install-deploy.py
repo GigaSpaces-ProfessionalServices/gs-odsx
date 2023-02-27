@@ -364,6 +364,17 @@ def createMSSQLEntryInSqlLite(puName, file, restPort):
     except Exception as e:
         handleException(e)
 
+def newInstallMssqlFeeder():
+    global newInstall
+    newInstall=[]
+    directory = os.getcwd()
+    os.chdir(sourceMSSQLFeederShFilePath)
+    for file in glob.glob("load_*.sh"):
+        os.chdir(directory)
+        exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
+        if exitsFeeder not in activefeeder:
+            newInstall.append(exitsFeeder)
+
 def proceedToDeployPU():
     global restPort
     try:
@@ -455,7 +466,7 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter sqlite3 db file :"+str(db_file))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder .jar file including file name : "+str(sourceMSSQLJarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder *.sh file : "+str(sourceMSSQLFeederShFilePath))
-    # verboseHandle.printConsoleInfo("Enter source file of mssql-feeder *.sh file : "+str(activefeeder))
+    verboseHandle.printConsoleInfo("Enter source file of mssql-feeder *.sh file : "+str(newInstall))
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
@@ -482,7 +493,7 @@ def proceedToDeployPUInputParam(managerHost):
     #set_value_in_property_file("app.dataengine.mssql-feeder.filePath.shFile",sourceMSSQLFeederShFilePath)
 
     #uploadFileRest(managerHost)
-
+    newInstallMssqlFeeder()
     global partition
     partition='1'
 
@@ -516,7 +527,6 @@ def proceedToDeployPUInputParam(managerHost):
         feederSleepAfterWrite='500'
 
     displaySummaryOfInputParam()
-
     finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
     if(len(str(finalConfirm))==0):
         finalConfirm='y'
