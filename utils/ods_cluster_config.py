@@ -3,11 +3,15 @@ import concurrent
 import hashlib
 import json, yaml
 import os, configparser
+import time
 from collections import namedtuple
 from concurrent.futures import ThreadPoolExecutor
 from datetime import datetime
 from json import JSONEncoder
+
 from time import sleep
+from pathlib import Path
+from random import randint
 
 from colorama import Fore
 from scripts.logManager import LogManager
@@ -1327,28 +1331,51 @@ def discoverHostConfig():
         file = sourceInstallerDirectory+'/host.yaml'
         with open(file) as f:
             content = yaml.safe_load(f)
+        hostModificationTime = os.path.getmtime(file)
+        clusterConfigModificationTime = os.path.getmtime('config/cluster.config')
+        configLogFile="config/cluster.config.lock"
+        updateClusterConfigFileFlag = hostModificationTime > clusterConfigModificationTime
+        print("updateClusterConfigFileFlag : "+str(updateClusterConfigFileFlag))
+        retry=20
+        while Path(configLogFile).exists():
+            logger.info("retrying ... "+str(retry))
+            print("retrying ... "+str(retry))
+            time.sleep(randint(500,3000)/1000)
+            retry = retry-1
+            if retry<=0:
+                logger.info("removing lock " + str(configLogFile) + ", max times retried ... "+str(retry))
+                print("removing lock " + str(configLogFile) + ", max times retried ... "+str(retry))
+                os.remove(configLogFile)
 
         managerHostCount=1
         if 'manager' in content['servers']:
-            cleanManagerHostFronConfig()
+            if updateClusterConfigFileFlag:
+                Path(configLogFile).touch()
+                logger.info("created lock " + str(configLogFile) + ", retry "+str(retry))
+                print("created lock " + str(configLogFile) + ", retry "+str(retry))
+                cleanManagerHostFronConfig()
             for k,v in content['servers']['manager'].items():
                 host = 'mgr'+str(managerHostCount)+""
                 os.environ[host] = str(v)
-                config_add_manager_node(host, host, 'admin', filePath='config/cluster.config')
+                if updateClusterConfigFileFlag:
+                    config_add_manager_node(host, host, 'admin', filePath='config/cluster.config')
                 managerHostCount+=1
         #status = os.system('bash')
         spaceHostCount=1
         if 'space' in content['servers']:
-            cleanSpaceHostFronConfig()
+            if updateClusterConfigFileFlag:
+                cleanSpaceHostFronConfig()
             for k,v in content['servers']['space'].items():
                 host = 'space'+str(spaceHostCount)+""
                 os.environ[host] = str(v)
-                config_add_space_node(host, host, 'gsc', filePath='config/cluster.config')
+                if updateClusterConfigFileFlag:
+                    config_add_space_node(host, host, 'gsc', filePath='config/cluster.config')
                 spaceHostCount+=1
 
         dataIntegrationHostCount=1
         if 'dataIntegration' in content['servers']:
-            cleanDIHostFronConfig()
+            if updateClusterConfigFileFlag:
+                cleanDIHostFronConfig()
             for host,v in content['servers']['dataIntegration'].items():
                 host = 'di'+str(dataIntegrationHostCount)
                 os.environ[host] = str(v)
@@ -1361,16 +1388,23 @@ def discoverHostConfig():
                     type='kafka Broker 2'
                 if(dataIntegrationHostCount==4):
                     type='Zookeeper Witness'
-                config_add_dataIntegration_node(host, host, 'dataIntegration', type, filePath='config/cluster.config')
-                config_add_dataEngine_node(host, host, "dataEngine", "mq-connector", "")
+                if updateClusterConfigFileFlag:
+                    config_add_dataIntegration_node(host, host, 'dataIntegration', type, filePath='config/cluster.config')
+                    config_add_dataEngine_node(host, host, "dataEngine", "mq-connector", "")
                 dataIntegrationHostCount+=1
+
+        if Path(configLogFile).exists():
+            logger.info("removing lock " + str(configLogFile) + ", retry "+str(retry))
+            print("removing lock " + str(configLogFile) + ", retry "+str(retry))
+            os.remove(configLogFile)
 
         if 'grafana' in content['servers']:
             nbHostCount=1
             for host,v in content['servers']['grafana'].items():
                 host = 'grafana'+str(nbHostCount)
                 os.environ[host] = str(v)
-                config_add_grafana_node(host,host,'Grafana', "config/cluster.config")
+                if updateClusterConfigFileFlag:
+                    config_add_grafana_node(host,host,'Grafana', "config/cluster.config")
                 nbHostCount+=1
 
         if 'influxdb' in content['servers']:
@@ -1378,7 +1412,8 @@ def discoverHostConfig():
             for host,v in content['servers']['influxdb'].items():
                 host = 'influxdb'+str(nbHostCount)
                 os.environ[host] = str(v)
-                config_add_influxdb_node(host,host,'Influxdb', "config/cluster.config")
+                if updateClusterConfigFileFlag:
+                    config_add_influxdb_node(host,host,'Influxdb', "config/cluster.config")
                 nbHostCount+=1
 
         if 'nb_applicative' in content['servers']:
@@ -1386,7 +1421,8 @@ def discoverHostConfig():
             for host,v in content['servers']['nb_applicative'].items():
                 host = 'nb_app'+str(nbHostCount)
                 os.environ[host] = str(v)
-                config_add_nb_node(host,host,'applicative server', "config/cluster.config")
+                if updateClusterConfigFileFlag:
+                    config_add_nb_node(host,host,'applicative server', "config/cluster.config")
                 nbHostCount+=1
 
         if 'nb_management' in content['servers']:
@@ -1394,7 +1430,8 @@ def discoverHostConfig():
             for host,v in content['servers']['nb_management'].items():
                 host = 'nb_mgt'+str(nbHostCount)
                 os.environ[host] = str(v)
-                config_add_nb_node(host,host,'management server', "config/cluster.config")
+                if updateClusterConfigFileFlag:
+                    config_add_nb_node(host,host,'management server', "config/cluster.config")
                 nbHostCount+=1
 
         if 'space' in content['servers']:
@@ -1402,20 +1439,23 @@ def discoverHostConfig():
             for host,v in content['servers']['space'].items():
                 host = 'nb_agent'+str(nbHostCount)
                 os.environ[host] = str(v)
-                config_add_nb_node(host,host,'agent', "config/cluster.config")
+                if updateClusterConfigFileFlag:
+                    config_add_nb_node(host,host,'agent', "config/cluster.config")
                 nbHostCount+=1
         dvHostCount=1
         if 'data_validator_server' in content['servers']:
             for host,v in content['servers']['data_validator_server'].items():
                 host = 'datavalidation'+str(dvHostCount)
                 os.environ[host]=str(v)
-                config_add_dataValidation_node(host, host,'DataValidation', 'server')
+                if updateClusterConfigFileFlag:
+                    config_add_dataValidation_node(host, host,'DataValidation', 'server')
                 dvHostCount+=1
         if 'data_validator_agent' in content['servers']:
             for host,v in content['servers']['data_validator_agent'].items():
                 host = 'datavalidation'+str(dvHostCount)
                 os.environ[host]=str(v)
-                config_add_dataValidation_node(host, host,'DataValidation', 'agent')
+                if updateClusterConfigFileFlag:
+                    config_add_dataValidation_node(host, host,'DataValidation', 'agent')
                 dvHostCount+=1
         if 'pivot' in content['servers']:
             pivotHostCount=1

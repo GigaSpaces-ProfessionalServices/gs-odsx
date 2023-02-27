@@ -8,7 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
-from utils.ods_cluster_config import config_get_dataValidation_nodes
+from utils.ods_cluster_config import config_get_dataValidation_nodes, config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
@@ -81,6 +81,14 @@ def getDataValidationAllHostFromEnv():
     hosts=hosts[:-1]
     return hosts
 
+def getInfluxdbHostFromEnv():
+    logger.info("getinfluxdbHostFromEnv()")
+    hosts = ''
+    influxdbNodes = config_get_influxdb_node()
+    for node in influxdbNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
 
 def installSingle():
     logger.info("installSingle():")
@@ -90,6 +98,8 @@ def installSingle():
         global sourceDvServerJar
         global logFilepath
         global dbPath
+        global influxdbHost
+        influxdbHost = getInfluxdbHostFromEnv()
         targetInstallDir=str(readValuefromAppConfig("app.dv.install.target"))
         serverHost = getDataValidationServerHostFromEnv()#str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
         #while(len(str(serverHost))==0):
@@ -115,6 +125,12 @@ def installSingle():
          f.write('logging.file.name='+logFilepath)
          f.write('\n')
          f.write('pathToDataBase='+dbPath)
+         f.write('\n')
+         f.write('influxDBUrl=http://'+influxdbHost +':8086')   #http://127.0.0.1:8086
+         f.write('\n')
+         f.write('influxDBUsername=admin')
+         f.write('\n')
+         f.write('influxDBPassword=admin')
 
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
         verboseHandle.printConsoleInfo("***Summary***")

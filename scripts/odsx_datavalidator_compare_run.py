@@ -89,10 +89,15 @@ def doValidate():
         if (len(str(executionTime)) == 0):
             executionTime = '0'
 
+        influxdbResultStore = str(userInputWrapper("Do you want to store results in influxdb (yes/no)? [no]: "))
+        if (len(str(influxdbResultStore)) == 0):
+            influxdbResultStore = 'no'
+
         # http://localhost:7890/compare/avg?dataSource1Type=gigaspaces&dataSource1HostIp=localhost&dataSource1Port=414&schemaName1=demo&dataSource2Type=gigaspaces&dataSource2HostIp=localhost&dataSource2Port=4174&schemaName2=demo2&tableName=com.mycompany.app.Person&fieldName=salary
         response = requests.get(
             "http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/compare/" + measurementIdA + "/" + measurementIdB
-            + "?executionTime=" + executionTime)
+            + "?executionTime=" + executionTime
+            +"&influxdbResultStore=" + influxdbResultStore)
 
         if response.status_code == 200:
             jsonArray = json.loads(response.text)
