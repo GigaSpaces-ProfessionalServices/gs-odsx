@@ -1341,7 +1341,13 @@ def discoverHostConfig():
         clusterConfigModificationTime = os.path.getmtime('config/cluster.config')
         configLogFile="config/cluster.config.lock"
         updateClusterConfigFileFlag = hostModificationTime > clusterConfigModificationTime
-        print("updateClusterConfigFileFlag : "+str(updateClusterConfigFileFlag))
+        print("updateClusterConfigFileFlag1 : "+str(updateClusterConfigFileFlag))
+        if not updateClusterConfigFileFlag:
+            spaceNodes = config_get_space_hosts()
+            if len(spaceNodes)==0:
+                updateClusterConfigFileFlag = True
+                print("updateClusterConfigFileFlag2 : "+str(updateClusterConfigFileFlag))
+
         retry=20
         while Path(configLogFile).exists():
             logger.info("retrying ... "+str(retry))
