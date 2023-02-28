@@ -460,8 +460,8 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
             logger.debug("script output"+str(outputShFile))
             newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
-            for newZkJar in newZkJars:
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+newZkJar)
+            #for newZkJar in newZkJars:
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
 
             newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
             for newZkJar in newZkJars:

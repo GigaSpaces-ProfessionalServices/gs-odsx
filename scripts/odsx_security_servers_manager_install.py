@@ -504,8 +504,8 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
     with Spinner():
         outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
         newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
-        for newZkJar in newZkJars:
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+newZkJar)
+#        for newZkJar in newZkJars:
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
 
         newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
         for newZkJar in newZkJars:
