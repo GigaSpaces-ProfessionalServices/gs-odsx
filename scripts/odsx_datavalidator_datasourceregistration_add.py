@@ -111,6 +111,7 @@ def doValidate():
         if (len(str(dataSource1Port)) == 0):
             dataSource1Port = getPort(dataSource1Type)
 
+        gsLookupGroup = ''
         if dataSource1Type == 'gigaspaces':
             gsLookupGroup = str(userInputWrapper("Enter Lookup Group [xap-16.2.0] :"))
             if (len(str(gsLookupGroup)) == 0):

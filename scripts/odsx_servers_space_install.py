@@ -419,8 +419,8 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
             #Upload CEF logging jar
             #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
             newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
-            for newZkJar in newZkJars:
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+newZkJar)
+            #for newZkJar in newZkJars:
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
 
             newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
             for newZkJar in newZkJars:
