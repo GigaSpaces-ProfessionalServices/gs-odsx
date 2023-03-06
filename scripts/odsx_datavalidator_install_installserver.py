@@ -2,6 +2,7 @@
 
 import os
 import subprocess
+import socket
 
 from colorama import Fore
 
@@ -135,6 +136,8 @@ def installSingle():
          f.write('influxDBName='+str(readValuefromAppConfig("db.influx.dbname")))
          f.write('\n')
          f.write('envName='+os.getenv('ENV_NAME',default='test'))
+         f.write('\n')
+         f.write('host='+socket.gethostname())
 
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
         verboseHandle.printConsoleInfo("***Summary***")
