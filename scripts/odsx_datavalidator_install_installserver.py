@@ -131,6 +131,10 @@ def installSingle():
          f.write('influxDBUsername=admin')
          f.write('\n')
          f.write('influxDBPassword=admin')
+         f.write('\n')
+         f.write('influxDBName='+str(readValuefromAppConfig("db.influx.dbname")))
+         f.write('\n')
+         f.write('envName='+os.getenv('ENV_NAME',default='test'))
 
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
         verboseHandle.printConsoleInfo("***Summary***")
