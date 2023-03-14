@@ -10,6 +10,7 @@ Group=gsods
 ExecStart=/bin/bash /usr/local/bin/start_gsc.sh
 ExecStop=/bin/bash /usr/local/bin/stop_gsc.sh
 RemainAfterExit=yes
+Restart=on-failure
 
 [Install]
 WantedBy=multi-user.target
