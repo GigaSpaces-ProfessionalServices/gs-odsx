@@ -21,6 +21,15 @@ sed -i 's,$ipAddress,'$ipAddress',g' /tmp/datavalidator-measurment.service
 sed -i 's|$measurmentArray|'$measurmentArray'|g' /tmp/datavalidator-measurment.service
 
 sudo mv -f /tmp/datavalidator-measurment.service /etc/systemd/system/
+
+service="datavalidator-measurment.service"
+
+if systemctl is-active --quiet datavalidator-measurment.service; then
+    sudo systemctl stop --quiet datavalidator-measurment.service
+    sudo systemctl disable --quiet datavalidator-measurment.service
+    sudo systemctl daemon-reload
+fi
+sleep 5
 sudo systemctl daemon-reload
 sudo systemctl enable datavalidator-measurment.service
 #sudo systemctl start datavalidator-measurment.service

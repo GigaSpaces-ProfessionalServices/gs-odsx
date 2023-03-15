@@ -10,7 +10,7 @@ from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
-
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -164,7 +164,7 @@ def setupService():
     printSchedulerTable()
     ipAddress= os.getenv("pivot1")
     portNumber= readValuefromAppConfig("app.dv.server.port")#7890
-    timeRestart= readValuefromAppConfig("app.datavalidator.measurement.time")#5
+    # timeRestart= #5
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
     print(Fore.GREEN+"1. "+
@@ -179,7 +179,7 @@ def setupService():
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to setup DataValidator Scheduler service ? (y/n) [y]:" + Fore.RESET
-    from utils.odsx_keypress import userInputWrapper
+
     choice = str(userInputWrapper(confirmMsg))
     if choice.casefold() == 'n':
         exit(0)
@@ -190,10 +190,10 @@ def setupService():
         os.system("chmod 333 scripts/setupDataValidatorSchedulerService.sh")
         os.system(commandToExecute)
         logger.info("setupService() completed")
-        verboseHandle.printConsoleInfo("Service started successfully")
+        verboseHandle.printConsoleInfo("Service setup successfully done")
     except Exception as e:
         logger.error("error occurred in setupService()")
-        verboseHandle.printConsoleError("Service not started")
+        verboseHandle.printConsoleError("Service not able to setup")
 
     logger.info("setupService() : end")
 
@@ -205,14 +205,19 @@ if __name__ == '__main__':
     try:
         # with Spinner():
         global measurmentArray
+        global timeRestart
+        timeRestart= readValuefromAppConfig("app.dv.measurement.time")
         measurmentArray=[]
-        optionForFilter = str(userInputWithEscWrapper(
-            Fore.YELLOW + "press [Enter] For Continue  \nPress [99] for exit.: " + Fore.RESET))
+        optionForFilter=0
+        # optionForFilter = str(userInputWithEscWrapper(
+        #     Fore.YELLOW + "press [Enter] For Continue  \nPress [99] for exit.: " + Fore.RESET))
         # Fore.YELLOW + "press [1] if you want to Filter by Mode.\npress [2] if you want to Filter by Host.\n[Enter] For all  \nPress [99] for exit.: " + Fore.RESET))
         while optionForFilter != '99':
             doValidate()
             optionForFilter = str(userInputWithEscWrapper(
-                Fore.YELLOW + "press [Enter] For Continue  \nPress [99] for exit.: " + Fore.RESET))
+                Fore.YELLOW + "press [Enter] For add another. \nPress [99] for save your measurment compare.: " + Fore.RESET))
+        timeRestart = str(userInputWrapper(Fore.YELLOW + "Enter the scheduler time (seconds) ? ["+str(timeRestart)+"] : " + Fore.RESET))
+        logger.info("timeRestart :" + str(timeRestart))
         setupService()
     except Exception as e:
         logger.error("Exception in Menu->Validators" + str(e))

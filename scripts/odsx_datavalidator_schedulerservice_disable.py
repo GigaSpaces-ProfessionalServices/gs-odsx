@@ -31,7 +31,7 @@ def checkServiceExists():
     else:
         return 0
 
-def stopDataValidationSchedulerService(args):
+def stopDataValidationSchedulerService():
 
     confirmMsg = Fore.YELLOW + "Are you sure, you want to stop DataValidator Scheduler service ? (Yes/No) [Yes] :"+Fore.RESET
 
@@ -66,7 +66,5 @@ def stopDataValidationSchedulerService(args):
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Datavalidator -> Scheduler Service -> Disable")
-    args = []
-    args = myCheckArg()
     # signal.signal(signal.SIGINT, signal_handler)
-    stopDataValidationSchedulerService(args)
+    stopDataValidationSchedulerService()

@@ -16,5 +16,8 @@
 3. Configure target path in app.config file
    app.xap.newzk.jar.target=/dbagiga/gigaspaces-smart-ods/lib/platform/zookeeper/
 4. Configure measurement time in app.config file
-   app.datavalidator.measurement.time=5
-   app.utilities.checkmanagersync.file=/dbagiga/utils/check_manager_sync/check_manager_sync.sh
+   app.dv.measurement.time=3600
+   change app.kapacitor.port=9092 to app.kapacitor.port=9992
+5. In KAPACITOR alerts should be in /dbagigashare/current/kapacitor/
+   Templates files should in /dbagigashare/env_config/kapacitor/
+   kapacitor.conf.template will reside in /dbagigashare/env_config/kapacitor/config

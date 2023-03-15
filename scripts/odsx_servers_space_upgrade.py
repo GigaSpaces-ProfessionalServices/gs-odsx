@@ -169,8 +169,7 @@ def proceedForSpaceUpgrade(spaceStatusIP, spaceStatus):
         verboseHandle.printConsoleError(
             "space is not running, upgrade will not be performed")
     elif packageName.replace(".zip","") == crnVersion:
-        verboseHandle.printConsoleError(
-            "space already upgraded")
+        verboseHandle.printConsoleInfo("space already upgraded")
     else:
         verboseHandle.printConsoleInfo(
             "Starting upgradation for space " + spaceStatusIP)

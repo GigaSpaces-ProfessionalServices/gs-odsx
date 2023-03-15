@@ -37,6 +37,7 @@ printNoColor() {
 sourceInstallerDirectory=$1
 host=$2
 port=$3
+sourceInstallerEnvConfigDirectory=$4
 info "host: "$host
 info "port: "$port
 #info "sourceInstallerDirectory: "$sourceInstallerDirectory
@@ -52,9 +53,62 @@ installation_file=$(find $installation_path -name "jq*.rpm" -printf "%f\n")
 info "File:"$installation_path/$installation_file"\n"
 yum install -y $installation_path/$installation_file
 
-mkdir -p /etc/kapacitor/templates
-info "Copying files from "$sourceInstallerDirectory/kapacitor/templates/" to /etc/kapacitor/templates/ \n"
-cp $sourceInstallerDirectory/kapacitor/templates/*.json /etc/kapacitor/templates/
+
+
+DIRECTORYAlerts=/etc/kapacitor/alerts
+if [ -d "$DIRECTORYAlerts" ]; then
+  echo "$DIRECTORYAlerts does exist."
+#  mkdir -p /etc/kapacitor/alerts
+  mv "$DIRECTORYAlerts" "${DIRECTORYAlerts}_temp" || echo 'Could not rename '"$DIRECTORYAlerts"''
+  mkdir -p /etc/kapacitor/alerts
+#  info "Copying files from "$sourceInstallerDirectory/kapacitor/alerts/" to /etc/kapacitor/alerts/ \n"
+#  cp $sourceInstallerDirectory/kapacitor/alerts/*.json /etc/kapacitor/
+  if  cp $sourceInstallerDirectory/kapacitor/alerts/*.tick  /etc/kapacitor/alerts
+  then
+    rm -rf /etc/kapacitor/alerts_temp
+    echo "alerts_temp removed sucessfully.."
+  else
+    cp /etc/kapacitor/alerts_temp /etc/kapacitor/alerts
+    rm -rf /etc/kapacitor/alerts_temp
+    echo "Copying files Failed from "$sourceInstallerDirectory/kapacitor/alerts/" to /etc/kapacitor/alerts/ \n "
+  fi
+fi
+
+if [ ! -d "$DIRECTORYAlerts" ]; then
+  echo "$DIRECTORYAlerts does not exist."
+  mkdir -p /etc/kapacitor/alerts
+  info "Copying files from "$sourceInstallerDirectory/kapacitor/alerts/" to /etc/kapacitor/alerts/ \n"
+  cp $sourceInstallerDirectory/kapacitor/alerts/*.tick /etc/kapacitor/alerts/
+fi
+
+
+
+DIRECTORY=/etc/kapacitor/templates
+if [ -d "$DIRECTORY" ]; then
+  echo "$DIRECTORY does exist."
+#  mkdir -p /etc/kapacitor/templates
+  mv "$DIRECTORY" "${DIRECTORY}_temp" || echo 'Could not rename '"$DIRECTORY"''
+  mkdir -p /etc/kapacitor/templates
+#  info "Copying files from "$sourceInstallerEnvConfigDirectory/kapacitor/templates/" to /etc/kapacitor/templates/ \n"
+#  cp $sourceInstallerEnvConfigDirectory/kapacitor/templates/*.json /etc/kapacitor/
+  if  cp $sourceInstallerEnvConfigDirectory/kapacitor/templates/*.json  /etc/kapacitor/templates
+  then
+    rm -rf /etc/kapacitor/templates_temp
+    echo "templates_temp removed sucessfully.."
+  else
+    cp /etc/kapacitor/templates_temp /etc/kapacitor/templates
+    rm -rf /etc/kapacitor/templates_temp
+    echo "Copying files Failed from "$sourceInstallerEnvConfigDirectory/kapacitor/templates/" to /etc/kapacitor/templates/ \n "
+  fi
+fi
+
+if [ ! -d "$DIRECTORY" ]; then
+  echo "$DIRECTORY does not exist."
+  mkdir -p /etc/kapacitor/templates
+  info "Copying files from "$sourceInstallerEnvConfigDirectory/kapacitor/templates/" to /etc/kapacitor/templates/ \n"
+  cp $sourceInstallerEnvConfigDirectory/kapacitor/templates/*.json /etc/kapacitor/templates/
+fi
+
 
 kapacitor_url='export KAPACITOR_URL=http://'$host:$port
 sed -i '/export KAPACITOR_URL/d' ~/.bash_profile
@@ -68,7 +122,7 @@ sleep 2
 #sed -i -e 's|#   url = "http://example.com"|  url = "http://localhost:4242"|g' /etc/kapacitor/kapacitor.conf
 #sed -i -e 's|#   alert-template-file = "/path/to/template/file"| alert-template-file = "/etc/kapacitor/templates/debug.json"|g' /etc/kapacitor/kapacitor.conf
 #info "\n Configuring kapacitor conf to /etc/kapacitor/kapacitor.conf"
-cat $sourceInstallerDirectory/kapacitor/config/kapacitor.conf.template >> /etc/kapacitor/kapacitor.conf
+cat $sourceInstallerEnvConfigDirectory/kapacitor/config/kapacitor.conf.template >> /etc/kapacitor/kapacitor.conf
 #sed -i -e 's|  state-changes-only = false|  state-changes-only = true|g' /etc/kapacitor/kapacitor.conf
 ex /etc/kapacitor/kapacitor.conf <<-EOF
    /^\[smtp\]

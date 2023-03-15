@@ -85,7 +85,8 @@ def executeCommandForInstall():
     try:
         commandToExecute="scripts/monitors_alerts_services_kapacitor_install.sh"
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
-        additionalParam=sourceInstallerDirectory+' '+hostList+' '+port
+        sourceInstallerEnvConfigDirectory = str(os.getenv("ENV_CONFIG"))
+        additionalParam=sourceInstallerDirectory+' '+hostList+' '+port+' '+sourceInstallerEnvConfigDirectory
         for host in hostList.split(','):
             logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
             with Spinner():
