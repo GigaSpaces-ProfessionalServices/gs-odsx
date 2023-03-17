@@ -215,7 +215,7 @@ if __name__ == '__main__':
         while optionForFilter != '99':
             doValidate()
             optionForFilter = str(userInputWithEscWrapper(
-                Fore.YELLOW + "press [Enter] For add another. \nPress [99] for save your measurment compare.: " + Fore.RESET))
+                Fore.YELLOW + "press [Enter] to add another. \nPress [99] for save your measurment compare.: " + Fore.RESET))
         timeRestart = str(userInputWrapper(Fore.YELLOW + "Enter the scheduler time (seconds) ? ["+str(timeRestart)+"] : " + Fore.RESET))
         logger.info("timeRestart :" + str(timeRestart))
         setupService()

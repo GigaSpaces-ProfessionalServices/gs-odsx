@@ -105,9 +105,9 @@ def executeCommandForInstall():
     try:
         commandToExecute="scripts/servers_grafana_install.sh"
 
-        additionalParam=sourceInstallerDirectory+' '+gsConfigYamlTarget+' '+gsConfigSpaceboardTarget
+        additionalParam=sourceInstallerDirectory+' '+gsConfigYamlTarget+' '+gsConfigSpaceboardTarget+' '+sourceInstallerEnvDirectory
         for host in hostList.split(','):
-            logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
+            logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory+" sourceInstallerEnvDirectory "+sourceInstallerEnvDirectory)
             with Spinner():
                 outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                 verboseHandle.printConsoleInfo("Grafana has been installed on host :"+str(host))
@@ -119,6 +119,7 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> Grafana -> Install')
     try:
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
+        sourceInstallerEnvDirectory = str(os.getenv("ENV_CONFIG"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         installUserAndTargetDirectory()
         confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install Grafana servers (y/n) [y]: "+Fore.RESET))
         if(len(str(confirmInstall))==0):
