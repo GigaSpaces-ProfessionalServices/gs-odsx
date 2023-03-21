@@ -21,3 +21,11 @@
 5. In KAPACITOR alerts should be in /dbagigashare/current/kapacitor/
    Templates files should in /dbagigashare/env_config/kapacitor/
    kapacitor.conf.template will reside in /dbagigashare/env_config/kapacitor/config
+6. [LEUMI-537] Create folder security in /dbagigashare/env_config/ & copy files ldap-security-config.xml, SQLJDBCDriver.conf, *.keytab
+7. [LEUMI-537] Update app.yaml file as below
+   env_config:
+     security:
+       sqljdbc: SQLJDBCDriver.conf
+       keytab: keytab
+       ldapsourcefile: ldap-security-config.xml
+8. [LEUMI-537] Copy nb folder /dbagigashare/current/nb/ to /dbagigashare/env_config/nb/management & applicative. Keep tar.gz file location as it.
