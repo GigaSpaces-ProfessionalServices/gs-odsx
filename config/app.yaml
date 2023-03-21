@@ -107,6 +107,7 @@ current:
     jars:
       readfromshobjar: readFromShob-1.0.0.jar
 env_config:
-  sqljdbc: SQLJDBCDriver.conf
-  keytab: keytab
-  ldapsourcefile: ldap-security-config.xml
+  security:
+    sqljdbc: SQLJDBCDriver.conf
+    keytab: keytab
+    ldapsourcefile: ldap-security-config.xml

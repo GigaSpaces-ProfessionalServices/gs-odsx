@@ -1,1 +1,1 @@
-Install-Deploy,Start,List,Stop,Remove-Undeploy,Reset-database
+Install-Deploy,Start,List,Stop,Remove-Undeploy,Reset-database,Status

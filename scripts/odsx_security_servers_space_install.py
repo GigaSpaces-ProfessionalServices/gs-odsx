@@ -291,7 +291,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
-        ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..ldapsourcefile"))
+        ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..security.ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
@@ -476,9 +476,9 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
             #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..keytab")+msSqlFeederFileTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..security.keytab")+msSqlFeederFileTarget)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+msSqlFeederFileTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+msSqlFeederFileTarget)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
             #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)

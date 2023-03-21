@@ -225,7 +225,7 @@ def proceedForPreInstallation(nbServers, param):
             remotePath='/dbagiga'
             commandToExecute="scripts/servers_northbound_management_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
-        additionalParam=remotePath+' '+sourceInstallerDirectory
+        additionalParam=remotePath+' '+sourceInstallerDirectory + ' '+sourceInstallerDirectoryTar
         logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
 
         with Spinner():
@@ -299,7 +299,7 @@ def proceedForManagementInstallation():
         #config_add_nb_node(hostip, hostip, "management server", "config/cluster.config")
         logger.info("Completed Installation for management server:"+str(hostip))
         verboseHandle.printConsoleInfo("Completed Installation for management server:"+str(hostip))
-    cleanNbConfig()
+#    cleanNbConfig()
     logger.info("Completed installation for all management server")
     verboseHandle.printConsoleInfo("Completed installation for all management server")
     pass
@@ -307,8 +307,10 @@ def proceedForManagementInstallation():
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> NB -> All -> Install')
     sourceInstallerDirectory=""
+    sourceInstallerDirectoryTar=""
     try:
-        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
+        sourceInstallerDirectoryTar = str(os.getenv("ODSXARTIFACTS"))
         summaryForApplicativeInstallation()
         summaryForAgentInstallation()
         summaryForManagementInstallation()
@@ -319,7 +321,7 @@ if __name__ == '__main__':
             proceedForApplicativeInstallation()
             proceedForAgentInstallation()
             proceedForManagementInstallation()
-        if confirmInstall.casefold()=='n':
-            cleanNbConfig()
+     #   if confirmInstall.casefold()=='n':
+     #       cleanNbConfig()
     except Exception as e:
         handleException(e)

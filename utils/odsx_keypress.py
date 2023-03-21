@@ -41,7 +41,7 @@ def userInputWithEscWrapper(inputStr,isSingleInputEnabled=False):
             os.system("stty erase ^H")
             return "99"
     else:
-        userInput = userInputWrapper(inputStr)
+        userInput = input(inputStr)
         return userInput
 
 

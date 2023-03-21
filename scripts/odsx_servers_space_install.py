@@ -438,11 +438,11 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
             verboseHandle.printConsoleInfo(db2jccJarLicenseInput+" -> "+db2FeederJarTargetInput)
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-            verboseHandle.printConsoleInfo("*"+getYamlFilePathInsideConfigFolder("..keytab")+" -> "+msSqlFeederFileTarget)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..keytab")+" "+msSqlFeederFileTarget)
+            verboseHandle.printConsoleInfo("*"+getYamlFilePathInsideConfigFolder("..security.keytab")+" -> "+msSqlFeederFileTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..security.keytab")+" "+msSqlFeederFileTarget)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
-            verboseHandle.printConsoleInfo(getYamlFilePathInsideConfigFolder("..sqljdbc")+" ->"+msSqlFeederFileTarget)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..sqljdbc")+" "+msSqlFeederFileTarget)
+            verboseHandle.printConsoleInfo(getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" ->"+msSqlFeederFileTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
             configureMetricsXML(host)
         serverHost=''
         try:

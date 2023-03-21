@@ -205,7 +205,7 @@ def proceedForPreInstallation(nbServers, param):
         if param.casefold()=='applicative':
             commandToExecute="scripts/servers_northbound_applicative_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
-        additionalParam=remotePath+' '+sourceInstallerDirectory
+        additionalParam=remotePath+' '+sourceInstallerDirectory + ' ' + sourceInstallerDirectoryTar
         logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
 
         with Spinner():
@@ -238,22 +238,24 @@ def proceedForApplicativeInstallation():
         logger.info("hostip :"+str(hostip))
         logger.info("Completed Installation for applicative server:"+str(hostip))
         verboseHandle.printConsoleInfo("Completed installation for applicative server:"+str(hostip))
-    cleanNbConfig()
+#    cleanNbConfig()
     logger.info("Completed installation for all applicative servers")
     verboseHandle.printConsoleInfo("Completed installation for all applicative servers")
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Servers -> NB -> Applicative -> Install')
     sourceInstallerDirectory=""
+    sourceInstallerDirectoryTar=""
     try:
-        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
+        sourceInstallerDirectoryTar = str(os.getenv("ODSXARTIFACTS"))
         summaryForApplicativeInstallation()
         confirmInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed for NB applicavive servers ["+getNBApplicativeHostFromEnv()+"] installation ? (y/n) [y] :"+Fore.RESET))
         if confirmInstall.casefold()=='':
             confirmInstall='y'
         if(confirmInstall.casefold()=='y'):
             proceedForApplicativeInstallation()
-        if confirmInstall.casefold()=='n':
-            cleanNbConfig()
+       # if confirmInstall.casefold()=='n':
+       #     cleanNbConfig()
     except Exception as e:
         handleException(e)

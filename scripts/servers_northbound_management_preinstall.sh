@@ -3,18 +3,19 @@ echo "Extracting install.tar to "$targetDir
 tar -xvf install.tar
 targetDir=$1
 sourceInstallerDirectory=$2
-
+sourceInstallerDirectoryTar=$3
 echo "TargetDir"$targetDir
 echo "sourceInstallerDirectory:"$sourceInstallerDirectory
 echo "getting installation file .gz"
 home_dir=$(pwd)
 echo "homedir: "$home_dir
 installation_path=$sourceInstallerDirectory/nb/
-installation_file=$(find $installation_path -name *.tar.gz -printf "%f\n")
-echo $installation_path"/"$installation_file
+installation_path_tar=$sourceInstallerDirectoryTar/nb
+installation_file=$(find $installation_path_tar -name *.tar.gz -printf "%f\n")
+echo $installation_path_tar"/"$installation_file
 
-echo "Extracting .tar.gz file from "$installation_path
-tar -xzf $installation_path/*.tar.gz -C /dbagiga
+echo "Extracting .tar.gz file from "$installation_path_tar
+tar -xzf $installation_path_tar/*.tar.gz -C /dbagiga
 
 dbagigashareManagementPath=$sourceInstallerDirectory'/nb/management'
 
