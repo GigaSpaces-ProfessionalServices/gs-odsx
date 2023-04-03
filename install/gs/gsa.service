@@ -1,7 +1,7 @@
 [Unit]
 Description="GigaSpaces Service Grid"
 After=network.target
-#Requires=gsc.service
+Requires=gsc.service
 
 [Service]
 Type=simple
