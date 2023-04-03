@@ -398,6 +398,9 @@ function gsCreateGSServeice {
   mv /tmp/st*_gs*.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
+  if [ "$selinux" == "true" ]; then
+     restorecon /etc/systemd/system/gs*.service
+  fi
 
   #rm -rf gs.service
 
@@ -451,6 +454,8 @@ sourceInstallerDirectory=${12}
 logTargetPath=${13}
 logSourcePath=${14}
 gsNicAddress=${15}
+selinux=${16}
+
 echo "param1"$1
 echo "param2"$targetDir
 echo "param3"$gs_clusterhosts

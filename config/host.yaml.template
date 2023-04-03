@@ -1,0 +1,24 @@
+servers :
+  manager :
+    host1 : x.x.x.x
+    host2 : x.x.x.x
+    host3 : x.x.x.x
+  space :
+    host1 : x.x.x.x
+    host2 : x.x.x.x
+  pivot :
+    host1 : x.x.x.x
+  influxdb :
+    host1 : x.x.x.x
+  grafana :
+    host1 : x.x.x.x
+  dataIntegration :
+    host1 : x.x.x.x
+  nb_applicative :
+    host1 : x.x.x.x
+  nb_management :
+    host1 : x.x.x.x
+  data_validator_server :
+    host1 : x.x.x.x
+  data_validator_agent :
+    host1 : x.x.x.x

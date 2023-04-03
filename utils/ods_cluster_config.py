@@ -1335,22 +1335,22 @@ def discoverHostConfig():
         clusterConfigModificationTime = os.path.getmtime('config/cluster.config')
         configLogFile="config/cluster.config.lock"
         updateClusterConfigFileFlag = hostModificationTime > clusterConfigModificationTime
-        print("updateClusterConfigFileFlag1 : "+str(updateClusterConfigFileFlag))
+        logger.info("updateClusterConfigFileFlag1 : "+str(updateClusterConfigFileFlag))
         if not updateClusterConfigFileFlag:
             spaceNodes = config_get_space_hosts()
             if len(spaceNodes)==0:
                 updateClusterConfigFileFlag = True
-                print("updateClusterConfigFileFlag2 : "+str(updateClusterConfigFileFlag))
+                logger.info("updateClusterConfigFileFlag2 : "+str(updateClusterConfigFileFlag))
 
         retry=20
         while Path(configLogFile).exists():
             logger.info("retrying ... "+str(retry))
-            print("retrying ... "+str(retry))
+            #print("retrying ... "+str(retry))
             time.sleep(randint(500,3000)/1000)
             retry = retry-1
             if retry<=0:
                 logger.info("removing lock " + str(configLogFile) + ", max times retried ... "+str(retry))
-                print("removing lock " + str(configLogFile) + ", max times retried ... "+str(retry))
+                #print("removing lock " + str(configLogFile) + ", max times retried ... "+str(retry))
                 os.remove(configLogFile)
 
         managerHostCount=1
@@ -1358,7 +1358,7 @@ def discoverHostConfig():
             if updateClusterConfigFileFlag:
                 Path(configLogFile).touch()
                 logger.info("created lock " + str(configLogFile) + ", retry "+str(retry))
-                print("created lock " + str(configLogFile) + ", retry "+str(retry))
+              #  print("created lock " + str(configLogFile) + ", retry "+str(retry))
                 cleanManagerHostFronConfig()
             for k,v in content['servers']['manager'].items():
                 host = 'mgr'+str(managerHostCount)+""
@@ -1401,7 +1401,7 @@ def discoverHostConfig():
 
         if Path(configLogFile).exists():
             logger.info("removing lock " + str(configLogFile) + ", retry "+str(retry))
-            print("removing lock " + str(configLogFile) + ", retry "+str(retry))
+           # print("removing lock " + str(configLogFile) + ", retry "+str(retry))
             os.remove(configLogFile)
 
         if 'grafana' in content['servers']:

@@ -29,17 +29,20 @@ if [[ $DISTRO == *"Ubuntu"* ]]; then
     sudo apt upgrade -y
     sudo apt install daemon python3 -y
     sudo apt -y install wget
+    sudo apt -y install unzip
     sudo apt install openjdk-8-jdk-headless
 elif [[ $DISTRO == *"Red Hat"* && $DISTRO == *"7"* ]]; then
     sudo yum update -y
     sudo yum install -y python36 python36-pip
     sudo yum -y install wget
+    sudo yum -y install unzip
     sudo yum -y install java-1.8.0-openjdk
     sudo yum install -y nc
 else
     sudo yum update -y
     sudo yum install -y python3
     sudo yum -y install wget
+    sudo yum -y install unzip
     sudo yum -y install java-1.8.0-openjdk
 fi
 

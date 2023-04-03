@@ -298,6 +298,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
         newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+        selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -398,6 +399,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"21. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"22. "+
+              Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
+              Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -408,14 +412,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength=len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget)
+                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
     except Exception as e:
         handleException(e)
 
-def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget):
+def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled):
     installStatus='No'
     install = isInstalledAndGetVersion(host)
     logger.info("install : "+str(install))
@@ -424,7 +428,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
     if installStatus == 'No':
         gsNicAddress = host_nic_dict_obj[host]
         #print(host+"  "+gsNicAddress)
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress +' ' + selinuxEnabled
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         # print("---------------------"+str(additionalParam))
         logger.info("additionalParam - Installation :")
@@ -476,9 +480,9 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
             #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp *"+getYamlFilePathInsideConfigFolder("..security.keytab")+msSqlFeederFileTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.keytab").replace("keytab","*keytab")+" "+msSqlFeederFileTarget)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+msSqlFeederFileTarget)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
             #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
             #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)

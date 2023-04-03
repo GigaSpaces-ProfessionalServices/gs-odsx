@@ -89,16 +89,17 @@ def printManagerList(node):
         status="NOT REACHABLE"
     install = isInstalledAndGetVersion(os.getenv(str(node.ip)))
     logger.info("install : "+str(install))
-    influx = validateMetricsXmlInflux(os.getenv(str(node.ip)))
-    grafana = validateMetricsXmlGrafana(os.getenv(str(node.ip)))
+   # influx = validateMetricsXmlInflux(os.getenv(str(node.ip)))
+   # grafana = validateMetricsXmlGrafana(os.getenv(str(node.ip)))
     if(len(str(install))>8):
         installStatus='Yes'
     dataArray=[Fore.GREEN+os.getenv(str(node.ip))+Fore.RESET,
                Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
                Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
-               Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
-               Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
+    #           Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+    #           Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET
+               ]
     data.append(dataArray)
 
 def listFileFromDirectory():
@@ -119,8 +120,9 @@ def listFileFromDirectory():
                        Fore.YELLOW+"Installed"+Fore.RESET,
                        Fore.YELLOW+"Status"+Fore.RESET,
                        Fore.YELLOW+"Version"+Fore.RESET,
-                       Fore.YELLOW+"Influxdb"+Fore.RESET,
-                       Fore.YELLOW+"Grafana"+Fore.RESET]
+                #       Fore.YELLOW+"Influxdb"+Fore.RESET,
+                #       Fore.YELLOW+"Grafana"+Fore.RESET
+                       ]
             global data
             data=[]
             managerNodes = config_get_manager_node()

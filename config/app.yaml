@@ -57,9 +57,6 @@ current:
     jolokiaJar: jolokia-agent.jar
   kapacitor:
     alert:
-    config:
-      kapacitorconfigfile: kapacitor.conf.template
-    templates:
   mq-connector:
     adabas:
       config:
@@ -111,3 +108,9 @@ env_config:
     sqljdbc: SQLJDBCDriver.conf
     keytab: keytab
     ldapsourcefile: ldap-security-config.xml
+  kapacitor:
+    config:
+      kapacitorconfigfile: kapacitor.conf.template
+    templates:
+  grafana:
+    dashboards:

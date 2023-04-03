@@ -162,7 +162,7 @@ def displayInputParam(nbConfig):
     print(str("PIVOT_SERVERS= "+nbConfig.get("PIVOT_SERVERS")).replace('"',''))
 
 def summaryForManagementInstallation():
-    nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
+    nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf"
     proceedForEnvHostConfiguration(nbConfig,'management')
     verboseHandle.printConsoleInfo("nb.conf params for management servers.")
     nbConfig = createPropertiesMapFromFile(nbConfig)
@@ -175,10 +175,10 @@ def cleanNbConfig():
     direcrotyArray = ['management','applicative']
     for dir in direcrotyArray:
         if userCMD == 'ec2-user':
-            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
+            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
             logger.info(cmd)
         else:
-            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
+            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
         with Spinner():
             status = os.system(cmd)
             logger.info("removed nb.conf status "+str(status))
@@ -234,7 +234,7 @@ def proceedForManagementInstallation():
         #config_add_nb_node(hostip, hostip, "management server", "config/cluster.config")
         logger.info("Completed Installation for management server:"+str(hostip))
         verboseHandle.printConsoleInfo("Completed Installation for management server:"+str(hostip))
-    #cleanNbConfig()
+    cleanNbConfig()
     logger.info("Completed installation for all management server")
     verboseHandle.printConsoleInfo("Completed installation for all management server")
     pass
@@ -252,7 +252,7 @@ if __name__ == '__main__':
             confirmInstall='y'
         if(confirmInstall.casefold()=='y'):
             proceedForManagementInstallation()
-        #if confirmInstall.casefold()=='n':
-        #    cleanNbConfig()
+        if confirmInstall.casefold()=='n':
+            cleanNbConfig()
     except Exception as e:
         handleException(e)

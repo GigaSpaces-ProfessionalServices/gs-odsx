@@ -360,6 +360,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+        selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
+
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
         print(Fore.GREEN+"1. "+
@@ -404,7 +406,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"14. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-
+        print(Fore.GREEN+"15. "+
+              Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
+              Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
         additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -434,7 +438,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget)
+                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget,selinuxEnabled)
 
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
@@ -443,12 +447,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     except Exception as e:
         handleException(e)
 
-def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget):
+def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget,selinuxEnabled):
     gsNicAddress = host_nic_dict_obj[host]
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
         gsNicAddress='x'     # put dummy param to maintain position of arguments
-    additionalParam=additionalParam+' '+gsNicAddress
+    additionalParam=additionalParam+' '+gsNicAddress+' '+selinuxEnabled
     #print(additionalParam)
     with Spinner():
         scp_upload(host, user, 'install/install.tar', '')
@@ -528,7 +532,7 @@ def validateRPMS():
     for name, installer in di_installer_dict.items():
         if (len(str(installer)) == 0):
             verboseHandle.printConsoleInfo(
-                "Pre-requisite installer " + str(home) + "/install/" + str(name) + " not found")
+                "Pre-requisite installer " + str(gsZip) + " not found")
             return False
     return True
 

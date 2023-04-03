@@ -9,7 +9,7 @@ CONSUL_SERVERS="nb_app1,nb_app2,nb_app3"
 CONSUL_REPLICA_NUMBER="3"
 
 ## Nginx Parameters
-NB_DOMAIN="mexample.gigaspaces.com"
+NB_DOMAIN="example.gigaspaces.com"
 SSL_CERTIFICATE="server.crt"
 SSL_PRIVATE_KEY="server.key"
 SSL_CA_CERTIFICATE="cacert.crt"

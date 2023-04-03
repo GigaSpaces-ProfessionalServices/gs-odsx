@@ -158,7 +158,7 @@ def displayInputParam(nbConfig):
     print(str("PIVOT_SERVERS= "+nbConfig.get("PIVOT_SERVERS")).replace('"',''))
 
 def summaryForAgentInstallation():
-    nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf.template"
+    nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf"
     proceedForEnvHostConfiguration(nbConfig,'applicative')
     nbConfig = createPropertiesMapFromFile(nbConfig)
     displayInputParam(nbConfig)
@@ -170,10 +170,10 @@ def cleanNbConfig():
     direcrotyArray = ['management','applicative']
     for dir in direcrotyArray:
         if userCMD == 'ec2-user':
-            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
+            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
             logger.info(cmd)
         else:
-            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
+            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
         with Spinner():
             status = os.system(cmd)
             logger.info("removed nb.conf status "+str(status))
@@ -228,7 +228,7 @@ def proceedForAgentInstallation():
         #config_add_nb_node(hostip, hostip, "agent server", "config/cluster.config")
         logger.info("Completed Installation for agent server:"+str(hostip))
         verboseHandle.printConsoleInfo("Completed Installation for agent server:"+str(hostip))
-    #cleanNbConfig()
+    cleanNbConfig()
     logger.info("Completed installation for all agent server")
     verboseHandle.printConsoleInfo("Completed installation for all agent server")
     pass

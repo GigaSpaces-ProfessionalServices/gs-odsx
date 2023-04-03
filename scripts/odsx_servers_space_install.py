@@ -280,6 +280,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+        selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -356,6 +357,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"24. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"25. "+
+              Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
+              Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
 
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -367,14 +371,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength = len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,newZkJarTarget)
+                    executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,newZkJarTarget,selinuxEnabled)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
     except Exception as e:
         handleException(e)
 
-def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,newZkJarTarget):
+def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,newZkJarTarget,selinuxEnabled):
     installStatus='No'
     install = isInstalledAndGetVersion(host)
     logger.info("install : "+str(install))
@@ -382,7 +386,7 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
         installStatus='Yes'
     if installStatus == 'No':
         gsNicAddress = host_nic_dict_obj[host]
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress + ' '+ selinuxEnabled
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         logger.info("additionalParam - Installation :")
         logger.info("Building .tar file : tar -cvf install/install.tar install")

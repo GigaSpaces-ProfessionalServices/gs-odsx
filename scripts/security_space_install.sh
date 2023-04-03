@@ -400,7 +400,9 @@ function gsCreateGSServeice {
   mv /tmp/st*_gs*.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
-
+  if [ "$selinux" == "true" ]; then
+    restorecon /etc/systemd/system/gs*.service
+  fi
   rm -rf gs.service
 
   #======================================
@@ -458,6 +460,7 @@ logTargetPath=${19}
 logSourcePath=${20}
 startSpaceGsc=${21}
 gsNicAddress=${22}
+selinux=${23}
 
 #logTargetPath=${20}
 echo "param1"$1

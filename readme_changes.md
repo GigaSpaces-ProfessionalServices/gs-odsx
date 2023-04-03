@@ -18,8 +18,8 @@
 4. Configure measurement time in app.config file
    app.dv.measurement.time=3600
    change app.kapacitor.port=9092 to app.kapacitor.port=9992
-5. In KAPACITOR alerts should be in /dbagigashare/current/kapacitor/
-   Templates files should in /dbagigashare/env_config/kapacitor/
+5. In KAPACITOR alerts should be in /dbagigashare/current/kapacitor/ (only current changed to env_config directory)
+   Templates files should in /dbagigashare/env_config/kapacitor/templates/
    kapacitor.conf.template will reside in /dbagigashare/env_config/kapacitor/config
 6. [LEUMI-537] Create folder security in /dbagigashare/env_config/ & copy files ldap-security-config.xml, SQLJDBCDriver.conf, *.keytab
 7. [LEUMI-537] Update app.yaml file as below
@@ -29,3 +29,10 @@
        keytab: keytab
        ldapsourcefile: ldap-security-config.xml
 8. [LEUMI-537] Copy nb folder /dbagigashare/current/nb/ to /dbagigashare/env_config/nb/management & applicative. Keep tar.gz file location as it.
+9. Replace object management jar with new jar after compiling from csm project and setup the service.
+10. Add default grafana target property in app.config : 
+   app.grafana.gsconfigyaml.target=/etc/grafana/provisioning/dashboards/
+10. Remove from app.config from values of below property
+   app.manager.security.gsOptionExt & app.manager.gsOptionExt -Dcom.gs.dih.kafka.url=<DI servers>:9092 (remove this part only, keep remaining as it)
+11. Adding flag for SELinux, default is false. If its is SELinux set to true
+    app.selinux.enabled=false

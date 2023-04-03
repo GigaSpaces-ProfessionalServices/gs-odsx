@@ -158,7 +158,7 @@ def displayInputParam(nbConfig):
     print(str("PIVOT_SERVERS= "+nbConfig.get("PIVOT_SERVERS")).replace('"',''))
 
 def summaryForApplicativeInstallation():
-    nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf.template"
+    nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf"
     proceedForEnvHostConfiguration(nbConfig,'applicative')
     nbConfig = createPropertiesMapFromFile(nbConfig)
     verboseHandle.printConsoleInfo("nb.conf params for applicative servers.")
@@ -171,10 +171,10 @@ def cleanNbConfig():
     direcrotyArray = ['management','applicative']
     for dir in direcrotyArray:
         if userCMD == 'ec2-user':
-            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
+            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
             logger.info(cmd)
         else:
-            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf.template'
+            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
         with Spinner():
             status = os.system(cmd)
             logger.info("removed nb.conf status "+str(status))
@@ -238,7 +238,7 @@ def proceedForApplicativeInstallation():
         logger.info("hostip :"+str(hostip))
         logger.info("Completed Installation for applicative server:"+str(hostip))
         verboseHandle.printConsoleInfo("Completed installation for applicative server:"+str(hostip))
-#    cleanNbConfig()
+    cleanNbConfig()
     logger.info("Completed installation for all applicative servers")
     verboseHandle.printConsoleInfo("Completed installation for all applicative servers")
 
@@ -255,7 +255,7 @@ if __name__ == '__main__':
             confirmInstall='y'
         if(confirmInstall.casefold()=='y'):
             proceedForApplicativeInstallation()
-       # if confirmInstall.casefold()=='n':
-       #     cleanNbConfig()
+        if confirmInstall.casefold()=='n':
+            cleanNbConfig()
     except Exception as e:
         handleException(e)

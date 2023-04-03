@@ -368,7 +368,7 @@ function gsCreateGSServeice {
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
   cmd="$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
-  cat "$startSpaceGsc/start_gsc.sh" >> $start_gsc_file
+  #cat "$startSpaceGsc/start_gsc.sh" >> $start_gsc_file
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
@@ -386,7 +386,9 @@ function gsCreateGSServeice {
   mv /tmp/st*_gs*.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_gs*.sh
   mv /tmp/gs*.service /etc/systemd/system/
-
+  if [ "$selinux" == "true" ]; then
+    restorecon /etc/systemd/system/gs*.service
+  fi
   rm -rf gs.service
 
   #======================================
@@ -441,6 +443,7 @@ logSourcePath=${16}
 logTargetPath=${17}
 startSpaceGsc=${18}
 gsNicAddress=${19}
+selinux=${20}
 
 echo "param1"$1
 echo "param2"$targetDir
