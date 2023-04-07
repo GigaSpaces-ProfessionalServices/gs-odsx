@@ -28,3 +28,5 @@ servers :
     host2 : 10.0.0.68
   pivot :
     host1 : 127.0.0.1
+  cockpit :
+    host1 : 10.0.0.0

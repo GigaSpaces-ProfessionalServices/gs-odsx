@@ -22,3 +22,5 @@ servers :
     host1 : x.x.x.x
   data_validator_agent :
     host1 : x.x.x.x
+  cockpit :
+    host1 : x.x.x.x
