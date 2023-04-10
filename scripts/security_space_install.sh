@@ -459,8 +459,8 @@ sourceInstallerDirectory=${18}
 logTargetPath=${19}
 logSourcePath=${20}
 startSpaceGsc=${21}
-gsNicAddress=${22}
-selinux=${23}
+selinux=${22}
+gsNicAddress=${23}
 
 #logTargetPath=${20}
 echo "param1"$1

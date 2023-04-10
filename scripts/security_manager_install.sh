@@ -453,8 +453,8 @@ wantInstallUnzip=${11}
 sourceInstallerDirectory=${12}
 logTargetPath=${13}
 logSourcePath=${14}
-gsNicAddress=${15}
-selinux=${16}
+selinux=${15}
+gsNicAddress=${16}
 
 echo "param1"$1
 echo "param2"$targetDir

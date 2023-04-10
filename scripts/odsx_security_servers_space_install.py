@@ -428,7 +428,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
     if installStatus == 'No':
         gsNicAddress = host_nic_dict_obj[host]
         #print(host+"  "+gsNicAddress)
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+gsNicAddress +' ' + selinuxEnabled
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' ' + gsNicAddress
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         # print("---------------------"+str(additionalParam))
         logger.info("additionalParam - Installation :")

@@ -36,6 +36,6 @@ chown -R influxdb:influxdb $dir
 systemctl enable influxdb.service
 sleep 2
 systemctl start influxdb.service
-sleep 5
+sleep 10
 influx
 create database mydb;
