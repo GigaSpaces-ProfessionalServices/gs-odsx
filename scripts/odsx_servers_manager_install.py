@@ -452,7 +452,7 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
         gsNicAddress='x'     # put dummy param to maintain position of arguments
-    additionalParam=additionalParam+' '+gsNicAddress+' '+selinuxEnabled
+    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress
     #print(additionalParam)
     with Spinner():
         scp_upload(host, user, 'install/install.tar', '')

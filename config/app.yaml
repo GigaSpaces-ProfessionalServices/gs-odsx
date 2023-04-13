@@ -41,15 +41,15 @@ current:
         spacejar: in_memory_jar-0.1.jar
       zookeeper:
         zkjars:
-        - curator-client-5.2.1.jar
-        - curator-framework-5.2.1.jar
-        - curator-recipes-5.2.1.jar
-        - metrics-core-3.2.5.jar
-        - netty-all-4.1.68.Final.jar
-        - snappy-java-1.1.7.3.jar
-        - xap-zookeeper.jar
-        - zookeeper-3.6.3.jar
-        - zookeeper-jute-3.6.3.jar
+          - curator-client-5.2.1.jar
+          - curator-framework-5.2.1.jar
+          - curator-recipes-5.2.1.jar
+          - metrics-core-3.2.5.jar
+          - netty-all-4.1.68.Final.jar
+          - snappy-java-1.1.7.3.jar
+          - xap-zookeeper.jar
+          - zookeeper-3.6.3.jar
+          - zookeeper-jute-3.6.3.jar
     upgrade:
   iidr:
     watchdog:

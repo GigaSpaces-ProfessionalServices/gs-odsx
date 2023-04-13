@@ -489,7 +489,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
         gsNicAddress='x'     # put dummy param to maintain position of arguments
-    additionalParam=additionalParam+' '+gsNicAddress+' '+selinuxEnabled
+    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress
     with Spinner():
         scp_upload(host, user, 'install/install.tar', '')
         ##scp_upload(host, user, 'install/gs.service', '')
