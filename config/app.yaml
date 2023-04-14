@@ -115,5 +115,4 @@ env_config:
   grafana:
     dashboards:
 utilities:
-  check_manager_sync-conf: check_manager_sync.conf
-  check_manager_sync-sh: check_manager_sync.sh
+  check_manager_sync: check_manager_sync.sh

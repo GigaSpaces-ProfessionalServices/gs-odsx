@@ -27,7 +27,7 @@ if (grep -v '^ *#' /etc/influxdb/influxdb.conf  | grep -q '\[data\]'); then
 
     echo "" >> /etc/influxdb/influxdb.conf
     echo "# Influxdb config START" >> /etc/influxdb/influxdb.conf
-    cat /dbagigashare/current/influx/config/influxdb.conf.template >> /etc/influxdb/influxdb.conf
+    cat ${ODSXARTIFACTS}/influx/config/influxdb.conf.template >> /etc/influxdb/influxdb.conf
     echo "# Influxdb config END " >> /etc/influxdb/influxdb.conf
 
 fi
