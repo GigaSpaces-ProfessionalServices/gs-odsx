@@ -88,7 +88,7 @@ def configureLicenseManagerAndSpace():
     managerHosts = getManagerHostFromEnv()
     spaceHosts = getSpaceHostFromEnv()
     sourceGSmetrics = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsxml"))
-    targetGSmetrics = "/dbagiga/gs_config/"
+    targetGSmetrics = "/dbagiga/gs_config/metrics.xml"
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("metrics.xml.template source file :"+str(sourceGSmetrics))
     verboseHandle.printConsoleInfo("metrics.xml target : "+str(targetGSmetrics))
@@ -106,10 +106,12 @@ def configureLicenseManagerAndSpace():
         logger.info("commandToExecute:"+commandToExecute)
 
         for host in managerHosts.split(','):
+            executeRemoteCommandAndGetOutputPython36(host, 'root', commandToExecute)
             configureMetricsXML(host)
             verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
 
         for host in spaceHosts.split(','):
+            executeRemoteCommandAndGetOutputPython36(host, 'root', commandToExecute)
             configureMetricsXML(host)
             verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
 
