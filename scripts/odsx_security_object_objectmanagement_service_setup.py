@@ -98,8 +98,9 @@ def setupService():
     appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"', '')
     safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"', '')
     objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"', '')
+    adapterPropertyConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.adapterPropertyFileName")).replace('"','')
 
-    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + odsx_profile + " " + username + " " + password + " " + appId + " " + safeId + " " + objectId
+    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + odsx_profile + " " + username + " " + password + " " + appId + " " + safeId + " " + objectId
     commandToExecute = "scripts/objectmanagement_service_setup.sh " + args
     logger.info("Command " + commandToExecute)
     try:

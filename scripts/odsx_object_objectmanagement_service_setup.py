@@ -78,8 +78,9 @@ def setupService():
     #set_value_in_property_file(app_config_space_key,str(spaceName))
 
     tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlCriteriaFileName")).replace('"','')
+    adapterPropertyConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.adapterPropertyFileName")).replace('"','')
 
-    args = spaceName+" "+lookupLocator+" "+lookupGroup+" "+serviceJar+" "+ddlAndPropertiesBasePath+" "+tableListfilePath+" "+tieredCriteriaConfigFilePath
+    args = spaceName+" "+lookupLocator+" "+lookupGroup+" "+serviceJar+" "+ddlAndPropertiesBasePath+" "+tableListfilePath+" "+tieredCriteriaConfigFilePath+" "+adapterPropertyConfigFilePath
     commandToExecute = "scripts/objectmanagement_service_setup.sh "+args
     logger.info("Command "+commandToExecute)
     try:

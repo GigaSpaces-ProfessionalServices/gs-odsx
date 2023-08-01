@@ -90,6 +90,8 @@ def listSpacesOnServer(managerNodes):
         counter=0
         dataTable=[]
         for data in jsonArray:
+            if "backupsPerPartition" not in data["topology"]:
+                continue
             if(str(data["topology"]["backupsPerPartition"])=="1"):
                 isBackup="YES"
             if(str(data["topology"]["backupsPerPartition"])=="0"):

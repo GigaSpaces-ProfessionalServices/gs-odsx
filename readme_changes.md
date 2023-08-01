@@ -1,39 +1,6 @@
-1. Create directory /dbagigashare/current/gs/jars/zookeeper/ and copy the new zookeeper jar files
-2. Copy new zk jar names in app.yaml file as below
-   gs:
-     jars:
-       zookeeper:
-         zkjars:
-           - curator-client-5.2.1.jar
-           - curator-framework-5.2.1.jar
-           - curator-recipes-5.2.1.jar
-           - metrics-core-3.2.5.jar
-           - netty-all-4.1.68.Final.jar
-           - snappy-java-1.1.7.3.jar
-           - xap-zookeeper.jar
-           - zookeeper-3.6.3.jar
-           - zookeeper-jute-3.6.3.jar
-3. Configure target path in app.config file
-   app.xap.newzk.jar.target=/dbagiga/gigaspaces-smart-ods/lib/platform/zookeeper/
-4. Configure measurement time in app.config file
-   app.dv.measurement.time=3600
-   change app.kapacitor.port=9092 to app.kapacitor.port=9992
-5. In KAPACITOR alerts should be in /dbagigashare/current/kapacitor/ (only current changed to env_config directory)
-   Templates files should in /dbagigashare/env_config/kapacitor/templates/
-   kapacitor.conf.template will reside in /dbagigashare/env_config/kapacitor/config
-6. [LEUMI-537] Create folder security in /dbagigashare/env_config/ & copy files ldap-security-config.xml, SQLJDBCDriver.conf, *.keytab
-7. [LEUMI-537] Update app.yaml file as below
-   env_config:
-     security:
-       sqljdbc: SQLJDBCDriver.conf
-       keytab: keytab
-       ldapsourcefile: ldap-security-config.xml
-8. [LEUMI-537] Copy nb folder /dbagigashare/current/nb/ to /dbagigashare/env_config/nb/management & applicative. Keep tar.gz file location as it.
-9. Replace object management jar with new jar after compiling from csm project and setup the service.
-10. Add default grafana target property in app.config : 
-   app.grafana.gsconfigyaml.target=/etc/grafana/provisioning/dashboards/ 
-   app.grafana.provisioning.dashboards.target=/usr/share/grafana/conf/provisioning/dashboards/
-11. Remove from app.config from values of below property
-   app.manager.security.gsOptionExt & app.manager.gsOptionExt -Dcom.gs.dih.kafka.url=<DI servers>:9092 (remove this part only, keep remaining as it)
-12. Adding flag for SELinux, default is false. If its is SELinux set to true
-    app.selinux.enabled=false
+### TAU v4.09-tau-release tag
+1. Build objectManagement jar from https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement
+2. Reinstall objecmanagement service
+3. Fixed issues include : 
+   a. register type, unregister type, add index option 
+   b. Checking if backupsPerPartition exists in response of get spaces during create space/tiered space else won't show in list
