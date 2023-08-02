@@ -79,6 +79,7 @@ current:
             previousTs: null
         ddlBatchFileName: tableList.txt
         ddlCriteriaFileName: TieredCriteria.tab
+        adapterPropertyFileName: adapters.properties
     jars:
       management:
         objectmanagementjar: objectManagement.jar

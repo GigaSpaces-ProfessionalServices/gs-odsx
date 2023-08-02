@@ -400,12 +400,12 @@ if __name__ == '__main__':
                     verboseHandle.printConsoleInfo("No space/pu found.")
                 #with Spinner():
                 #    time.sleep(30)
-                gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost)
-                if(len(gs_pu_dictionary_obj)>0):
-                    getUserInput(managerHost)
-                else:
-                    logger.info("No space/pu undeployed found.")
-                    verboseHandle.printConsoleInfo("No space/pu undeployed found.")
+                #gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost)
+                #if(len(gs_pu_dictionary_obj)>0):
+                #    getUserInput(managerHost)
+                #else:
+                #    logger.info("No space/pu undeployed found.")
+                #    verboseHandle.printConsoleInfo("No space/pu undeployed found.")
                 #confirmParamAndRestartGSC()
                 gscRemove = str(userInputWrapper(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
                 if(len(str(gscRemove))==0):
