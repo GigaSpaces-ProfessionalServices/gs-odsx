@@ -268,10 +268,10 @@ def instancelistFromHosts(managerNodes):
                     optionMainMenu = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] Enter your space number for instance list. \nPress [99] for exit.: "+Fore.RESET))
                     logger.info("Enter your space number for instance list:" + str(optionMainMenu))
 
-                    if(str(optionMainMenu) == '1'):
-                             if len(spacename) >= int(optionMainMenu):
-                                  host = spacename.get(optionMainMenu)
-                                  listDeployed(managerHost,host)
+                    #if(str(optionMainMenu) == '1'):
+                    if len(spacename) >= int(optionMainMenu):
+                        host = spacename.get(optionMainMenu)
+                        listDeployed(managerHost,host)
                     elif(str(optionMainMenu) == '99'):
                             exitMenu = False
 

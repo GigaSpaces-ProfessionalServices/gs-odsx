@@ -215,7 +215,8 @@ def listObjects():
             objectMgmtPropertyInput = str(
                 userInputWithEscWrapper(Fore.YELLOW + "Choose property from list : " + Fore.RESET))
             if dataTableColumnsPropIndexDict.get(int(objectMgmtPropertyInput)) != "":
-                verboseHandle.printConsoleError("Index already exist")
+                if counter > int(objectMgmtPropertyInput):
+                    verboseHandle.printConsoleError("Index already exist")
                 exit(0)
 
             menus = "EQUAL,ORDERED,EQUAL_AND_ORDERED,EXIT"

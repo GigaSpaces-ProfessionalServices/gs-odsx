@@ -80,6 +80,7 @@ current:
         ddlBatchFileName: tableList.txt
         ddlCriteriaFileName: TieredCriteria.tab
         adapterPropertyFileName: adapters.properties
+        indexBatchFileName: batchIndexes.txt
     jars:
       management:
         objectmanagementjar: objectManagement.jar

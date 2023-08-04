@@ -298,21 +298,21 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global numberOfGSC
     global specificHost
     global individualHostConfirm
-    numberOfGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscperhost")) #str(userInputWrapper("Enter number of GSC per host [2] :"+Fore.RESET))
+    numberOfGSC = str(readValuefromAppConfig("app.newspace.creategsc.gscperhost")) #str(userInputWrapper("Enter number of GSC per host [2] :"+Fore.RESET))
     if(len(str(numberOfGSC))==0):
         numberOfGSC=2
     logger.info("numberofGSC :"+str(numberOfGSC))
 
     global memoryGSC
-    memoryGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gscmemory")) #str(userInputWrapper("Enter memory to create gsc [12g] :"+Fore.RESET))
+    memoryGSC = str(readValuefromAppConfig("app.newspace.creategsc.gscmemory")) #str(userInputWrapper("Enter memory to create gsc [12g] :"+Fore.RESET))
     if(len(memoryGSC)==0):
         memoryGSC="12g"
 
     global zoneGSC
-    zoneGSC = str(readValuefromAppConfig("app.spacejar.creategsc.gsczone")) #str(userInputWrapper("Enter zone :"+Fore.RESET))
+    zoneGSC = str(readValuefromAppConfig("app.newspace.creategsc.gsczone")) #str(userInputWrapper("Enter zone :"+Fore.RESET))
     while(len(str(zoneGSC))==0):
         zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
-    individualHostConfirm = str(readValuefromAppConfig("app.spacejar.creategsc.specifichost"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
+    individualHostConfirm = str(readValuefromAppConfig("app.newspace.creategsc.specifichost"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
     #if(len(str(individualHostConfirm))==0):
     #    individualHostConfirm = 'n'
     if(individualHostConfirm=='y'):
@@ -389,7 +389,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
     logger.info("dataPuREST()")
     try:
         global isSpacePropertyRequired
-        isSpacePropertyRequired = str(readValuefromAppConfig("app.spacejar.wantspaceproperty"))#str(userInputWrapper(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
+        isSpacePropertyRequired = str(readValuefromAppConfig("app.newspace.wantspaceproperty"))#str(userInputWrapper(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
         #if(len(isSpacePropertyRequired)==0):
         #    isSpacePropertyRequired='y'
         logger.info("isSpacePropertyRequired : "+str(isSpacePropertyRequired))
@@ -408,8 +408,8 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
             logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
             #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
 
-            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.spacejar.spaceproperty.filepath.target")).replace('"','')
-            logger.info("app.spacejar.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
+            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.newspace.spaceproperty.filepath.target")).replace('"','')
+            logger.info("app.newspace.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
             #spacePropertyConfigFilePathTargetInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
             #if(len(str(spacePropertyConfigFilePathTargetInput))>0):
             #    spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
@@ -489,13 +489,13 @@ def createNewSpaceREST(managerHostConfig):
                 #     isBuildGlobally='n'
 
                 global zoneOfPU
-                zoneOfPUValue = str(readValuefromAppConfig("app.spacejar.pu.zone"))
+                zoneOfPUValue = str(readValuefromAppConfig("app.newspace.pu.zone"))
                 zoneOfPU = zoneOfPUValue #str(userInputWrapper("Enter space zone ["+zoneOfPUValue+"] :"+Fore.RESET))
                 if(len(str(zoneOfPU))==0):
                     zoneOfPU=zoneOfPUValue
 
                 global resourceName
-                resourceNameValue = str(readValuefromAppConfig("app.spacejar.pu.name"))
+                resourceNameValue = str(readValuefromAppConfig("app.newspace.pu.name"))
                 resourceName = resourceNameValue #str(userInputWrapper("Enter service name ["+resourceNameValue+"] :"+Fore.RESET))
                 if(len(str(resourceName))==0):
                     resourceName=resourceNameValue
@@ -509,7 +509,7 @@ def createNewSpaceREST(managerHostConfig):
                 # global maxInstancesPerMachine
                 # maxInstancesPerMachine = '1'
                 global maxInstancesPerMachine
-                maxInstancesPerMachineValue = str(readValuefromAppConfig("app.spacejar.pu.maxinstancepermachine"))
+                maxInstancesPerMachineValue = str(readValuefromAppConfig("app.newspace.pu.maxinstancepermachine"))
                 maxInstancesPerMachine = maxInstancesPerMachineValue #str(userInputWrapper("Enter max instance per machine ["+maxInstancesPerMachineValue+"] :"+Fore.RESET))
                 if(len(str(maxInstancesPerMachine))==0):
                     maxInstancesPerMachine=maxInstancesPerMachineValue
@@ -524,11 +524,11 @@ def createNewSpaceREST(managerHostConfig):
 
                 displaySummaryOfInputParameter()
                 createConfirm = str(userInputWrapper("Are you sure want to proceed ? (y/n) [y] :"))
-                if(confirmCreateGSC == 'y'):
-                    createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
                 if(len(str(createConfirm))==0):
                     createConfirm='y'
                 if(createConfirm=='y'):
+                    if(confirmCreateGSC == 'y'):
+                        createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
                     uploadFileRest(managerHostConfig)
                     data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
                     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -644,7 +644,7 @@ if __name__ == '__main__':
                 listSpacesOnServer(managerNodes)
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                 global confirmCreateGSC
-                confirmCreateGSC = str(readValuefromAppConfig("app.spacejar.creategsc")) #str(userInputWrapper("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+                confirmCreateGSC = str(readValuefromAppConfig("app.newspace.wanttocreategsc")) #str(userInputWrapper("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
 
                 logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
                 logger.info("confirmCreateGSC : "+str(confirmCreateGSC))

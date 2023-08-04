@@ -79,8 +79,9 @@ def setupService():
 
     tieredCriteriaConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlCriteriaFileName")).replace('"','')
     adapterPropertyConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.adapterPropertyFileName")).replace('"','')
+    indexBatchConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace('"','')
 
-    args = spaceName+" "+lookupLocator+" "+lookupGroup+" "+serviceJar+" "+ddlAndPropertiesBasePath+" "+tableListfilePath+" "+tieredCriteriaConfigFilePath+" "+adapterPropertyConfigFilePath
+    args = spaceName+" "+lookupLocator+" "+lookupGroup+" "+serviceJar+" "+ddlAndPropertiesBasePath+" "+tableListfilePath+" "+tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath
     commandToExecute = "scripts/objectmanagement_service_setup.sh "+args
     logger.info("Command "+commandToExecute)
     try:
