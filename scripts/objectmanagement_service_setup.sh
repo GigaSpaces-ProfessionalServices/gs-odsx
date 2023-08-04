@@ -1,5 +1,4 @@
 #!/bin/bash
-set -x
 home_dir_sh=$(pwd)
 service_name='object-management.service'
 serviceJarName='objectManagement.jar'
