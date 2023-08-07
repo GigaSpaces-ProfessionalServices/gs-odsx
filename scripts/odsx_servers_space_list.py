@@ -140,7 +140,8 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
         status = getStatusOfSpaceHost(str(host))
         logger.info("status : "+str(status))
         logger.info("Host:"+str(host))
-        gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+        #adding split to get just hostname and not fully qualified name
+        gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
         #gsc = host_gsc_dict_obj.get(str(host))
         logger.info("GSC : "+str(gsc))
     else:

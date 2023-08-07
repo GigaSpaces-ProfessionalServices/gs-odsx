@@ -164,6 +164,7 @@ def addindexInBatch():
             Fore.GREEN + indexResponse + Fore.RESET
         ]
         dataTable.append(dataArray)
+        counter=counter+1
     printTabular(None, headers, dataTable)
     #if(response.text=="success"):
     #    verboseHandle.printConsoleInfo("All objects are registered successfully!!")

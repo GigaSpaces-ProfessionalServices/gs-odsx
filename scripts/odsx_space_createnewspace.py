@@ -379,8 +379,8 @@ def proceedForValidateResponse(response):
                 elif(str(status).casefold().__contains__('failed')):
                     return
                 else:
-                    logger.info("Unable to deploy :"+str(status))
-                    verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
+                    logger.info("deployment status :"+str(status))
+                    verboseHandle.printConsoleInfo("deployment status : "+str(status))
             else:
                 logger.info("Unable to deploy :"+str(deployResponseCode))
                 verboseHandle.printConsoleInfo("Unable to deploy : "+str(deployResponseCode))
