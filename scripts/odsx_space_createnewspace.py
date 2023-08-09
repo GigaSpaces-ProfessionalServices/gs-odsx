@@ -379,7 +379,7 @@ def proceedForValidateResponse(response):
                 elif(str(status).casefold().__contains__('failed')):
                     return
                 else:
-                    logger.info("deployment status :"+str(status))
+                    logger.info(str(status))
                     verboseHandle.printConsoleInfo("deployment status : "+str(status))
             else:
                 logger.info("Unable to deploy :"+str(deployResponseCode))
@@ -561,8 +561,8 @@ def createNewSpaceREST(managerHostConfig):
                             elif(str(status).casefold().__contains__('failed')):
                                 return
                             else:
-                                logger.info("Unable to deploy :"+str(status))
-                                verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
+                                logger.info("deployment status : "+str(status))
+                                verboseHandle.printConsoleInfo(str(status))
                     else:
                         return
     except Exception as e:
