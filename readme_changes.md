@@ -24,7 +24,7 @@
    STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED
 8. Update app.yaml file add indexBatchFileName: batchIndexes.txt below adapterPropertyFileName property
 9. Rebuild objectManagement jar from https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement and reinstall objecmanagement service
-### TAU v4.12-tau-release tag
+### TAU v4.13-tau-release tag
 10. Update app.yaml - Add section for oracle same as mssql section. Specify oracleJarFile: OracleFeeder-1.0-SNAPSHOT.jar
 11. Update app.config with following values
     app.dataengine.oracle-feeder.oracle.server=
