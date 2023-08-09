@@ -113,14 +113,9 @@ def listObjects():
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
                Fore.YELLOW + "Space Name" + Fore.RESET,
                Fore.YELLOW + "Object Name" + Fore.RESET,
-           #    Fore.YELLOW + "Space Id" + Fore.RESET,
-           #    Fore.YELLOW + "Space Routing" + Fore.RESET,
-           #    Fore.YELLOW + "Indexes" + Fore.RESET,
-           #    Fore.YELLOW + "Tier Criteria" + Fore.RESET
                Fore.YELLOW + "DDl File exist" + Fore.RESET,
                Fore.YELLOW + "Properties File exist" + Fore.RESET,
-               Fore.YELLOW + "Total records in ram" + Fore.RESET,
-               Fore.YELLOW + "Total records in disk" + Fore.RESET
+               Fore.YELLOW + "Total records in ram" + Fore.RESET
                ]
     data = []
     counter = 1
@@ -158,15 +153,10 @@ def listObjects():
             dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
                          Fore.GREEN + str(spaces["spacename"]) + Fore.RESET,
                          Fore.GREEN + str(object["tablename"]) + Fore.RESET,
-                    #     Fore.GREEN + str(object["spaceId"]) + Fore.RESET,
-                    #     Fore.GREEN + str(object["routing"]) + Fore.RESET,
-                    #     Fore.GREEN + str(object["index"]) + Fore.RESET,
-                    #     Fore.GREEN + str(object["criteria"]) + Fore.RESET
                          ddlFileCheck,
                          propertiesFileCheck,
-                    #     Fore.GREEN + str(object["objectInMemory"]) + Fore.RESET,
-                         Fore.GREEN + str(jsonCountData[0]["objectTypes"][str(object["tablename"])]["tieredEntries"]) + Fore.RESET,
-                         Fore.GREEN + str(jsonCountData[0]["objectTypes"][str(object["tablename"])]["entries"]) + Fore.RESET
+#                         Fore.GREEN + str(jsonCountData[0]["objectTypes"][str(object["tablename"])]["entries"]) + Fore.RESET
+                         Fore.GREEN + str(object["objectInMemory"]) + Fore.RESET
                         ]
             dataColumnsDict.update({counter: object["columns"]})
             dataTableColumnsDict.update({counter: object["tablename"]})
