@@ -226,23 +226,25 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         handleException(e)
 
 
-def proceedToCreateGSC(zoneGSC):
+def proceedToCreateGSC(zoneGSC,newGSCCount):
     logger.info("proceedToCreateGSC()")
-    for host in spaceNodes:
-        commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
-        verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
-        logger.info(commandToExecute)
-        with Spinner():
-            output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
-            print(output)
-            logger.info("Output:"+str(output))
+    idx = newGSCCount % len(spaceNodes)
+    host = spaceNodes[idx]
+
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
+    verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
+    logger.info(commandToExecute)
+    with Spinner():
+        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+        print(output)
+        logger.info("Output:"+str(output))
 
 def createGSCInputParam():
     logger.info("createGSCInputParam()")
     global numberOfGSC
     global memoryGSC
 
-    numberOfGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder.gscperhost"))
+    numberOfGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder.gscpercluster"))
     #str(userInputWrapper(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
     #while(len(str(numberOfGSC))==0):
     #    numberOfGSC=1
@@ -361,6 +363,7 @@ def createOracleEntryInSqlLite(puName, file, restPort):
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(puName)+"/instances")
         jsonArray = json.loads(response.text)
         logger.info("response : "+str(jsonArray))
+        verboseHandle.printConsoleInfo("response : "+str(jsonArray))
         hostId = ''
         for data in jsonArray:
             hostId = str(data["hostId"])
@@ -396,6 +399,7 @@ def proceedToDeployPU():
         restPort = 8015 #8025
         restPort = restPort+1
 
+        newGSCCount=0
         logger.info("Resport : "+str(restPort))
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
@@ -415,7 +419,8 @@ def proceedToDeployPU():
                     #else:
                     #    dbPort = restPort
                 if(confirmCreateGSC=='y'):
-                    proceedToCreateGSC(zoneGSC)
+                    proceedToCreateGSC(zoneGSC,newGSCCount)
+                    newGSCCount=newGSCCount+1
                 verboseHandle.printConsoleInfo("Resource : "+resource+" : rest.port : "+str(restPort))
                 data = getDataPUREST(resource,puName,zoneGSC,str(restPort),managerHost)
                 logger.info("data of payload :"+str(data))
@@ -464,7 +469,7 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("------------------------------------------------------------")
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
-        verboseHandle.printConsoleInfo("Enter number of GSCs per host :"+str(numberOfGSC))
+        verboseHandle.printConsoleInfo("Enter number of GSCs per cluster :"+str(numberOfGSC))
         verboseHandle.printConsoleInfo("Enter memory of GSC :"+memoryGSC)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
