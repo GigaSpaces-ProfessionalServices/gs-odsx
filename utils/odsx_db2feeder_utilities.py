@@ -148,6 +148,25 @@ def getPortNotExistInMSSQLFeeder(port):
     except Exception as e:
         handleException(e)
 
+def getPortNotExistInOracleFeeder(port):
+    logger.info("getPortIfNotExist()")
+    try:
+        feederList = ''
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        cnx = sqlite3.connect(db_file)
+        myCursor = cnx.cursor()
+        logger.info("SELECT * FROM oracle_host_port where port="+str(port))
+        myCursor.execute("SELECT * FROM oracle_host_port where port="+str(port))
+        myresult = myCursor.fetchall()
+        logger.info("myresult :"+str(myresult))
+        if(len(str(myresult))>2):
+            for x in myresult:
+                return str(x[3])
+        else:
+            return feederList
+    except Exception as e:
+        handleException(e)
+
 def getAllFeedersFromSqlLite():
     logger.info("getAllFeedersFromSqlLite()")
     try:
@@ -195,6 +214,36 @@ def getMSSQLQueryStatusFromSqlLite(feederName):
         return output
     except Exception as e:
         handleException(e)
+
+def getOracleQueryStatusFromSqlLite(feederName):
+    logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
+    try:
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        cnx = sqlite3.connect(db_file)
+        logger.info("Db connection obtained."+str(cnx))
+        logger.info("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.execute("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.commit()
+        logger.info("SQL : SELECT host,port FROM oracle_host_port where feeder_name like '%"+str(feederName)+"%' ")
+        mycursor = cnx.execute("SELECT host,port FROM oracle_host_port where feeder_name like '%"+str(feederName)+"%' ")
+        myresult = mycursor.fetchall()
+        cnx.close()
+        host = ''
+        port = ''
+        output='NA'
+        for row in myresult:
+            logger.info("host : "+str(row[0]))
+            host = str(row[0])
+            logger.info("port : "+str(row[1]))
+            port = str(row[1])
+            cmd = "curl "+host+":"+port+"/table-feed/status"
+            logger.info("cmd : "+str(cmd))
+            output = executeLocalCommandAndGetOutput(cmd);
+            logger.info("Output ::"+str(output))
+        return output
+    except Exception as e:
+        handleException(e)
+
 
 def getUsernameByHost(managerHost,appId,safeId,objectId):
     logger.info("getUsernameByHost()")

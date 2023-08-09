@@ -24,3 +24,28 @@
    STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED
 8. Update app.yaml file add indexBatchFileName: batchIndexes.txt below adapterPropertyFileName property
 9. Rebuild objectManagement jar from https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement and reinstall objecmanagement service
+### TAU v4.12-tau-release tag
+10. Update app.yaml - Add section for oracle same as mssql section. Specify oracleJarFile: OracleFeeder-1.0-SNAPSHOT.jar
+11. Update app.config with following values
+    app.dataengine.oracle-feeder.oracle.server=
+    app.dataengine.oracle-feeder.oracle.username=
+    app.dataengine.oracle-feeder.oracle.password=
+    app.dataengine.oracle-feeder.oracle.databasename=
+    app.dataengine.oracle-feeder.gscperhost=1
+    app.dataengine.oracle-feeder.gsc.memory=256m
+    app.dataengine.oracle-feeder.gsc.create=y
+    app.dataengine.oracle-feeder.sqlite.dbfile=/dbagigawork/sqlite/oracleFeeder.db
+    app.dataengine.oracle-feeder.space.name=dih-tau-space
+    app.dataengine.oracle-feeder.writeBatchSize=10000
+    app.dataengine.oracle-feeder.sleepAfterWriteInMillis=500
+12. Rebuild OracleFeeder-1.0-SNAPSHOT jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/OracleFeeder and place it to /dbagigashare/current/oracle/jars/
+13. Copy load data scripts from https://jay-dalal.s3.us-west-2.amazonaws.com/odsx/tau-feeder-scripts/oracle/ to /dbagigashare/current/oracle/scripts/
+    
+     Example: load_TA_PERSON.sh
+      ```
+      echo "starting TA_PERSON"
+      table_name="STUD.TA_PERSON"
+      exclude_columns="IS_IDNO_OBFUSCATE,IS_PASSPORT_OBFUSCATE"
+      pk_columns="K_PNIMI"
+      curl -XPOST "http://$1:$2/table-feed/start?table-name=${table_name}&base-column=T_IDKUN&exclude-columns=${exclude_columns}&pk-columns=${pk_columns}"
+      ```

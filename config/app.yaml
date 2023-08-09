@@ -70,6 +70,11 @@ current:
     jars:
       mssqlJarFile: mssqlFeeder-1.0.0.jar
     scripts: null
+  oracle:
+    config: null
+    jars:
+      oracleJarFile: OracleFeeder-1.0-SNAPSHOT.jar
+    scripts: null
   object:
     config:
       ddlparser:
