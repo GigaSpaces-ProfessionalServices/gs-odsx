@@ -8,6 +8,7 @@ import requests
 import sqlite3
 import subprocess
 import sys
+import socket
 from datetime import date, timedelta
 
 from colorama import Fore
@@ -302,6 +303,7 @@ def proceedToStartOracleFeeder(fileNumberToStart):
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
     shFileName = str(hostAndPort[2])
+    host=str(socket.gethostbyaddr(host).__getitem__(2)[0])
     cmd = str(sourceOracleFeederShFilePath)+'/'+shFileName+' '+host+" "+port
     logger.info("cmd : "+str(cmd))
     print(cmd)
@@ -319,6 +321,7 @@ def proceedToStartOracleFeederWithName(puName):
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
     shFileName = str(hostAndPort[2])
+    host=str(socket.gethostbyaddr(host).__getitem__(2)[0])
     cmd = str(sourceOracleFeederShFilePath)+'/'+shFileName+' '+host+" "+port
     logger.info("cmd : "+str(cmd))
     print(cmd)

@@ -5,6 +5,7 @@ import json
 import os
 import re
 import sys
+import socket
 
 import requests
 import sqlite3
@@ -303,6 +304,7 @@ def getOracleQueryStatusFromSqlLite(feederName):
             host = str(row[0])
             logger.info("port : "+str(row[1]))
             port = str(row[1])
+            host = str(socket.gethostbyaddr(host).__getitem__(2)[0])
             cmd = "curl "+host+":"+port+"/table-feed/status"
             logger.info("cmd : "+str(cmd))
             output = executeLocalCommandAndGetOutput(cmd);

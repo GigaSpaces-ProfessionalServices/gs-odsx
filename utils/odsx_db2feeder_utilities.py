@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 
-import os, subprocess, sqlite3, json, requests
+import os, subprocess, sqlite3, json, requests, socket
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValueByConfigObj
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
@@ -236,6 +236,7 @@ def getOracleQueryStatusFromSqlLite(feederName):
             host = str(row[0])
             logger.info("port : "+str(row[1]))
             port = str(row[1])
+            host = str(socket.gethostbyaddr(host).__getitem__(2)[0])
             cmd = "curl "+host+":"+port+"/table-feed/status"
             logger.info("cmd : "+str(cmd))
             output = executeLocalCommandAndGetOutput(cmd);

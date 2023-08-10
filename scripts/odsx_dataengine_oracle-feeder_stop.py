@@ -7,6 +7,7 @@ import re
 import requests
 import sqlite3
 import subprocess
+import socket
 from datetime import date, timedelta
 
 from colorama import Fore
@@ -301,6 +302,7 @@ def proceedToStopMSSQLFeeder(fileNumberToStop):
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
+    host=str(socket.gethostbyaddr(host).__getitem__(2)[0])
     cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
     print(cmd)
     logger.info("cmd : "+str(cmd))
