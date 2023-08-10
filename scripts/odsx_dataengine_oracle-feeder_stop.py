@@ -16,9 +16,9 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getMSSQLQueryStatusFromSqlLite
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
+from utils.odsx_db2feeder_utilities import getOracleQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -82,18 +82,18 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     out = out.decode()
     return str(out).replace('\n', '')
 
-def displayMSSQLFeederShFiles():
-    logger.info("stopMSSQLFeeder()")
+def displayOracleFeederShFiles():
+    logger.info("stopOracleFeeder()")
     global fileNameDict
-    global sourceMSSQLFeederShFilePath
+    global sourceOracleFeederShFilePath
     global fileNamePuNameDict
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    sourceMSSQLFeederShFilePath = str(str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/'))
-    logger.info("sourceMSSQLFeederShFilePath :"+str(sourceMSSQLFeederShFilePath))
+    sourceOracleFeederShFilePath = str(str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/'))
+    logger.info("sourceOracleFeederShFilePath :"+str(sourceOracleFeederShFilePath))
     counter=1
     directory = os.getcwd()
-    os.chdir(sourceMSSQLFeederShFilePath)
+    os.chdir(sourceOracleFeederShFilePath)
     fileNameDict = host_dictionary_obj()
     fileNamePuNameDict = host_dictionary_obj()
     headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
@@ -158,7 +158,7 @@ def listDeployed(managerHost):
         dataTable=[]
         flag = False
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-        sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
+        sourceOracleFeederShFilePath = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
         for i in jsonArray:
             if(str(i['name']).__contains__("oracle")):
                 flag = True
@@ -166,10 +166,10 @@ def listDeployed(managerHost):
 
             logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
 
-            os.chdir(sourceMSSQLFeederShFilePath)
+            os.chdir(sourceOracleFeederShFilePath)
 
             for file in glob.glob("load_*.sh"):
-                os.chdir(sourceMSSQLFeederShFilePath)
+                os.chdir(sourceOracleFeederShFilePath)
                 puName = str(file).replace('load_', '').replace('.sh', '').casefold()
                 file = open(file, "r")
                 for line in file:
@@ -180,7 +180,7 @@ def listDeployed(managerHost):
                         # global mySubString
                         # mySubString = myString[
                         #               myString.find(startString) + len(startString):myString.find(endString)]
-                        # puName = 'mssqlfeeder_'+puName
+                        # puName = 'oraclefeeder_'+puName
                         # conditionDate = getFormattedDate(mySubString)
                         if(myString.find(startString) != -1):
                             mySubString = myString[
@@ -206,14 +206,14 @@ def listDeployed(managerHost):
                 response2 = requests.get(
                     "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances")
                 jsonArray2 = json.loads(response2.text)
-                queryStatus = str(getMSSQLQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
+                queryStatus = str(getOracleQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
                 for data2 in jsonArray2:
                     hostId = data2["hostId"]
                 if (len(str(hostId)) == 0):
                     hostId = "N/A"
                 if (str(data["name"]).__contains__('oracle')):
                     os.getcwd()
-                    os.chdir(sourceMSSQLFeederShFilePath)
+                    os.chdir(sourceOracleFeederShFilePath)
                     for file in glob.glob("load_*.sh"):
                         puName = str(str(data["name"])).replace('oraclefeeder_', 'load_').casefold()
                         puName = puName + ".sh"
@@ -230,10 +230,10 @@ def listDeployed(managerHost):
                                     if(myString.find(startString) != -1):
                                         mySubString = myString[
                                                       myString.find(startString) + len(startString):myString.find(endString)]
-                                        # puName = 'mssqlfeeder_'+puName
+                                        # puName = 'oraclefeeder_'+puName
                                         conditionDate = getFormattedDate(mySubString)
                                     else:
-                                        # puName = 'mssqlfeeder_'+puName
+                                        # puName = 'oraclefeeder_'+puName
                                         conditionDate = "-"
                                     dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                                  Fore.GREEN + data["name"] + Fore.RESET,
@@ -269,11 +269,11 @@ def inputParam():
         inputNumberToStop = str(userInputWrapper(Fore.YELLOW+"Enter serial number to stop oracle-feeder : "+Fore.RESET))
         if(len(str(inputNumberToStop))==0):
             inputNumberToStop = str(userInputWrapper(Fore.YELLOW+"Enter serial number to stop oracle-feeder : "+Fore.RESET))
-        proceedToStopMSSQLFeeder(inputNumberToStop)
+        proceedToStopOracleFeeder(inputNumberToStop)
     if(len(str(inputChoice))==0):
         elements = len(fileNameDict)
         for i in range (1,elements+1):
-            proceedToStopMSSQLFeeder(str(i))
+            proceedToStopOracleFeeder(str(i))
 
 def sqlLiteGetHostAndPortByFileName(puName):
     logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(puName))
@@ -292,7 +292,7 @@ def sqlLiteGetHostAndPortByFileName(puName):
     except Exception as e:
         handleException(e)
 
-def proceedToStopMSSQLFeeder(fileNumberToStop):
+def proceedToStopOracleFeeder(fileNumberToStop):
     logger.info("proceedToStopOracleFeeder()")
     #shFileName = fileNameDict.get(str(fileNumberToStop))
     puName = gs_space_dictionary_obj.get(str(fileNumberToStop))
@@ -316,7 +316,7 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes);
         if(len(str(managerHost))>0):
-            displayMSSQLFeederShFiles()
+            displayOracleFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
                 inputParam()
