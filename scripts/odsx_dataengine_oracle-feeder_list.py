@@ -5,16 +5,15 @@ import os
 import re
 import requests
 import sqlite3
-from datetime import date, timedelta
-
 from colorama import Fore
+from datetime import date, timedelta
 
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_db2feeder_utilities import getOracleQueryStatusFromSqlLite
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -115,43 +114,14 @@ def listDeployed(managerHost):
         for i in jsonArray:
             if (str(i['name']).__contains__("oracle")):
                 flag = True
-        if (len(jsonArray) == 0 or flag == False):
 
-            logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
-            sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
-            os.chdir(sourceOracleFeederShFilePath)
+        logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
+        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+        os.chdir(sourceOracleFeederShFilePath)
 
-            for file in glob.glob("load_*.sh"):
-                os.chdir(sourceOracleFeederShFilePath)
-                puName = str(file).replace('load_', '').replace('.sh', '').casefold()
-                file = open(file, "r")
-                for line in file:
-                    if (line.startswith("curl")):
-                        myString = line
-                        startString = '&condition='
-                        endString = "&exclude-columns="
-                        # mySubString = myString[
-                        #               myString.find(startString) + len(startString):myString.find(endString)]
-                        puName = 'oraclefeeder_'+puName
-                        if(myString.find(startString) != -1):
-                            mySubString = myString[
-                                          myString.find(startString) + len(startString):myString.find(endString)]
-                            puName = 'oraclefeeder_'+puName
-                            conditionDate = getFormattedDate(mySubString)
-                        else:
-                            puName = 'oraclefeeder_'+puName
-                            conditionDate = "-"
-                        dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
-                                     Fore.GREEN + puName + Fore.RESET,
-                                     Fore.GREEN + str("-") + Fore.RESET,
-                                     Fore.GREEN + str("-") + Fore.RESET,
-                                     Fore.GREEN + str("-") + Fore.RESET,
-                                     Fore.GREEN + "Undeployed" + Fore.RESET,
-                                     Fore.GREEN + str(conditionDate) + Fore.RESET,
-                                     ]
-                counter = counter + 1
-                dataTable.append(dataArray)
-        else:
+        deployedPUNames = []
+        if (len(jsonArray) > 0):
+
             for data in jsonArray:
                 hostId = ''
                 response2 = requests.get(
@@ -182,6 +152,7 @@ def listDeployed(managerHost):
                                         conditionDate = getFormattedDate(mySubString)
                                     else:
                                         conditionDate = "-"
+                                    deployedPUNames.append(data["name"])
                                     dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                                  Fore.GREEN + data["name"] + Fore.RESET,
                                                  Fore.GREEN + str(hostId) + Fore.RESET,
@@ -200,6 +171,42 @@ def listDeployed(managerHost):
                     gs_space_dictionary_obj.add(str(counter + 1), str(data["name"]))
                     counter = counter + 1
                     dataTable.append(dataArray)
+
+        for file in glob.glob("load_*.sh"):
+            os.chdir(sourceOracleFeederShFilePath)
+            puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+            file = open(file, "r")
+            puName = 'oraclefeeder_'+puName
+            if puName in deployedPUNames:
+                continue
+            for line in file:
+                if (line.startswith("curl")):
+                    #puName = 'oraclefeeder_'+puName
+                    myString = line
+                    startString = '&condition='
+                    endString = "&exclude-columns="
+                    # mySubString = myString[
+                    #               myString.find(startString) + len(startString):myString.find(endString)]
+
+                    if(myString.find(startString) != -1):
+                        mySubString = myString[
+                                    myString.find(startString) + len(startString):myString.find(endString)]
+                        #puName = 'oraclefeeder_'+puName
+                        conditionDate = getFormattedDate(mySubString)
+                    else:
+                        #puName = 'oraclefeeder_'+puName
+                        conditionDate = "-"
+                    dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                                         Fore.GREEN + puName + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + str("-") + Fore.RESET,
+                                     Fore.GREEN + "Undeployed" + Fore.RESET,
+                                     Fore.GREEN + str(conditionDate) + Fore.RESET,
+                                     ]
+            counter = counter + 1
+            dataTable.append(dataArray)
+
         cnx.commit()
         cnx.close()
 

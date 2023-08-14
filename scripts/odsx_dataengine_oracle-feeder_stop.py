@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import glob
 import json
 import os
@@ -296,6 +297,11 @@ def proceedToStopOracleFeeder(fileNumberToStop):
     logger.info("proceedToStopOracleFeeder()")
     #shFileName = fileNameDict.get(str(fileNumberToStop))
     puName = gs_space_dictionary_obj.get(str(fileNumberToStop))
+    proceedToStopOracleFeederbyName(puName)
+
+def proceedToStopOracleFeederbyName(puName):
+    logger.info("proceedToStopOracleFeeder()")
+    #shFileName = fileNameDict.get(str(fileNumberToStop))
     verboseHandle.printConsoleInfo("puName :"+str(puName))
     shFileName = fileNamePuNameDict.get(str(puName))
     hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
@@ -319,7 +325,10 @@ if __name__ == '__main__':
             displayOracleFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
-                inputParam()
+                if len(sys.argv) > 1 and sys.argv[1] != "m":
+                    proceedToStopOracleFeederbyName(sys.argv[1])
+                else:
+                    inputParam()
             else:
                 logger.info("No feeder found.")
                 verboseHandle.printConsoleInfo("No feeder found.")

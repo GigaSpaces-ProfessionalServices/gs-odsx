@@ -110,6 +110,7 @@ def listDeployed(managerHost):
     global gs_space_dictionary_obj
     global activefeeder
     activefeeder=[]
+    deployedPUNames =[]
     try:
         logger.info("managerHost :"+str(managerHost))
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
@@ -136,10 +137,33 @@ def listDeployed(managerHost):
                              Fore.GREEN+data["processingUnitType"]+Fore.RESET,
                              Fore.GREEN+data["status"]+Fore.RESET
                              ]
+                deployedPUNames.append(data["name"])
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 activefeeder.append(str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
+
+        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+        directory = os.getcwd()
+        os.chdir(sourceOracleFeederShFilePath)
+        for file in glob.glob("load_*.sh"):
+            os.chdir(directory)
+            puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+            puName = 'oraclefeeder_'+puName
+            if puName in deployedPUNames:
+                continue
+
+            dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                            Fore.GREEN + puName + Fore.RESET,
+                            Fore.GREEN + str("-") + Fore.RESET,
+                            Fore.GREEN + str("-") + Fore.RESET,
+                            Fore.GREEN + str("-") + Fore.RESET,
+                            Fore.GREEN + "Undeployed" + Fore.RESET,
+                        ]
+            counter = counter + 1
+            dataTable.append(dataArray)
+
         printTabular(None,headers,dataTable)
         return gs_space_dictionary_obj
     except Exception as e:
