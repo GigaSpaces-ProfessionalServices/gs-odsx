@@ -85,6 +85,17 @@ def getdbFeederList():
         puName = str(file).replace('load_','').replace('.sh','').casefold()
         dbFeederList.append('db2feeder_'+puName)
 
+def getoracleFeederList():
+    global oracleFeederList
+    oracleFeederList=[]
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    os.getcwd()
+    sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+    os.chdir(sourceOracleFeederShFilePath)
+    for file in glob.glob("load_*.sh"):
+        puName = str(file).replace('load_','').replace('.sh','').casefold()
+        oracleFeederList.append('oraclefeeder_'+puName)
+
 def getAllFeeders():
     logger.info("getAllFeeders() : start")
 
@@ -117,15 +128,15 @@ def getAllFeeders():
         dataTable=[]
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         getmssqlFeederList()
-        getdbFeederList()
+        getoracleFeederList()
         if (len(jsonArray) == 0):
-            sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
+            sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
             os.chdir(sourceDB2FeederShFilePathConfig)
             for file in glob.glob("load_*.sh"):
                 puName = str(file).replace('load_','').replace('.sh','').casefold()
-                puName = 'db2feeder_'+puName
-                if(str(puName).__contains__('db2')):
-                    dbFeederList.remove(puName)
+                puName = 'oraclefeeder_'+puName
+                if(str(puName).__contains__('oracle')):
+                    oracleFeederList.remove(puName)
                     dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                                          Fore.GREEN+str(puName)+Fore.RESET,
                                          Fore.GREEN+str("-")+Fore.RESET,
@@ -154,19 +165,7 @@ def getAllFeeders():
                 dataTable.append(dataArray1)
 
             os.getcwd()
-            dPipelineSourceConfig = str(getYamlFilePathInsideFolder(".mq-connector.adabas.config.pipeline")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-            filename = os.path.basename(dPipelineSourceConfig)
-            if(len(str(filename)) != 0):
-                    resourceName = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.pu.name"))
-                    dataArray1 = [Fore.GREEN + str(counter + 1) + Fore.RESET,
-                                         Fore.GREEN + resourceName + Fore.RESET,
-                                         Fore.GREEN + str("-") + Fore.RESET,
-                                         Fore.GREEN + str("-") + Fore.RESET,
-                                         # Fore.GREEN + str("-") + Fore.RESET,
-                                         Fore.GREEN + "Undeployed" + Fore.RESET,
-                                         ]
-                    counter = counter + 1
-                    dataTable.append(dataArray1)
+
         for data in jsonArray:
             hostId=''
             if profile == 'security':
@@ -179,9 +178,9 @@ def getAllFeeders():
                 hostId=data2["hostId"]
             if(len(str(hostId))==0):
                 hostId="N/A"
-            if(str(data["name"]).__contains__('db2')):
-                if(dbFeederList.__contains__(str(data["name"]))):
-                    dbFeederList.remove(str(data["name"]))
+            if(str(data["name"]).__contains__('oracle')):
+                if(oracleFeederList.__contains__(str(data["name"]))):
+                    oracleFeederList.remove(str(data["name"]))
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
@@ -192,19 +191,7 @@ def getAllFeeders():
                 counter=counter+1
                 dataTable.append(dataArray)
 
-            # For Kafka - Consumer
 
-            if(str(data["name"]).casefold().__contains__('adabasconsumer')):
-                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                             Fore.GREEN+data["name"]+Fore.RESET,
-                             Fore.GREEN+str(hostId)+Fore.RESET,
-                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
-                             # Fore.GREEN+str("-")+Fore.RESET,
-                             Fore.GREEN+data["status"]+Fore.RESET
-                             ]
-                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
-                counter=counter+1
-                dataTable.append(dataArray)
             # For MS-SQL-Feeder
 
             if(str(data["name"]).__contains__('mssql')):
@@ -237,9 +224,9 @@ def getAllFeeders():
                                  ]
                     counter=counter+1
                     dataTable.append(dataArray)
-        if (len(dbFeederList) != 0 and len(jsonArray) != 0):
-            for puName in dbFeederList:
-                if(str(puName).__contains__('db2')):
+        if (len(oracleFeederList) != 0 and len(jsonArray) != 0):
+            for puName in oracleFeederList:
+                if(str(puName).__contains__('oracle')):
                     dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                                  Fore.GREEN+str(puName)+Fore.RESET,
                                  Fore.GREEN+str("-")+Fore.RESET,
@@ -253,11 +240,9 @@ def getAllFeeders():
         if not(str(jsonArray).__contains__("mssql")):
                 mssqlFlag = True
         # for i in jsonArray:
-        if not(str(jsonArray).__contains__("db2")):
+        if not(str(jsonArray).__contains__("oracle")):
                 db2Flag = True
         # for i in jsonArray:
-        if not(str(jsonArray).casefold().__contains__('adabasconsumer')):
-                adabsFlag = True
         # if(db2Flag == True and len(jsonArray) != 0):
         #     sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".db2.scripts.").replace('.','/')
         #     os.chdir(sourceDB2FeederShFilePathConfig)
@@ -292,24 +277,8 @@ def getAllFeeders():
         #                       ]
         #         counter = counter + 1
         #         dataTable.append(dataArray1)
-        if(adabsFlag == True and len(jsonArray) != 0):
-            os.getcwd()
-            dPipelineSourceConfig = str(getYamlFilePathInsideFolder(".mq-connector.adabas.config.pipeline")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-            filename = os.path.basename(dPipelineSourceConfig)
-            if(len(str(filename)) != 0):
-                resourceName = str(readValueByConfigObj("app.dataengine.mq.kafka.consumer.pu.name"))
-                counter = counter + 1
-                dataArray1 = [Fore.GREEN + str(counter) + Fore.RESET,
-                              Fore.GREEN + resourceName + Fore.RESET,
-                              Fore.GREEN + str("-") + Fore.RESET,
-                              Fore.GREEN + str("-") + Fore.RESET,
-                              # Fore.GREEN + str("-") + Fore.RESET,
-                              Fore.GREEN + "Undeployed" + Fore.RESET,
-                              ]
-
-                dataTable.append(dataArray1)
         mssqlFeederList.clear()
-        dbFeederList.clear()
+        oracleFeederList.clear()
         return dataTable
 
     except Exception as e:
