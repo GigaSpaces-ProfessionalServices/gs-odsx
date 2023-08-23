@@ -3,7 +3,7 @@ import argparse
 import os
 import sys
 from concurrent.futures import ThreadPoolExecutor
-
+import socket
 import json
 import requests
 from colorama import Fore
@@ -164,7 +164,8 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
         logger.info("status : "+str(status))
         logger.info("Host:"+str(host))
         #gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0))) # UN-Comment for AWS
-        gsc = host_gsc_dict_obj.get(str(host)) # Un-Comment for Bank
+        gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
+        #gsc = host_gsc_dict_obj.get(str(host)) # Un-Comment for Bank
         logger.info("GSC : "+str(gsc))
     else:
         status="NOT REACHABLE"

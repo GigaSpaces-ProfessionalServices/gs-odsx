@@ -93,6 +93,8 @@ def listSpacesOnServer(managerNodes):
         counter=0
         dataTable=[]
         for data in jsonArray:
+            if "backupsPerPartition" not in data["topology"]:
+                continue
             if(str(data["topology"]["backupsPerPartition"])=="1"):
                 isBackup="YES"
             if(str(data["topology"]["backupsPerPartition"])=="0"):
@@ -302,21 +304,21 @@ def createGSCInputParam(managerNodes,spaceNodes,managerHostConfig):
     global numberOfGSC
     global specificHost
     global individualHostConfirm
-    numberOfGSC = str(userInputWrapper("Enter number of GSC per host [2] :"+Fore.RESET))
+    numberOfGSC = str(readValuefromAppConfig("app.newspace.creategsc.gscperhost")) #str(userInputWrapper("Enter number of GSC per host [2] :"+Fore.RESET))
     if(len(str(numberOfGSC))==0):
         numberOfGSC=2
     logger.info("numberofGSC :"+str(numberOfGSC))
 
     global memoryGSC
-    memoryGSC = str(userInputWrapper("Enter memory to create gsc [12g] :"+Fore.RESET))
+    memoryGSC = str(readValuefromAppConfig("app.newspace.creategsc.gscmemory")) #str(userInputWrapper("Enter memory to create gsc [12g] :"+Fore.RESET))
     if(len(memoryGSC)==0):
         memoryGSC="12g"
 
     global zoneGSC
-    zoneGSC = str(userInputWrapper("Enter zone [bll] :"+Fore.RESET))
+    zoneGSC = str(readValuefromAppConfig("app.newspace.creategsc.gsczone")) #str(userInputWrapper("Enter zone :"+Fore.RESET))
     while(len(str(zoneGSC))==0):
-        zoneGSC ='bll'
-    individualHostConfirm = str(readValuefromAppConfig("app.spacejar.creategsc.specifichost"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
+        zoneGSC = str(userInputWrapper("Enter zone :"+Fore.RESET))
+    individualHostConfirm = str(readValuefromAppConfig("app.newspace.creategsc.specifichost"))#str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC on specific host ? (y/n) [n] :"))
     #if(len(str(individualHostConfirm))==0):
     #    individualHostConfirm = 'n'
     if(individualHostConfirm=='y'):
@@ -347,18 +349,17 @@ def displaySummaryOfInputParameter():
         verboseHandle.printConsoleWarning("Number of GSC per host :"+str(numberOfGSC))
         verboseHandle.printConsoleWarning("Enter memory to create gsc :"+str(memoryGSC))
         verboseHandle.printConsoleWarning("Enter zone :"+str(zoneGSC))
-    if(confirmCreateSpace=='y'):
-        verboseHandle.printConsoleWarning("Enter space name :"+spaceName)
-        verboseHandle.printConsoleWarning("Enter space zone :"+str(zoneOfPU))
-        verboseHandle.printConsoleWarning("Enter service name :"+str(resourceName))
-        verboseHandle.printConsoleWarning("Enter resource file name :"+str(resource))
-        verboseHandle.printConsoleWarning("Enter partitions :"+str(partitions))
-        verboseHandle.printConsoleWarning("Enter max instance per machine :"+str(maxInstancesPerMachine))
-        if(backUpRequired==1):
-            haStatus=True
-        else:
-            haStatus=False
-        verboseHandle.printConsoleWarning("SLA [HA] ? (y/n) :"+str(str(haStatus)))
+    verboseHandle.printConsoleWarning("Enter space name :"+str(spaceName))
+    verboseHandle.printConsoleWarning("Enter space zone :"+str(zoneOfPU))
+    verboseHandle.printConsoleWarning("Enter resource name :"+str(resourceName))
+    verboseHandle.printConsoleWarning("Enter resource file name :"+str(resource))
+    verboseHandle.printConsoleWarning("Enter partitions :"+str(partitions))
+    verboseHandle.printConsoleWarning("Enter max instance per machine :"+str(maxInstancesPerMachine))
+    if(backUpRequired == 1):
+        haStatus=True
+    else:
+        haStatus=False
+    verboseHandle.printConsoleWarning("SLA [HA] ? (y/n) :"+str(str(haStatus)))
 
 
 def proceedForValidateResponse(response):
@@ -382,8 +383,8 @@ def proceedForValidateResponse(response):
                 elif(str(status).casefold().__contains__('failed')):
                     return
                 else:
-                    logger.info("Unable to deploy :"+str(status))
-                    verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
+                    logger.info(str(status))
+                    verboseHandle.printConsoleInfo("deployment status : "+str(status))
             else:
                 logger.info("Unable to deploy :"+str(deployResponseCode))
                 verboseHandle.printConsoleInfo("Unable to deploy : "+str(deployResponseCode))
@@ -392,7 +393,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
     logger.info("dataPuREST()")
     try:
         global isSpacePropertyRequired
-        isSpacePropertyRequired = str(readValuefromAppConfig("app.spacejar.wantspaceproperty"))#str(userInputWrapper(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
+        isSpacePropertyRequired = str(readValuefromAppConfig("app.newspace.wantspaceproperty"))#str(userInputWrapper(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
         #if(len(isSpacePropertyRequired)==0):
         #    isSpacePropertyRequired='y'
         logger.info("isSpacePropertyRequired : "+str(isSpacePropertyRequired))
@@ -411,8 +412,8 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
             logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
             #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
 
-            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.spacejar.spaceproperty.filepath.target")).replace('"','')
-            logger.info("app.spacejar.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
+            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.newspace.spaceproperty.filepath.target")).replace('"','')
+            logger.info("app.newspace.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
             #spacePropertyConfigFilePathTargetInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
             #if(len(str(spacePropertyConfigFilePathTargetInput))>0):
             #    spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
@@ -488,7 +489,7 @@ def createNewSpaceREST(managerHostConfig):
 
                 global spaceName
                 sName = str(readValuefromAppConfig("app.newspace.name"))
-                spaceName = str(userInputWrapper("Enter space name  ["+sName+"] :"+Fore.RESET))  #str(userInputWrapper("Enter space name  [mySpace] :"+Fore.RESET))
+                spaceName = sName #str(userInputWrapper("Enter space name  ["+sName+"] :"+Fore.RESET))  #str(userInputWrapper("Enter space name  [mySpace] :"+Fore.RESET))
                 if(len(str(spaceName))==0):
                     spaceName=sName
 
@@ -499,75 +500,75 @@ def createNewSpaceREST(managerHostConfig):
                 #     isBuildGlobally='n'
 
                 global zoneOfPU
-                zoneOfPUValue = str(readValuefromAppConfig("app.spacejar.pu.zone"))
-                zoneOfPU = str(userInputWrapper("Enter space zone ["+zoneOfPUValue+"] :"+Fore.RESET))
+                zoneOfPUValue = str(readValuefromAppConfig("app.newspace.pu.zone"))
+                zoneOfPU = zoneOfPUValue #str(userInputWrapper("Enter space zone ["+zoneOfPUValue+"] :"+Fore.RESET))
                 if(len(str(zoneOfPU))==0):
                     zoneOfPU=zoneOfPUValue
 
                 global resourceName
-                resourceNameValue = str(readValuefromAppConfig("app.spacejar.pu.name"))
-                resourceName = str(userInputWrapper("Enter service name ["+resourceNameValue+"] :"+Fore.RESET))
+                resourceNameValue = str(readValuefromAppConfig("app.newspace.pu.name"))
+                resourceName = resourceNameValue #str(userInputWrapper("Enter service name ["+resourceNameValue+"] :"+Fore.RESET))
                 if(len(str(resourceName))==0):
                     resourceName=resourceNameValue
 
                 global partitions
                 partitionsValue = str(readValuefromAppConfig("app.newspace.partitions"))
-                partitions = str(userInputWrapper("Enter partitions ["+partitionsValue+"] :"+Fore.RESET))
+                partitions = partitionsValue #str(userInputWrapper("Enter partitions ["+partitionsValue+"] :"+Fore.RESET))
                 if(len(str(partitions))==0):
                     partitions=partitionsValue
 
                 # global maxInstancesPerMachine
                 # maxInstancesPerMachine = '1'
                 global maxInstancesPerMachine
-                maxInstancesPerMachineValue = str(readValuefromAppConfig("app.spacejar.pu.maxinstancepermachine"))
-                maxInstancesPerMachine = str(userInputWrapper("Enter max instance per machine ["+maxInstancesPerMachineValue+"] :"+Fore.RESET))
+                maxInstancesPerMachineValue = str(readValuefromAppConfig("app.newspace.pu.maxinstancepermachine"))
+                maxInstancesPerMachine = maxInstancesPerMachineValue #str(userInputWrapper("Enter max instance per machine ["+maxInstancesPerMachineValue+"] :"+Fore.RESET))
                 if(len(str(maxInstancesPerMachine))==0):
                     maxInstancesPerMachine=maxInstancesPerMachineValue
 
                 global backUpRequired
                 backUpRequiredValue = str(readValuefromAppConfig("app.newspace.ha"))#
-                backUpRequired = str(userInputWrapper("SLA [HA] ? (y/n) ["+backUpRequiredValue+"] :"+Fore.RESET))
+                backUpRequired = backUpRequiredValue #str(userInputWrapper("SLA [HA] ? (y/n) ["+backUpRequiredValue+"] :"+Fore.RESET))
                 if(len(str(backUpRequired))==0 or backUpRequired=='y'):
                     backUpRequired=1
                 if(str(backUpRequired)=='n'):
                     backUpRequired=0
 
-            displaySummaryOfInputParameter()
+                displaySummaryOfInputParameter()
+                createConfirm = str(userInputWrapper("Are you sure want to proceed ? (y/n) [y] :"))
+                if(len(str(createConfirm))==0):
+                    createConfirm='y'
+                if(createConfirm=='y'):
+                    if(confirmCreateGSC == 'y'):
+                        createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
+                    uploadFileRest(managerHostConfig)
+                    data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
+                    headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
 
-            createConfirm = str(userInputWrapper("Are you sure want to proceed ? (y/n) [y] :"))
-            if(confirmCreateGSC == 'y'):
-                createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
-            if(len(str(createConfirm))==0):
-                createConfirm='y'
-            if(createConfirm=='y'):
-                uploadFileRest(managerHostConfig)
-                data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
-                headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-                logger.info("url : "+"http://"+managerHostConfig+":8090/v2/pus")
-
-                response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth=HTTPBasicAuth(username,password))
-                deployResponseCode = str(response.content.decode('utf-8'))
-                logger.info("deployResponseCode :"+str(deployResponseCode))
-                status = validateResponseGetDescription(deployResponseCode)
-                logger.info("response.status_code :"+str(response.status_code))
-                logger.info("response.content :"+str(response.content))
-                if(response.status_code==202):
-                    logger.info("Response :"+str(status))
-                    retryCount=5
-                    while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
-                        status = validateResponseGetDescription(deployResponseCode)
-                        verboseHandle.printConsoleInfo("Response :"+str(status))
-                        retryCount = retryCount-1
-                        time.sleep(2)
-                        if(str(status).casefold().__contains__('successful')):
-                            return
-                        elif(str(status).casefold().__contains__('failed')):
-                            return
-                else:
-                    logger.info("Unable to deploy :"+str(status))
-                    verboseHandle.printConsoleInfo("Unable to deploy : "+str(status))
-            else:
-                return
+                    response = requests.post("http://"+managerHostConfig+":8090/v2/pus",data=json.dumps(data),headers=headers,auth=HTTPBasicAuth(username,password))
+                    deployResponseCode = str(response.content.decode('utf-8'))
+                    print("deployResponseCode : "+str(deployResponseCode))
+                    logger.info("deployResponseCode :"+str(deployResponseCode))
+                    # proceedForValidateResponse(response)
+                    status = validateResponseGetDescription(deployResponseCode)
+                    logger.info("response.status_code :"+str(response.status_code))
+                    logger.info("response.content :"+str(response.content) )
+                    if(response.status_code==202):
+                        logger.info("Response :"+str(status))
+                        retryCount=5
+                        while(retryCount>0 or (not str(status).casefold().__contains__('successful')) or (not str(status).casefold().__contains__('failed'))):
+                            status = validateResponseGetDescription(deployResponseCode)
+                            verboseHandle.printConsoleInfo("Response :"+str(status))
+                            retryCount = retryCount-1
+                            time.sleep(2)
+                            if(str(status).casefold().__contains__('successful')):
+                                return
+                            elif(str(status).casefold().__contains__('failed')):
+                                return
+                            else:
+                                logger.info("deployment status : "+str(status))
+                                verboseHandle.printConsoleInfo(str(status))
+                    else:
+                        return
     except Exception as e:
         handleException(e)
     # logger.info("createNewSpaceREST() : managerHostConfig:"+str(managerHostConfig))
@@ -763,7 +764,7 @@ if __name__ == '__main__':
                 listSpacesOnServer(managerNodes)
                 space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                 global confirmCreateGSC
-                confirmCreateGSC = str(userInputWrapper("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+                confirmCreateGSC = str(readValuefromAppConfig("app.newspace.wanttocreategsc")) #str(userInputWrapper("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
                 logger.info("confirmCreateGSC : "+str(confirmCreateGSC))
                 if(confirmCreateGSC=='y' or len(str(confirmCreateGSC)) == 0):
                     isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHostConfig)
