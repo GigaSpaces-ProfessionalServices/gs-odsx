@@ -54,3 +54,19 @@
 15. Update app.config
     Change key from app.dataengine.mssql-feeder.gscperhost to app.dataengine.mssql-feeder.gscpercluster
     Change key from app.dataengine.oracle-feeder.gscperhost to app.dataengine.oracle-feeder.gscpercluster
+### TAU v4.21-tau-release tag
+16. Update app.config with following values
+    app.dataengine.mssql-feeder.mssql.server=
+    app.dataengine.mssql-feeder.mssql.username=
+    app.dataengine.mssql-feeder.mssql.password=
+    app.dataengine.mssql-feeder.mssql.databasename=
+    app.dataengine.mssql-feeder.mssql.authenticationscheme=
+    app.dataengine.mssql-feeder.gscpercluster=1
+    app.dataengine.mssql-feeder.gsc.memory=256m
+    app.dataengine.mssql-feeder.gsc.create=y
+    app.dataengine.mssql-feeder.sqlite.dbfile=/dbagigawork/sqlite/mssqlFeeder.db
+    app.dataengine.mssql-feeder.space.name=bllspace
+    app.dataengine.mssql-feeder.writeBatchSize=10000
+    app.dataengine.mssql-feeder.sleepAfterWriteInMillis=500
+17. Rebuild MsSqlFeeder jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/MsSqlFeeder and place it to /dbagigashare/current/mssql/jars/
+18. Copy load data scripts from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/deployment/MSSQL_FEEDER/scripts to /dbagigashare/current/mssql/scripts/

@@ -205,6 +205,7 @@ def getMSSQLQueryStatusFromSqlLite(feederName):
         for row in myresult:
             logger.info("host : "+str(row[0]))
             host = str(row[0])
+            host = str(socket.gethostbyaddr(host).__getitem__(2)[0])
             logger.info("port : "+str(row[1]))
             port = str(row[1])
             cmd = "curl "+host+":"+port+"/table-feed/status"
