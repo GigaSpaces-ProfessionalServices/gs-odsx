@@ -31,6 +31,8 @@ current:
         metricsxml: metrics.xml.template
       space:
         spacepropertyfile: space.properties
+      imspace:
+        imspacepropertyfile: imspace.properties
       ts:
         criteria: TSDirtyBit
         spaceproperty: spaceproperty.properties

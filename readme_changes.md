@@ -70,3 +70,16 @@
     app.dataengine.mssql-feeder.sleepAfterWriteInMillis=500
 17. Rebuild MsSqlFeeder jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/MsSqlFeeder and place it to /dbagigashare/current/mssql/jars/
 18. Copy load data scripts from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/deployment/MSSQL_FEEDER/scripts to /dbagigashare/current/mssql/scripts/
+### TAU v4.23-tau-release tag
+19. Update app.config with following values
+    app.newspace.wantspaceproperty=y
+    app.newspace.spaceproperty.filepath.target=/dbagiga/gs_config/imspace.properties
+20. Update app.yaml with following values unser ".gs.config"
+    imspace:
+        imspacepropertyfile: imspace.properties
+21. Create "imspace.properties" and copy to "/dbagigashare/current//gs/config/imspace/" directory
+    space-config.engine.memory_usage.high_watermark_percentage=97
+    space-config.engine.memory_usage.write_only_block_percentage=96
+    space-config.engine.memory_usage.write_only_check_percentage=95
+    space-config.engine.memory_usage.gc-before-shortage=false
+

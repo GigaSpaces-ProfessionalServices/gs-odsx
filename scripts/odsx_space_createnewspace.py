@@ -5,6 +5,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 import requests, json, math
 from scripts.spinner import Spinner
+from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
@@ -351,6 +352,8 @@ def displaySummaryOfInputParameter():
     verboseHandle.printConsoleWarning("Enter resource file name :"+str(resource))
     verboseHandle.printConsoleWarning("Enter partitions :"+str(partitions))
     verboseHandle.printConsoleWarning("Enter max instance per machine :"+str(maxInstancesPerMachine))
+    verboseHandle.printConsoleWarning("Enter space.property.filePath : "+str(spacePropertyConfigFilePath))
+    verboseHandle.printConsoleWarning("Enter space.property.filePath.target : "+str(spacePropertyConfigFilePathTarget))
     if(backUpRequired == 1):
         haStatus=True
     else:
@@ -388,38 +391,6 @@ def proceedForValidateResponse(response):
 def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backUpRequired):
     logger.info("dataPuREST()")
     try:
-        global isSpacePropertyRequired
-        isSpacePropertyRequired = str(readValuefromAppConfig("app.newspace.wantspaceproperty"))#str(userInputWrapper(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
-        #if(len(isSpacePropertyRequired)==0):
-        #    isSpacePropertyRequired='y'
-        logger.info("isSpacePropertyRequired : "+str(isSpacePropertyRequired))
-        global spacePropertyConfigFilePath
-        global spacePropertyConfigFilePathTarget
-        spacePropertyConfigFilePath=''
-        spacePropertyConfigFilePathTarget=''
-        if(isSpacePropertyRequired=='y'):
-            spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.space.spacepropertyfile"))
-            logger.info("gs.config.ts.spaceproperty :"+str(spacePropertyConfigFilePath))
-            #spacePropertyConfigFilePathInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath ["+str(spacePropertyConfigFilePath)+"]: "+Fore.RESET))
-            #if(len(str(spacePropertyConfigFilePathInput))>0):
-            #    spacePropertyConfigFilePath = spacePropertyConfigFilePathInput
-            #while(len(str(spacePropertyConfigFilePath))==0):
-            #    spacePropertyConfigFilePath = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
-            logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
-            #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
-
-            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.newspace.spaceproperty.filepath.target")).replace('"','')
-            logger.info("app.newspace.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
-            #spacePropertyConfigFilePathTargetInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
-            #if(len(str(spacePropertyConfigFilePathTargetInput))>0):
-            #    spacePropertyConfigFilePathTarget = spacePropertyConfigFilePathTargetInput
-            #while(len(str(spacePropertyConfigFilePathTarget))==0):
-            #    spacePropertyConfigFilePathTarget = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target : "+Fore.RESET))
-            logger.info("spacePropertyConfigFilePathTarget :"+str(spacePropertyConfigFilePathTarget))
-            #set_value_in_property_file('app.space.property.filePath.target',str(spacePropertyConfigFilePathTarget))
-        else:
-            logger.info("Skipping space property configure.")
-
         data={
             "resource": ""+resource+"",
             "topology": {
@@ -522,6 +493,25 @@ def createNewSpaceREST(managerHostConfig):
                 if(str(backUpRequired)=='n'):
                     backUpRequired=0
 
+                global isSpacePropertyRequired
+                isSpacePropertyRequired = str(readValuefromAppConfig("app.newspace.wantspaceproperty"))#str(userInputWrapper(Fore.YELLOW+"Do you want to add space property ? (y/n) [y]: "+Fore.RESET))
+                #if(len(isSpacePropertyRequired)==0):
+                #    isSpacePropertyRequired='y'
+                logger.info("isSpacePropertyRequired : "+str(isSpacePropertyRequired))
+                global spacePropertyConfigFilePath
+                global spacePropertyConfigFilePathTarget
+                spacePropertyConfigFilePath=''
+                spacePropertyConfigFilePathTarget=''
+                if(isSpacePropertyRequired=='y'):
+                    spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.imspace.imspacepropertyfile"))
+                    logger.info("gs.config.ts.spaceproperty :"+str(spacePropertyConfigFilePath))
+                    logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
+                    spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.newspace.spaceproperty.filepath.target")).replace('"','')
+                    logger.info("app.newspace.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
+                    logger.info("spacePropertyConfigFilePathTarget :"+str(spacePropertyConfigFilePathTarget))
+                else:
+                    logger.info("Skipping space property configure.")
+
                 displaySummaryOfInputParameter()
                 createConfirm = str(userInputWrapper("Are you sure want to proceed ? (y/n) [y] :"))
                 if(len(str(createConfirm))==0):
@@ -529,10 +519,10 @@ def createNewSpaceREST(managerHostConfig):
                 if(createConfirm=='y'):
                     if(confirmCreateGSC == 'y'):
                         createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
+                    copyFilesFromODSXToSpaceServer()
                     uploadFileRest(managerHostConfig)
                     data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
                     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-
                     # if(isBuildGlobally=='y'):
                     #for i in range(1,len(space_dict_obj)+1):
                     #    host = space_dict_obj.get(str(i))
@@ -577,6 +567,41 @@ def createNewSpaceREST(managerHostConfig):
     # response = requests.post("http://"+managerHostConfig+":8090/v2/spaces?name="+spaceName+"&partitions="+partitions+"&backups="+backUpRequired)
     # proceedForValidateResponse(response)
     # verboseHandle.printConsoleInfo("Space "+spaceName+" created.")
+
+def getSpaceNodeIps():
+    logger.info("spaceNodes() ")
+    ips = []
+    spaceNodes = config_get_space_hosts()
+    for node in spaceNodes:
+        ips.append(os.getenv(node.ip))
+    logger.info("ips : "+str(ips))
+    return ips
+
+def copyFilesFromODSXToSpaceServer():
+    logger.info("copyFilesFromODSXToSpaceServer()")
+    ips = getSpaceNodeIps()
+    logger.info(" ips : "+str(ips)+" spacePropertyConfigFilePath : "+str(spacePropertyConfigFilePath)+" spacePropertyConfigFilePathTarget : "+str(spacePropertyConfigFilePathTarget))
+    copyFile(ips,spacePropertyConfigFilePath , spacePropertyConfigFilePathTarget)
+
+def copyFile(hostips, srcPath, destPath, dryrun=False):
+    logger.info("copyFile :"+str(hostips)+" : "+str(srcPath)+" : "+str(destPath))
+    username = "root"
+    '''
+    if not dryrun:
+        username = userInputWrapper("Enter username for host [root] : ")
+        if username == "":
+            username = "root"
+    else:
+        username = "root"
+    '''
+    for hostip in hostips:
+        if scp_upload(hostip, username, srcPath, destPath):
+            verboseHandle.printConsoleInfo(hostip)
+            logger.info(
+                "Done copying, hostip=" + hostip + ", username=" + username + ", srcPath=" + srcPath + ", destPath=" + destPath)
+        else:
+            return False
+    return True
 
 def validateResponseGetDescription(responseCode):
     logger.info("validateResponse() "+str(responseCode))
