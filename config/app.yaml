@@ -88,6 +88,7 @@ current:
         ddlCriteriaFileName: TieredCriteria.tab
         adapterPropertyFileName: adapters.properties
         indexBatchFileName: batchIndexes.txt
+        pollingFileName: pollingcontainer.txt
     jars:
       management:
         objectmanagementjar: objectManagement.jar

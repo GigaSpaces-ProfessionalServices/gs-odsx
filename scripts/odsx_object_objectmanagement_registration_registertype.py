@@ -437,7 +437,7 @@ if __name__ == '__main__':
         myCheckArg()
         selectedOption = ""
         if len(sys.argv) > 1 and sys.argv[1] != "m":
-            setInputs(False,sys.argv[1])
+            setInputs(False, sys.argv[1] +".ddl")
             registerInSingle()
             exit(0)
 

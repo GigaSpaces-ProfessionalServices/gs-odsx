@@ -4,6 +4,8 @@ import glob
 import json
 import os
 import re
+import socket
+
 import requests
 import sqlite3
 import subprocess
@@ -301,6 +303,7 @@ def proceedToStartMSSQLFeeder(fileNumberToStart):
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
+    host = str(socket.gethostbyaddr(host).__getitem__(2)[0])
     shFileName = str(hostAndPort[2])
     cmd = str(sourceMSSQLFeederShFilePath)+'/'+shFileName+' '+host+" "+port
     logger.info("cmd : "+str(cmd))
@@ -318,6 +321,7 @@ def proceedToStartMSSQLFeederWithName(puName):
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
+    host = str(socket.gethostbyaddr(host).__getitem__(2)[0])
     shFileName = str(hostAndPort[2])
     cmd = str(sourceMSSQLFeederShFilePath)+'/'+shFileName+' '+host+" "+port
     logger.info("cmd : "+str(cmd))

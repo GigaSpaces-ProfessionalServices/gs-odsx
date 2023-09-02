@@ -70,6 +70,7 @@ def myCheckArg(args=None):
 
 def setUserInputs():
     global batchIndexFilePath
+    global pollingContainerFilePath
     global ddlAndPropertiesBasePath
     global spaceName
     global objectMgmtHost
@@ -103,12 +104,13 @@ def setUserInputs():
     ddlAndPropertiesBasePath = os.path.dirname(batchIndexFilePath) +"/"
 
     batchIndexFilePath = ddlAndPropertiesBasePath+"batchIndexes.txt"
+    pollingContainerFilePath = ddlAndPropertiesBasePath+"pollingcontainer.txt"
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
         set_value_in_property_file("app.objectmanagement.space",spaceName)
 
-    displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,ddlAndPropertiesBasePath,batchIndexFilePath)
+    displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,ddlAndPropertiesBasePath,batchIndexFilePath,pollingContainerFilePath)
 
     summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: "+Fore.RESET))
     while(len(str(summaryConfirm))==0):
@@ -118,7 +120,7 @@ def setUserInputs():
         logger.info("Exiting without registering object")
         exit(0)
 
-def displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,ddlAndPropertiesBasePath,batchIndexFilePath):
+def displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,ddlAndPropertiesBasePath,batchIndexFilePath,pollingContainerFilePath):
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
     print(Fore.GREEN+"1. "+
@@ -139,6 +141,9 @@ def displaySummary(lookupLocator,lookupGroup,objectMgmtHost,spaceName,ddlAndProp
     print(Fore.GREEN+"6. "+
           Fore.GREEN+"Batch index file location = "+
           Fore.GREEN+batchIndexFilePath+Fore.RESET)
+    print(Fore.GREEN+"7. "+
+          Fore.GREEN+"Polling container file location = "+
+          Fore.GREEN+pollingContainerFilePath+Fore.RESET)
 
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
 

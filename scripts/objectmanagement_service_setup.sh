@@ -12,12 +12,13 @@ table_batch_file_path=$6
 tier_criteria_file=$7
 adapter_property_file=$8
 batch_index_file=$9
-odsx_profile=${10}
-gs_username=${11}
-gs_password=${12}
-appId=${13}
-safeId=${14}
-objectId=${15}
+polling_container_file=${10}
+odsx_profile=${11}
+gs_username=${12}
+gs_password=${13}
+appId=${14}
+safeId=${15}
+objectId=${16}
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -49,6 +50,7 @@ sed -i 's,$table_batch_file_path,'$table_batch_file_path',g' /tmp/$service_name
 sed -i 's,$tier_criteria_file,'$tier_criteria_file',g' /tmp/$service_name
 sed -i 's,$adapter_property_file,'$adapter_property_file',g' /tmp/$service_name
 sed -i 's,$batch_index_file,'$batch_index_file',g' /tmp/$service_name
+sed -i 's,$polling_container_file,'$polling_container_file',g' /tmp/$service_name
 sed -i 's,$odsx_profile,'$odsx_profile',g' /tmp/$service_name
 #sed -i 's,$gs_username,'$gs_username',g' /tmp/$service_name
 #sed -i 's,$gs_password,'$gs_password',g' /tmp/$service_name

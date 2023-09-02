@@ -83,3 +83,12 @@
     space-config.engine.memory_usage.write_only_check_percentage=95
     space-config.engine.memory_usage.gc-before-shortage=false
 
+### TAU v4.24-tau-release tag
+22. Rebuild objectManagement jar from https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement and reinstall objecmanagement service
+23. Update app.yaml file add pollingFileName: pollingcontainer.txt below indexBatchFileName property
+24. sample pollingcontainer.txt file :
+    #typeName	srcPropName	destPropName	obfuscatePropName	obfuscationType	spaceId
+    STUD.TA_HODAA	PNIMI	K_IDNO	IS_IDNO_OBFUSCATE	obfuscatToPnimi9Digits	id
+    STUD.TA_PERSON	K_PNIMI	IDNO	IS_IDNO_OBFUSCATE	obfuscatToPnimi9Digits	K_PNIMI
+    STUD.TA_PERSON	K_PNIMI	PASSPORT	IS_PASSPORT_OBFUSCATE	obfuscatToPnimi14Digits	K_PNIMI
+25. 

@@ -109,6 +109,7 @@ def listDeployed(managerHost):
         logger.info("gs_space_dictionary_obj : " + str(gs_space_dictionary_obj))
         counter = 0
         dataTable = []
+        dataArray=[]
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory + ".mssql.scripts.").replace('.', '/')
         flag = False
