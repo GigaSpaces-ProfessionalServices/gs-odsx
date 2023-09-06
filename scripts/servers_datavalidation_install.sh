@@ -56,4 +56,10 @@ chmod +x /usr/local/bin/st*_data_validation.sh
 
 mv /tmp/$data_validation_service_file /etc/systemd/system/
 
+restorecon /etc/systemd/system/$data_validation_service_file
+
+sudo systemctl daemon-reload
+sudo systemctl enable $data_validation_service_file
+
+
 

@@ -12,6 +12,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
+from utils.odsx_data_validation_utils import getPort
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -32,20 +33,6 @@ class host_dictionary_obj(dict):
     # Function to add key:value
     def add(self, key, value):
         self[key] = value
-
-
-def getPort(dataSource):
-    if (dataSource == 'gigaspaces'):
-        return '4174'
-
-    if (dataSource == 'mysql'):
-        return '3306'
-
-    if (dataSource == 'db2'):
-        return '446'
-
-    if (dataSource == 'ms-sql'):
-        return '1433'
 
 
 def doValidate():
@@ -107,7 +94,7 @@ def doValidate():
             test = str(userInputWrapper("Test type (count/avg/min/max/sum) [count]: "))
             if (len(str(test)) == 0):
                 test = 'count'
-            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
             if (len(str(dataSource1Type)) == 0):
                 dataSource1Type = 'gigaspaces'
             dataSource1HostIp = str(userInputWrapper("DataSource Host Ip [localhost]: "))
@@ -234,7 +221,7 @@ def doValidate():
         test = str(userInputWrapper("Test type (avg/count/min/max) [count]: "))
         if (len(str(test)) == 0):
             test = 'count'
-        dataSource1Type = str(userInputWrapper("DataSource1 Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        dataSource1Type = str(userInputWrapper("DataSource1 Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
         dataSource1HostIp = str(userInputWrapper("DataSource1 Host Ip [localhost]: "))
@@ -261,7 +248,7 @@ def doValidate():
             fieldName1 = 'demo'
 
         verboseHandle.printConsoleWarning('');
-        dataSource2Type = str(userInputWrapper("DataSource2 Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        dataSource2Type = str(userInputWrapper("DataSource2 Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
         if (len(str(dataSource2Type)) == 0):
             dataSource2Type = 'gigaspaces'
         dataSource2HostIp = str(userInputWrapper("DataSource2 Host Ip [localhost]: "))

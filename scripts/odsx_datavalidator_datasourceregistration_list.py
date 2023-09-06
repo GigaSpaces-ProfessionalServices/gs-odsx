@@ -11,6 +11,7 @@ from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
+from utils.odsx_data_validation_utils import getPort
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -31,20 +32,6 @@ class host_dictionary_obj(dict):
     # Function to add key:value
     def add(self, key, value):
         self[key] = value
-
-
-def getPort(dataSource):
-    if (dataSource == 'gigaspaces'):
-        return '4174'
-
-    if (dataSource == 'mysql'):
-        return '3306'
-
-    if (dataSource == 'db2'):
-        return '446'
-
-    if (dataSource == 'ms-sql'):
-        return '1433'
 
 
 def doValidate():

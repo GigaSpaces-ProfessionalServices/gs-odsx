@@ -33,21 +33,6 @@ class host_dictionary_obj(dict):
     def add(self, key, value):
         self[key] = value
 
-
-def getPort(dataSource):
-    if (dataSource == 'gigaspaces'):
-        return '4174'
-
-    if (dataSource == 'mysql'):
-        return '3306'
-
-    if (dataSource == 'db2'):
-        return '446'
-
-    if (dataSource == 'ms-sql'):
-        return '1433'
-
-
 def doValidate():
     verboseHandle.printConsoleWarning('')
 
@@ -123,7 +108,7 @@ dataSourceNames=[]
 dataSourceNames.append("")
 trueFalse=["true","false",""]
 authenticationSchemes = ["JavaKerberos","NTLM",""]
-dataSourceTypes=["gigaspaces","ms-sql","db2","mysql",""]
+dataSourceTypes=["gigaspaces","ms-sql","db2","mysql","oracle",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:
         response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/list")

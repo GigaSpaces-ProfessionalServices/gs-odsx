@@ -11,6 +11,7 @@ from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig
+from utils.odsx_data_validation_utils import getPort
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -31,21 +32,6 @@ class host_dictionary_obj(dict):
     # Function to add key:value
     def add(self, key, value):
         self[key] = value
-
-
-def getPort(dataSource):
-    if (dataSource == 'gigaspaces'):
-        return '4174'
-
-    if (dataSource == 'mysql'):
-        return '3306'
-
-    if (dataSource == 'db2'):
-        return '446'
-
-    if (dataSource == 'ms-sql'):
-        return '1433'
-
 
 def doValidate():
     verboseHandle.printConsoleWarning('')
@@ -86,10 +72,10 @@ def doValidate():
              print(Fore.YELLOW +"A data source name with the same name already exists ["+dataSourceName+"]"+Fore.RESET)
              dataSourceName = str(userInputWrapper("DataSource Name:"))
 
-        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
         while(dataSource1Type not in dataSourceTypes):
             print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
-            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql) [gigaspaces]: "))
+            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
 
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
@@ -152,7 +138,7 @@ def doValidate():
 dataSourceNames=[]
 trueFalse=["true","false",""]
 authenticationSchemes = ["JavaKerberos","NTLM",""]
-dataSourceTypes=["gigaspaces","ms-sql","db2","mysql",""]
+dataSourceTypes=["gigaspaces","ms-sql","db2","mysql","oracle",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:
         response = requests.get("http://" + dataValidatorServiceHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/datasource/list")

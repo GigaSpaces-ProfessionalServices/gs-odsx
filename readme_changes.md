@@ -91,4 +91,17 @@
     STUD.TA_HODAA	PNIMI	K_IDNO	IS_IDNO_OBFUSCATE	obfuscatToPnimi9Digits	id
     STUD.TA_PERSON	K_PNIMI	IDNO	IS_IDNO_OBFUSCATE	obfuscatToPnimi9Digits	K_PNIMI
     STUD.TA_PERSON	K_PNIMI	PASSPORT	IS_PASSPORT_OBFUSCATE	obfuscatToPnimi14Digits	K_PNIMI
-25. 
+### TAU v4.25-tau-release tag
+25. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+26. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+27. Update host Ips in /dbagigashare/env_config/host.yaml on pivot machine
+    data_validator_server :
+      host1 : 172.31.47.137
+    data_validator_agent :
+      host1 : 172.31.41.161
+      host2 : 172.31.47.193
+28. Add entry if not available in app.yaml
+    data-validator:
+      jars:
+        serverjar: data-validator-server-0.0.1-SNAPSHOT.jar
+        agentjar: data-validator-agent-0.0.1-SNAPSHOT.jar
