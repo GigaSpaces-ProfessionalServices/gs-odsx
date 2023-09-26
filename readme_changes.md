@@ -105,3 +105,6 @@
       jars:
         serverjar: data-validator-server-0.0.1-SNAPSHOT.jar
         agentjar: data-validator-agent-0.0.1-SNAPSHOT.jar
+### TAU v4.26-tau-release tag
+29. Re build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+30. Follow the same steps from TAU v4.25-tau-release tag section

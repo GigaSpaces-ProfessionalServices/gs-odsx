@@ -83,7 +83,7 @@ def doValidate():
                         dataSourceName = str(userInputWrapper("DataSource Name [Current value: '" + datasource["dataSourceName"] + "'] New value:"))
 
 
-                dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [Current value: '" + datasource["dataSourceType"] + "'] New value: "))
+                dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/mysql/oracle) [Current value: '" + datasource["dataSourceType"] + "'] New value: "))
                 if (len(str(dataSource1Type)) == 0):
                     dataSource1Type = datasource["dataSourceType"]
                 else:
@@ -92,7 +92,7 @@ def doValidate():
                             dataSource1Type = datasource["dataSourceType"]
                             break
                         print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
-                        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [Current value: '" + datasource["dataSourceType"] + "'] New value: "))
+                        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/mysql/oracle) [Current value: '" + datasource["dataSourceType"] + "'] New value: "))
 
 
                 dataSource1HostIp = str(userInputWrapper("DataSource Host Ip [Current value: '" + datasource["dataSourceHostIp"] + "'] New value: "))

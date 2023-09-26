@@ -94,7 +94,7 @@ def doValidate():
             test = str(userInputWrapper("Test type (count/avg/min/max/sum) [count]: "))
             if (len(str(test)) == 0):
                 test = 'count'
-            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
+            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/mysql/oracle) [gigaspaces]: "))
             if (len(str(dataSource1Type)) == 0):
                 dataSource1Type = 'gigaspaces'
             dataSource1HostIp = str(userInputWrapper("DataSource Host Ip [localhost]: "))
@@ -221,7 +221,7 @@ def doValidate():
         test = str(userInputWrapper("Test type (avg/count/min/max) [count]: "))
         if (len(str(test)) == 0):
             test = 'count'
-        dataSource1Type = str(userInputWrapper("DataSource1 Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
+        dataSource1Type = str(userInputWrapper("DataSource1 Type (gigaspaces/ms-sql/mysql/oracle) [gigaspaces]: "))
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
         dataSource1HostIp = str(userInputWrapper("DataSource1 Host Ip [localhost]: "))
@@ -248,7 +248,7 @@ def doValidate():
             fieldName1 = 'demo'
 
         verboseHandle.printConsoleWarning('');
-        dataSource2Type = str(userInputWrapper("DataSource2 Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
+        dataSource2Type = str(userInputWrapper("DataSource2 Type (gigaspaces/ms-sql/mysql/oracle) [gigaspaces]: "))
         if (len(str(dataSource2Type)) == 0):
             dataSource2Type = 'gigaspaces'
         dataSource2HostIp = str(userInputWrapper("DataSource2 Host Ip [localhost]: "))

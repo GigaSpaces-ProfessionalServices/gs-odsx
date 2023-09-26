@@ -68,10 +68,10 @@ def doValidate():
         verboseHandle.printConsoleWarning('');
         verboseHandle.printConsoleWarning('Add new DataSource:');
 
-        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
+        dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/mysql/oracle) [gigaspaces]: "))
         while(dataSource1Type not in dataSourceTypes):
             print(Fore.YELLOW +"Please select DataSource Type from given list"+Fore.RESET)
-            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/db2/mysql/oracle) [gigaspaces]: "))
+            dataSource1Type = str(userInputWrapper("DataSource Type (gigaspaces/ms-sql/mysql/oracle) [gigaspaces]: "))
 
         if (len(str(dataSource1Type)) == 0):
             dataSource1Type = 'gigaspaces'
