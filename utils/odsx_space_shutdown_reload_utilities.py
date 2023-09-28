@@ -597,8 +597,8 @@ def checkSpacePrimaryStatus(managerHost,isSecure=False,username=None,password=No
     tierStorageSpace = readValuefromAppConfig("app.tieredstorage.pu.spacename")
     spaceName = readValuefromAppConfig("app.spacejar.space.name")
 
-    strSpaceMaxPartitions = readValuefromAppConfig("app.spacejar.pu.partitions")
-    spaceMaxPartitions = int(strSpaceMaxPartitions)
+    #strSpaceMaxPartitions = readValuefromAppConfig("app.spacejar.pu.partitions")
+    #spaceMaxPartitions = int(strSpaceMaxPartitions)
 
     strTierSpaceMaxPartitions = readValuefromAppConfig("app.tieredstorage.gsc.partitions")
     tierSpaceMaxPartitions = int(strTierSpaceMaxPartitions)

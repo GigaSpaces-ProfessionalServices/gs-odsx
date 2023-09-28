@@ -1,8 +1,13 @@
-echo "Starting pre Installation cofiguration."
+echo "Starting pre Installation configuration."
 echo "Extracting install.tar to "$targetDir
 tar -xvf install.tar
 targetDir=$1
 echo "TargetDir"$targetDir
+
+sslCert=$2
+sslKey=$3
+sslCaCert=$4
+
 
 echo "getting installation file .gz"
 home_dir=$(pwd)
@@ -10,40 +15,36 @@ echo "homedir: "$home_dir
 installation_path=$home_dir/install/nb
 
 installation_file=$(find $installation_path -name *.tar.gz -printf "%f\n")
+nb_foldername=$(tar -ztvf $installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
+
 echo $installation_path"/"$installation_file
 
 echo "Extracting .tar.gz file from "$installation_path
 tar -xzf $installation_path/*.tar.gz -C /dbagiga
 
-echo "Moving file from $installation_path/nb.conf To $targetDir/nb-infra/"
-mv $installation_path/nb.conf $targetDir/nb-infra/
+echo "Moving file from $installation_path/nb.conf To $targetDir/$nb_foldername/"
+mv $installation_path/nb.conf $targetDir/$nb_foldername/
 
-echo "copying ssl files to $targetDir/nb-infra/ssl"
-pfxFiles=$(ls install/nb/ssl/*.pfx 2> /dev/null | wc -l)
-echo "pemFiles:"$pfxFiles
-if [[ $pfxFiles -gt 0 ]]
-then
-    echo "Copying .pfx file"
-    cp install/nb/ssl/*.pfx $targetDir/nb-infra/ssl/
-fi
-crtFiles=$(ls install/nb/ssl/*.crt 2> /dev/null | wc -l)
+echo "copying ssl files to $targetDir/$nb_foldername/ssl"
+
+crtFiles=$(ls $dbagigashareApplicativePath/ssl/$sslCert 2> /dev/null | wc -l)
 echo "crtFiles:"$crtFiles
 if [[ $crtFiles -gt 0 ]]
 then
-    echo "Copying .crt file"
-    cp install/nb/ssl/*.crt $targetDir/nb-infra/ssl/
+    echo "Copying cert file"
+    cp $dbagigashareApplicativePath/ssl/$sslCert $targetDir/$nb_foldername/ssl/
 fi
-pemFiles=$(ls install/nb/ssl/*.pem 2> /dev/null | wc -l)
-echo "pemFiles:"$pemFiles
+cacert=$(ls $dbagigashareApplicativePath/ssl/$sslCaCert 2> /dev/null | wc -l)
+echo "cacertFiles:"$cacert
 if [[  $pemFiles -gt 0 ]]
 then
-    echo "Copying .pem file"
-    cp install/nb/ssl/*.pem $targetDir/nb-infra/ssl/
+    echo "Copying cacert file"
+    cp $dbagigashareApplicativePath/ssl/$sslCaCert $targetDir/$nb_foldername/ssl/
 fi
-keyFiles=$(ls install/nb/ssl/*.key 2> /dev/null | wc -l)
+keyFiles=$(ls $dbagigashareApplicativePath/ssl/$sslKey 2> /dev/null | wc -l)
 echo "keyFiles:"$keyFiles
 if [[ $keyFiles -gt 0 ]]
 then
-    echo "Copying .key file"
-    cp install/nb/ssl/*.key $targetDir/nb-infra/ssl/
+    echo "Copying key file"
+    cp $dbagigashareApplicativePath/ssl/$sslKey $targetDir/$nb_foldername/ssl/
 fi

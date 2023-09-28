@@ -2,6 +2,8 @@
 import argparse
 import os
 import sys
+
+from scripts.odsx_servers_northbound_management_remove import getNBFolderName
 from utils.odsx_print_tabular_data import printTabular
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_nb_list
@@ -51,7 +53,7 @@ def handleException(e):
 def getVersion(ip):
     logger.info("getVersion () "+str(ip))
     output=''
-    cmdToExecute = "cd /dbagiga/nb-infra/;./install_nb_infra.sh -v;"
+    cmdToExecute = "cd /dbagiga/"+getNBFolderName()+"/;./install_nb_infra.sh -v;"
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(ip, 'root', cmdToExecute)
     logger.info(cmdToExecute+" :"+str(output))

@@ -5,6 +5,7 @@ import os
 from colorama import Fore
 
 from scripts.logManager import LogManager
+from scripts.odsx_servers_northbound_management_remove import getNBFolderName
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, \
     config_get_manager_node
@@ -204,8 +205,14 @@ def proceedForPreInstallation(nbServers, param):
             remotePath='/dbagiga'
             commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
-        additionalParam=remotePath+' '+sourceInstallerDirectory + ' '+sourceInstallerDirectoryTar
-        logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
+        nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
+        nbConfig = createPropertiesMapFromFile(nbConfig)
+        sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
+        sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))
+        sslCaCert = str(nbConfig.get("SSL_CA_CERTIFICATE"))
+        additionalParam=remotePath+' '+sourceInstallerDirectory + ' '+sourceInstallerDirectoryTar + ' ' +sslCert +' '+sslKey+ ' '+sslCaCert
+
+        logger.debug("Additional Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
 
         with Spinner():
             outputShFile= executeRemoteShCommandAndGetOutput(hostip, nb_user, additionalParam, commandToExecute)
@@ -215,7 +222,7 @@ def proceedForPreInstallation(nbServers, param):
 def proceedForAgentInstallation():
     logger.info("proceedForAgentInstallation()")
     nbAgentServers = getNBAgentHostFromEnv()
-    remotePath='/dbagiga/nb-infra'
+    remotePath='/dbagiga/'+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbAgentServers,'AGENT')
     for hostip in nbAgentServers.split(','):

@@ -75,7 +75,7 @@ if [ -d "$DIRECTORYAlerts" ]; then
 fi
 
 if [ ! -d "$DIRECTORYAlerts" ]; then
-  echo "$DIRECTORYAlerts does not exist."
+  echo "$DIRECTORYAlerts does not exist. Creating directory"
   mkdir -p /etc/kapacitor/alerts
   info "Copying files from "$sourceInstallerDirectory/kapacitor/alerts/" to /etc/kapacitor/alerts/ \n"
   cp $sourceInstallerDirectory/kapacitor/alerts/*.tick /etc/kapacitor/alerts/
@@ -103,7 +103,7 @@ if [ -d "$DIRECTORY" ]; then
 fi
 
 if [ ! -d "$DIRECTORY" ]; then
-  echo "$DIRECTORY does not exist."
+  echo "$DIRECTORY does not exist. Creating directory"
   mkdir -p /etc/kapacitor/templates
   info "Copying files from "$sourceInstallerEnvConfigDirectory/kapacitor/templates/" to /etc/kapacitor/templates/ \n"
   cp $sourceInstallerEnvConfigDirectory/kapacitor/templates/*.json /etc/kapacitor/templates/

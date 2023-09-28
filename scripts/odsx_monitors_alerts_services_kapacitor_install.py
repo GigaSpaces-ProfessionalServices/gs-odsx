@@ -88,7 +88,7 @@ def executeCommandForInstall():
         sourceInstallerEnvConfigDirectory = str(os.getenv("ENV_CONFIG"))
         additionalParam=sourceInstallerDirectory+' '+hostList+' '+port+' '+sourceInstallerEnvConfigDirectory
         for host in hostList.split(','):
-            logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
+            logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerEnvConfigDirectory)
             with Spinner():
                 outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
                 verboseHandle.printConsoleInfo("kapacitor has been installed on host :"+str(host))

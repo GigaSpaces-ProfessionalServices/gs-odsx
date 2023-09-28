@@ -115,7 +115,7 @@ def getYamlJarFilePath(yamlPath,appConfig):
 
 def getYamlFilePathInsideFolder(configPath):
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory +",configPath: "+configPath)
     fileName= readValueFromYaml(configPath)
     path = str(configPath)[:str(configPath).rindex('.')].replace('.','/')
     return sourceInstallerDirectory+path+'/'+fileName
