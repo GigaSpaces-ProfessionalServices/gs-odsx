@@ -8,7 +8,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import getYamlFilePathInsideFolder
+from utils.ods_app_config import getYamlFilePathInsideFolder, readValueByConfigObj
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_grafana_list, config_get_nb_list
 from utils.ods_scp import scp_upload
@@ -42,6 +42,23 @@ def getNBServerHostList():
                 nodes = nodes+','+os.getenv(node.ip)
     return nodes
 
+def getPivotHost():
+    hostname = os.getenv("pivot1")
+    return hostname;
+def containsNBMAnagementtHost():
+    logger.info("getNBMAnagementtHostList()")
+    nodeList = config_get_nb_list()
+    nodes=""
+    for node in nodeList:
+        if(str(node.role).casefold().__contains__('management')):
+            if(len(nodes)==0):
+                nodes = os.getenv(node.ip)
+            else:
+                nodes = nodes+','+os.getenv(node.ip)
+    if nodes=="":
+        return False
+    return True
+
 def getConsulHost():
     logger.info("getConsulHost() : start")
     consulHost = '0.0.0.0';
@@ -49,7 +66,7 @@ def getConsulHost():
 
     logger.info("All Consul Hosts : "+consulHostList)
 
-    if(len(consulHostList)<=0):
+    if(len(consulHostList)==0):
         verboseHandle.printConsoleInfo("Consul host not found..")
 
     consulHost = consulHostList.split(",")[0]
@@ -101,15 +118,21 @@ def myCheckArg(args=None):
 
 def setupService():
     global grafanaEndpoint
+    global isNbManagementHostAvailable
+    isNbManagementHostAvailable = containsNBMAnagementtHost()
     sourceInstallerDirectory=""
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+#    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("setupService() : start")
     #grafanaEndpointInput = Fore.YELLOW + "Enter endpoint for grafana server :" + Fore.RESET
     # ALON & AHARON Ask to take nb_domain from nb.conf from /dbagigashare/current/nb/management/ instead of pivot host
     nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
     nbConfig = createPropertiesMapFromFile(nbConfig)
-    grafanaEndpoint = str(nbConfig.get("NB_DOMAIN"))
-
+    if isNbManagementHostAvailable:
+        grafanaEndpoint = str(nbConfig.get("NB_DOMAIN"))
+    else:
+        verboseHandle.printConsoleWarning("No nb management found, so considering pivot as grafana endpoint")
+        grafanaEndpoint = getPivotHost()
     consulHost = getConsulHost()
     catalogJar = str(getYamlFilePathInsideFolder(".grafana.catalog.jars.catalogjar"))
     verboseHandle.printConsoleWarning("-------------Summary---------------------")
@@ -123,7 +146,8 @@ def setupService():
     if choice.casefold() == 'n':
         exit(0)
 
-    commandToExecute = "scripts/settings_catalogueService_setup.sh "+consulHost+" "+catalogJar;
+    dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+    commandToExecute = "scripts/settings_catalogueService_setup.sh "+consulHost+" "+catalogJar+" "+dbaGigaLogPath
     logger.info("Command "+commandToExecute)
     try:
         os.system(commandToExecute)
@@ -142,7 +166,7 @@ def setupGrafanaDashboard():
  
     for host in grafanaHostList:
         uploadDashbordJsonFile(host)
-        uploadDashboadProvisionFile(host)
+        #uploadDashboadProvisionFile(host)
 
    
     restartGrafana()
@@ -192,7 +216,9 @@ def uploadDashbordJsonFile(host):
     localIP = localIP[1:]
     catalogue_service_url = 'https://'+str(grafanaEndpoint)+':3211/services'
     catalogue_table_url = 'https://'+str(grafanaEndpoint)+':3211/metadata'
-
+    if not isNbManagementHostAvailable:
+        catalogue_service_url = catalogue_service_url.replace("https","http")
+        catalogue_table_url = catalogue_table_url.replace("https","http")
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))

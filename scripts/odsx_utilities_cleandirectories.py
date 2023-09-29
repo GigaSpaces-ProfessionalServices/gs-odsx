@@ -7,6 +7,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.ods_validation import port_check_config
@@ -94,11 +95,12 @@ def cleanUpManagerServers():
     managerNodes = config_get_manager_node()
     if(len(str(managerNodes))>0):
         logger.info("managerNodes: main"+str(managerNodes))
-        verboseHandle.printConsoleInfo("Cleaning [/dbagigawork] ,[/dbagigalogs] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        verboseHandle.printConsoleInfo("Cleaning [/dbagigawork] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
         managerHosts = getManagerServerHostList()
         confirm = str(userInputWithEscWrapper(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
-            cmd = "rm -rf /dbagigawork/*;find /dbagigalogs/ -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
+            cmd = "rm -rf /dbagigawork/*;find "+dbaGigaLogPath+"/ -mindepth 1 ! -regex '^"+dbaGigaLogPath+"/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
             for node in managerNodes:
                 with Spinner():
@@ -121,11 +123,12 @@ def cleanUpSpaceServers():
     spaceNodes = config_get_space_hosts()
     if(len(str(spaceNodes))>0):
         logger.info("spaceNodes: main"+str(spaceNodes))
-        verboseHandle.printConsoleInfo("Cleaning [/dbagigadata] ,[/dbagigalogs] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        verboseHandle.printConsoleInfo("Cleaning [/dbagigadata] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
         spaceHosts = getSpaceServerHostList()
         confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
-            cmd = "rm -rf /dbagigadata/*;find /dbagigalogs/ -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
+            cmd = "rm -rf /dbagigadata/*;find "+dbaGigaLogPath+"/ -mindepth 1 ! -regex '^"+dbaGigaLogPath+"/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
             for node in spaceNodes:
                 with Spinner():

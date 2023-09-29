@@ -1,13 +1,15 @@
 echo "Installation starting..."
-echo $1 "====" $2
+echo $1 "====" $3
+gigalogs=$2
+
 cd $1
-logDir="dbagigalogs/nginx"
+logDir="$gigalogs/nginx"
 if [ ! -d "/$logDir" ]; then
    mkdir -p /$logDir
    chmod 777 /$logDir
 fi
 pwd
-./install_nb_infra.sh $2
+./install_nb_infra.sh $3
 echo "Setting NB_HOME"
 cd
 path="export NB_HOME="$1

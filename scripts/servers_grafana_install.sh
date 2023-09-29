@@ -20,6 +20,7 @@ sleep 5
 cp -r $sourceInstallerEnvDirectory/grafana/dashboards/*.json  $gsConfigSpaceboardTarget
 
 #Added
+systemctl enable grafana-server.service
 systemctl daemon-reload
 sleep 5
 printf "\n"

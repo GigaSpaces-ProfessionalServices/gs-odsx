@@ -2,7 +2,7 @@
 home_dir_sh=$(pwd)
 service_name='retention-manager.service'
 serviceJarName='retention-manager.jar'
-log_location=/dbagigalogs/retention-manager/
+log_location=$gigalogs/retention-manager/
 space_name=$1
 manager_host=$2
 db_location=$3
@@ -13,6 +13,7 @@ scheduler_minute=$7
 scheduler_hour=$8
 retentionJar=$9
 lookup_group=${10}
+gigalogs=${11}
 
 if [ ! -d "$log_location" ]; then
   mkdir $log_location

@@ -213,8 +213,9 @@ def proceedForInstallation(hostConfig):
         influxdbhost = str(getInfluxdbHost())
         if(len(influxdbhost)==0):
             verboseHandle.printConsoleWarning("No influxdb configuration found.")
+            dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
         additionalParam = ""+targetDir+' '+hostConfig+' '+connectionStr+' '+bootstrapAddress+' '+os.path.basename(sourceAdabasJarFile)
-        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort+' '+influxdbhost
+        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort+' '+influxdbhost +' '+dbaGigaLogPath
         print(additionalParam)
         logger.info("additionalParam : "+str(additionalParam))
         user='root'

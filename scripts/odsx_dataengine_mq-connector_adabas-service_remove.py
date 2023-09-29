@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_dataEngine_nodes, config_remove_dataEngine_byNameIP, \
     isInstalledAdabasService
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
@@ -79,7 +80,8 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
     if(confirm=='y' or len(str(confirm))==0 ):
         logger.info("Individual host : "+str(host))
         commandToExecute="scripts/dataengine_list_mq-connector_adabasservice_remove.sh"
-        outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        outputShFile= connectExecuteSSH(host, user,commandToExecute,dbaGigaLogPath)
         print(outputShFile)
         config_remove_dataEngine_byNameIP(host,host)
        # hostAppConfig = str(readValuefromAppConfig("app.di.hosts")).replace('"','')
@@ -163,7 +165,8 @@ def executeCommandForUnInstall():
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
                     commandToExecute="scripts/dataengine_list_mq-connector_adabasservice_remove.sh"
-                    additionalParam=""
+                    dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+                    additionalParam=dbaGigaLogPath
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
                         for host in nodes.split(','):

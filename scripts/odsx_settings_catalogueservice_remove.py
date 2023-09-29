@@ -101,7 +101,7 @@ def removeGrafanaDashboard():
     for host in grafanaHostList:
         try:
             jsonDelete = executeRemoteCommandAndGetOutput(host,user,"rm -f /usr/share/grafana/conf/provisioning/dashboards/catalogue.json")
-            yamlDelete = executeRemoteCommandAndGetOutput(host,user,"rm -f /etc/grafana/provisioning/dashboards/catalogue.yaml")
+           # yamlDelete = executeRemoteCommandAndGetOutput(host,user,"rm -f /etc/grafana/provisioning/dashboards/catalogue.yaml")
         except Exception as e:
             logger.error("Exception in removing catalogue dashboard in grafana : removeGrafanaDashboard() :"+str(e))
             verboseHandle.printConsoleError("Exception in removing catalogue dashboard in grafana: removeGrafanaDashboard() : "+str(e))

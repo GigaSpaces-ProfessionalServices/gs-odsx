@@ -1,11 +1,12 @@
 #!/bin/bash
 echo "Consul host="$1
 serviceJarName=$2
+gigalogs=$3
 home_dir_sh=$(pwd)
 service_name='catalogue-service.service'
 echo "serviceJarName:"$serviceJarName
 consul_host=$1
-log_location=/dbagigalogs/
+log_location=$gigalogs/
 
 cp $home_dir_sh/systemServices/catalogue/$service_name /tmp/$service_name
 cp $serviceJarName  /dbagiga/

@@ -2,6 +2,8 @@ echo "Removing Server - Space"
 removeJava=$1
 #echo "removeJava :"$removeJava
 removeUnzip=$2
+gigalogs=$3
+
 #echo "removeUnzip :"$removeUnzip
 
 homeDir=$(pwd)
@@ -27,7 +29,7 @@ systemctl stop gsa.service
 sleep 5
 rm -rf $GS_HOME
 rm -rf setenv.sh gs install install.tar /dbagiga/giga* /dbagigadata/* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
-find /dbagigalogs/ -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete
+find $gigalogs/ -mindepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -delete
 cd /dbagiga
 rm -rf gigaspaces-smart-ods /dbagiga/gs_config /dbagiga/gs_jars
 echo "Remove symlink done!"

@@ -359,7 +359,7 @@ function gsCreateGSServeice {
     echo "GS Creating services started."
 
   chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
-  find /dbagigalogs -maxdepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
+  find $gigalogs -maxdepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"
@@ -461,6 +461,7 @@ logSourcePath=${20}
 startSpaceGsc=${21}
 selinux=${22}
 gsNicAddress=${23}
+gigalogs=${24}
 
 #logTargetPath=${20}
 echo "param1"$1

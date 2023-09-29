@@ -125,7 +125,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print("optionID:"+str(hostsConfig)+" : "+user)
         logger.debug("optionID:"+str(hostsConfig))
         targetDirectory=''
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        dbaGigaDataPath=str(readValueByConfigObj("app.gigadata.path"))
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
         additionalParam = str(readValuefromAppConfig("app.space.targetDirectory"))
         #print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
@@ -428,7 +430,8 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
     if installStatus == 'No':
         gsNicAddress = host_nic_dict_obj[host]
         #print(host+"  "+gsNicAddress)
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' ' + gsNicAddress
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' ' + gsNicAddress +' '+dbaGigaLogPath
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         # print("---------------------"+str(additionalParam))
         logger.info("additionalParam - Installation :")

@@ -15,7 +15,7 @@ cd $GS_HOME
 #sudo -s
 #nohup ./bin/gs.sh host run-agent --auto > /tmp/agent-console.log 2>&1 &
 systemctl daemon-reload
-systemctl start gsa.service
+systemctl start gsc.service
 sleep 30
 echo "Space servers started."
 #source setenv.sh

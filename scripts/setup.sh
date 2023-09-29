@@ -57,6 +57,9 @@ odsx_path="export ODSXARTIFACTS=/dbagigashare/current/"
 echo "$odsx_path" >> ~/.bashrc
 odsx_path="export ENV_CONFIG=/dbagigashare/env_config/"
 echo "$odsx_path" >> ~/.bashrc
+dbaGigaLogPath="/dbagigalogs"
+odsx_path="export ODSX_LOG_PATH=$dbaGigaLogPath"
+echo "$odsx_path" >> ~/.bashrc
 
 wget https://bootstrap.pypa.io/get-pip.py -P /tmp
 python3 /tmp/get-pip.py
@@ -80,8 +83,8 @@ source ~/.bashrc
 cd
 mkdir -p /dbagigawork/sqlite
 cd /dbagigawork/sqlite
-mkdir /dbagigalogs/
-touch /dbagigalogs/odsx.log
+mkdir $dbaGigaLogPath/
+touch $dbaGigaLogPath/odsx.log
 wget https://www.sqlite.org/2022/sqlite-tools-linux-x86-3380000.zip
 unzip sqlite-tools-linux-x86-3380000.zip
 mv sqlite-tools-linux-x86-3380000/* .

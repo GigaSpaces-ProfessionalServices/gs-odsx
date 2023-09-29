@@ -8,6 +8,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list, \
     config_remove_space_nodeByIP
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, connectExecuteSSH
@@ -63,7 +64,8 @@ def myCheckArg(args=None):
 def execute_scriptBuilder(host):
     logger.info("execute_scriptBuilder(args)")
     commandToExecute="scripts/security_space_remove.sh"
-    additionalParam = removeJava+' '+removeUnzip
+    dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
+    additionalParam = removeJava+' '+removeUnzip +dbaGigaLogPath
     logger.info("additionalParam : "+str(additionalParam))
     with Spinner():
         #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)

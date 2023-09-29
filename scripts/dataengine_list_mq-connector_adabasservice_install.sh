@@ -12,11 +12,12 @@ queueName=$9
 sslChipherSuite=${10}
 mqPort=${11}
 influxhost=${12}
+gigalogs=${18}
 
 rootDir='/dbagiga'
 #targetDir='/dbagigasoft/Adabas'
 echo "targetDir:"$targetDir
-logDir='/dbagigalogs/Adabas'
+logDir='$gigalogs/Adabas'
 start_publisher_file='run-publisher.sh'
 stop_publisher_file='stop-publisher.sh'
 service_file='odsxadabas.service'

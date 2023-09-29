@@ -68,9 +68,9 @@ def installUserAndTargetDirectory():
         '''
         user="root"
         logger.info(" user: "+str(user))
-        targetDirectory = str(userInputWrapper(Fore.YELLOW+"Enter data directory Influxdb server [/dbagigainflaxdata]:"+Fore.RESET))
+        targetDirectory = str(userInputWrapper(Fore.YELLOW+"Enter data directory Influxdb server [/dbagigainfluxdata]:"+Fore.RESET))
         if(len(targetDirectory)==0):
-            targetDirectory='/dbagigainflaxdata'
+            targetDirectory='/dbagigainfluxdata'
         logger.info("targetDirectory : "+str(targetDirectory))
 
     except Exception as e:

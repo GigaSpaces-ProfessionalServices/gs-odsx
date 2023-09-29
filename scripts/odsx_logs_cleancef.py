@@ -6,7 +6,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import getYamlFilePathInsideFolder
+from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
@@ -65,9 +65,10 @@ def proceedForNodeConfiguration(flag,nodes,targetDir):
 def proceedForInputParam(configXapLogLocation):
     #configXapLogLocation = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file"))
     #verboseHandle.printConsoleInfo("xap_logging.properties location ["+configXapLogLocation+"]")
-    configXapLogLocation = str(userInputWrapper(Fore.YELLOW+"Target directory of CEF logs [/dbagigalogs/CEF/] : "+Fore.RESET))
+    dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
+    configXapLogLocation = str(userInputWrapper(Fore.YELLOW+"Target directory of CEF logs ["+dbaGigaLogPath+"/CEF/] : "+Fore.RESET))
     if(len(str(configXapLogLocation))==0):
-        configXapLogLocation='/dbagigalogs/CEF/'
+        configXapLogLocation=dbaGigaLogPath+'/CEF/'
 
     confirmManagerInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to clean CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):

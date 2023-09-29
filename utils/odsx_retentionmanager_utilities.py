@@ -131,9 +131,11 @@ def setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,re
         scheduler_config='interval'
         set_value_in_property_file(app_config_interval_key,str(schedulerInterval))
         set_value_in_property_file(app_config_time_key,'')
+    dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
 
     args = spaceName+" "+managerServer+" "+dbLocation+" "+influxHost
-    args+= " "+scheduler_config+" "+str(scheduler_interval)+" "+scheduler_minute+" "+scheduler_hour+" "+retentionJar+" "+lookupGroup
+    args+= " "+scheduler_config+" "+str(scheduler_interval)+" "+scheduler_minute+" "+scheduler_hour+" "+retentionJar+" "+lookupGroup +" "+dbaGigaLogPath
+
     commandToExecute = "scripts/retentionmanager_service_setup.sh "+args
     logger.info("Command "+commandToExecute)
     try:

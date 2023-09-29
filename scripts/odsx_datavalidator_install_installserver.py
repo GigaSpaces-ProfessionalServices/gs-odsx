@@ -114,7 +114,8 @@ def installSingle():
         dbPath= str(readValuefromAppConfig("app.dv.server.db")) #userInputWrapper(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
         #if(len(str(dbPath))==0):
         #    dbPath='/dbagigawork/sqlite/datavalidator.db'
-        logFilepath= str(readValuefromAppConfig("app.dv.server.log")) #userInputWrapper(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
+        dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
+        logFilepath= str(readValuefromAppConfig("app.dv.server.log")).replace("/dbagigalogs",dbaGigaLogPath) #userInputWrapper(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
         #if(len(str(logFilepath))==0):
         #    logFilepath='/dbagigalogs/datavalidator.log'
         sourceDvServerJar = str(getYamlFilePathInsideFolder(".data-validator.jars.serverjar"))

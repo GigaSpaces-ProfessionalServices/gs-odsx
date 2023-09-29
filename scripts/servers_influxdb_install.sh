@@ -32,7 +32,10 @@ if (grep -v '^ *#' /etc/influxdb/influxdb.conf  | grep -q '\[data\]'); then
 
 fi
 sleep 5
-chown -R influxdb:influxdb $dir
+#chown -R influxdb:influxdb $dir
+
+chown -R influxdb.influxdb /*gigainf*
+
 systemctl enable influxdb.service
 sleep 2
 systemctl start influxdb.service

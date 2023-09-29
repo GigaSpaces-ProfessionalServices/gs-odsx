@@ -54,7 +54,7 @@ function installFlink() {
   installation_file_flink=$(find $installation_path_flink -name "flink*.tgz" -printf "%f\n")
   info "InstallationFile:"$installation_file_flink"\n"
   mkdir -p /dbagiga/di-flink
-  mkdir -p /dbagigalogs/di-flink
+  mkdir -p $gigalogs/di-flink
   info "Copying file from "$installation_path_flink/$installation_file_flink +" to /dbagiga/di-flink \n"
   cp $installation_path_flink/$installation_file_flink /dbagiga/di-flink
   info "\nExtracting zip file...\n"
@@ -90,8 +90,8 @@ function installDIMatadata {
   installation_file_mdm=$(find $installation_path_mdm -name "di-mdm*.gz" -printf "%f\n")
   info "InstallationFile:"$installation_file_mdm"\n"
   mkdir -p /dbagiga/di-mdm
-  mkdir -p /dbagigalogs/di-mdm
-  chown gsods:gsods /dbagigalogs/di-mdm
+  mkdir -p $gigalogs/di-mdm
+  chown gsods:gsods $gigalogs/di-mdm
   info "Copying file from "$installation_path_mdm/$installation_file_mdm +" to /dbagiga/di-mdm \n"
   cp $installation_path_mdm/$installation_file_mdm /dbagiga/di-mdm
   info "\nExtracting zip file...\n"
@@ -101,7 +101,7 @@ function installDIMatadata {
   info "Creating symlink for :"$extracted_folder_mdm
   ln -s $extracted_folder_mdm latest-di-mdm
   cd latest-di-mdm
-  sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|/dbagigalogs/di-mdm|g' config/di-mdm.service
+  sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|$gigalogs/di-mdm|g' config/di-mdm.service
   sed -i -e 's|/home/gsods|/dbagiga|g' config/di-mdm.service
 
   sed -i '/^zookeeper.connectUrl/d' /dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
@@ -126,8 +126,8 @@ function installDIManager {
   installation_file_manager=$(find $installation_path_manager -name "di-manager*.gz" -printf "%f\n")
   info "InstallationFile:"$installation_file_manager"\n"
   mkdir -p /dbagiga/di-manager
-  mkdir -p /dbagigalogs/di-manager
-  chown gsods:gsods /dbagigalogs/di-manager
+  mkdir -p $gigalogs/di-manager
+  chown gsods:gsods $gigalogs/di-manager
   info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-manager \n"
   cp $installation_path_manager/$installation_file_manager /dbagiga/di-manager
   info "\nExtracting zip file...\n"
@@ -137,7 +137,7 @@ function installDIManager {
   info "Creating symlink for :"$extracted_folder_manager
   ln -s $extracted_folder_manager latest-di-manager
   cd latest-di-manager
-  sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|/dbagigalogs/di-manager|g' config/di-manager.service
+  sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|$gigalogs/di-manager|g' config/di-manager.service
   sed -i -e 's|/home/gsods|/dbagiga|g' config/di-manager.service
   info "\ncurrentHost::"$currentHost
   sed -i -e 's|localhost:6081|'$currentHost':6081|g' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
@@ -197,6 +197,7 @@ if [ "$kafkaBrokerCount" == 3 ]; then
   flinkJobManagerMemoryMetaspaceSize=${15}
   flinkTaskManagerMemoryProcessSize=${16}
   dimMdmFlinkInstallon1bFlag=${17}
+  gigalogs=${18}
 
   echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "${10}" logsFolderZK "${11}" currentHost:"$currentHost
   echo "flinkJobManagerMemoryMetaspaceSize $flinkJobManagerMemoryMetaspaceSize, flinkTaskManagerMemoryProcessSize=$flinkTaskManagerMemoryProcessSize"

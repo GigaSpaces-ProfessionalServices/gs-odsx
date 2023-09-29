@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import os,sys
 from utils.ods_cluster_config import get_cluster_obj, ClusterEncoder, config_get_grafana_node, config_get_influxdb_node
-from utils.ods_app_config import set_value_in_property_file
+from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj
 from scripts.logManager import LogManager
 from json import JSONEncoder
 import json
@@ -105,9 +105,10 @@ def cleanUp():
     logger.info("Selected answer manager:"+str(answer))
     if(answer.lower() == "y"):
         clenupManagerNode()
-        answerServer = input("Do you want to clean Manager Server folders? \n /dbagiga \n /dbagigalogs/ \n /dbagigawork/ \nsetenv.sh \n install \n install.tar \n /usr/local/bin/start_gs.sh \n /usr/local/bin/stop_gs.sh \n /etc/systemd/system/gs.service \n(yes(y)/no(n)/cancel(c): ")
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        answerServer = input("Do you want to clean Manager Server folders? \n /dbagiga \n "+dbaGigaLogPath+"/ \n /dbagigawork/ \nsetenv.sh \n install \n install.tar \n /usr/local/bin/start_gs.sh \n /usr/local/bin/stop_gs.sh \n /etc/systemd/system/gs.service \n(yes(y)/no(n)/cancel(c): ")
         if(answerServer.lower() == "y"):
-            cmd = 'rm -rf setenv.sh gs install install.tar  /dbagiga/*  /dbagigalogs/*  /dbagigawork/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service'
+            cmd = 'rm -rf setenv.sh gs install install.tar  /dbagiga/*  '+dbaGigaLogPath+'/*  /dbagigawork/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service'
             verboseHandle.printConsoleInfo("Removing..")
             verboseHandle.printConsoleWarning("Removing with user [root]")
             host = input("Please enter host:")
@@ -137,9 +138,10 @@ def cleanUp():
     logger.info("Selected answer space:"+str(answer))
     if(answer.lower() == "y"):
         cleanupSpacesServerHosts()
-        answerServer = input("Do you want to clean Space Server folders? \n /dbagiga \n /dbagigalogs/ \n /dbagigawork/ \nsetenv.sh \n install \n install.tar \n /usr/local/bin/start_gs.sh \n /usr/local/bin/stop_gs.sh \n /etc/systemd/system/gs.service \n(yes(y)/no(n)/cancel(c): ")
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        answerServer = input("Do you want to clean Space Server folders? \n /dbagiga \n "+dbaGigaLogPath+"/ \n /dbagigawork/ \nsetenv.sh \n install \n install.tar \n /usr/local/bin/start_gs.sh \n /usr/local/bin/stop_gs.sh \n /etc/systemd/system/gs.service \n(yes(y)/no(n)/cancel(c): ")
         if(answerServer.lower() == "y"):
-            cmd = 'rm -rf setenv.sh gs install install.tar  /dbagiga/*  /dbagigalogs/*  /dbagigawork/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service'
+            cmd = 'rm -rf setenv.sh gs install install.tar  /dbagiga/*  '+dbaGigaLogPath+'/*  /dbagigawork/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service'
             verboseHandle.printConsoleInfo("Removing..")
             verboseHandle.printConsoleWarning("Removing with user [root]")
             host = input("Please enter host:")

@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_servers_northbound_management_remove import getNBFolderName
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, \
     config_get_manager_node
 from utils.ods_scp import scp_upload
@@ -139,7 +140,9 @@ def proceedForEnvHostConfiguration(sourceNbConfFile,flag):
     nbConfig = createPropertiesMapFromFile(sourceNbConfFile)
     existingConsul_server = str(nbConfig.get("CONSUL_SERVERS")).replace('"','')
     #update_app_config_file_shared(linePatternToReplace, value, lines1,fileName)
-    lines = update_app_config_file_shared("consul_servers=".upper(), getNBApplicativeHostFromEnv(), None,sourceNbConfFile,flag)
+    dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+    lines = update_app_config_file_shared("log_path=".upper(), dbaGigaLogPath, None,sourceNbConfFile,flag)
+    lines = update_app_config_file_shared("consul_servers=".upper(), getNBApplicativeHostFromEnv(), lines,sourceNbConfFile,flag)
     lines = update_app_config_file_shared("influxdb_servers=".upper(), validateAndConfigureInfluxdb(), lines,sourceNbConfFile,flag)
     lines = update_app_config_file_shared("pivot_servers=".upper(), str(os.getenv('pivot1')), lines,sourceNbConfFile,flag)
     update_app_config_file_shared("CONSUL_REPLICA_NUMBER=".upper(), str(len(getNBApplicativeHostFromEnv().split(","))), lines,sourceNbConfFile,flag)
@@ -232,7 +235,8 @@ def proceedForApplicativeInstallation():
         logger.info("connectExecuteSSH :")
         with Spinner():
             logger.info("connectExecuteSSH : hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
-            connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " ")
+            dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+            connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath +" " +dbaGigaLogPath+ " ")
         logger.info("Adding server-node :"+str(hostip))
         #config_add_nb_node(hostip, hostip, "applicative server",  "config/cluster.config")
 

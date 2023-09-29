@@ -2,7 +2,6 @@
 home_dir_sh=$(pwd)
 service_name='object-management.service'
 serviceJarName='objectManagement.jar'
-log_location=/dbagigalogs/objectManagement/
 space_name=$1
 lookup_locator=$2
 lookup_group=$3
@@ -13,12 +12,14 @@ tier_criteria_file=$7
 adapter_property_file=$8
 batch_index_file=$9
 polling_container_file=${10}
-odsx_profile=${11}
-gs_username=${12}
-gs_password=${13}
-appId=${14}
-safeId=${15}
-objectId=${16}
+dbaGigaLogPath=${11}
+odsx_profile=${12}
+gs_username=${13}
+gs_password=${14}
+appId=${15}
+safeId=${16}
+objectId=${17}
+log_location=$dbaGigaLogPath/objectManagement/
 
 function getAppPropertyValue() {
     ENV=${1:-dev}

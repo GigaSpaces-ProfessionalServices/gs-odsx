@@ -8,7 +8,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder, readValueByConfigObj
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
@@ -130,19 +130,23 @@ def installCluster():
     srNo=srNo+1
     print(Fore.GREEN +str(srNo)+ ". Installation base folder for Kafka and Zookeeper : "+baseFolderLocation+"" + Fore.RESET)
     logger.info(" base folder: " + str(baseFolderLocation))
-    dataFolderKafka = str(readValuefromAppConfig("app.di.base.kafka.data"))
+    dbaGigaDataPath=str(readValuefromAppConfig("app.gigadata.path"))
+    dataFolderKafka = str(readValuefromAppConfig("app.di.base.kafka.data")).replace("/dbagigadata",dbaGigaDataPath)
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Data folder for Kafka : "+dataFolderKafka+"" + Fore.RESET)
     logger.info(" dataFolderKafka: " + str(dataFolderKafka))
-    dataFolderZK = str(readValuefromAppConfig("app.di.base.zk.data"))
+    dbaGigaDataPath=str(readValuefromAppConfig("app.gigadata.path"))
+    dataFolderZK = str(readValuefromAppConfig("app.di.base.zk.data")).replace("/dbagigadata",dbaGigaDataPath)
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Data folder for Zookeeper : "+dataFolderZK+"" + Fore.RESET)
     logger.info(" dataFolderZK: " + str(dataFolderZK))
-    logsFolderKafka = str(readValuefromAppConfig("app.di.base.kafka.logs"))
+    dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
+    logsFolderKafka = str(readValuefromAppConfig("app.di.base.kafka.logs")).replace("/dbagigalogs",dbaGigaLogPath)
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Base logs folder for kafka : "+logsFolderKafka+"" + Fore.RESET)
     logger.info(" logsFolderKafka: " + str(logsFolderKafka))
-    logsFolderZK = str(readValuefromAppConfig("app.di.base.zk.logs"))
+    dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
+    logsFolderZK = str(readValuefromAppConfig("app.di.base.zk.logs")).replace("/dbagigalogs",dbaGigaLogPath)
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Base logs folder for Zookeeper : "+logsFolderZK+"" + Fore.RESET)
     logger.info(" logsFolderZK: " + str(logsFolderZK))
@@ -240,15 +244,16 @@ def executeCommandForInstall(host, type, count,nodeListSize):
     try:
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
+        dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
         if (len(clusterHosts) == 4):
             commandToExecute = "scripts/servers_di_install.sh"
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag +' '+dbaGigaLogPath
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag +' '+dbaGigaLogPath
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize+' n '+dbaGigaLogPath
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)
