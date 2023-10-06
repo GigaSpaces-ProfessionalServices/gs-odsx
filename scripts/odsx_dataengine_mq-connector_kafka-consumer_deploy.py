@@ -254,8 +254,8 @@ def createGSCInputParam(managerHost,spaceNode):
     #print(Fore.YELLOW+"-Dpipeline.config.location source ["+str(dPipelineSourceConfig)+"] : "+Fore.RESET)
     #if(len(str(dPipelineLocationSourceInput))==0):
     dPipelineLocationSource=str(dPipelineSourceConfig)
-
-    dPipelineTargetConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.target")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    dPipelineTargetConfig = str(readValueByConfigObj("app.dataengine.mq.dpipleline.target")).replace('[','').replace(']','').replace("'","").replace(', ',',').replace("/dbagiga/",dbaGigaDir)
     #print(Fore.YELLOW+"-Dpipeline.config.location target ["+str(dPipelineTargetConfig)+"] : "+Fore.RESET)
     #if(len(str(dPipelineLocationTargetInput))==0):
     dPipelineLocationTarget=str(dPipelineTargetConfig)

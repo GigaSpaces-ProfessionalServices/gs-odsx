@@ -8,6 +8,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
@@ -445,10 +446,10 @@ def proceedToDeployPUInputParam(managerHost):
     if (len(str(resourceName)) == 0):
         resourceName = 'cdc_tables-dih-consumer-fullsync.war'
     logger.info("nameOfPU :" + str(resourceName))
-
-    resourcePath = str(userInputWrapper(Fore.YELLOW + "Enter path of PU to deploy [/dbagiga] :" + Fore.RESET))
+    dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+    resourcePath = str(userInputWrapper(Fore.YELLOW + "Enter path of PU to deploy ["+dbaGigaPath+"] :" + Fore.RESET))
     if (len(str(resourcePath)) == 0):
-        resourcePath = '/dbagiga'
+        resourcePath = dbaGigaPath
     logger.info("nameOfPU :" + str(resourcePath))
     processingUnitName = str(userInputWrapper(Fore.YELLOW + "Enter Resource Name [consumer-online] : " + Fore.RESET))
     while (len(str(processingUnitName)) == 0):

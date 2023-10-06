@@ -63,8 +63,9 @@ def handleException(e):
 def execute_scriptBuilder(host):
     logger.info("execute_scriptBuilder(args)")
     commandToExecute="scripts/security_manager_remove.sh"
-
-    additionalParam = removeJava+' '+removeUnzip
+    dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    additionalParam = removeJava+' '+removeUnzip+' '+dbaGigaLogPath+' '+dbaGigaDir
     logger.info("additionalParam : "+str(additionalParam))
     with Spinner():
         #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)

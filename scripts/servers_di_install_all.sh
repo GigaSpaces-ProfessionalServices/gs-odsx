@@ -53,33 +53,33 @@ function installFlink() {
   installation_path_flink=$sourceInstallerDirectory/data-integration/di-flink
   installation_file_flink=$(find $installation_path_flink -name "flink*.tgz" -printf "%f\n")
   info "InstallationFile:"$installation_file_flink"\n"
-  mkdir -p /dbagiga/di-flink
+  mkdir -p $gigaDir/di-flink
   mkdir -p $gigalogs/di-flink
-  info "Copying file from "$installation_path_flink/$installation_file_flink +" to /dbagiga/di-flink \n"
-  cp $installation_path_flink/$installation_file_flink /dbagiga/di-flink
+  info "Copying file from "$installation_path_flink/$installation_file_flink +" to $gigaDir/di-flink \n"
+  cp $installation_path_flink/$installation_file_flink $gigaDir/di-flink
   info "\nExtracting zip file...\n"
-  tar -xzf /dbagiga/di-flink/$installation_file_flink --directory /dbagiga/di-flink/
-  extracted_folder_flink=$(ls -I "*.tgz" /dbagiga/di-flink/)
-  cd /dbagiga/di-flink/
+  tar -xzf $gigaDir/di-flink/$installation_file_flink --directory $gigaDir/di-flink/
+  extracted_folder_flink=$(ls -I "*.tgz" $gigaDir/di-flink/)
+  cd $gigaDir/di-flink/
   ln -s $extracted_folder_flink latest-flink
   cd
-  sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  sed -i -e 's|taskmanager.numberOfTaskSlots: 1|taskmanager.numberOfTaskSlots: 10|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
+  sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
+  sed -i -e 's|taskmanager.numberOfTaskSlots: 1|taskmanager.numberOfTaskSlots: 10|g' $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
 
   if [ "$flinkJobManagerMemoryMetaspaceSize" != "None" ] ; then
-    sed -i '/^jobmanager.memory.jvm-metaspace.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-    echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+    sed -i '/^jobmanager.memory.jvm-metaspace.size/d' $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
+    echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize" >> $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
   fi
   if [ "$flinkTaskManagerMemoryProcessSize" != "None" ] ; then
-    sed -i '/^taskmanager.memory.process.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-    echo "taskmanager.memory.process.size: $flinkTaskManagerMemoryProcessSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+    sed -i '/^taskmanager.memory.process.size/d' $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
+    echo "taskmanager.memory.process.size: $flinkTaskManagerMemoryProcessSize" >> $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
   fi
-  sed -i -e 's|jobmanager.memory.process.size: 1600m|jobmanager.memory.process.size: 4000m|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-jobmanager.service
-  sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-taskmanager.service
-  cp /dbagiga/di-flink/latest-flink/conf/di-flink-jobmanager.service /etc/systemd/system/
-  cp /dbagiga/di-flink/latest-flink/conf/di-flink-taskmanager.service /etc/systemd/system/
+  sed -i -e 's|jobmanager.memory.process.size: 1600m|jobmanager.memory.process.size: 4000m|g' $gigaDir/di-flink/latest-flink/conf/flink-conf.yaml
+  sed -i -e 's|/home/gsods|$gigaDir|g' $gigaDir/di-flink/latest-flink/conf/di-flink-jobmanager.service
+  sed -i -e 's|/home/gsods|$gigaDir|g' $gigaDir/di-flink/latest-flink/conf/di-flink-taskmanager.service
+  cp $gigaDir/di-flink/latest-flink/conf/di-flink-jobmanager.service /etc/systemd/system/
+  cp $gigaDir/di-flink/latest-flink/conf/di-flink-taskmanager.service /etc/systemd/system/
 
   info "\n Installation Flink completed."
 }
@@ -89,31 +89,31 @@ function installDIMatadata {
   installation_path_mdm=$sourceInstallerDirectory/data-integration/di-mdm
   installation_file_mdm=$(find $installation_path_mdm -name "di-mdm*.gz" -printf "%f\n")
   info "InstallationFile:"$installation_file_mdm"\n"
-  mkdir -p /dbagiga/di-mdm
+  mkdir -p $gigaDir/di-mdm
   mkdir -p $gigalogs/di-mdm
   chown gsods:gsods $gigalogs/di-mdm
-  info "Copying file from "$installation_path_mdm/$installation_file_mdm +" to /dbagiga/di-mdm \n"
-  cp $installation_path_mdm/$installation_file_mdm /dbagiga/di-mdm
+  info "Copying file from "$installation_path_mdm/$installation_file_mdm +" to $gigaDir/di-mdm \n"
+  cp $installation_path_mdm/$installation_file_mdm $gigaDir/di-mdm
   info "\nExtracting zip file...\n"
-  tar -xzf /dbagiga/di-mdm/$installation_file_mdm --directory /dbagiga/di-mdm/
-  extracted_folder_mdm=$(ls -I "*.gz" /dbagiga/di-mdm/)
-  cd /dbagiga/di-mdm/
+  tar -xzf $gigaDir/di-mdm/$installation_file_mdm --directory $gigaDir/di-mdm/
+  extracted_folder_mdm=$(ls -I "*.gz" $gigaDir/di-mdm/)
+  cd $gigaDir/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
   ln -s $extracted_folder_mdm latest-di-mdm
   cd latest-di-mdm
   sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|$gigalogs/di-mdm|g' config/di-mdm.service
-  sed -i -e 's|/home/gsods|/dbagiga|g' config/di-mdm.service
+  sed -i -e 's|/home/gsods|$gigaDir|g' config/di-mdm.service
 
-  sed -i '/^zookeeper.connectUrl/d' /dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-  echo "">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  sed -i '/^zookeeper.connectUrl/d' $gigaDir/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  echo "">>$gigaDir/di-mdm/latest-di-mdm/config/di-mdm-application.properties
   if [ "$kafkaBrokerCount" == 1 ]; then
-    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>$gigaDir/di-mdm/latest-di-mdm/config/di-mdm-application.properties
   else
-    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>$gigaDir/di-mdm/latest-di-mdm/config/di-mdm-application.properties
   fi
   cd
   info "\nCopying service file\n"
-  cp /dbagiga/di-mdm/latest-di-mdm/config/di-mdm.service /etc/systemd/system/
+  cp $gigaDir/di-mdm/latest-di-mdm/config/di-mdm.service /etc/systemd/system/
   systemctl daemon-reload
   systemctl enable di-mdm
   #systemctl start di-mdm
@@ -125,34 +125,34 @@ function installDIManager {
   installation_path_manager=$sourceInstallerDirectory/data-integration/di-manager
   installation_file_manager=$(find $installation_path_manager -name "di-manager*.gz" -printf "%f\n")
   info "InstallationFile:"$installation_file_manager"\n"
-  mkdir -p /dbagiga/di-manager
+  mkdir -p $gigaDir/di-manager
   mkdir -p $gigalogs/di-manager
   chown gsods:gsods $gigalogs/di-manager
-  info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-manager \n"
-  cp $installation_path_manager/$installation_file_manager /dbagiga/di-manager
+  info "Copying file from "$installation_path_manager/$installation_file_manager +" to $gigaDir/di-manager \n"
+  cp $installation_path_manager/$installation_file_manager $gigaDir/di-manager
   info "\nExtracting zip file...\n"
-  tar -xzf /dbagiga/di-manager/$installation_file_manager --directory /dbagiga/di-manager/
-  extracted_folder_manager=$(ls -I "*.gz" /dbagiga/di-manager/)
-  cd /dbagiga/di-manager/
+  tar -xzf $gigaDir/di-manager/$installation_file_manager --directory $gigaDir/di-manager/
+  extracted_folder_manager=$(ls -I "*.gz" $gigaDir/di-manager/)
+  cd $gigaDir/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
   ln -s $extracted_folder_manager latest-di-manager
   cd latest-di-manager
   sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|$gigalogs/di-manager|g' config/di-manager.service
-  sed -i -e 's|/home/gsods|/dbagiga|g' config/di-manager.service
+  sed -i -e 's|/home/gsods|$gigaDir|g' config/di-manager.service
   info "\ncurrentHost::"$currentHost
-  sed -i -e 's|localhost:6081|'$currentHost':6081|g' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  sed -i -e 's|localhost:6081|'$currentHost':6081|g' $gigaDir/di-manager/latest-di-manager/config/di-manager-application.properties
 
-  sed -i '/^mdm.server.url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  sed -i '/^mdm.server.fallback-url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  sed -i '/^mdm.server.url/d' $gigaDir/di-manager/latest-di-manager/config/di-manager-application.properties
+  sed -i '/^mdm.server.fallback-url/d' $gigaDir/di-manager/latest-di-manager/config/di-manager-application.properties
+  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>$gigaDir/di-manager/latest-di-manager/config/di-manager-application.properties
   if [ "$kafkaBrokerCount" == 1 ]; then
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>$gigaDir/di-manager/latest-di-manager/config/di-manager-application.properties
   else
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigaDir/di-manager/latest-di-manager/config/di-manager-application.properties
   fi
   cd
   info "\nCopying service file\n"
-  cp /dbagiga/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/
+  cp $gigaDir/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/
   systemctl daemon-reload
   systemctl enable di-manager
   #systemctl start di-manager
@@ -176,6 +176,8 @@ if [ "$kafkaBrokerCount" == 1 ]; then
   currentHost=${12}
   flinkJobManagerMemoryMetaspaceSize=${13}
   flinkTaskManagerMemoryProcessSize=${14}
+  gigalogs=${15}
+  gigaDir=${16}
   dimMdmFlinkInstallon1bFlag="y"
   echo " dataFolderKafka "$6" dataFolderZK "$7" logsFolderKafka "$8" logsFolderZK "$9" currentHost:"$currentHost
 fi
@@ -198,6 +200,7 @@ if [ "$kafkaBrokerCount" == 3 ]; then
   flinkTaskManagerMemoryProcessSize=${16}
   dimMdmFlinkInstallon1bFlag=${17}
   gigalogs=${18}
+  gigaDir=${19}
 
   echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "${10}" logsFolderZK "${11}" currentHost:"$currentHost
   echo "flinkJobManagerMemoryMetaspaceSize $flinkJobManagerMemoryMetaspaceSize, flinkTaskManagerMemoryProcessSize=$flinkTaskManagerMemoryProcessSize"

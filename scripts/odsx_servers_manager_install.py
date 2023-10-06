@@ -315,7 +315,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #else:
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
-        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")) #'"\\"{}\\""'.format(gsLogsConfigFile)
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace("/dbagiga/",dbaGigaDir) #'"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
@@ -355,12 +356,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #if(len(str(sourceDirectoryForJar))==0):
         #    sourceDirectoryForJar='/dbagiga'
         cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         #To Display Summary ::
-        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -417,7 +418,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         while(len(str(summaryConfirm))==0):
             summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
-        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
@@ -454,7 +455,8 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
     if(len(str(gsNicAddress))==0):
         gsNicAddress='x'     # put dummy param to maintain position of arguments
     dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress +' '+dbaGigaLogPath
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress +' '+dbaGigaLogPath+' '+dbaGigaDir
     #print(additionalParam)
     with Spinner():
         scp_upload(host, user, 'install/install.tar', '')

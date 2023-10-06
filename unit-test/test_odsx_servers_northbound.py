@@ -81,7 +81,8 @@ def upload_packages_to_nb_servers(hostip,nb_user,confirmServerInstall,confirmAge
         scp_upload(hostip, nb_user, 'install/install.tar', '')
 
     commandToExecute="scripts/servers_northbound_preinstall.sh"
-    additionalParam='/dbagiga'
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    additionalParam=dbaGigaDir+' '+dbaGigaDir
     print(additionalParam)
     logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
     with Spinner():

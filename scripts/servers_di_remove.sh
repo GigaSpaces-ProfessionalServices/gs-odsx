@@ -1,8 +1,9 @@
 #source /dbagiga/setenv.sh
 
-wantToRemoveKafka=$1
-wantToRemoveZk=$2
-wantToRemoveTelegraf=$3
+gigaDir=$4
+wantToRemoveKafka=$2
+wantToRemoveZk=$3
+wantToRemoveTelegraf=$4
 
 if [ "$wantToRemoveKafka" == "y" ]; then
   systemctl stop odsxkafka.service
@@ -10,7 +11,7 @@ if [ "$wantToRemoveKafka" == "y" ]; then
   rm -rf $KAFKA_LOGS_PATH
   rm -rf $KAFKA_DATA_PATH
   rm -rf $KAFKAPATH
-  rm -rf install install.tar /dbagiga/setenv.sh /usr/local/bin/st*_kafka.sh /etc/systemd/system/kafka.service /etc/systemd/system/odsxkafka.service
+  rm -rf install install.tar $gigaDir/setenv.sh /usr/local/bin/st*_kafka.sh /etc/systemd/system/kafka.service /etc/systemd/system/odsxkafka.service
 fi
 
 if [ "$wantToRemoveZk" == "y" ]; then
@@ -36,11 +37,11 @@ systemctl stop di-manager.service
 systemctl stop di-flink-taskmanager.service
 systemctl stop di-flink-jobmanager.service
 systemctl daemon-reload
-/dbagiga/di-flink/latest-flink/bin/stop-cluster.sh
+$gigaDir/di-flink/latest-flink/bin/stop-cluster.sh
 sleep 5
 
-rm -f /dbagiga/di-mdm/latest-flink /dbagiga/di-mdm/latest-di-mdm /dbagiga/di-mdm/latest-di-manager /etc/systemd/system/di-mdm.service /etc/systemd/system/di-manager.service
-rm -rf /dbagiga/di-flink/* /dbagiga/di-mdm/* /dbagiga/di-manager/*
+rm -f $gigaDir/di-mdm/latest-flink $gigaDir/di-mdm/latest-di-mdm $gigaDir/di-mdm/latest-di-manager /etc/systemd/system/di-mdm.service /etc/systemd/system/di-manager.service
+rm -rf $gigaDir/di-flink/* $gigaDir/di-mdm/* $gigaDir/di-manager/*
 rm -f /etc/systemd/system/di-flink-jobmanager.service /etc/systemd/system/di-flink-taskmanager.service
 
 systemctl daemon-reload

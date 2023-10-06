@@ -75,7 +75,8 @@ def installSingle():
         global sourceDvServerJar
         global logFilepath
         global dbPath
-        targetInstallDir=str(readValuefromAppConfig("app.dv.install.target"))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        targetInstallDir=str(readValuefromAppConfig("app.dv.install.target")).replace("/dbagiga/",dbaGigaDir)
         agentHosts = getDataValidationAgentHostFromEnv()#str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
         #while(len(str(agentHosts))==0):
         #    agentHosts = str(userInputWrapper(Fore.YELLOW+"Enter hosts(comma separated) to install Data Validation Agents: "+Fore.RESET))

@@ -176,17 +176,18 @@ def proceedForSpaceUpgrade(spaceStatusIP, spaceStatus):
             "Starting upgradation for space " + spaceStatusIP)
         #scp_upload(spaceStatusIP, user, sourcePath + "/" + packageName,
         #           "install/gs/upgrade/")
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.space.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.space.cefLogging.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
         springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
         vaultSupportJarInput = str(getYamlFilePathInsideFolder(".security.jars.vaultsupportjar")).replace('[','').replace(']','')
         javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
-        springTargetJarInput = str(readValuefromAppConfig("app.space.security.spring.jar.target")).replace('[','').replace(']','')
-
+        springTargetJarInput = str(readValuefromAppConfig("app.space.security.spring.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
         applicativeUserFile = readValuefromAppConfig("app.server.user")
-        additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName+" " \
+        additionalParam = destPath + " " + packageName + " " + applicativeUserFile+" "+dbaGigaDir+ " " +sourcePath+'/'+packageName+" " \
                                                                                                                     ""+cefLoggingJarInput+" "+cefLoggingJarInputTarget+" "+springLdapCoreJarInput+" "+springLdapJarInput+" "+vaultSupportJarInput+" "+javaPasswordJarInput+" "+springTargetJarInput
         #print(additionalParam)
         isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
@@ -253,7 +254,8 @@ if __name__ == '__main__':
             #    managerUpgrade = spaceDict.get(int(hostConfiguration))
             #/dbagiga/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
             sourcePath= sourceInstallerDirectory+"gs/upgrade"
-            destPath="/dbagiga"
+            dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+            destPath=dbaGigaDir
             verboseHandle.printConsoleWarning("------------------Summary-----------------")
             verboseHandle.printConsoleWarning("Enter source directory for new GS build : "+sourcePath)
             verboseHandle.printConsoleWarning("Enter destination directory to install new GS build : "+str(destPath))

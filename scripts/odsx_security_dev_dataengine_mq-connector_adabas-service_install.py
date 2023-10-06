@@ -99,7 +99,8 @@ def getInputParam(kafkaHosts):
     global sourceKeyStoreFile
     sourceAdabasJarFile=''
     targetAdabasJarFile=''
-    targetDir = str(readValueByConfigObj("app.dataengine.mq.adabas.targetDir")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    dbaGigaDir=str(readValueByConfigObj("app.giga.path"))
+    targetDir = str(readValueByConfigObj("app.dataengine.mq.adabas.targetDir")).replace('[','').replace(']','').replace("'","").replace(', ',',').replace("/dbagiga/",dbaGigaDir)
     verboseHandle.printConsoleWarning("MQ-Connector will going to install on hosts ["+str(kafkaHosts)+"] ")
     targetDirConfirm = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
     if(len(str(targetDirConfirm))==0):

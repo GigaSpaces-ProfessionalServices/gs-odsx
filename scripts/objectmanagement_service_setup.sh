@@ -13,12 +13,13 @@ adapter_property_file=$8
 batch_index_file=$9
 polling_container_file=${10}
 dbaGigaLogPath=${11}
-odsx_profile=${12}
-gs_username=${13}
-gs_password=${14}
-appId=${15}
-safeId=${16}
-objectId=${17}
+gigaDir=${12}
+odsx_profile=${13}
+gs_username=${14}
+gs_password=${15}
+appId=${16}
+safeId=${17}
+objectId=${18}
 log_location=$dbaGigaLogPath/objectManagement/
 
 function getAppPropertyValue() {
@@ -35,13 +36,13 @@ fi
 home_dir_sh=$(pwd)
 cp $home_dir_sh/install/$service_name /tmp/$service_name
 
-cp $serviceJar /dbagiga/
+cp $serviceJar $gigaDir
 
 
 serviceJar=$(readlink --canonicalize $serviceJar)
 base_name=$(basename ${serviceJar})
 
-sed -i 's,$serviceJar,'/dbagiga/$base_name',g' /tmp/$service_name
+sed -i 's,$serviceJar,'$gigaDir/$base_name',g' /tmp/$service_name
 sed -i 's,$space_name,'$space_name',g' /tmp/$service_name
 sed -i 's,$log_location,'$log_location',g' /tmp/$service_name
 sed -i 's/$lookup_locator/'$lookup_locator'/g' /tmp/$service_name

@@ -165,7 +165,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #else:
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
-        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile"))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace("/dbagiga/",dbaGigaDir)
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
@@ -227,7 +228,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    sourceDirectoryForJar='/dbagiga'
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         logger.info("sourceInstallerDirectory :"+str(sourceInstallerDirectory))
-        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
         if(len(additionalParam)==0):
@@ -268,20 +269,20 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
 
         cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         db2ccJarPath = ".db2.jars.db2ccjar"
         db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
         db2jccJarInput =getYamlJarFilePath(".db2.jars",db2jccJarInput)
         db2ccJarLicensePath=".db2.jars.db2ccLicense"
         db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
         db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
-        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
+        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         msSqlFeederFilePath="."
         msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
-        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
-        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         #To Display Summary ::
@@ -389,7 +390,8 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
     if installStatus == 'No':
         gsNicAddress = host_nic_dict_obj[host]
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled + ' '+ gsNicAddress +' '+dbaGigaLogPath
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled + ' '+ gsNicAddress +' '+dbaGigaLogPath+' '+dbaGigaDir
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         logger.info("additionalParam - Installation :")
         logger.info("Building .tar file : tar -cvf install/install.tar install")

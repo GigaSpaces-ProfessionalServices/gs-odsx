@@ -414,8 +414,8 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
             #    spacePropertyConfigFilePath = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath : "+Fore.RESET))
             logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
             #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
-
-            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.spacejar.spaceproperty.filepath.target")).replace('"','')
+            dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+            spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.spacejar.spaceproperty.filepath.target")).replace('"','').replace("/dbagiga/",dbaGigaDir)
             logger.info("app.spacejar.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
             #spacePropertyConfigFilePathTargetInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath.target ["+str(spacePropertyConfigFilePathTarget)+"]: "+Fore.RESET))
             #if(len(str(spacePropertyConfigFilePathTargetInput))>0):

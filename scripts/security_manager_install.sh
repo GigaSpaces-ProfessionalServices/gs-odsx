@@ -321,7 +321,7 @@ function installAirGapGS {
    # echo "File $targetConfigDir/metrics.xml not exist so copying"
    # cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
    #fi
-   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
+   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template $gigaDir/gs_config/metrics.xml
 
    limitContent="$applicativeUser hard nofile "$nofileLimitFile
    limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
@@ -336,8 +336,8 @@ function installAirGapGS {
 
    cd $targetDir
    ln -s $extracted_folder gigaspaces-smart-ods
-   sed -i -e 's|../config/security/security-config.xml|//dbagiga/gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
-   cp gigaspaces-smart-ods/config/security/security.properties /dbagiga/gs_config/
+   sed -i -e 's|../config/security/security-config.xml|/$gigaDir/gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
+   cp gigaspaces-smart-ods/config/security/security.properties $gigaDir/gs_config/
    echo "Installation & configuration Gigaspace  -Done!"
 }
 function loadEnv {
@@ -359,9 +359,9 @@ function installTelegraf {
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
+  chown -R $applicativeUser:$applicativeUser /dbagigawork/ $gigaDir/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
   find $gigalogs -maxdepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
-  #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
+  #chgrp -R gsods /dbagigalogs/ /dbagigawork/ $gigaDir/*
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"
@@ -411,7 +411,7 @@ function gsCreateGSServeice {
   chmod 777 -R $GS_HOME/deploy/
   chmod 777 -R $GS_HOME/deploy/*
   chmod 777 -R $GS_HOME/tools/gs-webui/*
-  chmod -R +x /dbagiga
+  chmod -R +x $gigaDir
 
   systemctl daemon-reload
   systemctl enable $gsa_service_file
@@ -433,7 +433,7 @@ function gsCreateGSServeice {
 
 function copyLogFile {
     echo "xap_logging file copied from source to target"
-    cd /dbagiga/gs_config/
+    cd $gigaDir/gs_config/
     sudo cp $logSourcePath $logTargetPath
 }
 #if the airGap true then it will install from user/install dir
@@ -453,9 +453,10 @@ wantInstallUnzip=${11}
 sourceInstallerDirectory=${12}
 logTargetPath=${13}
 logSourcePath=${14}
-selinux=${15}
-gsNicAddress=${16}
-gigalogs=${17}
+gsNicAddress=${15}
+gigalogs=${16}
+gigaDir=${17}
+selinux=${18}
 
 echo "param1"$1
 echo "param2"$targetDir

@@ -121,10 +121,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
         gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN + dbaGigaPath + Fore.YELLOW+"]: "+Fore.RESET))
         targetDirectory=str(additionalParam)
         if(len(additionalParam)==0):
-            targetDirectory='/dbagiga'
+            targetDirectory=dbaGigaPath
         logger.info("targetDirecory :"+str(targetDirectory))
         gsOptionExt = str(userInputWrapper(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
@@ -145,8 +146,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
-
-        gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLogsConfigFile))==0):
@@ -203,10 +204,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         zoneGSC = str(userInputWrapper(Fore.YELLOW+"Enter zone to create GSC [bll]: "+Fore.RESET))
         if(len(str(zoneGSC))==0):
             zoneGSC = 'bll'
-
-        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
+        dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy jars from ["+dbaGigaPath+"] : "+Fore.RESET))
         if(len(str(sourceDirectoryForJar))==0):
-            sourceDirectoryForJar='/dbagiga'
+            sourceDirectoryForJar=dbaGigaPath
 
         getInputParamForSecurityCredantials()
 
@@ -247,13 +248,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
         cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         db2jccJarInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc-4.26.14.jar")).replace('[','').replace(']','')
         db2jccJarInput = sourceDirectoryForJar+'/'+db2jccJarInput
         db2jccJarLicenseInput = str(readValuefromAppConfig("app.space.db2feeder.jar.db2jcc_license_cu-4.16.53.jar")).replace('[','').replace(']','')
         db2jccJarLicenseInput=sourceDirectoryForJar+'/'+db2jccJarLicenseInput
-        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
+        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         springLdapCoreJarInput = str(readValuefromAppConfig("app.manager.security.spring.ldap.core.jar")).replace('[','').replace(']','')
         springLdapCoreJarInput=sourceDirectoryForJar+'/'+springLdapCoreJarInput
@@ -263,15 +264,16 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         vaultSupportJarInput=sourceDirectoryForJar+'/'+vaultSupportJarInput
         javaPasswordJarInput = str(readValuefromAppConfig("app.manager.security.spring.javaPassword.jar")).replace('[','').replace(']','')
         javaPasswordJarInput=sourceDirectoryForJar+'/'+javaPasswordJarInput
-        springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         msSqlFeederFileSource = str(readValuefromAppConfig("app.space.mssqlfeeder.files.source")).replace('[','').replace(']','')
-        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
+        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
         ldapSecurityConfigInput = str(readValuefromAppConfig("app.manager.security.config.ldap.source.file"))
         ldapSecurityConfigInput=sourceDirectoryForJar+'/'+ldapSecurityConfigInput
-        ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
+        ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file")).replace("/dbagiga/",dbaGigaDir)
 
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")

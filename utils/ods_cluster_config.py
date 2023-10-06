@@ -15,6 +15,7 @@ from random import randint
 
 from colorama import Fore
 from scripts.logManager import LogManager
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36,executeRemoteCommandAndGetOutput
@@ -530,20 +531,22 @@ def config_get_space_list_with_status(user,filePath='config/cluster.config'):
 def isInstalledAndGetVersion(host):
     logger.info("isInstalledAndGetVersion")
     #commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
-    commandToExecute='cd /dbagiga;cd -P gigaspaces-smart-ods;echo ""$(basename $(pwd))'
+    dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+    commandToExecute='cd '+dbaGigaPath+';cd -P gigaspaces-smart-ods;echo ""$(basename $(pwd))'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
-    outputShFile=str(outputShFile).replace('\n','').replace('/dbagiga/','')
+    outputShFile=str(outputShFile).replace('\n','').replace(dbaGigaPath,'')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 
 def isInstalledAndGetVersionOldGS(host):
     logger.info("isInstalledAndGetVersion")
     #commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
-    commandToExecute='cd /dbagiga;cd -P gigaspaces-smart-ods-old;echo ""$(basename $(pwd))'
+    dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+    commandToExecute='cd '+dbaGigaPath+';cd -P gigaspaces-smart-ods-old;echo ""$(basename $(pwd))'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
-    outputShFile=str(outputShFile).replace('\n','').replace('/dbagiga/','')
+    outputShFile=str(outputShFile).replace('\n','').replace(dbaGigaPath,'')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 

@@ -61,7 +61,8 @@ def execute_scriptBuilder(host):
     logger.info("execute_scriptBuilder(args)")
     commandToExecute="scripts/servers_space_remove.sh"
     dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
-    additionalParam = removeJava+' '+removeUnzip+' '+dbaGigaLogPath
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    additionalParam = removeJava+' '+removeUnzip+' '+dbaGigaLogPath+' '+dbaGigaDir
     logger.info("additionalParam : "+str(additionalParam))
         #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)
     outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)

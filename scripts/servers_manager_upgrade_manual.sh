@@ -46,14 +46,16 @@ printNoColor() {
 destinationPath=$1
 newPackagename=$2
 applicativeUser=$3
-sourcePath=$4
-cefLoggingJarInput=$5
-cefLoggingJarInputTarget=$6
-springLdapCoreJarInput=$7
-springLdapJarInput=$8
-vaultSupportJarInput=$9
-javaPasswordJarInput=${10}
-springTargetJarInput=${11}
+gigaDir=$4
+sourcePath=$5
+cefLoggingJarInput=$6
+cefLoggingJarInputTarget=$7
+springLdapCoreJarInput=$8
+springLdapJarInput=$9
+vaultSupportJarInput=${10}
+javaPasswordJarInput=${11}
+springTargetJarInput=${12}
+
 info "stopping gs...\n"
 systemctl stop gsa
 sleep 30
@@ -70,10 +72,10 @@ cd ..
 parentPathGS=$(pwd)
 #echo "parentPathGS: "$parentPathGS
 if [ -d "gigaspaces-smart-ods-old" ]; then
-  cd -P /dbagiga/gigaspaces-smart-ods-old
+  cd -P $gigaDir/gigaspaces-smart-ods-old
   previousGSPath=$(pwd)
   previousGSName=$(basename $previousGSPath)
-  cd /dbagiga
+  cd $gigaDir
   info "previousGSPath "$previousGSName
   rm -f gigaspaces-smart-ods-old
   rm -rf $previousGSName
@@ -103,12 +105,12 @@ cp $currentGSPath/gs-license.txt .
 info "copying required jars...\n"
 cp $cefLoggingJarInput $cefLoggingJarInputTarget
 cd
-rm -f /dbagiga/gs_jars/*
+rm -f $gigaDir/gs_jars/*
 #echo ""$springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
 cp $springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
 #echo ""/dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
-cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
-chown -R $applicativeUser:$applicativeUser /dbagiga/*
+cp $gigaDir/gigaspaces-smart-ods/lib/optional/security/* $gigaDir/gs_jars
+chown -R $applicativeUser:$applicativeUser $gigaDir/*
 sleep 10
 info "starting gs...\n"
 systemctl start gsa

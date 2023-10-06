@@ -158,15 +158,16 @@ def proceedForRollback(host):
     ssh = ""
 
     cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-    cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
     springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
     springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
     vaultSupportJarInput = str(getYamlFilePathInsideFolder(".security.jars.vaultsupportjar")).replace('[','').replace(']','')
     javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
-
-    springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
-
-    additionalParam=cefLoggingJarInput+" "+cefLoggingJarInputTarget+" "+springLdapCoreJarInput+" "+springLdapJarInput+" "+vaultSupportJarInput+" "+javaPasswordJarInput+" "+springTargetJarInput
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    additionalParam=cefLoggingJarInput+" "+cefLoggingJarInputTarget+" "+springLdapCoreJarInput+" "+springLdapJarInput+" "+vaultSupportJarInput+" "+javaPasswordJarInput+" "+springTargetJarInput+" "+dbaGigaDir
 
     if isConnectUsingPem == 'True':
         ssh = ''.join(

@@ -361,7 +361,8 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         #set_value_in_property_file('app.tieredstorage.criteria.filepath',str(tieredCriteriaConfigFilePath))
 
         global tieredCriteriaConfigFilePathTarget
-        tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','')
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','').replace("/dbagiga/",dbaGigaDir)
         #tieredCriteriaConfigFilePathTargetInput = \
         #print(Fore.YELLOW+" tieredCriteriaConfig.filePath.target : "+str(tieredCriteriaConfigFilePathTarget)+Fore.RESET)
         #if(len(str(tieredCriteriaConfigFilePathTargetInput))>0):
@@ -384,7 +385,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         #set_value_in_property_file('app.space.property.filePath',str(spacePropertyConfigFilePath))
 
         global spacePropertyConfigFilePathTarget
-        spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.space.property.filePath.target")).replace('"','')
+        spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.space.property.filePath.target")).replace('"','').replace("/dbagiga/",dbaGigaDir)
         logger.info("app.space.property.filePath.target :"+str(spacePropertyConfigFilePathTarget))
         #spacePropertyConfigFilePathTargetInput =
         #print(Fore.YELLOW+"space.property.filePath.target : "+str(spacePropertyConfigFilePathTarget)+Fore.RESET)

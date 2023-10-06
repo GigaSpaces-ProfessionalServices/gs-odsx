@@ -105,7 +105,8 @@ def getInputParam(kafkaHosts):
     kafkahostConfig = kafkaHosts
     sourceAdabasJarFile=''
     targetAdabasJarFile=''
-    targetDir = str(readValueByConfigObj("app.dataengine.mq.adabas.targetDir")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+    dbaGigaDir=str(readValueByConfigObj("app.giga.path"))
+    targetDir = str(readValueByConfigObj("app.dataengine.mq.adabas.targetDir")).replace('[','').replace(']','').replace("'","").replace(', ',',').replace("/dbagiga/",dbaGigaDir)
     #verboseHandle.printConsoleWarning("MQ-Connector will going to install on hosts ["+str(kafkaHosts)+"] ")
     #targetDirConfirm = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install mq-connector : ["+targetDir+"] : "))
     #if(len(str(targetDirConfirm))==0):
@@ -213,9 +214,11 @@ def proceedForInstallation(hostConfig):
         influxdbhost = str(getInfluxdbHost())
         if(len(influxdbhost)==0):
             verboseHandle.printConsoleWarning("No influxdb configuration found.")
-            dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        dbaGigaDir=str(readValueByConfigObj("app.giga.path"))
         additionalParam = ""+targetDir+' '+hostConfig+' '+connectionStr+' '+bootstrapAddress+' '+os.path.basename(sourceAdabasJarFile)
-        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort+' '+influxdbhost +' '+dbaGigaLogPath
+        additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort+' '+influxdbhost +' '+dbaGigaLogPath+' '+dbaGigaDir
         print(additionalParam)
         logger.info("additionalParam : "+str(additionalParam))
         user='root'

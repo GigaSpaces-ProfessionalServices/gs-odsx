@@ -186,7 +186,8 @@ def cleanNbConfig():
 def proceedForPreInstallation(nbServers, param):
     logger.info("proceedForPreInstallation : "+param)
     nb_user='root'
-    remotePath='/dbagiga'
+    dbaGigaPath=str(readValueByConfigObj("app.giga.path"))
+    remotePath=dbaGigaPath
 
     cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
@@ -195,7 +196,7 @@ def proceedForPreInstallation(nbServers, param):
 
     for hostip in nbServers.split(','):
         verboseHandle.printConsoleInfo(param+" Pre-installation started for host : "+hostip)
-        cmd = 'mkdir -p '+remotePath+'; chmod 777 /dbagiga'
+        cmd = 'mkdir -p '+remotePath+'; chmod 777 '+dbaGigaPath
         logger.info("cmd :"+str(cmd))
         with Spinner():
             output = executeRemoteCommandAndGetOutput(hostip, nb_user, cmd)
@@ -226,7 +227,8 @@ def proceedForPreInstallation(nbServers, param):
 def proceedForApplicativeInstallation():
     logger.info("proceedForApplicativeInstallation()")
     nbApplicativeServers = getNBApplicativeHostFromEnv()
-    remotePath='/dbagiga/'+getNBFolderName()
+    dbaGigaPath=str(readValueByConfigObj("app.giga.path"))
+    remotePath=dbaGigaPath+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbApplicativeServers,'APPLICATIVE')
 

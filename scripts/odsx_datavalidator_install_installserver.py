@@ -101,7 +101,8 @@ def installSingle():
         global dbPath
         global influxdbHost
         influxdbHost = getInfluxdbHostFromEnv()
-        targetInstallDir=str(readValuefromAppConfig("app.dv.install.target"))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        targetInstallDir=str(readValuefromAppConfig("app.dv.install.target")).replace("/dbagiga/",dbaGigaDir)
         serverHost = getDataValidationServerHostFromEnv()#str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
         #while(len(str(serverHost))==0):
         #    serverHost = str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))

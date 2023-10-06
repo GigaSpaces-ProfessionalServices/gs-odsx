@@ -63,7 +63,8 @@ def proceedForNodeConfiguration(flag,nodes,targetDir):
             logger.info("outputShFile kafka : " + str(outputShFile))
 
 def proceedForInputParam(configXapLogLocation):
-    configXapLogLocation = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file"))
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    configXapLogLocation = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file")).replace("/dbagiga/",dbaGigaDir)
     verboseHandle.printConsoleInfo("xap_logging.properties location ["+configXapLogLocation+"]")
     confirmManagerInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to disable CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):

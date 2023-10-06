@@ -14,6 +14,7 @@ scheduler_hour=$8
 retentionJar=$9
 lookup_group=${10}
 gigalogs=${11}
+gigaDir=${11}
 
 if [ ! -d "$log_location" ]; then
   mkdir $log_location
@@ -28,14 +29,14 @@ fi
 serviceJar=$retentionJar
 
 cp $home_dir_sh/install/$service_name /tmp/$service_name
-cp $serviceJar /dbagiga/
+cp $serviceJar $gigaDir
 
 #echo "serviceJar: "$serviceJar
 serviceJar=$(readlink --canonicalize $serviceJar)
 base_name=$(basename ${serviceJar})
 #echo "base_name:"$base_name
 
-sed -i 's,$serviceJar,'/dbagiga/$base_name',g' /tmp/$service_name
+sed -i 's,$serviceJar,'$gigaDir/$base_name',g' /tmp/$service_name
 sed -i 's,$db_location,'$db_location',g' /tmp/$service_name
 sed -i 's,$space_name,'$space_name',g' /tmp/$service_name
 sed -i 's,$manager_host,'$manager_host',g' /tmp/$service_name

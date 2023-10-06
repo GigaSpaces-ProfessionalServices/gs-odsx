@@ -9,6 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_servers_di_install import getDIServerHostList
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import isValidHost, port_check
@@ -230,7 +231,8 @@ def isFLinkInstalled(host,nodeType):
         return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isDIMInstalled"+str(host))
     isInstalled = "Yes"
-    commandToExecute='ls /dbagiga/di-flink/latest-flink/bin/start-cluster.sh'
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    commandToExecute='ls '+dbaGigaDir+'di-flink/latest-flink/bin/start-cluster.sh'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')

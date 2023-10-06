@@ -81,7 +81,8 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
         logger.info("Individual host : "+str(host))
         commandToExecute="scripts/security_mq-connector_adabasservice_remove.sh"
         dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
-        outputShFile= connectExecuteSSH(host, user,commandToExecute,dbaGigaLogPath)
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        outputShFile= connectExecuteSSH(host, user,commandToExecute,dbaGigaLogPath+' '+dbaGigaDir)
         print(outputShFile)
         config_remove_dataEngine_byNameIP(host,host)
        # hostAppConfig = str(readValuefromAppConfig("app.di.hosts")).replace('"','')
@@ -166,7 +167,8 @@ def executeCommandForUnInstall():
                 if(confirmUninstall=='y'):
                     commandToExecute="scripts/security_mq-connector_adabasservice_remove.sh"
                     dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
-                    additionalParam=dbaGigaLogPath
+                    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+                    additionalParam=dbaGigaLogPath +' '+dbaGigaDir
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
                         for host in nodes.split(','):

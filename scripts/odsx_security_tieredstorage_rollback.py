@@ -537,7 +537,8 @@ def copyFilesFromODSXToSpaceServer():
     logger.info("cmd : "+str(cmd))
     status = os.system(cmd)
     logger.info("status : "+str(status))
-    tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','')
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    tieredCriteriaConfigFilePathTarget = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath.target")).replace('"','').replace("/dbagiga/",dbaGigaDir)
     logger.info(" ips : "+str(ips)+" tieredCriteriaConfigFilePath :"+str(tieredCriteriaConfigFilePath)+" tieredCriteriaConfigFilePathTarget : "+str(tieredCriteriaConfigFilePathTarget))
     if(copyFile(ips, tieredCriteriaConfigFilePath, tieredCriteriaConfigFilePathTarget)):
         logger.info("File copied successfully.. taking backup of source file")

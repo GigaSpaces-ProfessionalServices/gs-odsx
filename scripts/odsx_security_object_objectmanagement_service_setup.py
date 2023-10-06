@@ -102,7 +102,8 @@ def setupService():
     indexBatchConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace('"','')
     pollingContainerFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.pollingFileName")).replace('"','')
     dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
-    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath+" "+dbaGigaLogPath + " " + odsx_profile + " " + username + " " + password + " " + appId + " " + safeId + " " + objectId
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath+" "+dbaGigaLogPath +" "+dbaGigaDir+ " " + odsx_profile + " " + username + " " + password + " " + appId + " " + safeId + " " + objectId
     commandToExecute = "scripts/objectmanagement_service_setup.sh " + args
     logger.info("Command " + commandToExecute)
     try:

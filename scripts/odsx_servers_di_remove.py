@@ -77,7 +77,8 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
     if(confirm=='y' or len(str(confirm))==0 ):
         logger.info("Individual host : "+str(host))
         commandToExecute="scripts/servers_di_remove.sh"
-        outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        outputShFile= connectExecuteSSH(host, user,commandToExecute,dbaGigaDir)
         print(outputShFile)
         config_remove_dataIntegration_byNameIP(host,host)
         hostAppConfig = str(readValuefromAppConfig("app.di.hosts")).replace('"','')
@@ -113,7 +114,8 @@ def executeCommandForUnInstall():
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
                     commandToExecute="scripts/servers_di_remove.sh"
-                    additionalParam= wantToRemoveKafka+" "+wantToRemoveZk+" "+wantToRemoveTelegraf
+                    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+                    additionalParam= dbaGigaDir +" "+wantToRemoveKafka+" "+wantToRemoveZk+" "+wantToRemoveTelegraf
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
                         for host in nodes.split(','):

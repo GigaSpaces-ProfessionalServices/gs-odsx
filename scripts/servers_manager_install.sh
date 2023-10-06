@@ -313,7 +313,7 @@ function installAirGapGS {
    # echo "File $targetConfigDir/metrics.xml not exist so copying"
    # cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
    #fi
-   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
+   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template $gigaDir/gs_config/metrics.xml
 
    limitContent="$applicativeUser hard nofile "$nofileLimitFile
    limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
@@ -350,7 +350,7 @@ function installTelegraf {
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
+  chown -R $applicativeUser:$applicativeUser /dbagigawork/ $gigaDir/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
   find $gigalogs -maxdepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
@@ -402,7 +402,7 @@ function gsCreateGSServeice {
   chmod 777 -R $GS_HOME/deploy/
   chmod 777 -R $GS_HOME/deploy/*
   chmod 777 -R $GS_HOME/tools/gs-webui/*
-  chmod -R +x /dbagiga
+  chmod -R +x $gigaDir
 
   systemctl daemon-reload
   systemctl enable $gsa_service_file
@@ -423,7 +423,7 @@ function gsCreateGSServeice {
 
 function copyLogFile {
     echo "xap_logging file copied from source to target"
-    cd /dbagiga/gs_config/
+    cd $gigaDir/gs_config/
     sudo cp $logSourcePath $logTargetPath
 }
 
@@ -447,6 +447,7 @@ logSourcePath=${14}
 selinux=${15}
 gsNicAddress=${16}
 gigalogs=${17}
+gigaDir=${18}
 
 echo "param1"$1
 echo "param2"$targetDir

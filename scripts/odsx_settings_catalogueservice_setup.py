@@ -147,7 +147,8 @@ def setupService():
         exit(0)
 
     dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-    commandToExecute = "scripts/settings_catalogueService_setup.sh "+consulHost+" "+catalogJar+" "+dbaGigaLogPath
+    dbaGigaDir=str(readValueByConfigObj("app.giga.path"))
+    commandToExecute = "scripts/settings_catalogueService_setup.sh "+consulHost+" "+catalogJar+" "+dbaGigaLogPath+" "+dbaGigaDir
     logger.info("Command "+commandToExecute)
     try:
         os.system(commandToExecute)

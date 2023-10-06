@@ -156,8 +156,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
-
-        gsLogsConfigFileFromConfig = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        gsLogsConfigFileFromConfig = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = ""
         #print(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET)
@@ -168,7 +168,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
         # gsLogsConfigFile = '"\\"{}\\""'.format(gsLogsConfigFile)
-        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")) #'"\\"{}\\""'.format(gsLogsConfigFile)
+        gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace("/dbagiga/",dbaGigaDir) #'"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
         #licenseConfig='"{}"'.format(licenseConfig)
@@ -229,7 +229,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         appId = str(readValuefromAppConfig("app.space.security.appId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         objectId= str(readValuefromAppConfig("app.space.security.objectId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
@@ -237,7 +237,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
-        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
         #noOfHost = str(userInputWrapper(Fore.YELLOW+"Enter number of space hosts you want to create :"+Fore.RESET))
@@ -272,34 +272,34 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
         cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         db2ccJarPath = ".db2.jars.db2ccjar"
         db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
         db2jccJarInput =getYamlJarFilePath(".db2.jars",db2jccJarInput)
         db2ccJarLicensePath=".db2.jars.db2ccLicense"
         db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
         db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
-        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
+        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
         springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
         vaultSupportJarInput = str(getYamlFilePathInsideFolder(".security.jars.vaultsupportjar")).replace('[','').replace(']','')
         javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
-
-        springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         msSqlFeederFilePath="."
         msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
-        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
+        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
         ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..security.ldapsourcefile"))
-        ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
+        ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file")).replace("/dbagiga/",dbaGigaDir)
 
-        logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
+        logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
-        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         #To Display Summary ::
@@ -352,7 +352,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"15A. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
-              Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
+              Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace("/dbagiga/",dbaGigaDir)+Fore.RESET)
         print(Fore.GREEN+"16. "+
               Fore.GREEN+"db2jcc-4.26.14.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarInput).replace('"','')+Fore.RESET)
@@ -431,7 +431,8 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
         gsNicAddress = host_nic_dict_obj[host]
         #print(host+"  "+gsNicAddress)
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' ' + gsNicAddress +' '+dbaGigaLogPath
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' ' + gsNicAddress +' '+dbaGigaLogPath+' '+dbaGigaDir
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         # print("---------------------"+str(additionalParam))
         logger.info("additionalParam - Installation :")
@@ -477,7 +478,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             #print(outputShFile)
             #Upload CEF logging jar
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target").replace("/dbagiga/",dbaGigaDir))
 
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
             #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
@@ -491,8 +492,8 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
             #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+dbaGigaDir+"/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /"+dbaGigaDir+"/* ")
             configureMetricsXML(host)
         serverHost=''
         try:

@@ -245,15 +245,16 @@ def executeCommandForInstall(host, type, count,nodeListSize):
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
         dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
+        dbaGigaDir=str(readValueByConfigObj("app.giga.path"))
         if (len(clusterHosts) == 4):
             commandToExecute = "scripts/servers_di_install.sh"
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag +' '+dbaGigaLogPath
+            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag +' '+dbaGigaLogPath+' '+dbaGigaDir
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag +' '+dbaGigaLogPath
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag +' '+dbaGigaLogPath+' '+dbaGigaDir
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize+' n '+dbaGigaLogPath
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize+' n '+dbaGigaLogPath +' '+dbaGigaDir
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)

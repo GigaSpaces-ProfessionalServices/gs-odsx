@@ -167,7 +167,8 @@ def executeCommandForInstall(space):
 
     logger.info("executeCommandForInstall(): start")
     try:
-        path = str(readValuefromAppConfig("app.utilities.recoverymonitor.file"))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        path = str(readValuefromAppConfig("app.utilities.recoverymonitor.file")).replace("/dbagiga/",dbaGigaDir)
         with Spinner():
             os.system('python3 '+path+' '+space)
     except Exception as e:
@@ -175,7 +176,8 @@ def executeCommandForInstall(space):
     logger.info("executeCommandForInstall(): end")
 
 def displaySummary():
-    jcmd = str(readValuefromAppConfig("app.utilities.recoverymonitor.file"))
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    jcmd = str(readValuefromAppConfig("app.utilities.recoverymonitor.file")).replace("/dbagiga/",dbaGigaDir)
     spaceName = str(readValuefromAppConfig("app.utilities.recovery.monitor.space.name"))
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")

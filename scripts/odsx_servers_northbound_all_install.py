@@ -201,7 +201,8 @@ def cleanNbConfig():
 def proceedForPreInstallation(nbServers, param):
     logger.info("proceedForPreInstallation : "+param)
     nb_user='root'
-    remotePath='/dbagiga'
+    dbaGigaPath=str(readValueByConfigObj("app.giga.path"))
+    remotePath=dbaGigaPath
     cmd = 'sudo tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
@@ -209,7 +210,7 @@ def proceedForPreInstallation(nbServers, param):
 
     for hostip in nbServers.split(','):
         verboseHandle.printConsoleInfo(param+" Pre-installation started for host : "+hostip)
-        cmd = 'mkdir -p '+remotePath+'; chmod 777 /dbagiga'
+        cmd = 'mkdir -p '+remotePath+'; chmod 777 '+dbaGigaPath
         logger.info("cmd :"+str(cmd))
         with Spinner():
             output = executeRemoteCommandAndGetOutput(hostip, nb_user, cmd)
@@ -223,10 +224,10 @@ def proceedForPreInstallation(nbServers, param):
         if param.casefold()=='applicative':
             commandToExecute="scripts/servers_northbound_applicative_preinstall.sh"
         if param.casefold()=='agent':
-            remotePath='/dbagiga'
+            remotePath=dbaGigaPath
             commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
         if param.casefold()=='management':
-            remotePath='/dbagiga'
+            remotePath=dbaGigaPath
             commandToExecute="scripts/servers_northbound_management_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
         nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
@@ -234,7 +235,8 @@ def proceedForPreInstallation(nbServers, param):
         sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
         sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))
         sslCaCert = str(nbConfig.get("SSL_CA_CERTIFICATE"))
-        additionalParam=remotePath+' '+sourceInstallerDirectory + ' '+sourceInstallerDirectoryTar + ' ' +sslCert +' '+sslKey+ ' '+sslCaCert
+        dbaGigaDir=str(readValueByConfigObj("app.giga.path"))
+        additionalParam=remotePath+' '+sourceInstallerDirectory + ' '+sourceInstallerDirectoryTar + ' ' +sslCert +' '+sslKey+ ' '+sslCaCert + ' '+dbaGigaDir
         logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
 
         with Spinner():
@@ -245,7 +247,8 @@ def proceedForPreInstallation(nbServers, param):
 def proceedForApplicativeInstallation():
     logger.info("proceedForApplicativeInstallation()")
     nbApplicativeServers = getNBApplicativeHostFromEnv()
-    remotePath='/dbagiga/'+getNBFolderName()
+    dbaGigaPath=str(readValueByConfigObj("app.giga.path"))
+    remotePath=dbaGigaPath+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbApplicativeServers,'APPLICATIVE')
 
@@ -275,7 +278,8 @@ def proceedForApplicativeInstallation():
 def proceedForAgentInstallation():
     logger.info("proceedForAgentInstallation()")
     nbAgentServers = getNBAgentHostFromEnv()
-    remotePath='/dbagiga/'+getNBFolderName()
+    dbaGigaPath=str(readValueByConfigObj("app.giga.path"))
+    remotePath = dbaGigaPath +getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbAgentServers,'AGENT')
     for hostip in nbAgentServers.split(','):
@@ -296,7 +300,8 @@ def proceedForAgentInstallation():
 def proceedForManagementInstallation():
     logger.info("proceedForManagementInstallation()")
     nbManagementServers = getNBManagementHostFromEnv()
-    remotePath='/dbagiga/'+getNBFolderName()
+    dbaGigaPath=str(readValueByConfigObj("app.giga.path"))
+    remotePath=dbaGigaPath+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbManagementServers,'MANAGEMENT')
     for hostip in nbManagementServers.split(','):

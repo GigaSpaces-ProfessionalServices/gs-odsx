@@ -506,7 +506,8 @@ def createNewSpaceREST(managerHostConfig):
                     spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.imspace.imspacepropertyfile"))
                     logger.info("gs.config.ts.spaceproperty :"+str(spacePropertyConfigFilePath))
                     logger.info("spacePropertyConfigFilePath :"+str(spacePropertyConfigFilePath))
-                    spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.newspace.spaceproperty.filepath.target")).replace('"','')
+                    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+                    spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.newspace.spaceproperty.filepath.target")).replace('"','').replace("/dbagiga/",dbaGigaDir)
                     logger.info("app.newspace.spaceproperty.filepath.target :"+str(spacePropertyConfigFilePathTarget))
                     logger.info("spacePropertyConfigFilePathTarget :"+str(spacePropertyConfigFilePathTarget))
                 else:

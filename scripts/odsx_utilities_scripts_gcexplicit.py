@@ -78,7 +78,8 @@ def executeCommandForInstall(zone,host):
 
     logger.info("executeCommandForInstall(): start")
     try:
-        path = str(readValuefromAppConfig("app.utilities.gcexplicit.file"))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        path = str(readValuefromAppConfig("app.utilities.gcexplicit.file")).replace("/dbagiga/",dbaGigaDir)
         with Spinner():
             os.system('sh '+path+' -z '+zone+' -n '+host)
     except Exception as e:
@@ -161,7 +162,8 @@ def managerHostList(spaceNodes):
 
 
 def displaySummary():
-    jcmd = str(readValuefromAppConfig("app.utilities.gcexplicit.file"))
+    dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+    jcmd = str(readValuefromAppConfig("app.utilities.gcexplicit.file")).replace("/dbagiga/",dbaGigaDir)
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
     print(Fore.GREEN+"1. "+

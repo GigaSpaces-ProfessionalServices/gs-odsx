@@ -16,7 +16,7 @@ class bcolors:
 #!/usr/bin/env python3
 import os
 from scripts.logManager import LogManager
-from utils.ods_app_config import getYamlFilePathInsideFolder
+from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig
 from scripts.spinner import Spinner
 from colorama import Fore
 from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
@@ -76,7 +76,8 @@ def getManagerHostFromEnv():
 def configureMetricsXML(host):
     logger.info("configureMetricsXML()")
     try:
-        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" /dbagiga/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" /dbagiga/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" /dbagiga/gs_config/metrics.xml'
+        dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" '+dbaGigaPath+'gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" '+dbaGigaPath+'gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" '+dbaGigaPath+'gs_config/metrics.xml'
         logger.info(cmd)
         user = 'root'
         with Spinner():
@@ -88,7 +89,8 @@ def configureLicenseManagerAndSpace():
     managerHosts = getManagerHostFromEnv()
     spaceHosts = getSpaceHostFromEnv()
     sourceGSmetrics = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsxml"))
-    targetGSmetrics = "/dbagiga/gs_config/metrics.xml"
+    dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+    targetGSmetrics = dbaGigaPath+"gs_config/metrics.xml"
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("metrics.xml.template source file :"+str(sourceGSmetrics))
     verboseHandle.printConsoleInfo("metrics.xml target : "+str(targetGSmetrics))

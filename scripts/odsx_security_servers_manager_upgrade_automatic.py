@@ -184,7 +184,8 @@ if __name__ == '__main__':
             # if managerDict.get(int(hostConfiguration)) is not None:
             #    managerUpgrade = managerDict.get(int(hostConfiguration))
             sourcePath= sourceInstallerDirectory+"/gs/upgrade"
-            destPath="/dbagiga"
+            dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+            destPath=dbaGigaDir
             verboseHandle.printConsoleWarning("------------------Summary-----------------")
             verboseHandle.printConsoleWarning("Enter source directory for new GS build : "+sourcePath)
             verboseHandle.printConsoleWarning("Enter destination directory to install new GS build : "+str(destPath))
@@ -256,7 +257,7 @@ if __name__ == '__main__':
                                     #           "install/gs/upgrade/")
                                     commandToExecute = "scripts/servers_manager_upgrade_manual.sh"
                                     applicativeUserFile = readValuefromAppConfig("app.server.user")
-                                    additionalParam = destPath + " " + packageName + " " + applicativeUserFile+ " " +sourcePath+'/'+packageName
+                                    additionalParam = destPath + " " + packageName + " " + applicativeUserFile+" "+dbaGigaDir+ " " +sourcePath+'/'+packageName
                                     #print(additionalParam)
                                     isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
                                     pemFileName = readValuefromAppConfig("cluster.pemFile")

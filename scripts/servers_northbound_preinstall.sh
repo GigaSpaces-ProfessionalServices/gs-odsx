@@ -4,10 +4,10 @@ tar -xvf install.tar
 targetDir=$1
 echo "TargetDir"$targetDir
 
-sslCert=$2
-sslKey=$3
-sslCaCert=$4
-
+gigaDir=$2
+sslCert=$3
+sslKey=$4
+sslCaCert=$5
 
 echo "getting installation file .gz"
 home_dir=$(pwd)
@@ -20,7 +20,7 @@ nb_foldername=$(tar -ztvf $installation_file | head -1 | awk '{print $NF}' | cut
 echo $installation_path"/"$installation_file
 
 echo "Extracting .tar.gz file from "$installation_path
-tar -xzf $installation_path/*.tar.gz -C /dbagiga
+tar -xzf $installation_path/*.tar.gz -C $gigaDir
 
 echo "Moving file from $installation_path/nb.conf To $targetDir/$nb_foldername/"
 mv $installation_path/nb.conf $targetDir/$nb_foldername/

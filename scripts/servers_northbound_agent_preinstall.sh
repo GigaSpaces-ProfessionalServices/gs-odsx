@@ -8,6 +8,7 @@ sourceInstallerDirectoryTar=$3
 sslCert=$4
 sslKey=$5
 sslCaCert=$6
+gigaDir=$7
 
 echo "TargetDir"$targetDir
 echo "sourceInstallerDirectory:"$sourceInstallerDirectory
@@ -23,7 +24,7 @@ nb_foldername=$(tar -ztvf $installation_file | head -1 | awk '{print $NF}' | cut
 echo $installation_path_tar"/"$installation_file
 
 echo "Extracting .tar.gz file from "$installation_path_tar
-tar -xzf $installation_path_tar/*.tar.gz -C /dbagiga
+tar -xzf $installation_path_tar/*.tar.gz -C $gigaDir
 
 dbagigashareApplicativePath=$sourceInstallerDirectory'/nb/applicative'
 

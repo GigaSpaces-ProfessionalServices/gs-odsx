@@ -125,7 +125,8 @@ def handleException(e):
 
 def proceedForRollback(host):
     logger.info("proceedForRollback")
-    cmdList = ["systemctl stop gsa","cd /dbagiga;rm -f gigaspaces-smart-ods;mv /dbagiga/gigaspaces-smart-ods-old /dbagiga/gigaspaces-smart-ods","systemctl start gsa"]
+    dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
+    cmdList = ["systemctl stop gsa","cd "+dbaGigaPath+";rm -f gigaspaces-smart-ods;mv "+dbaGigaPath+"gigaspaces-smart-ods-old "+dbaGigaPath+"gigaspaces-smart-ods","systemctl start gsa"]
     for cmd in cmdList:
         #print("Executing "+str(cmd)+" : "+str(host))
         logger.info("Getting status.. odsxgs :"+str(cmd))

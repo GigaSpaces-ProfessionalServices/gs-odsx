@@ -233,9 +233,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
         gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+dbaGigaDir+Fore.YELLOW+"]: "+Fore.RESET))
         if(len(additionalParam)==0):
-            targetDir='/dbagiga'
+            targetDir=dbaGigaDir
         else:
             targetDir=additionalParam
         if(gsOptionExtFromConfig.__contains__('<DI servers>')):
@@ -274,7 +275,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
 
-        gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','')
+        gsLogsConfigFileFromConfig = str(readValueByConfigObj("app.manager.gsLogsConfigFile")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLogsConfigFile))==0):
@@ -314,9 +315,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(len(str(wantToInstallUnzip))==0):
             wantToInstallUnzip='n'
 
-        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy files [/dbagiga] : "+Fore.RESET))
+        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy files ["+dbaGigaDir+"] : "+Fore.RESET))
         if(len(str(sourceDirectoryForJar))==0):
-            sourceDirectoryForJar='/dbagiga'
+            sourceDirectoryForJar=dbaGigaDir
 
         usernameDevConfig = str(readValueByConfigObj("app.manager.dev.security.username")).replace('[','').replace(']','').replace('"','')
         usernameDev = str(userInputWrapper(Fore.YELLOW+"Enter username for Dev env ["+usernameDevConfig+"] : "+Fore.RESET))
@@ -332,7 +333,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         cefLoggingJarInput = str(readValuefromAppConfig("app.manager.cefLogging.jar")).replace('[','').replace(']','')
         cefLoggingJarInput=sourceDirectoryForJar+'/'+cefLoggingJarInput
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         springLdapCoreJarInput = str(readValuefromAppConfig("app.manager.security.spring.ldap.core.jar")).replace('[','').replace(']','')
         springLdapCoreJarInput=sourceDirectoryForJar+'/'+springLdapCoreJarInput
@@ -342,13 +343,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         vaultSupportJarInput=sourceDirectoryForJar+'/'+vaultSupportJarInput
         javaPasswordJarInput = str(readValuefromAppConfig("app.manager.security.spring.javaPassword.jar")).replace('[','').replace(']','')
         javaPasswordJarInput=sourceDirectoryForJar+'/'+javaPasswordJarInput
-        springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
+        springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
 
         sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
 
         ldapSecurityConfigInput = str(readValuefromAppConfig("app.manager.security.config.ldap.source.file"))
         ldapSecurityConfigInput=sourceDirectoryForJar+'/'+ldapSecurityConfigInput
-        ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
+        ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file")).replace("/dbagiga/",dbaGigaDir)
 
     #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -415,7 +416,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
             if(len(additionalParam)==0):
-                additionalParam= 'true'+' '+'/dbagiga'+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+                additionalParam= 'true'+' '+dbaGigaDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             else:
                 additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             #print('additional param :'+additionalParam)

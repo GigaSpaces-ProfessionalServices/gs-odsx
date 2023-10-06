@@ -42,7 +42,8 @@ def handleException(e):
 def executeCommandForInstall(user):
     logger.info("executeCommandForInstall(): start")
     try:
-        path = str(readValuefromAppConfig("app.utilities.checkmanagersync.file"))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        path = str(readValuefromAppConfig("app.utilities.checkmanagersync.file")).replace("/dbagiga/",dbaGigaDir)
         with Spinner():
           host= os.getenv("pivot1")
           output= executeRemoteCommandAndGetOutput(host,user,path)

@@ -78,7 +78,8 @@ def proceedForInputParam(configXapLogLocation):
     #check source file exist
     global targetCefLogInput
     if(os.path.isfile(sourceCefLogInput)):
-        targetCefLogConfig = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file"))
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        targetCefLogConfig = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file")).replace("/dbagiga/",dbaGigaDir)
         targetCefLogInput = str(userInputWrapper(Fore.YELLOW+"Enter target CEF configured xap_logging.properties file ["+targetCefLogConfig+"] : "))
         if(len(str(targetCefLogInput))==0):
             targetCefLogInput=targetCefLogConfig

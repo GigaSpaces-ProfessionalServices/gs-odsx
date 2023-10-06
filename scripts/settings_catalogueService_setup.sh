@@ -2,6 +2,7 @@
 echo "Consul host="$1
 serviceJarName=$2
 gigalogs=$3
+gigaDir=$4
 home_dir_sh=$(pwd)
 service_name='catalogue-service.service'
 echo "serviceJarName:"$serviceJarName
@@ -9,13 +10,13 @@ consul_host=$1
 log_location=$gigalogs/
 
 cp $home_dir_sh/systemServices/catalogue/$service_name /tmp/$service_name
-cp $serviceJarName  /dbagiga/
+cp $serviceJarName  $gigaDir/
 
 serviceJar=$(readlink --canonicalize $serviceJarName)
 base_name=$(basename ${serviceJar})
 echo "base_name"$base_name
 
-sed -i 's,$serviceJar,'/dbagiga/$base_name',g' /tmp/$service_name
+sed -i 's,$serviceJar,'$gigaDir/$base_name',g' /tmp/$service_name
 sed -i 's,$consul_host,'$consul_host',g' /tmp/$service_name
 sed -i 's,$log_location,'$log_location',g' /tmp/$service_name
 
