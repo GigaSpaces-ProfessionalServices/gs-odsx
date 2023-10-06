@@ -397,7 +397,7 @@ def proceedToDeployPU():
         directory = os.getcwd()
         os.chdir(sourceMSSQLFeederShFilePath)
         #os.system("pwd")
-        restPort = 8025
+        restPort = 8300
         restPort = restPort+1
 
         newGSCCount=0

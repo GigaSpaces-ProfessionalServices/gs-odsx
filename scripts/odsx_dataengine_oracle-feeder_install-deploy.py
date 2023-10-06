@@ -420,7 +420,7 @@ def proceedToDeployPU():
         directory = os.getcwd()
         os.chdir(sourceOracleFeederShFilePath)
         #os.system("pwd")
-        restPort = 8015 #8025
+        restPort = 8500
         restPort = restPort+1
 
         newGSCCount=0
