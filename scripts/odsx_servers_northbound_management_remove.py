@@ -48,7 +48,7 @@ def getNBFolderName():
     for tar_file in tar_files:
         cmdToExecute = "tar -ztvf "+str(os.getenv("ODSXARTIFACTS")) +"/nb/"+tar_file+" | head -1 | awk '{print $NF}' | cut -d/ -f1"
         output = executeRemoteCommandAndGetOutput(getPivotHost(),"root",cmdToExecute)
-        return output
+        return output.replace("\n","")
 
 def getNBAgentHostList():
     logger.info("getNBAgentHostList()")
