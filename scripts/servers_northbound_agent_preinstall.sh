@@ -18,7 +18,7 @@ installation_path=$sourceInstallerDirectory/nb/
 installation_path_tar=$sourceInstallerDirectoryTar/nb
 installation_file=$(find $installation_path_tar -name *.tar.gz -printf "%f\n")
 
-nb_foldername=$(tar -ztvf $installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
+nb_foldername=$(tar -ztvf $installation_path_tar/$installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
 
 echo $installation_path_tar"/"$installation_file
 

@@ -15,7 +15,7 @@ echo "homedir: "$home_dir
 installation_path=$home_dir/install/nb
 
 installation_file=$(find $installation_path -name *.tar.gz -printf "%f\n")
-nb_foldername=$(tar -ztvf $installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
+nb_foldername=$(tar -ztvf $installation_path/$installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
 
 echo $installation_path"/"$installation_file
 
