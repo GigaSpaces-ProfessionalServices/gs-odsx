@@ -205,7 +205,7 @@ def proceedForPreInstallation(nbServers, param):
             remotePath='/dbagiga'
             commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
-        nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
+        nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf.template"
         nbConfig = createPropertiesMapFromFile(nbConfig)
         sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
         sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))

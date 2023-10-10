@@ -38,9 +38,9 @@ then
     echo "Copying cert file"
     cp $dbagigashareApplicativePath/ssl/$sslCert $targetDir/$nb_foldername/ssl/
 fi
-cacert=$(ls $dbagigashareApplicativePath/ssl/$sslCaCert 2> /dev/null | wc -l)
-echo "cacertFiles:"$cacert
-if [[  $pemFiles -gt 0 ]]
+cacertFiles=$(ls $dbagigashareApplicativePath/ssl/$sslCaCert 2> /dev/null | wc -l)
+echo "cacertFiles:"$cacertFiles
+if [[  $cacertFiles -gt 0 ]]
 then
     echo "Copying cacert file"
     cp $dbagigashareApplicativePath/ssl/$sslCaCert $targetDir/$nb_foldername/ssl/

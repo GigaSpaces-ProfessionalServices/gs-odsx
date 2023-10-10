@@ -217,6 +217,7 @@ def proceedForPreInstallation(nbServers, param):
             logger.info("hostip ::"+str(hostip)+" user :"+str(nb_user)+" remotePath: "+str(remotePath))
             scp_upload(hostip, nb_user, 'install/install.tar', '')
 
+        nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf.template"
         if param.casefold()=='applicative':
             commandToExecute="scripts/servers_northbound_applicative_preinstall.sh"
         if param.casefold()=='agent':
@@ -225,8 +226,8 @@ def proceedForPreInstallation(nbServers, param):
         if param.casefold()=='management':
             remotePath='/dbagiga'
             commandToExecute="scripts/servers_northbound_management_preinstall.sh"
+            nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
         logger.info("commandToExecute :"+commandToExecute)
-        nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
         nbConfig = createPropertiesMapFromFile(nbConfig)
         sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
         sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))
