@@ -8,7 +8,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, \
     config_get_manager_node
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, connectExecuteSSHWithLoginProxy
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
@@ -252,7 +252,7 @@ def proceedForApplicativeInstallation():
         logger.info("connectExecuteSSH :")
         with Spinner():
             logger.info("connectExecuteSSH : hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
-            connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " ")
+            connectExecuteSSHWithLoginProxy(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " ")
         logger.info("Adding server-node :"+str(hostip))
         #config_add_nb_node(hostip, hostip, "applicative server",  "config/cluster.config")
 
@@ -280,7 +280,7 @@ def proceedForAgentInstallation():
         logger.info(" hostip :"+str(hostip))
         with Spinner():
             logger.info("connectExecuteSSH Agent: hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
-            connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --agent")
+            connectExecuteSSHWithLoginProxy(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --agent")
         logger.info("Adding agent-node :"+str(hostip))
         #config_add_nb_node(hostip, hostip, "agent server", "config/cluster.config")
         logger.info("Completed Installation for agent server:"+str(hostip))
@@ -301,7 +301,7 @@ def proceedForManagementInstallation():
         logger.info(" hostip :"+str(hostip))
         with Spinner():
             logger.info("connectExecuteSSH Agent: hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
-            connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --management")
+            connectExecuteSSHWithLoginProxy(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " --management")
         logger.info("Adding agent-node :"+str(hostip))
         #config_add_nb_node(hostip, hostip, "management server", "config/cluster.config")
         logger.info("Completed Installation for management server:"+str(hostip))

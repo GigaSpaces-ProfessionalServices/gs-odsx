@@ -25,6 +25,21 @@ def connectExecuteSSH(host, user, shellScript, params):
     else:
         print("Invalid Host / IP."+str(host))
 
+def connectExecuteSSHWithLoginProxy(host, user, shellScript, params):
+    if (isValidHost(host)):
+        isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
+        pemFileName = readValuefromAppConfig("cluster.pemFile")
+        if (isConnectUsingPem=='True'):
+            ssh = ''.join(['ssh', ' -i ', pemFileName, ' ', user, '@', host, ' '])
+        else:
+            ssh = ''.join(['ssh', ' ', host, ' '])
+        if (len(params) > 0):
+            cmd = ssh + 'bash' + ' -l -s ' + params + ' < ' + shellScript  # + '>> myl
+        else:
+            cmd = ssh + 'bash' + ' -l < ' + shellScript  # + '>> myl
+        status = os.system(cmd)
+    else:
+        print("Invalid Host / IP."+str(host))
 
 def executeRemoteCommandAndGetOutput(host, user, commandToExecute):
     logger.info("executeRemoteCommandAndGetOutput host:"+str(host)+" user:"+str(user)+" commmandToExecute:"+str(commandToExecute))
