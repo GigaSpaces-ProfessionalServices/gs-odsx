@@ -102,7 +102,7 @@ def myCheckArg(args=None):
 def setupService():
     global grafanaEndpoint
     sourceInstallerDirectory=""
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("setupService() : start")
     #grafanaEndpointInput = Fore.YELLOW + "Enter endpoint for grafana server :" + Fore.RESET
     # ALON & AHARON Ask to take nb_domain from nb.conf from /dbagigashare/current/nb/management/ instead of pivot host
@@ -142,7 +142,7 @@ def setupGrafanaDashboard():
  
     for host in grafanaHostList:
         uploadDashbordJsonFile(host)
-        uploadDashboadProvisionFile(host)
+        #uploadDashboadProvisionFile(host)
 
    
     restartGrafana()
@@ -190,8 +190,8 @@ def uploadDashbordJsonFile(host):
         localIP = executeLocalCommandAndGetOutput("hostname")
 
     localIP = localIP[1:]
-    catalogue_service_url = 'https://'+str(grafanaEndpoint)+':3211/services'
-    catalogue_table_url = 'https://'+str(grafanaEndpoint)+':3211/metadata'
+    catalogue_service_url = 'http://'+str(grafanaEndpoint)+':3211/services'
+    catalogue_table_url = 'http://'+str(grafanaEndpoint)+':3211/metadata'
 
     try:
         with Spinner():
