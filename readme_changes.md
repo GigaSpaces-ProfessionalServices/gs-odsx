@@ -110,3 +110,12 @@
 30. Follow the same steps from TAU v4.25-tau-release tag section
 ### TAU v4.27-tau-release tag
 31. Removed app.spacejar.pu.partitions property from app.config
+### TAU v4.32-tau-release tag
+32. Update app.yaml and add below section in parallel to mssql & oracle  :
+    gilboa:
+      config: null
+      jars:
+        gilboaJarFile: GilboaSync-1.2-SNAPSHOT.jar
+33. Update app.config file :
+    app.dataengine.gilboa-feeder.sqlite.dbfile=/dbagigawork/sqlite/gilboaFeeder.db
+34. Build gilboa jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/releases/tag/TAU-Infra-1.0

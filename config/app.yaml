@@ -72,6 +72,11 @@ current:
     jars:
       mssqlJarFile: mssqlFeeder-1.0.0.jar
     scripts: null
+  gilboa:
+    config: null
+    jars:
+      gilboaJarFile: GilboaSync-1.2-SNAPSHOT.jar
+    scripts: null
   oracle:
     config: null
     jars:
