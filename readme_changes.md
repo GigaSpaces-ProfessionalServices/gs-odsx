@@ -118,8 +118,9 @@
         gilboaJarFile: GilboaSync-1.2-SNAPSHOT.jar
 33. Update app.config file :
     app.dataengine.gilboa-feeder.sqlite.dbfile=/dbagigawork/sqlite/gilboaFeeder.db
-34. Build gilboa jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/releases/tag/TAU-Infra-1.0
-35. Sample /dbagigashare/current/gilboa/scripts/load_Portal_Calendary_Changes_View.sh :
+34. Create gilboa folder under /dbagigashare/current/ with same folders as mssql 
+35. Build gilboa jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/releases/tag/TAU-Infra-1.0 & copy to /dbagigashare/current/gilboa/jars/
+36. Sample /dbagigashare/current/gilboa/scripts/load_Portal_Calendary_Changes_View.sh :
     echo "starting Portal_Calendary_View"
     table_name="dbo.Portal_Calendary_View"
     exclude_columns=""
