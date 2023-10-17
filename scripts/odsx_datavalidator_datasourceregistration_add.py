@@ -122,12 +122,20 @@ def doValidate():
                 print(Fore.YELLOW +"Please select IntegratedSecurity's value from given list"+Fore.RESET)
                 IntegratedSecurity = str(userInputWrapper("IntegratedSecurity [true/false]:"))
 
-            AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM] [default:JavaKerberos]:"))
+            AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM/MSSQL/] [default:JavaKerberos]:"))
             if (len(str(AuthenticationScheme)) == 0):
                 AuthenticationScheme = 'JavaKerberos'
             while(AuthenticationScheme not in authenticationSchemes):
                 print(Fore.YELLOW +"Please select AuthenticationScheme's value from given list"+Fore.RESET)
-                AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM]:"))
+                AuthenticationScheme = str(userInputWrapper("AuthenticationScheme[JavaKerberos/NTLM/MSSQL]:"))
+
+            if IntegratedSecurity == 'false' and AuthenticationScheme =='MSSQL' :
+                username1 = str(userInputWrapper("User name []: "))
+                if (len(str(username1)) == 0):
+                    username1 = ''
+                password1 = str(userInputWrapper("Password []: "))
+                if (len(str(password1)) == 0):
+                    password1 = ''
 
             Properties = str(userInputWrapper("Connection properties( ex.Key=value;):"))
 
@@ -167,7 +175,7 @@ def doValidate():
 
 dataSourceNames=[]
 trueFalse=["true","false",""]
-authenticationSchemes = ["JavaKerberos","NTLM",""]
+authenticationSchemes = ["JavaKerberos","NTLM","MSSQL",""]
 dataSourceTypes=["gigaspaces","ms-sql","db2","mysql","oracle",""]
 def printDatasourcetable(dataValidatorServiceHost):
     try:

@@ -131,4 +131,5 @@
     app.dataengine.mssql-feeder.rest.port=8302
     app.dataengine.oracle-feeder.rest.port=8500
     app.dataengine.gilboa-feeder.rest.port=8251
-    
+38. Build data validator agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+39. Copy generated agent jar to /dbagigashare/current/data-validator/jars on pivot machine    
