@@ -126,3 +126,9 @@
     exclude_columns=""
     pk_columns=""
     curl -XPOST "http://$1:$2/table-feed/start?table-name=${table_name}&base-column=v_timestamp"
+### TAU v4.33-tau-release tag
+37. Add following properties in app.config
+    app.dataengine.mssql-feeder.rest.port=8302
+    app.dataengine.oracle-feeder.rest.port=8500
+    app.dataengine.gilboa-feeder.rest.port=8251
+    
