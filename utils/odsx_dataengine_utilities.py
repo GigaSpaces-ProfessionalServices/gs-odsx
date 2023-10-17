@@ -74,6 +74,17 @@ def getmssqlFeederList():
         puName = str(file).replace('load_','').replace('.sh','').casefold()
         mssqlFeederList.append('mssqlfeeder_'+puName)
 
+def getgilboaFeederList():
+    global gilboaFeederList
+    gilboaFeederList=[]
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    os.getcwd()
+    sourceGilboaFeederShFilePath = str(sourceInstallerDirectory + ".gilboa.scripts.").replace('.', '/')
+    os.chdir(sourceGilboaFeederShFilePath)
+    for file in glob.glob("load_*.sh"):
+        puName = str(file).replace('load_','').replace('.sh','').casefold()
+        gilboaFeederList.append('gilboafeeder_'+puName)
+
 def getdbFeederList():
     global dbFeederList
     dbFeederList=[]
@@ -128,6 +139,7 @@ def getAllFeeders():
         dataTable=[]
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         getmssqlFeederList()
+        getgilboaFeederList()
         getoracleFeederList()
         if (len(jsonArray) == 0):
             sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
@@ -161,6 +173,25 @@ def getAllFeeders():
                                      # Fore.GREEN + str("-") + Fore.RESET,
                                      Fore.GREEN + "Undeployed" + Fore.RESET,
                                      ]
+                counter = counter + 1
+                dataTable.append(dataArray1)
+
+            os.getcwd()
+
+            sourceGilboaFeederShFilePath = str(sourceInstallerDirectory + ".gilboa.scripts.").replace('.', '/')
+            os.chdir(sourceGilboaFeederShFilePath)
+            for file in glob.glob("load_*.sh"):
+                os.chdir(sourceGilboaFeederShFilePath)
+                puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+                puName = 'gilboafeeder_'+puName
+                gilboaFeederList.remove(puName)
+                dataArray1 = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                              Fore.GREEN + puName + Fore.RESET,
+                              Fore.GREEN + str("-") + Fore.RESET,
+                              Fore.GREEN + str("-") + Fore.RESET,
+                              # Fore.GREEN + str("-") + Fore.RESET,
+                              Fore.GREEN + "Undeployed" + Fore.RESET,
+                              ]
                 counter = counter + 1
                 dataTable.append(dataArray1)
 
@@ -208,8 +239,23 @@ def getAllFeeders():
                 counter=counter+1
                 dataTable.append(dataArray)
 
+            if(str(data["name"]).__contains__('gilboa')):
+                if(gilboaFeederList.__contains__(str(data["name"]))):
+                    gilboaFeederList.remove(str(data["name"]))
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+str(hostId)+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             # Fore.GREEN+str(queryStatus)+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
+
         logger.info("getAllFeeders() : end")
         mssqlFlag = False
+        gilboaFlag = False
         db2Flag = False
         adabsFlag = False
         if (len(mssqlFeederList) != 0 and len(jsonArray) != 0):
@@ -224,6 +270,20 @@ def getAllFeeders():
                                  ]
                     counter=counter+1
                     dataTable.append(dataArray)
+
+        if (len(gilboaFeederList) != 0 and len(jsonArray) != 0):
+            for puName in gilboaFeederList:
+                if(str(puName).__contains__('gilboa')):
+                    dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                                 Fore.GREEN+str(puName)+Fore.RESET,
+                                 Fore.GREEN+str("-")+Fore.RESET,
+                                 Fore.GREEN+str("-")+Fore.RESET,
+                                 # Fore.GREEN+str("-")+Fore.RESET,
+                                 Fore.GREEN+str("Undeployed")+Fore.RESET,
+                                 ]
+                    counter=counter+1
+                    dataTable.append(dataArray)
+
         if (len(oracleFeederList) != 0 and len(jsonArray) != 0):
             for puName in oracleFeederList:
                 if(str(puName).__contains__('oracle')):
@@ -239,6 +299,8 @@ def getAllFeeders():
         # for i in jsonArray:
         if not(str(jsonArray).__contains__("mssql")):
                 mssqlFlag = True
+        if not(str(jsonArray).__contains__("gilboa")):
+            gilboaFlag = True
         # for i in jsonArray:
         if not(str(jsonArray).__contains__("oracle")):
                 db2Flag = True
@@ -278,6 +340,7 @@ def getAllFeeders():
         #         counter = counter + 1
         #         dataTable.append(dataArray1)
         mssqlFeederList.clear()
+        gilboaFeederList.clear()
         oracleFeederList.clear()
         return dataTable
 

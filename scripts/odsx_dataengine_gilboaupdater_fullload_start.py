@@ -212,14 +212,12 @@ def listDeployed(managerHost):
                     hostId = data2["hostId"]
                 if (len(str(hostId)) == 0):
                     hostId = "N/A"
-                print("str(data[name] "+str(data["name"]))
                 if (str(data["name"]).__contains__('mssql')):
                     os.getcwd()
                     os.chdir(sourceMSSQLFeederShFilePath)
                     for file in glob.glob("load_*.sh"):
                         puName = str(str(data["name"])).replace('mssqlfeeder_', 'load_').casefold()
                         puName = puName + ".sh"
-                        print("file "+str(file)+" puName : "+puName+" : "+file.casefold() == puName)
                         if (file.casefold() == puName):
                             file = open(file, "r")
                             for line in file:

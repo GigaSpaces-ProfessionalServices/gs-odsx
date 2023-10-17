@@ -330,7 +330,7 @@ def proceedToStartMSSQLFeederWithName(puName):
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_mssql-feeder_start")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine  -> Gilboa -> Update -> Start")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine  -> Gilboa -> Update -> Run Update")
     try:
         managerHost=''
         managerNodes = config_get_manager_node()

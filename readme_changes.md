@@ -115,7 +115,8 @@
     gilboa:
       config: null
       jars:
-        gilboaJarFile: GilboaSync-1.2-SNAPSHOT.jar
+        gilboaJarFile: GilboaSyncFeeder-1.0-SNAPSHOT
+      scripts: null
 33. Update app.config file :
     app.dataengine.gilboa-feeder.sqlite.dbfile=/dbagigawork/sqlite/gilboaFeeder.db
 34. Create gilboa folder under /dbagigashare/current/ with same folders as mssql 
