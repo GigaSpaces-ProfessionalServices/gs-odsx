@@ -397,8 +397,7 @@ def proceedToDeployPU():
         directory = os.getcwd()
         os.chdir(sourceMSSQLFeederShFilePath)
         #os.system("pwd")
-        restPort = 8250
-        restPort = restPort+1
+        restPort = str(readValueByConfigObj("app.dataengine.gilboa-feeder.rest.port")).replace('"','').replace(' ','')
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))

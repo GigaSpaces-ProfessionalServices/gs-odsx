@@ -397,8 +397,8 @@ def proceedToDeployPU():
         directory = os.getcwd()
         os.chdir(sourceMSSQLFeederShFilePath)
         #os.system("pwd")
-        restPort = 8300
-        restPort = restPort+1
+        restPort = str(readValueByConfigObj("app.dataengine.mssql-feeder.rest.port")).replace('"','').replace(' ','')
+        #restPort = restPort+1
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
