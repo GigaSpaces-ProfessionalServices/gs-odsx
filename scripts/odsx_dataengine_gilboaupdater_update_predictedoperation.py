@@ -71,7 +71,7 @@ def getGilboaQueryStatusFromSqlLite(feederName):
             host = str(socket.gethostbyaddr(host).__getitem__(2)[0])
             logger.info("port : "+str(row[1]))
             port = str(row[1])
-            cmd = "curl -XPOST \"http://"+host+":"+port+"/table-feed/actions_count?table-name=dbo.Portal_Calendary_View&base-column=v_timestamp\""
+            cmd = "curl -X POST http://"+host+":"+port+"/table-feed/actions_count?table-name=dbo.Portal_Calendary_View&base-column=v_timestamp"
             logger.info("cmd : "+str(cmd))
             output = executeLocalCommandAndGetOutput(cmd)
             output = "predicated count : "+str(output)
@@ -107,7 +107,7 @@ def getData():
     return data
 def gilboaSyncChangeCount(host,port):
     logger.info("count for gilboa sync changes")
-    response = requests.get('http://' + host + ':'+port+'/table-feed/actions_count',params=getData(),
+    response = requests.post('http://' + host + ':'+port+'/table-feed/actions_count',params=getData(),
                             headers={'Accept': 'application/json'})
     verboseHandle.printConsoleInfo("Count in memory : " + response.text)
 

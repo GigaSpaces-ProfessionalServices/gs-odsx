@@ -135,3 +135,5 @@
 38. Build data validator agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 39. Copy generated agent jar to /dbagigashare/current/data-validator/jars on pivot machine    
 40. Pull and Rebuild MsSqlFeeder jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/MsSqlFeeder and place it to /dbagigashare/current/mssql/jars/
+41. In mssql load scripts add param : clear-before-start=true. So sample script will look like :
+    curl -XPOST "http://$1:$2/table-feed/start?table-name=${table_name}&base-column=v_timestamp&clear-before-start=true"

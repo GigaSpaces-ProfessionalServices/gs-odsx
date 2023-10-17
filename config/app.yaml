@@ -75,7 +75,7 @@ current:
   gilboa:
     config: null
     jars:
-      gilboaJarFile: GilboaSyncFeeder-1.0-SNAPSHOT
+      gilboaJarFile: GilboaSyncFeeder-1.0-SNAPSHOT.jar
     scripts: null
   oracle:
     config: null
