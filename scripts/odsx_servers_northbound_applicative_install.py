@@ -11,7 +11,7 @@ from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, \
     config_get_manager_node
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, connectExecuteSSHWithLoginProxy
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
@@ -206,11 +206,10 @@ def proceedForPreInstallation(nbServers, param):
         with Spinner():
             logger.info("hostip ::"+str(hostip)+" user :"+str(nb_user)+" remotePath: "+str(remotePath))
             scp_upload(hostip, nb_user, 'install/install.tar', '')
-
+        nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf.template"
         if param.casefold()=='applicative':
             commandToExecute="scripts/servers_northbound_applicative_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
-        nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
         nbConfig = createPropertiesMapFromFile(nbConfig)
         sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
         sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))
@@ -238,7 +237,7 @@ def proceedForApplicativeInstallation():
         with Spinner():
             logger.info("connectExecuteSSH : hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
             dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-            connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath +" " +dbaGigaLogPath+ " ")
+            connectExecuteSSHWithLoginProxy(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath +" " +dbaGigaLogPath+ " ")
         logger.info("Adding server-node :"+str(hostip))
         #config_add_nb_node(hostip, hostip, "applicative server",  "config/cluster.config")
 

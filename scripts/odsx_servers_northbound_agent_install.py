@@ -11,7 +11,7 @@ from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_nb_list, config_get_grafana_list, config_get_influxdb_node, \
     config_get_manager_node
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, connectExecuteSSHWithLoginProxy
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
@@ -209,7 +209,7 @@ def proceedForPreInstallation(nbServers, param):
             remotePath=dbaGigaPath
             commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
         logger.info("commandToExecute :"+commandToExecute)
-        nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
+        nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf.template"
         nbConfig = createPropertiesMapFromFile(nbConfig)
         sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
         sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))
@@ -237,7 +237,7 @@ def proceedForAgentInstallation():
         with Spinner():
             logger.info("connectExecuteSSH Agent: hostip "+str(hostip)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
             dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-            connectExecuteSSH(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " "+dbaGigaLogPath+" --agent ")
+            connectExecuteSSHWithLoginProxy(hostip, nb_user, "scripts/servers_northbound_install.sh", remotePath + " "+dbaGigaLogPath+" --agent ")
         logger.info("Adding agent-node :"+str(hostip))
         #config_add_nb_node(hostip, hostip, "agent server", "config/cluster.config")
         logger.info("Completed Installation for agent server:"+str(hostip))

@@ -110,3 +110,30 @@
 30. Follow the same steps from TAU v4.25-tau-release tag section
 ### TAU v4.27-tau-release tag
 31. Removed app.spacejar.pu.partitions property from app.config
+### TAU v4.32-tau-release tag
+32. Update app.yaml and add below section in parallel to mssql & oracle  :
+    gilboa:
+      config: null
+      jars:
+        gilboaJarFile: GilboaSyncFeeder-1.0-SNAPSHOT
+      scripts: null
+33. Update app.config file :
+    app.dataengine.gilboa-feeder.sqlite.dbfile=/dbagigawork/sqlite/gilboaFeeder.db
+34. Create gilboa folder under /dbagigashare/current/ with same folders as mssql 
+35. Build gilboa jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/releases/tag/TAU-Infra-1.0 & copy to /dbagigashare/current/gilboa/jars/
+36. Sample /dbagigashare/current/gilboa/scripts/load_Portal_Calendary_Changes_View.sh :
+    echo "starting Portal_Calendary_View"
+    table_name="dbo.Portal_Calendary_View"
+    exclude_columns=""
+    pk_columns=""
+    curl -XPOST "http://$1:$2/table-feed/start?table-name=${table_name}&base-column=v_timestamp"
+### TAU v4.33-tau-release tag
+37. Add following properties in app.config
+    app.dataengine.mssql-feeder.rest.port=8302
+    app.dataengine.oracle-feeder.rest.port=8500
+    app.dataengine.gilboa-feeder.rest.port=8251
+38. Build data validator agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+39. Copy generated agent jar to /dbagigashare/current/data-validator/jars on pivot machine    
+40. Pull and Rebuild MsSqlFeeder jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/MsSqlFeeder and place it to /dbagigashare/current/mssql/jars/
+41. In mssql load scripts add param : clear-before-start=true. So sample script will look like :
+    curl -XPOST "http://$1:$2/table-feed/start?table-name=${table_name}&base-column=v_timestamp&clear-before-start=true"

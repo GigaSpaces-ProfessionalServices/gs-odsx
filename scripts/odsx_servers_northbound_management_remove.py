@@ -6,8 +6,9 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_nb_list
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
+from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -45,7 +46,9 @@ def getNBFolderName():
     files = os.listdir(str(os.getenv("ODSXARTIFACTS")) +"/nb/")
     tar_files = [file for file in files if file.endswith('.tar.gz')]
     for tar_file in tar_files:
-        return tar_file.replace(".tar.gz","")
+        cmdToExecute = "tar -ztvf "+str(os.getenv("ODSXARTIFACTS")) +"/nb/"+tar_file+" | head -1 | awk '{print $NF}' | cut -d/ -f1"
+        output = executeRemoteCommandAndGetOutput(getPivotHost(),"root",cmdToExecute)
+        return output.replace("\n","")
 
 def getNBAgentHostList():
     logger.info("getNBAgentHostList()")

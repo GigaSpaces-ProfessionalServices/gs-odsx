@@ -18,7 +18,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
+from utils.odsx_db2feeder_utilities import getPortNotExistInGilboaFeeder
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -128,7 +128,7 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            if(str(data["name"]).casefold().__contains__("mssqlfeeder")):
+            if(str(data["name"]).casefold().__contains__("gilboa")):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,
@@ -230,8 +230,7 @@ def proceedToCreateGSC(zoneGSC,newGSCCount):
     logger.info("proceedToCreateGSC()")
     idx = newGSCCount % len(spaceNodes)
     host = spaceNodes[idx]
-    dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
-    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config="+dbaGigaPath+"gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
     verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
     logger.info(commandToExecute)
     with Spinner():
@@ -260,16 +259,16 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     logger.info("updateAndCopyJarFileFromSourceToShFolder()")
     #sourceDB2FeederShFilePath = '/home/ec2-user/db2-feeder'
     #sourceDB2JarFilePath = '/home/ec2-user/db2feeder-1.0.0.jar'
-    head , tail = os.path.split(sourceMSSQLJarFilePath)
+    head , tail = os.path.split(sourceGilboaJarFilePath)
     fileName= str(tail).replace('.jar','')
     filePrefix = fileName
     targetJarFile=sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
-        cmd = "sudo cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
+        cmd = "sudo cp "+sourceGilboaJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
         #print(cmd)
     else:
-        cmd = "cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
+        cmd = "cp "+sourceGilboaJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
     logger.info("cmd : "+str(cmd))
     home = executeLocalCommandAndGetOutput(cmd)
     logger.info("home: "+str(home))
@@ -283,13 +282,13 @@ def uploadFileRest(managerHostConfig):
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
 
-            exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
+            exitsFeeder = str(file).replace('load','gilboafeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load','').replace('.sh','').casefold()
                 pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
                 #print("pathOfSourcePU : "+str(pathOfSourcePU))
                 #print("jarName :"+jarName)
-                zoneGSC = 'mssql_'+puName
+                zoneGSC = 'gilboa_'+puName
                 verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
                 logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
                 logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
@@ -349,12 +348,12 @@ def validateResponseGetDescription(responseCode):
 def sqlLiteCreateTableDB():
     logger.info("sqlLiteCreateTableDB()")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         logger.info("dbFile : "+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx)+" Sqlite V: "+str(sqlite3.version))
         #cnx.execute("DROP TABLE IF EXISTS db2_host_port")
-        cnx.execute("CREATE TABLE IF NOT EXISTS mssql_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.execute("CREATE TABLE IF NOT EXISTS gilboa_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -369,9 +368,9 @@ def createMSSQLEntryInSqlLite(puName, file, restPort):
         hostId = ''
         for data in jsonArray:
             hostId = str(data["hostId"])
-        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
-        cnx.execute("INSERT INTO mssql_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
+        cnx.execute("INSERT INTO gilboa_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -384,7 +383,7 @@ def newInstallMssqlFeeder():
     os.chdir(sourceMSSQLFeederShFilePath)
     for file in glob.glob("load_*.sh"):
         os.chdir(directory)
-        exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
+        exitsFeeder = str(file).replace('load','gilboafeeder').replace('.sh','').casefold()
         if exitsFeeder not in activefeeder:
             newInstall.append(exitsFeeder)
 
@@ -398,26 +397,25 @@ def proceedToDeployPU():
         directory = os.getcwd()
         os.chdir(sourceMSSQLFeederShFilePath)
         #os.system("pwd")
-        restPort = str(readValueByConfigObj("app.dataengine.mssql-feeder.rest.port")).replace('"','').replace(' ','')
-        #restPort = restPort+1
+        restPort = str(readValueByConfigObj("app.dataengine.gilboa-feeder.rest.port")).replace('"','').replace(' ','')
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
-            exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
+            exitsFeeder = str(file).replace('load','gilboafeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load_','').replace('.sh','').casefold()
-                zoneGSC = 'mssql_'+puName
+                zoneGSC = 'gilboa_'+puName
                 logger.info("filePrefix : "+filePrefix)
                 resource = filePrefix+'_'+puName+'.jar'
-                puName = 'mssqlfeeder_'+puName
-                port = getPortNotExistInMSSQLFeeder(restPort)
+                puName = 'gilboafeeder_'+puName
+                port = getPortNotExistInGilboaFeeder(restPort)
                 logger.info("dbPort : "+str(port))
                 if(len(str(port))!=0):
                     while(len(str(port))!=0):
                         restPort = int(port)+1
-                        port = getPortNotExistInMSSQLFeeder(restPort)
+                        port = getPortNotExistInGilboaFeeder(restPort)
                     #else:
                     #    dbPort = restPort
                 if(confirmCreateGSC=='y'):
@@ -467,7 +465,7 @@ def proceedToDeployPU():
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
-    db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+    db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
     verboseHandle.printConsoleInfo("------------------------------------------------------------")
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
@@ -479,24 +477,24 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
     verboseHandle.printConsoleInfo("Enter sqlite3 db file :"+str(db_file))
-    verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder .jar file including file name : "+str(sourceMSSQLJarFilePath))
+    verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder .jar file including file name : "+str(sourceGilboaJarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder *.sh file : "+str(sourceMSSQLFeederShFilePath))
     verboseHandle.printConsoleInfo("Enter source file of mssql-feeder *.sh file : "+str(newInstall))
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
 
-    global sourceMSSQLJarFilePath
-    sourceMSSQLJarFileConfig = str(getYamlFilePathInsideFolder(".mssql.jars.mssqlJarFile"))
-    #print(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET)
-    #if(len(str(sourceMSSQLJarFilePath))==0):
-    sourceMSSQLJarFilePath = sourceMSSQLJarFileConfig
-    #set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceMSSQLJarFilePath)
+    global sourceGilboaJarFilePath
+    sourceGilboaJarFileConfig = str(getYamlFilePathInsideFolder(".gilboa.jars.gilboaJarFile"))
+    #print(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceGilboaJarFileConfig+"] : "+Fore.RESET)
+    #if(len(str(sourceGilboaJarFilePath))==0):
+    sourceGilboaJarFilePath = sourceGilboaJarFileConfig
+    #set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceGilboaJarFilePath)
 
     global sourceMSSQLFeederShFilePath
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    sourceMSSQLFeederShFilePathConfig = str(sourceInstallerDirectory+".mssql.scripts.").replace('.','/')
+    sourceMSSQLFeederShFilePathConfig = str(sourceInstallerDirectory+".gilboa.scripts.").replace('.','/')
 
     #print(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceMSSQLFeederShFilePathConfig+"] : "+Fore.RESET)
     #if(len(str(sourceMSSQLFeederShFilePath))==0):
@@ -554,7 +552,7 @@ def proceedToDeployPUInputParam(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_mssql-feeder_install")
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> MSSQL-Feeder -> Install-Deploy')
+    verboseHandle.printConsoleWarning('Menu -> DataEngine  -> Gilboa -> Update -> Install-Deploy')
     try:
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))

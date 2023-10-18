@@ -28,7 +28,7 @@ systemctl stop gsa.service
 sleep 5
 rm -rf $GS_HOME
 rm -rf setenv.sh gs dbagigashare install install.tar $gigaDir/giga* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
-find $gigalogs/ -mindepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -delete
+find $gigalogs/ -mindepth 1 ! -regex '^/dbagigalogs/consul\|/dbagigalogs/nginx\(/.*\)?' -delete
 cd $gigaDir
 rm -f gigaspaces-smart-ods $gigaDir/gs_config/metrics.xml
 echo "Remove symlink done!"

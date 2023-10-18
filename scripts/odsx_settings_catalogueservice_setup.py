@@ -121,7 +121,7 @@ def setupService():
     global isNbManagementHostAvailable
     isNbManagementHostAvailable = containsNBMAnagementtHost()
     sourceInstallerDirectory=""
-#    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     logger.info("setupService() : start")
     #grafanaEndpointInput = Fore.YELLOW + "Enter endpoint for grafana server :" + Fore.RESET
@@ -215,11 +215,9 @@ def uploadDashbordJsonFile(host):
         localIP = executeLocalCommandAndGetOutput("hostname")
 
     localIP = localIP[1:]
-    catalogue_service_url = 'https://'+str(grafanaEndpoint)+':3211/services'
-    catalogue_table_url = 'https://'+str(grafanaEndpoint)+':3211/metadata'
-    if not isNbManagementHostAvailable:
-        catalogue_service_url = catalogue_service_url.replace("https","http")
-        catalogue_table_url = catalogue_table_url.replace("https","http")
+    catalogue_service_url = 'http://'+str(grafanaEndpoint)+':3211/services'
+    catalogue_table_url = 'http://'+str(grafanaEndpoint)+':3211/metadata'
+
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))

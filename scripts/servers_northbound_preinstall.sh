@@ -15,7 +15,7 @@ echo "homedir: "$home_dir
 installation_path=$home_dir/install/nb
 
 installation_file=$(find $installation_path -name *.tar.gz -printf "%f\n")
-nb_foldername=$(tar -ztvf $installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
+nb_foldername=$(tar -ztvf $installation_path/$installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
 
 echo $installation_path"/"$installation_file
 
@@ -34,9 +34,9 @@ then
     echo "Copying cert file"
     cp $dbagigashareApplicativePath/ssl/$sslCert $targetDir/$nb_foldername/ssl/
 fi
-cacert=$(ls $dbagigashareApplicativePath/ssl/$sslCaCert 2> /dev/null | wc -l)
-echo "cacertFiles:"$cacert
-if [[  $pemFiles -gt 0 ]]
+cacertFiles=$(ls $dbagigashareApplicativePath/ssl/$sslCaCert 2> /dev/null | wc -l)
+echo "cacertFiles:"$cacertFiles
+if [[  $cacertFiles -gt 0 ]]
 then
     echo "Copying cacert file"
     cp $dbagigashareApplicativePath/ssl/$sslCaCert $targetDir/$nb_foldername/ssl/

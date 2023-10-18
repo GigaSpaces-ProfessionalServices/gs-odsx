@@ -230,8 +230,7 @@ def proceedToCreateGSC(zoneGSC,newGSCCount):
     logger.info("proceedToCreateGSC()")
     idx = newGSCCount % len(spaceNodes)
     host = spaceNodes[idx]
-    dbaGigaPath=str(readValuefromAppConfig("app.giga.path"))
-    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config="+dbaGigaPath+"gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
     verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
     logger.info(commandToExecute)
     with Spinner():
@@ -399,7 +398,6 @@ def proceedToDeployPU():
         os.chdir(sourceMSSQLFeederShFilePath)
         #os.system("pwd")
         restPort = str(readValueByConfigObj("app.dataengine.mssql-feeder.rest.port")).replace('"','').replace(' ','')
-        #restPort = restPort+1
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
@@ -554,7 +552,7 @@ def proceedToDeployPUInputParam(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_mssql-feeder_install")
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> MSSQL-Feeder -> Install-Deploy')
+    verboseHandle.printConsoleWarning('Menu -> DataEngine  -> Gilboa -> Full load -> Install-Deploy')
     try:
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))
