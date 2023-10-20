@@ -144,6 +144,8 @@ if __name__ == '__main__':
                     dir_list = os.listdir(sourcePath)
                     if (len(dir_list) > 1):
                         verboseHandle.printConsoleError("multiple packages exist in source path " + str(dir_list))
+                    elif len(dir_list)==0:
+                        verboseHandle.printConsoleError("no packages exist in source path " + str(sourcePath))
                     else:
                         packageName = dir_list[0]
                         user = 'root'

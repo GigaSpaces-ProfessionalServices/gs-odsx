@@ -229,11 +229,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         hostManager=hostsConfig.replace('"','').split(",")
         #print("optionID:"+str(hostsConfig)+" : "+user)
         logger.debug("optionID:"+str(hostsConfig))
-
-        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
-        #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
         dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagiga/",dbaGigaDir).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
         additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+dbaGigaDir+Fore.YELLOW+"]: "+Fore.RESET))
         if(len(additionalParam)==0):
             targetDir=dbaGigaDir

@@ -369,6 +369,8 @@ function gsCreateGSServeice {
   echo "$cmd">>$start_gsa_file
   cmd="$GS_HOME/bin/gs.sh container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
   cat "$startSpaceGsc/start_gsc.sh" >> $start_gsc_file
+  sed -i -e 's|/dbagiga/|'$gigaDir'|g' $start_gsc_file
+  sed -i -e 's|/dbagigalogs/|'$gigalogs'/|g' $start_gsc_file
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
@@ -443,9 +445,9 @@ logSourcePath=${16}
 logTargetPath=${17}
 startSpaceGsc=${18}
 selinux=${19}
-gsNicAddress=${20}
-gigalogs=${21}
-gigaDir=${22}
+gigalogs=${20}
+gigaDir=${21}
+gsNicAddress=${22}
 
 echo "param1"$1
 echo "param2"$targetDir

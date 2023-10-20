@@ -254,12 +254,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         hostManager=hostsConfig.replace('"','').split(",")
         #print("optionID:"+str(hostsConfig)+" : "+user)
         logger.debug("optionID:"+str(hostsConfig))
-
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagiga/",dbaGigaDir).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-
-        additionalParam = str(readValuefromAppConfig("app.manager.targetFolderInstall"))
+        additionalParam = str(readValuefromAppConfig("app.manager.targetFolderInstall")).replace("/dbagiga",dbaGigaDir)
         #print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
         #if(len(additionalParam)==0):
         #    targetDir='/dbagiga'
@@ -315,7 +314,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #else:
         #    set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
         #gsLogsConfigFile = '"{}"'.format(gsLogsConfigFile)
-        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         gsLogsConfigFile = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace("/dbagiga/",dbaGigaDir) #'"\\"{}\\""'.format(gsLogsConfigFile)
 
         licenseConfig = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))

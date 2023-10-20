@@ -127,9 +127,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         targetDirectory=''
         dbaGigaDataPath=str(readValueByConfigObj("app.gigadata.path"))
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagiga/",dbaGigaDir).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(readValuefromAppConfig("app.space.targetDirectory"))
+        additionalParam = str(readValuefromAppConfig("app.space.targetDirectory")).replace("/dbagiga",dbaGigaDir)
         #print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
         targetDirectory=str(additionalParam)
         #if(len(additionalParam)==0):
@@ -156,7 +157,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #    set_value_in_property_file('app.manager.gsManagerOptions',gsManagerOptions)
         #gsManagerOptions='"{}"'.format(gsManagerOptions)
         gsManagerOptions='"\\"{}\\""'.format(gsManagerOptions)
-        dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         gsLogsConfigFileFromConfig = str(readValuefromAppConfig("app.manager.gsLogsConfigFile")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = ""
@@ -432,7 +432,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
         #print(host+"  "+gsNicAddress)
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
         dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' ' + gsNicAddress +' '+dbaGigaLogPath+' '+dbaGigaDir
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled  +' '+dbaGigaLogPath+' '+dbaGigaDir +' ' + gsNicAddress
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         # print("---------------------"+str(additionalParam))
         logger.info("additionalParam - Installation :")
