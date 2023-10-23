@@ -18,6 +18,6 @@ sed -i '/export NB_HOME/d' .bashrc
 echo "$path">>.bashrc
 
 setsebool -P httpd_read_user_content 1
-chcon -Rt httpd_sys_rw_content_t /dbagigalogs/nginx/
+chcon -Rt httpd_sys_rw_content_t $gigalogs/nginx/
 
 echo "Setting NB_HOME -Done!"

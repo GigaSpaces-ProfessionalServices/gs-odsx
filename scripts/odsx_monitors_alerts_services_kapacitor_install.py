@@ -105,9 +105,9 @@ if __name__ == '__main__':
         if(rpmStatus == "Yes"):
             if(len(str(confirmInstall))==0):
                 confirmInstall='y'
-                if(confirmInstall=='y'):
-                    #buildUploadInstallTarToServer()
-                    executeCommandForInstall()
+            if(confirmInstall=='y'):
+                #buildUploadInstallTarToServer()
+                executeCommandForInstall()
         else:
             verboseHandle.printConsoleError(" jq or kapacitor rpm File not exists")
     except Exception as e:

@@ -214,7 +214,8 @@ def proceedForPreInstallation(nbServers, param):
         sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
         sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))
         sslCaCert = str(nbConfig.get("SSL_CA_CERTIFICATE"))
-        additionalParam=remotePath+' '+sourceInstallerDirectory + ' ' + sourceInstallerDirectoryTar + ' ' +sslCert +' '+sslKey+ ' '+sslCaCert
+        dbaGigaPath=str(readValueByConfigObj("app.giga.path"))
+        additionalParam=remotePath+' '+sourceInstallerDirectory + ' ' + sourceInstallerDirectoryTar + ' ' +sslCert +' '+sslKey+ ' '+sslCaCert + ' '+dbaGigaPath
 
         logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
 
