@@ -9,6 +9,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts, config_get_nb_list, \
     config_get_grafana_list, config_get_influxdb_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
@@ -404,7 +405,8 @@ def getUsageOfRoot(ip):
 
 def getUsageOfWork(ip):
     logger.info("getUsageOfWork(ip) :"+str(ip))
-    commandToExecute = "df /dbagigawork/ | awk 'END{ print $(NF-1) }'"
+    dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+    commandToExecute = "df "+dbaGigaWorkPath+"/ | awk 'END{ print $(NF-1) }'"
     output = executeRemoteCommandAndGetOutput(ip, 'root', commandToExecute)
     logger.info("output :"+str(output))
     return str(output).replace('\n','')

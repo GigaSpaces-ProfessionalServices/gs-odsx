@@ -112,7 +112,8 @@ def installSingle():
         user="root"
         logger.info(" user: "+str(user))
 
-        dbPath= str(readValuefromAppConfig("app.dv.server.db")) #userInputWrapper(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        dbPath= str(readValuefromAppConfig("app.dv.server.db")).replace("/dbagigawork",dbaGigaWorkPath) #userInputWrapper(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
         #if(len(str(dbPath))==0):
         #    dbPath='/dbagigawork/sqlite/datavalidator.db'
         dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))

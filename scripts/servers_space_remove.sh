@@ -4,6 +4,7 @@ removeJava=$1
 removeUnzip=$2
 gigalogs=$3
 gigaDir=$4
+gigaWork=$5
 
 #echo "removeUnzip :"$removeUnzip
 
@@ -29,7 +30,7 @@ systemctl stop gsc.service
 systemctl stop gsa.service
 sleep 5
 rm -rf $GS_HOME
-rm -rf setenv.sh gs install install.tar $gigaDir/giga* /dbagigadata/* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+rm -rf setenv.sh gs install install.tar $gigaDir/giga* /dbagigadata/* $gigaWork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
 find $gigalogs/ -mindepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -delete
 cd $gigaDir
 rm -f gigaspaces-smart-ods $gigaDir/gs_config/metrics.xml

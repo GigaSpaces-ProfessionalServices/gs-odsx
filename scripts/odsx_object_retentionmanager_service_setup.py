@@ -98,7 +98,8 @@ def setupService():
 
     #set_value_in_property_file(app_config_space_key,str(spaceName))
 
-    dbLocation = readValuefromAppConfig(app_retentionmanager_sqlite_dbfile)
+    dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+    dbLocation = readValuefromAppConfig(app_retentionmanager_sqlite_dbfile).replace("/dbagigawork",dbaGigaWorkPath)
     setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,retentionJar)
     verboseHandle.printConsoleInfo("Retention Manager Service setup successfully!")
 

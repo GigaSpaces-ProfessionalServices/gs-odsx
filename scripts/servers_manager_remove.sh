@@ -5,6 +5,7 @@ removeUnzip=$2
 #echo "removeUnzip :"$removeUnzip
 gigalogs=$3
 gigaDir=$4
+gigaWork=$5
 homeDir=$(pwd)
 source setenv.sh
 #sudo su
@@ -27,7 +28,7 @@ source setenv.sh
 systemctl stop gsa.service
 sleep 5
 rm -rf $GS_HOME
-rm -rf setenv.sh gs dbagigashare install install.tar $gigaDir/giga* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+rm -rf setenv.sh gs dbagigashare install install.tar $gigaDir/giga* $gigaWork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
 find $gigalogs/ -mindepth 1 ! -regex '^/dbagigalogs/consul\|/dbagigalogs/nginx\(/.*\)?' -delete
 cd $gigaDir
 rm -f gigaspaces-smart-ods $gigaDir/gs_config/metrics.xml

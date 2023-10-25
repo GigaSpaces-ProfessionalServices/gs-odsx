@@ -62,7 +62,8 @@ def execute_scriptBuilder(host):
     commandToExecute="scripts/security_space_remove.sh"
     dbaGigaLogPath=str(readValuefromAppConfig("app.gigalog.path"))
     dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
-    additionalParam = removeJava+' '+removeUnzip +' '+dbaGigaLogPath+' '+dbaGigaDir
+    dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+    additionalParam = removeJava+' '+removeUnzip +' '+dbaGigaLogPath+' '+dbaGigaDir+' '+dbaGigaWorkPath
     logger.info("additionalParam : "+str(additionalParam))
     # with Spinner():
     #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)

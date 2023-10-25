@@ -391,7 +391,8 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
         gsNicAddress = host_nic_dict_obj[host]
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
         dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled  +' '+dbaGigaLogPath+' '+dbaGigaDir + ' '+ gsNicAddress
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled  +' '+dbaGigaLogPath+' '+ dbaGigaDir +' ' + dbaGigaWorkPath + ' '+ gsNicAddress
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         logger.info("additionalParam - Installation :")
         logger.info("Building .tar file : tar -cvf install/install.tar install")

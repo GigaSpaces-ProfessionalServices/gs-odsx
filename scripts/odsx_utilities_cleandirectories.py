@@ -96,11 +96,12 @@ def cleanUpManagerServers():
     if(len(str(managerNodes))>0):
         logger.info("managerNodes: main"+str(managerNodes))
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        verboseHandle.printConsoleInfo("Cleaning [/dbagigawork] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        verboseHandle.printConsoleInfo("Cleaning ["+dbaGigaWorkPath+"] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
         managerHosts = getManagerServerHostList()
         confirm = str(userInputWithEscWrapper(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
-            cmd = "rm -rf /dbagigawork/*;find "+dbaGigaLogPath+"/ -mindepth 1 ! -regex '^"+dbaGigaLogPath+"/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
+            cmd = "rm -rf "+dbaGigaWorkPath+"/*;find "+dbaGigaLogPath+"/ -mindepth 1 ! -regex '^"+dbaGigaLogPath+"/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
             for node in managerNodes:
                 with Spinner():

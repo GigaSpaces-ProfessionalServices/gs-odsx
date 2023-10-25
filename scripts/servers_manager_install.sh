@@ -350,7 +350,7 @@ function installTelegraf {
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigawork/ $gigaDir/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
+  chown -R $applicativeUser:$applicativeUser $gigaWork/ $gigaDir/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
   find $gigalogs -maxdepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
   #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
 
@@ -448,6 +448,7 @@ selinux=${15}
 gsNicAddress=${16}
 gigalogs=${17}
 gigaDir=${18}
+gigaWork=${19}
 
 echo "param1"$1
 echo "param2"$targetDir

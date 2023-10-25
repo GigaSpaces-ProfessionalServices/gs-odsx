@@ -146,7 +146,8 @@ def proceedForAllUndeployed(managerHost):
 def deleteOracleEntryFromSqlLite(puName):
     logger.info("deleteOracleEntryFromSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("SQL : DELETE FROM oracle_host_port where feeder_name like '%"+str(puName)+"%'")

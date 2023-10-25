@@ -101,7 +101,8 @@ def handleException(e):
 def insertDB2EntryInSqlLite(spaceID, hostId, status):
     # print("createDB2EntryInSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         cnx.execute("INSERT INTO db2_updatecachepolicy_status (spaceID, hostId, status) VALUES ('"+str(spaceID)+"', '"+str(hostId)+"','"+str(status)+"')")
         cnx.commit()
@@ -113,7 +114,8 @@ def insertDB2EntryInSqlLite(spaceID, hostId, status):
 def truncateInSqlLite():
     # print("truncateInSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         cnx.execute("DELETE FROM db2_updatecachepolicy_status ")
         cnx.commit()
@@ -125,7 +127,8 @@ def truncateInSqlLite():
 def createDB2EntryInSqlLite():
     # logger.info("createDB2EntryInSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         cnx.execute("CREATE TABLE IF NOT EXISTS db2_updatecachepolicy_status (spaceID VARCHAR(50), hostId VARCHAR(50), status VARCHAR(50))")
         cnx.commit()
@@ -137,7 +140,8 @@ def createDB2EntryInSqlLite():
 def updateDB2EntryInSqlLite(spaceID, status):
     # print("updateDB2EntryInSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         mycursor = cnx.execute("UPDATE db2_updatecachepolicy_status SET status='"+str(status)+"' where spaceID='"+str(spaceID)+"' ")
         logger.info("query result for update:"+str(mycursor.rowcount))

@@ -91,7 +91,8 @@ def listDeployed(managerHost):
     logger.info("listDeployed()")
     global gs_space_dictionary_obj
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
 
         logger.info("managerHost :"+str(managerHost))

@@ -50,7 +50,8 @@ def handleException(e):
 def sqlLiteDeleteTableMsSqlFeeder():
     logger.info("sqlLiteDeleteTableMsSqlFeeder() ")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("DELETE FROM mssql_host_port")

@@ -84,7 +84,8 @@ def setScheduleInterval():
 
     
     spaceName = readValuefromAppConfig(app_config_space_key)
-    dbLocation = readValuefromAppConfig(app_retentionmanager_sqlite_dbfile)
+    dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+    dbLocation = readValuefromAppConfig(app_retentionmanager_sqlite_dbfile).replace("/dbagigawork",dbaGigaWorkPath)
     #print(str(intervalInMilliSecs))
     retentionJar = str(getYamlFilePathInsideFolder(".object.jars.retention.retentionjar"))
     setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,retentionJar)

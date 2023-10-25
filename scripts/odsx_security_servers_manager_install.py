@@ -259,7 +259,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.debug("optionID:"+str(hostsConfig))
 
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace("/dbagigawork",dbaGigaWorkPath).replace("/dbagigalogs",dbaGigaLogPath).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
         dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         additionalParam = str(readValuefromAppConfig("app.manager.targetFolderInstall")).replace("/dbagiga",dbaGigaDir)
@@ -492,7 +493,8 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         gsNicAddress='x'     # put dummy param to maintain position of arguments
     dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
     dbaGigaDir=str(readValueByConfigObj("app.giga.path"))
-    additionalParam=additionalParam+' '+selinuxEnabled + ' '+dbaGigaLogPath+' '+dbaGigaDir+' '+gsNicAddress
+    dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+    additionalParam=additionalParam+' '+selinuxEnabled + ' '+dbaGigaLogPath+' ' + dbaGigaDir + ' ' + dbaGigaWorkPath + ' ' + gsNicAddress
     with Spinner():
         scp_upload(host, user, 'install/install.tar', '')
         ##scp_upload(host, user, 'install/gs.service', '')

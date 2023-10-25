@@ -14,15 +14,16 @@ scheduler_hour=$8
 retentionJar=$9
 lookup_group=${10}
 gigalogs=${11}
-gigaDir=${11}
+gigaDir=${12}
+gigaWork=${13}
 
 if [ ! -d "$log_location" ]; then
   mkdir $log_location
 fi
 
 if [ ! -f "$db_location" ]; then
-    mkdir /dbagigawork/sqlite
-    cp $home_dir_sh/systemServices/retentionManager/retention-manager.db /dbagigawork/sqlite/
+    mkdir $gigaWork/sqlite
+    cp $home_dir_sh/systemServices/retentionManager/retention-manager.db $gigaWork/sqlite/
 
 fi
 

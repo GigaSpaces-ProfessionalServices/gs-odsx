@@ -349,7 +349,7 @@ function loadEnv {
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigawork/ $gigaDir/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
+  chown -R $applicativeUser:$applicativeUser $gigaWork/ $gigaDir/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
   find $gigalogs/ -maxdepth 1 ! -regex '^$gigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
 
   start_gsa_file="start_gsa.sh"
@@ -447,7 +447,8 @@ startSpaceGsc=${18}
 selinux=${19}
 gigalogs=${20}
 gigaDir=${21}
-gsNicAddress=${22}
+gigaWork=${22}
+gsNicAddress=${23}
 
 echo "param1"$1
 echo "param2"$targetDir

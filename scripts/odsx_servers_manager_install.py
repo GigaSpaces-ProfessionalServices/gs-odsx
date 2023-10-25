@@ -256,7 +256,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.debug("optionID:"+str(hostsConfig))
         dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagiga/",dbaGigaDir).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.gsOptionExt")).replace("/dbagigawork",dbaGigaWorkPath).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagiga/",dbaGigaDir).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
         additionalParam = str(readValuefromAppConfig("app.manager.targetFolderInstall")).replace("/dbagiga",dbaGigaDir)
         #print(Fore.YELLOW+"Target directory to install GS ["+Fore.GREEN+additionalParam+Fore.YELLOW+"]: "+Fore.RESET)
@@ -454,7 +455,8 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
         gsNicAddress='x'     # put dummy param to maintain position of arguments
     dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
     dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
-    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress +' '+dbaGigaLogPath+' '+dbaGigaDir
+    dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress +' '+dbaGigaLogPath+' '+dbaGigaDir+ ' '+dbaGigaWorkPath
     #print(additionalParam)
     with Spinner():
         scp_upload(host, user, 'install/install.tar', '')

@@ -231,7 +231,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.debug("optionID:"+str(hostsConfig))
         dbaGigaDir=str(readValuefromAppConfig("app.giga.path"))
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagiga/",dbaGigaDir).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace("/dbagigawork",dbaGigaWorkPath).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagiga/",dbaGigaDir).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
         additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+dbaGigaDir+Fore.YELLOW+"]: "+Fore.RESET))
         if(len(additionalParam)==0):

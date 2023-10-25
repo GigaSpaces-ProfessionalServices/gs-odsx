@@ -139,7 +139,8 @@ def listDeployed(managerHost):
     logger.info("listDeployed()")
     global gs_space_dictionary_obj
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
 
         logger.info("managerHost :"+str(managerHost))
@@ -266,7 +267,8 @@ def inputParam():
 def sqlLiteGetHostAndPortByFileName(puName):
     logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(puName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("SQL: SELECT host,port FROM db2_host_port where feeder_name like '%"+str(puName)+"%' ")

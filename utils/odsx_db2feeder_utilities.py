@@ -58,7 +58,8 @@ def executeLocalCommandAndGetOutput(commandToExecute):
 def getQueryStatusFromSqlLite(feederName):
     logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("CREATE TABLE IF NOT EXISTS db2_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
@@ -87,7 +88,8 @@ def getQueryStatusFromSqlLite(feederName):
 def deleteDB2EntryFromSqlLite(puName):
     logger.info("deleteDB2EntryFromSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("SQL : DELETE FROM db2_host_port where feeder_name like '%"+str(puName)+"%'")
@@ -101,7 +103,8 @@ def getPortNotExistInDB2Feeder(port):
     logger.info("getPortIfNotExist()")
     try:
         feederList = ''
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         myCursor = cnx.cursor()
         logger.info("SELECT * FROM db2_host_port where port="+str(port))
@@ -119,7 +122,8 @@ def getPortNotExistInDB2Feeder(port):
 def deleteMSSqlEntryFromSqlLite(puName):
     logger.info("deleteMSSqlEntryFromSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("SQL : DELETE FROM mssql_host_port where feeder_name like '%"+str(puName)+"%'")
@@ -132,7 +136,8 @@ def deleteMSSqlEntryFromSqlLite(puName):
 def deleteGilboaEntryFromSqlLite(puName):
     logger.info("deleteMSSqlEntryFromSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("SQL : DELETE FROM gilboa_host_port where feeder_name like '%"+str(puName)+"%'")
@@ -145,7 +150,8 @@ def getPortNotExistInMSSQLFeeder(port):
     logger.info("getPortIfNotExist()")
     try:
         feederList = ''
-        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         myCursor = cnx.cursor()
         logger.info("SELECT * FROM mssql_host_port where port="+str(port))
@@ -164,7 +170,8 @@ def getPortNotExistInGilboaFeeder(port):
     logger.info("getPortIfNotExist()")
     try:
         feederList = ''
-        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         myCursor = cnx.cursor()
         logger.info("SELECT * FROM gilboa_host_port where port="+str(port))
@@ -183,7 +190,8 @@ def getPortNotExistInOracleFeeder(port):
     logger.info("getPortIfNotExist()")
     try:
         feederList = ''
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         myCursor = cnx.cursor()
         logger.info("SELECT * FROM oracle_host_port where port="+str(port))
@@ -202,7 +210,8 @@ def getAllFeedersFromSqlLite():
     logger.info("getAllFeedersFromSqlLite()")
     try:
         feederList = []
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         myCursor = cnx.cursor()
         logger.info("SQL : SELECT * FROM mssql_host_port")
@@ -220,7 +229,8 @@ def getAllFeedersFromSqlLite():
 def getMSSQLQueryStatusFromSqlLite(feederName):
     logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("CREATE TABLE IF NOT EXISTS mssql_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
@@ -250,7 +260,8 @@ def getMSSQLQueryStatusFromSqlLite(feederName):
 def getGilboaQueryStatusFromSqlLite(feederName):
     logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("CREATE TABLE IF NOT EXISTS gilboa_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
@@ -280,7 +291,8 @@ def getGilboaQueryStatusFromSqlLite(feederName):
 def getOracleQueryStatusFromSqlLite(feederName):
     logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")

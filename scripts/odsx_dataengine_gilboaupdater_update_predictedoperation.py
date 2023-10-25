@@ -52,7 +52,8 @@ def handleException(e):
 def getGilboaQueryStatusFromSqlLite(feederName):
     logger.info("getQueryStatusFromSqlLite() shFile : "+str(feederName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("CREATE TABLE IF NOT EXISTS gilboa_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
@@ -84,7 +85,8 @@ def sqlLiteGetHostAndPortByFileName():
     puName="gilboafeeder"
     logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(puName))
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("SQL : SELECT host,port,file FROM gilboa_host_port where feeder_name like '%"+str(puName)+"%' ")

@@ -371,7 +371,8 @@ def validateResponseGetDescription(responseCode):
 def sqlLiteCreateTableDB():
     logger.info("sqlLiteCreateTableDB()")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         logger.info("dbFile : "+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx)+" Sqlite V: "+str(sqlite3.version))
@@ -392,7 +393,8 @@ def createOracleEntryInSqlLite(puName, file, restPort):
         hostId = ''
         for data in jsonArray:
             hostId = str(data["hostId"])
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
         cnx.commit()
@@ -489,7 +491,8 @@ def proceedToDeployPU():
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
-    db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+    dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+    db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
     verboseHandle.printConsoleInfo("------------------------------------------------------------")
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):

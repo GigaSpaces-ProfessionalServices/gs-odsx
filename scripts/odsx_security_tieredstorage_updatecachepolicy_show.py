@@ -171,7 +171,8 @@ def listSpacesOnServer(managerHost):
 
 def statusList(spaceID):
     try:
-        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         mycursor = cnx.execute("SELECT status FROM db2_updatecachepolicy_status where spaceID='"+str(spaceID)+"'")
         myresult = mycursor.fetchone()
@@ -361,7 +362,8 @@ def copyFile(hostips, srcPath, destPath, dryrun=False):
 def createDB2EntryInSqlLite():
     logger.info("createDB2EntryInSqlLite()")
     try:
-        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValuefromAppConfig("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.tieredstorage.updatecachepolicy.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         cnx.execute("CREATE TABLE IF NOT EXISTS db2_updatecachepolicy_status (spaceID VARCHAR(50), hostId VARCHAR(50), status VARCHAR(50))")
         cnx.commit()

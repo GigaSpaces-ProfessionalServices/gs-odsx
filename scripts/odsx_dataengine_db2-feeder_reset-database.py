@@ -50,7 +50,8 @@ def handleException(e):
 def sqlLiteDeleteTableDb2Feeder():
     logger.info("sqlLiteDeleteTableDb2Feeder() ")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
+        db_file = str(readValueByConfigObj("app.dataengine.db2-feeder.sqlite.dbfile")).replace("/dbagigawork",dbaGigaWorkPath).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
         logger.info("DELETE FROM db2_host_port")
