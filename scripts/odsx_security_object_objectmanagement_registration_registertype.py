@@ -304,10 +304,12 @@ def setInputs(isSandbox):
         timestr = time.strftime("%Y%m%d-%H%M%S")
 
         reportFilePath = readValuefromAppConfig("app.objectmanagement.validate.reportlocation")
+        dbaGigaSharePath=str(readValuefromAppConfig("app.gigashare.path"))
         if reportFilePath is None or reportFilePath=="" or len(str(reportFilePath))<0:
             reportFilePath = ddlAndPropertiesBasePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
             set_value_in_property_file("app.objectmanagement.validate.reportlocation",ddlAndPropertiesBasePath)
         else:
+            reportFilePath = str(reportFilePath).replace("/dbagigashare",dbaGigaSharePath)
             if not os.path.exists(reportFilePath):
                 os.mkdir(reportFilePath)
             reportFilePath = reportFilePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"

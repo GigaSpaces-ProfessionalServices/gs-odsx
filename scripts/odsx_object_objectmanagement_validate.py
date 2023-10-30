@@ -157,10 +157,12 @@ def setInputs():
     tableName = selectedddlFilename.replace(".ddl", "")
 
     reportFilePath = readValuefromAppConfig("app.objectmanagement.validate.reportlocation")
+    dbaGigaSharePath=str(readValuefromAppConfig("app.gigashare.path"))
     if(reportFilePath is None or reportFilePath=="" or len(str(reportFilePath))<0):
         reportFilePath = ddlAndPropertiesBasePath+"/validate_report_"+tableName+".txt"
         set_value_in_property_file("app.objectmanagement.validate.reportlocation",ddlAndPropertiesBasePath)
     else:
+        reportFilePath = str(reportFilePath).replace("/dbagigashare",dbaGigaSharePath)
         reportFilePath = reportFilePath+"/validate_report_"+tableName+".txt"
     
     displaySummary()

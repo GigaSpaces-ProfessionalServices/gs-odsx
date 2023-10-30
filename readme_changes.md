@@ -142,3 +142,10 @@
     app.giga.path=/dbagiga/
     app.gigadata.path=/dbagigadata
     app.gigalog.path=/dbagigalogs
+### TAU v4.37-tau--path-changes tag
+43. Added below for path changes, now dbagigashare, dbagigainfluxdata can be configured using below properties from app.config
+    app.gigashare.path=/dbagigashare
+    app.gigainfluxdata.path=/dbagigainfluxdata
+43. Update ~/.bashrc if dbagigashare path is updated
+    export ODSXARTIFACTS=/dbagigashare/current/
+    export ENV_CONFIG=/dbagigashare/env_config/

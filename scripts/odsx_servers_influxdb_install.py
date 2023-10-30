@@ -6,6 +6,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -68,9 +69,10 @@ def installUserAndTargetDirectory():
         '''
         user="root"
         logger.info(" user: "+str(user))
-        targetDirectory = str(userInputWrapper(Fore.YELLOW+"Enter data directory Influxdb server [/dbagigainfluxdata]:"+Fore.RESET))
+        dbaGigainfluxdata=str(readValueByConfigObj("app.gigainfluxdata.path"))
+        targetDirectory = str(userInputWrapper(Fore.YELLOW+"Enter data directory Influxdb server ["+dbaGigainfluxdata+"]:"+Fore.RESET))
         if(len(targetDirectory)==0):
-            targetDirectory='/dbagigainfluxdata'
+            targetDirectory=dbaGigainfluxdata
         logger.info("targetDirectory : "+str(targetDirectory))
 
     except Exception as e:

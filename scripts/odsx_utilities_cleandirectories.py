@@ -97,7 +97,7 @@ def cleanUpManagerServers():
         logger.info("managerNodes: main"+str(managerNodes))
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
         dbaGigaWorkPath=str(readValueByConfigObj("app.gigawork.path"))
-        verboseHandle.printConsoleInfo("Cleaning ["+dbaGigaWorkPath+"] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
+        verboseHandle.printConsoleInfo("Cleaning ["+dbaGigaWorkPath+"] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] ["+dbaGigaLogPath+"/consul]")
         managerHosts = getManagerServerHostList()
         confirm = str(userInputWithEscWrapper(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(managerHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
@@ -125,11 +125,12 @@ def cleanUpSpaceServers():
     if(len(str(spaceNodes))>0):
         logger.info("spaceNodes: main"+str(spaceNodes))
         dbaGigaLogPath=str(readValueByConfigObj("app.gigalog.path"))
-        verboseHandle.printConsoleInfo("Cleaning [/dbagigadata] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
+        dbaGigaDataPath=str(readValueByConfigObj("app.gigadata.path"))
+        verboseHandle.printConsoleInfo("Cleaning ["+dbaGigaDataPath+"] ,["+dbaGigaLogPath+"] and [GS_HOME/deploy] *exclude [GS_HOME/deploy/templates] [/dbagialogs/consul]")
         spaceHosts = getSpaceServerHostList()
         confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to delete above directories on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
         if(confirm=='y' or len(confirm)==0):
-            cmd = "rm -rf /dbagigadata/*;find "+dbaGigaLogPath+"/ -mindepth 1 ! -regex '^"+dbaGigaLogPath+"/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
+            cmd = "rm -rf "+dbaGigaDataPath+"/*;find "+dbaGigaLogPath+"/ -mindepth 1 ! -regex '^"+dbaGigaLogPath+"/consul\(/.*\)?' -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
             user = 'root'
             for node in spaceNodes:
                 with Spinner():

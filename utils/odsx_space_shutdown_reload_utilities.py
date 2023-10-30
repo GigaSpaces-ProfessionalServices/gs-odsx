@@ -400,8 +400,9 @@ def validateTierStorageFreeSpace(managerHost,tierSpace,isSecure=False,username=N
 
 
     #print("hostList =>"+str(hostList));
-    for host in hostList:   
-        tierStorageLocation = "/dbagigadata/tiered-storage"
+    for host in hostList:
+        dbaGigaDataPath=str(readValuefromAppConfig("app.gigadata.path"))
+        tierStorageLocation = dbaGigaDataPath+"/tiered-storage"
         #print("tierStorageLocation==="+str(tierStorageLocation))
         checkFileSizeCmd = "df -ha "+tierStorageLocation
         fileSizeOutput = executeRemoteCommandAndGetOutput(host, 'root', checkFileSizeCmd)

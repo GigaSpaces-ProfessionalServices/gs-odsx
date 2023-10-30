@@ -230,7 +230,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.info("sourceInstallerDirectory :"+str(sourceInstallerDirectory))
         logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
+        dbaGigaSharePath=str(readValuefromAppConfig("app.gigashare.path"))
+        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path")).replace("/dbagigashare",dbaGigaSharePath)
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory+' '+logSourcePath+' '+logTargetPath
         else:

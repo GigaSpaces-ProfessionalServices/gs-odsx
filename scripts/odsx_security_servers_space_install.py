@@ -298,7 +298,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file")).replace("/dbagiga/",dbaGigaDir)
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
+        dbaGigaSharePath=str(readValuefromAppConfig("app.gigashare.path"))
+        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path")).replace("/dbagigashare",dbaGigaSharePath)
         newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','').replace("/dbagiga/",dbaGigaDir)
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
