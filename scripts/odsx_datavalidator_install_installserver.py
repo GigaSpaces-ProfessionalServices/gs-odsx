@@ -127,13 +127,13 @@ def installSingle():
          f.write('\n')
          f.write('pathToDataBase='+dbPath)
          f.write('\n')
-         f.write('influxDBUrl=http://'+influxdbHost +':8086')   #http://127.0.0.1:8086
+         f.write('influxDBUrl=http://'+influxdbHost +':'+str(readValuefromAppConfig("app.dv.influxdbport")))   #http://127.0.0.1:8086
          f.write('\n')
-         f.write('influxDBUsername=admin')
+         f.write('influxDBUsername='+str(readValuefromAppConfig("app.dv.influxdbusername")))
          f.write('\n')
-         f.write('influxDBPassword=admin')
+         f.write('influxDBPassword='+str(readValuefromAppConfig("app.dv.influxdbpassword")))
          f.write('\n')
-         f.write('influxDBName='+str(readValuefromAppConfig("db.influx.dbname")))
+         f.write('influxDBName='+str(readValuefromAppConfig("app.dv.influxdbname")))
          f.write('\n')
          f.write('envName='+os.getenv('ENV_NAME',default='test'))
          f.write('\n')

@@ -140,3 +140,9 @@
 ### TAU v4.35-tau-release tag    
 42. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 43. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+44. Add following properties in app.config
+    app.dv.influxdbname=telegraf
+    app.dv.influxdbport=8086
+    app.dv.influxdbusername=admin
+    app.dv.influxdbpassword=admin
+    
