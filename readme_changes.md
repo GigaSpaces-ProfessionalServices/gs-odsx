@@ -130,7 +130,7 @@
 ### TAU v4.33-tau-release tag
 37. Add following properties in app.config
     app.dataengine.mssql-feeder.rest.port=8302
-    app.dataengine.oracle-feeder.rest.port=8500
+    app.dataengine.oracle-feeder.rest.port=8501
     app.dataengine.gilboa-feeder.rest.port=8251
 38. Build data validator agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 39. Copy generated agent jar to /dbagigashare/current/data-validator/jars on pivot machine    
@@ -142,10 +142,18 @@
     app.giga.path=/dbagiga/
     app.gigadata.path=/dbagigadata
     app.gigalog.path=/dbagigalogs
+### TAU v4.36-tau-release tag & TAU v4.35-tau-release tag    
+43. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+44. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+45. Add following properties in app.config
+    app.dv.influxdbname=telegraf
+    app.dv.influxdbport=8086
+    app.dv.influxdbusername=admin
+    app.dv.influxdbpassword=admin
 ### TAU v4.37-tau--path-changes tag
-43. Added below for path changes, now dbagigashare, dbagigainfluxdata can be configured using below properties from app.config
+46. Added below for path changes, now dbagigashare, dbagigainfluxdata can be configured using below properties from app.config
     app.gigashare.path=/dbagigashare
     app.gigainfluxdata.path=/dbagigainfluxdata
-43. Update ~/.bashrc if dbagigashare path is updated
+47. Update ~/.bashrc if dbagigashare path is updated
     export ODSXARTIFACTS=/dbagigashare/current/
     export ENV_CONFIG=/dbagigashare/env_config/
