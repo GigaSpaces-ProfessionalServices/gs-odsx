@@ -145,4 +145,5 @@
     app.dv.influxdbport=8086
     app.dv.influxdbusername=admin
     app.dv.influxdbpassword=admin
-    
+45. Replaced suffix with csv in app.yaml file
+    indexBatchFileName: batchIndexes.csv    
