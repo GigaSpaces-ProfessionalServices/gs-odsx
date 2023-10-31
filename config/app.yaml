@@ -92,7 +92,7 @@ current:
         ddlBatchFileName: tableList.txt
         ddlCriteriaFileName: TieredCriteria.tab
         adapterPropertyFileName: adapters.properties
-        indexBatchFileName: batchIndexes.txt
+        indexBatchFileName: batchIndexes.csv
         pollingFileName: pollingcontainer.txt
     jars:
       management:

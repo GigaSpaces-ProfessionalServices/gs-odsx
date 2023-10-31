@@ -103,7 +103,7 @@ def setUserInputs():
     batchIndexFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace("//","/")
     ddlAndPropertiesBasePath = os.path.dirname(batchIndexFilePath) +"/"
 
-    batchIndexFilePath = ddlAndPropertiesBasePath+"batchIndexes.txt"
+    batchIndexFilePath = ddlAndPropertiesBasePath+"batchIndexes.csv"
     pollingContainerFilePath = ddlAndPropertiesBasePath+"pollingcontainer.txt"
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):

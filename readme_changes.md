@@ -158,3 +158,5 @@
 47. Update ~/.bashrc if dbagigashare path is updated
     export ODSXARTIFACTS=/dbagigashare/current/
     export ENV_CONFIG=/dbagigashare/env_config/
+48. Replaced suffix with csv in app.yaml file
+    indexBatchFileName: batchIndexes.csv
