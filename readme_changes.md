@@ -142,6 +142,7 @@
     app.giga.path=/dbagiga/
     app.gigadata.path=/dbagigadata
     app.gigalog.path=/dbagigalogs
+    If dbagigalogs path is changed then update path in config/logging.conf (line: 30)
 ### TAU v4.36-tau-release tag & TAU v4.35-tau-release tag    
 43. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 44. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
