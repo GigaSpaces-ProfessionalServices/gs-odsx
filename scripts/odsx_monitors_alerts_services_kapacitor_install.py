@@ -71,7 +71,7 @@ def installUserAndTargetDirectory():
         port = str(readValuefromAppConfig("app.kapacitor.port"))
         verboseHandle.printConsoleInfo("Kapacitor will be installed on hosts : "+str(hostList))
         verboseHandle.printConsoleInfo("Kapacitor will be installed on port : "+str(port))
-        verboseHandle.printConsoleInfo("Kapacitor configuration file : "+sourceInstallerDirectory+"/kapacitor/config/kapacitor.conf.template")
+        verboseHandle.printConsoleInfo("Kapacitor configuration file : "+str(os.getenv("ENV_CONFIG"))+"/kapacitor/config/kapacitor_config.sh")
         verboseHandle.printConsoleInfo("Kapacitor installer : "+str(packageName))
         verboseHandle.printConsoleWarning("-------------------------------------------------------------")
         logger.info(" user: "+str(user))
@@ -105,9 +105,9 @@ if __name__ == '__main__':
         if(rpmStatus == "Yes"):
             if(len(str(confirmInstall))==0):
                 confirmInstall='y'
-                if(confirmInstall=='y'):
-                    #buildUploadInstallTarToServer()
-                    executeCommandForInstall()
+            if(confirmInstall=='y'):
+                #buildUploadInstallTarToServer()
+                executeCommandForInstall()
         else:
             verboseHandle.printConsoleError(" jq or kapacitor rpm File not exists")
     except Exception as e:
