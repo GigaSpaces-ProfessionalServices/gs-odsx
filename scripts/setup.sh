@@ -1,5 +1,27 @@
 #!/bin/bash
 
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigashare=$(read_property "app.gigashare.path")
+gigawork=$(read_property "app.gigawork.path")
+gigalog=$(read_property "app.gigalog.path")
+
 # Determine OS platform
 checkOS() {
     UNAME=$(uname | tr "[:upper:]" "[:lower:]")
@@ -17,7 +39,7 @@ checkOS() {
     fi
     # For everything else (or if above failed), just use generic identifier
     [ "$DISTRO" == "" ] && export DISTRO=$UNAME
-    unset UNAME   
+    unset UNAME
 }
 
 checkOS
@@ -53,13 +75,10 @@ sed -i '/export PYTHONPATH=$(dirname $(pwd))/d' ~/.bash_profile
 project_home_dir=$(dirname $(pwd))
 python_path="export PYTHONPATH="$project_home_dir
 echo "$python_path" >> ~/.bashrc
-odsx_path="export ODSXARTIFACTS=/dbagigashare/current/"
+odsx_path="export ODSXARTIFACTS="$gigashare"/current/"
 echo "$odsx_path" >> ~/.bashrc
-odsx_path="export ENV_CONFIG=/dbagigashare/env_config/"
-echo "$odsx_path" >> ~/.bashrc
-dbaGigaLogPath="/dbagigalogs"
-odsx_path="export ODSX_LOG_PATH=$dbaGigaLogPath"
-echo "$odsx_path" >> ~/.bashrc
+#odsx_path="export ENV_CONFIG=/dbagigashare/env_config/"
+#echo "$odsx_path" >> ~/.bashrc
 
 wget https://bootstrap.pypa.io/get-pip.py -P /tmp
 python3 /tmp/get-pip.py
@@ -81,10 +100,10 @@ fi
 source ~/.bashrc
 #SQLite
 cd
-mkdir -p /dbagigawork/sqlite
-cd /dbagigawork/sqlite
-mkdir $dbaGigaLogPath/
-touch $dbaGigaLogPath/odsx.log
+mkdir -p $gigawork/sqlite
+cd $gigawork/sqlite
+mkdir $gigalog/
+touch $gigalog/odsx.log
 wget https://www.sqlite.org/2022/sqlite-tools-linux-x86-3380000.zip
 unzip sqlite-tools-linux-x86-3380000.zip
 mv sqlite-tools-linux-x86-3380000/* .
