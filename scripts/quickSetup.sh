@@ -18,8 +18,10 @@ read_property() {
 }
 
 gigashare=$(read_property "app.gigashare.path")
+gigalog=$(read_property "app.gigalog.path")
 
 sed -i '/export PYTHONPATH=$(dirname $(pwd))/d' ~/.bash_profile
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' ../conf/logging.conf
 
 #echo 'export PYTHONPATH=$(dirname $(pwd))' >> ~/.bashrc
 project_home_dir=$(dirname $(pwd))

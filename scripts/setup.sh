@@ -104,6 +104,9 @@ mkdir -p $gigawork/sqlite
 cd $gigawork/sqlite
 mkdir $gigalog/
 touch $gigalog/odsx.log
+
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' ../conf/logging.conf
+
 wget https://www.sqlite.org/2022/sqlite-tools-linux-x86-3380000.zip
 unzip sqlite-tools-linux-x86-3380000.zip
 mv sqlite-tools-linux-x86-3380000/* .
