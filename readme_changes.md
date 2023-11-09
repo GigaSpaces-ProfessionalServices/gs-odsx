@@ -160,3 +160,8 @@
     export ENV_CONFIG=/dbagigashare/env_config/
 48. Replaced suffix with csv in app.yaml file
     indexBatchFileName: batchIndexes.csv
+45. Replaced suffix with csv in app.yaml file
+    indexBatchFileName: batchIndexes.csv    
+### TAU v4.38-tau-release tag  
+46. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+47. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine

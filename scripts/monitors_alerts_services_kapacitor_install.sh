@@ -122,7 +122,7 @@ sleep 2
 #sed -i -e 's|#   url = "http://example.com"|  url = "http://localhost:4242"|g' /etc/kapacitor/kapacitor.conf
 #sed -i -e 's|#   alert-template-file = "/path/to/template/file"| alert-template-file = "/etc/kapacitor/templates/debug.json"|g' /etc/kapacitor/kapacitor.conf
 #info "\n Configuring kapacitor conf to /etc/kapacitor/kapacitor.conf"
-# cat $sourceInstallerEnvConfigDirectory/kapacitor/config/kapacitor.conf.template >> /etc/kapacitor/kapacitor.conf
+#cat $sourceInstallerEnvConfigDirectory/kapacitor/config/kapacitor.conf.template >> /etc/kapacitor/kapacitor.conf
 #sed -i -e 's|  state-changes-only = false|  state-changes-only = true|g' /etc/kapacitor/kapacitor.conf
 #ex /etc/kapacitor/kapacitor.conf <<-EOF
 #   /^\[smtp\]
@@ -130,5 +130,6 @@ sleep 2
 #   s/= false/= true/
 #   wq
 #EOF
+echo "running script : " $sourceInstallerEnvConfigDirectory/kapacitor/config/kapacitor_config.sh
 $sourceInstallerEnvConfigDirectory/kapacitor/config/kapacitor_config.sh
 sleep 5

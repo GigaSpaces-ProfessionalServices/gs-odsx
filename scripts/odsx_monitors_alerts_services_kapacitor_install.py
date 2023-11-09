@@ -71,7 +71,7 @@ def installUserAndTargetDirectory():
         port = str(readValuefromAppConfig("app.kapacitor.port"))
         verboseHandle.printConsoleInfo("Kapacitor will be installed on hosts : "+str(hostList))
         verboseHandle.printConsoleInfo("Kapacitor will be installed on port : "+str(port))
-        verboseHandle.printConsoleInfo("Kapacitor configuration file : "+sourceInstallerDirectory+"/kapacitor/config/kapacitor.conf.template")
+        verboseHandle.printConsoleInfo("Kapacitor configuration file : "+str(os.getenv("ENV_CONFIG"))+"/kapacitor/config/kapacitor_config.sh")
         verboseHandle.printConsoleInfo("Kapacitor installer : "+str(packageName))
         verboseHandle.printConsoleWarning("-------------------------------------------------------------")
         logger.info(" user: "+str(user))
