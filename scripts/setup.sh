@@ -22,6 +22,7 @@ gigashare=$(read_property "app.gigashare.path")
 gigawork=$(read_property "app.gigawork.path")
 gigalog=$(read_property "app.gigalog.path")
 gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
 
 # Determine OS platform
 checkOS() {
@@ -113,6 +114,12 @@ mkdir $gigalog/
 touch $gigalog/odsx.log
 
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigapath/gs-odsx/config/logging.conf
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/scripts/start_gsc.sh
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/log/xap_logging.properties
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/telegraf/scripts/space/telegraf_wal-size.sh
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/mq-connector/adabas/config/application.yml
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/mq-connector/config/application.yml
+sed -i -e 's|/dbagigainflaxdata/|'$gigainfluxpath'/|g' $gigashare/current/influx/config/influxdb.conf.template
 
 wget https://www.sqlite.org/2022/sqlite-tools-linux-x86-3380000.zip
 unzip sqlite-tools-linux-x86-3380000.zip

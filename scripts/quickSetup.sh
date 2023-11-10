@@ -20,9 +20,16 @@ read_property() {
 gigashare=$(read_property "app.gigashare.path")
 gigalog=$(read_property "app.gigalog.path")
 gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
 
 sed -i '/export PYTHONPATH=$(dirname $(pwd))/d' ~/.bash_profile
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigapath/gs-odsx/config/logging.conf
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/scripts/start_gsc.sh
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/log/xap_logging.properties
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/telegraf/scripts/space/telegraf_wal-size.sh
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/mq-connector/adabas/config/application.yml
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/mq-connector/config/application.yml
+sed -i -e 's|/dbagigainflaxdata/|'$gigainfluxpath'/|g' $gigashare/current/influx/config/influxdb.conf.template
 
 #echo 'export PYTHONPATH=$(dirname $(pwd))' >> ~/.bashrc
 project_home_dir=$(dirname $(pwd))
