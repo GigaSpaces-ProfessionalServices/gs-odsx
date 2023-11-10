@@ -160,8 +160,16 @@
     export ENV_CONFIG=/dbagigashare/env_config/
 48. Replaced suffix with csv in app.yaml file
     indexBatchFileName: batchIndexes.csv
-45. Replaced suffix with csv in app.yaml file
+49. Replaced suffix with csv in app.yaml file
     indexBatchFileName: batchIndexes.csv    
 ### TAU v4.38-tau-release tag  
-46. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
-47. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+50. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+51. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+### TAU v4.40-tau-release tag
+52. Updated below default paths in app.config and removed dba from prefix. Note for app.giga.path keep ending slash 
+    app.giga.path=/giga/
+    app.gigadata.path=/gigadata
+    app.gigalog.path=/gigalogs
+    app.gigawork.path=/gigawork
+    app.gigashare.path=/gigashare
+    app.gigainfluxdata.path=/gigainfluxdata

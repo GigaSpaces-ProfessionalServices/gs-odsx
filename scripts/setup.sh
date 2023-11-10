@@ -21,6 +21,7 @@ read_property() {
 gigashare=$(read_property "app.gigashare.path")
 gigawork=$(read_property "app.gigawork.path")
 gigalog=$(read_property "app.gigalog.path")
+gigapath=$(read_property "app.giga.path")
 
 # Determine OS platform
 checkOS() {
@@ -80,7 +81,13 @@ echo "$odsx_path" >> ~/.bashrc
 #odsx_path="export ENV_CONFIG=/dbagigashare/env_config/"
 #echo "$odsx_path" >> ~/.bashrc
 
-wget https://bootstrap.pypa.io/get-pip.py -P /tmp
+python_version=$(python3 -c 'import sys; print(".".join(map(str, sys.version_info[:2])))')
+if [[ $(echo "$python_version > 3.6" | bc -l) -eq 1 ]]; then
+    wget https://bootstrap.pypa.io/pip/get-pip.py -P /tmp
+else
+    wget https://bootstrap.pypa.io/pip/3.6/get-pip.py -P /tmp
+fi
+
 python3 /tmp/get-pip.py
 
 if [[ $DISTRO == *"Ubuntu"* ]]; then
@@ -105,7 +112,7 @@ cd $gigawork/sqlite
 mkdir $gigalog/
 touch $gigalog/odsx.log
 
-sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' ../conf/logging.conf
+sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigapath/gs-odsx/config/logging.conf
 
 wget https://www.sqlite.org/2022/sqlite-tools-linux-x86-3380000.zip
 unzip sqlite-tools-linux-x86-3380000.zip
