@@ -73,19 +73,19 @@ def doValidate():
     resultCount = printmeasurementtable(dataValidatorServiceHost)
     if resultCount > 0:
         from utils.odsx_keypress import userInputWrapper
-        measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison : "))
+        measurementIdA = str(userInputWithEscWrapper("Select 1st measurement Id for comparison : "))
         while(measurementIdA not in measurementids):
             print(Fore.YELLOW +"Please select 1st measurement Id from above list"+Fore.RESET)
             from utils.odsx_keypress import userInputWrapper
-            measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison :"))
+            measurementIdA = str(userInputWithEscWrapper("Select 1st measurement Id for comparison :"))
         if (len(str(measurementIdA)) == 0):
             measurementIdA = '1'
         from utils.odsx_keypress import userInputWrapper
-        measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison : "))
+        measurementIdB = str(userInputWithEscWrapper("Select 2nd measurement Id for comparison : "))
         while(measurementIdB not in measurementids):
             print(Fore.YELLOW +"Please select 2nd measurement Id from above list"+Fore.RESET)
             from utils.odsx_keypress import userInputWrapper
-            measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison :"))
+            measurementIdB = str(userInputWithEscWrapper("Select 2nd measurement Id for comparison :"))
         if (len(str(measurementIdB)) == 0):
             measurementIdB = '1'
 

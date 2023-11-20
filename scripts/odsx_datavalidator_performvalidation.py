@@ -10,7 +10,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_list import getDataValidationHost
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_data_validation_utils import getPort
 
@@ -153,7 +153,7 @@ def doValidate():
             verboseHandle.printConsoleWarning('');
             measurementId = str(userInputWrapper("Select measurement by id to run [1]: "))
             if (len(str(measurementId)) == 0):
-                measurementId = '1')
+                measurementId = '1'
             while(measurementId not in measurementids):
                 print(Fore.YELLOW +"Please select  measurement from above list"+Fore.RESET) 
                 measurementId = str(userInputWrapper("Select measurement by id to run [1]:"))
@@ -180,18 +180,18 @@ def doValidate():
     elif testType == '2':
         resultCount = printmeasurementtable(dataValidatorServiceHost)
         if resultCount > 0:
-            measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison : "))
+            measurementIdA = str(userInputWithEscWrapper("Select 1st measurement Id for comparison : "))
             if (len(str(measurementIdA)) == 0):
                 measurementIdA = '1'
             while(measurementIdA not in measurementids):
                print(Fore.YELLOW +"Please select  1st measurement Id  from above list"+Fore.RESET) 
-               measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison : "))
-            measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison : "))
+               measurementIdA = str(userInputWithEscWrapper("Select 1st measurement Id for comparison : "))
+            measurementIdB = str(userInputWithEscWrapper("Select 2nd measurement Id for comparison : "))
             if (len(str(measurementIdB)) == 0):
                 measurementIdB = '1'
             while(measurementIdB not in measurementids):
               print(Fore.YELLOW +"Please select  2nd measurement Id  from above list"+Fore.RESET) 
-              measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison : "))
+              measurementIdB = str(userInputWithEscWrapper("Select 2nd measurement Id for comparison : "))
 
             executionTime = str(userInputWrapper("Execution time delay (in minutes) [0]: "))
             if (len(str(executionTime)) == 0):

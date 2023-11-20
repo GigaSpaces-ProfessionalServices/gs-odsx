@@ -10,7 +10,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_list import getDataValidationHost
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -51,16 +51,16 @@ def doValidate():
     dataValidatorServiceHost = dataValidationHost
     resultCount = printmeasurementtable(dataValidatorServiceHost)
     if resultCount > 0:
-        measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison : "))
+        measurementIdA = str(userInputWithEscWrapper("Select 1st measurement Id for comparison : "))
         while(measurementIdA not in measurementids):
           print(Fore.YELLOW +"Please select 1st measurement Id from above list"+Fore.RESET)
-          measurementIdA = str(userInputWrapper("Select 1st measurement Id for comparison :"))
+          measurementIdA = str(userInputWithEscWrapper("Select 1st measurement Id for comparison :"))
         if (len(str(measurementIdA)) == 0):
           measurementIdA = '1'
-        measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison : "))
+        measurementIdB = str(userInputWithEscWrapper("Select 2nd measurement Id for comparison : "))
         while(measurementIdB not in measurementids):
            print(Fore.YELLOW +"Please select 2nd measurement Id from above list"+Fore.RESET)
-           measurementIdB = str(userInputWrapper("Select 2nd measurement Id for comparison :"))
+           measurementIdB = str(userInputWithEscWrapper("Select 2nd measurement Id for comparison :"))
         if (len(str(measurementIdB)) == 0):
           measurementIdB = '1'
 
