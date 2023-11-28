@@ -150,5 +150,10 @@
 ### TAU v4.38-tau-release tag  
 46. Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 47. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
-
-    
+### TAU v4.42-tau-release tag
+48. For DI zookeeper config added below properties in app.config file
+    app.di.base.zk.clientPort=2181
+    app.di.base.zk.initLimit=1000
+    app.di.base.zk.syncLimit=1000
+    app.di.base.zk.tickTime=2000
+49. Make sure di-flink-taskmanager.service & di-flink-jobmanager.service are located in folder /dbagigashare/current/data-integration/di-flink/

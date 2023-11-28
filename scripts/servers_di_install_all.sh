@@ -55,31 +55,42 @@ function installFlink() {
   info "InstallationFile:"$installation_file_flink"\n"
   mkdir -p /dbagiga/di-flink
   mkdir -p /dbagigalogs/di-flink
+  mkdir -p /home/gsods/di-flink
   info "Copying file from "$installation_path_flink/$installation_file_flink +" to /dbagiga/di-flink \n"
   cp $installation_path_flink/$installation_file_flink /dbagiga/di-flink
   info "\nExtracting zip file...\n"
   tar -xzf /dbagiga/di-flink/$installation_file_flink --directory /dbagiga/di-flink/
+  chown -R gsods:gsods /dbagiga/di-flink/
   extracted_folder_flink=$(ls -I "*.tgz" /dbagiga/di-flink/)
   cd /dbagiga/di-flink/
-  ln -s $extracted_folder_flink latest-flink
-  cd
-  sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  sed -i -e 's|taskmanager.numberOfTaskSlots: 1|taskmanager.numberOfTaskSlots: 10|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
+  ln -s /dbagiga/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
+  mv /dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml /dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml_orig
 
-  if [ "$flinkJobManagerMemoryMetaspaceSize" != "None" ] ; then
-    sed -i '/^jobmanager.memory.jvm-metaspace.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-    echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  fi
-  if [ "$flinkTaskManagerMemoryProcessSize" != "None" ] ; then
-    sed -i '/^taskmanager.memory.process.size/d' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-    echo "taskmanager.memory.process.size: $flinkTaskManagerMemoryProcessSize" >> /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  fi
-  sed -i -e 's|jobmanager.memory.process.size: 1600m|jobmanager.memory.process.size: 4000m|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
-  sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-jobmanager.service
-  sed -i -e 's|/home/gsods|/dbagiga|g' /dbagiga/di-flink/latest-flink/conf/di-flink-taskmanager.service
-  cp /dbagiga/di-flink/latest-flink/conf/di-flink-jobmanager.service /etc/systemd/system/
-  cp /dbagiga/di-flink/latest-flink/conf/di-flink-taskmanager.service /etc/systemd/system/
+  echo "">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.rpc.address: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.rpc.port: 6123">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.bind-host: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.memory.process.size: 4000m">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.bind-host: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.host: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.memory.process.size: 4000m">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.numberOfTaskSlots: 10">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "parallelism.default: 1">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.execution.failover-strategy: region">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.memory.jvm-metaspace.size: 1500m">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "state.savepoints.dir: file:///home/gsods/di-flink/latest-flink/data/savepoints">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "state.checkpoints.dir: file:///home/gsods/di-flink/latest-flink/data/checkpoints">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  #sed -i -e 's|/home/gsods|/dbagiga|g' /home/gsods/di-flink/latest-flink/conf/di-flink-jobmanager.service
+  #sed -i -e 's|/home/gsods|/dbagiga|g' /home/gsods/di-flink/latest-flink/conf/di-flink-taskmanager.service
+  chmod +x /home/gsods/di-flink/latest-flink/bin/*
+  cp $installation_path_flink/di-flink-jobmanager.service /etc/systemd/system/
+  cp $installation_path_flink/di-flink-taskmanager.service /etc/systemd/system/
+  mkdir -p /home/gsods/latest-flink/data/checkpoints/ /home/gsods/latest-flink/data/savepoints/
+  chown -R gsods:gsods /home/gsods/di-flink/
+  restorecon /etc/systemd/system/di-*
+  sudo systemctl daemon-reload
+  sudo systemctl restart di-flink-taskmanager.service
+  sudo systemctl restart di-flink-jobmanager.service
 
   info "\n Installation Flink completed."
 }
@@ -91,33 +102,27 @@ function installDIMatadata {
   info "InstallationFile:"$installation_file_mdm"\n"
   mkdir -p /dbagiga/di-mdm
   mkdir -p /dbagigalogs/di-mdm
-  chown gsods:gsods /dbagigalogs/di-mdm
-  info "Copying file from "$installation_path_mdm/$installation_file_mdm +" to /dbagiga/di-mdm \n"
+  mkdir -p /home/gsods/di-mdm
   cp $installation_path_mdm/$installation_file_mdm /dbagiga/di-mdm
   info "\nExtracting zip file...\n"
   tar -xzf /dbagiga/di-mdm/$installation_file_mdm --directory /dbagiga/di-mdm/
+  chown -R gsods:gsods /dbagiga/di-mdm/
   extracted_folder_mdm=$(ls -I "*.gz" /dbagiga/di-mdm/)
   cd /dbagiga/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
-  ln -s $extracted_folder_mdm latest-di-mdm
-  cd latest-di-mdm
-  sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|/dbagigalogs/di-mdm|g' config/di-mdm.service
-  sed -i -e 's|/home/gsods|/dbagiga|g' config/di-mdm.service
+  ln -s /dbagiga/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm/
+  #echo "">>/dbagiga/di-mdm.properties
+  echo "spring.profiles.active=zookeeper">/dbagiga/di-mdm.properties
+  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm.properties
+  #  if [ "$kafkaBrokerCount" == 1 ]; then
+  #  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/home/gsods/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  #else
+  #  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>/home/gsods/di-mdm/latest-di-mdm/config/di-mdm-application.properties
+  #fi
 
-  sed -i '/^zookeeper.connectUrl/d' /dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-  echo "">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-  if [ "$kafkaBrokerCount" == 1 ]; then
-    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-  else
-    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>/dbagiga/di-mdm/latest-di-mdm/config/di-mdm-application.properties
-  fi
-  cd
-  info "\nCopying service file\n"
-  cp /dbagiga/di-mdm/latest-di-mdm/config/di-mdm.service /etc/systemd/system/
-  systemctl daemon-reload
-  systemctl enable di-mdm
-  #systemctl start di-mdm
-  info "\n Installation DI-MDM completed."
+  cd /home/gsods/di-mdm/latest-di-mdm/utils
+  chown -R gsods:gsods /home/gsods/di-mdm/
+  sudo ./install_new_version.sh /dbagiga/di-mdm.properties
 }
 
 function installDIManager {
@@ -127,35 +132,36 @@ function installDIManager {
   info "InstallationFile:"$installation_file_manager"\n"
   mkdir -p /dbagiga/di-manager
   mkdir -p /dbagigalogs/di-manager
-  chown gsods:gsods /dbagigalogs/di-manager
+  mkdir -p /home/gsods/di-manager
   info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-manager \n"
   cp $installation_path_manager/$installation_file_manager /dbagiga/di-manager
   info "\nExtracting zip file...\n"
   tar -xzf /dbagiga/di-manager/$installation_file_manager --directory /dbagiga/di-manager/
+  chown -R gsods:gsods /dbagiga/di-manager/
   extracted_folder_manager=$(ls -I "*.gz" /dbagiga/di-manager/)
   cd /dbagiga/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
-  ln -s $extracted_folder_manager latest-di-manager
-  cd latest-di-manager
-  sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|/dbagigalogs/di-manager|g' config/di-manager.service
-  sed -i -e 's|/home/gsods|/dbagiga|g' config/di-manager.service
-  info "\ncurrentHost::"$currentHost
-  sed -i -e 's|localhost:6081|'$currentHost':6081|g' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  ln -s /dbagiga/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
 
-  sed -i '/^mdm.server.url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  sed -i '/^mdm.server.fallback-url/d' /dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
-  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+  echo "">/dbagiga/di-manager.properties
+  echo "springdoc.api-docs.path=/api-docs">>/dbagiga/di-manager.properties
+  echo "springdoc.swagger-ui.path=/swagger-ui">>/dbagiga/di-manager.properties
+  echo "springdoc.swagger-ui.operationsSorter=method">>/dbagiga/di-manager.properties
+  sed -i '/^mdm.server.url/d' /dbagiga/di-manager.properties
+  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager.properties
+  sed -i '/^mdm.server.fallback-url/d' /home/gsods/di-manager/latest-di-manager/config/di-manager-application.properties
   if [ "$kafkaBrokerCount" == 1 ]; then
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/home/gsods/di-manager/latest-di-manager/config/di-manager-application.properties
   else
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-manager/latest-di-manager/config/di-manager-application.properties
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/home/gsods/di-manager/latest-di-manager/config/di-manager-application.properties
   fi
-  cd
-  info "\nCopying service file\n"
-  cp /dbagiga/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/
-  systemctl daemon-reload
-  systemctl enable di-manager
-  #systemctl start di-manager
+  echo "server.port=6080">>/dbagiga/di-manager.properties
+  echo "mdm.client.timeouts.connection.ms=10000">>/dbagiga/di-manager.properties
+  echo "mdm.client.timeouts.read.ms=60000">>/dbagiga/di-manager.properties
+  cd /home/gsods/di-manager/latest-di-manager/utils/
+  chown -R gsods:gsods /home/gsods/di-manager/
+  sudo ./install_new_version.sh /dbagiga/di-manager.properties
+
   info "\n Installation DI-Manager completed.\n"
 }
 
@@ -177,6 +183,10 @@ if [ "$kafkaBrokerCount" == 1 ]; then
   flinkJobManagerMemoryMetaspaceSize=${13}
   flinkTaskManagerMemoryProcessSize=${14}
   dimMdmFlinkInstallon1bFlag="y"
+  zkClientPort=${15}
+  zkInitLimit=${16}
+  zkSyncLimit=${17}
+  zkTickTime=${18}
   echo " dataFolderKafka "$6" dataFolderZK "$7" logsFolderKafka "$8" logsFolderZK "$9" currentHost:"$currentHost
 fi
 if [ "$kafkaBrokerCount" == 3 ]; then
@@ -197,6 +207,10 @@ if [ "$kafkaBrokerCount" == 3 ]; then
   flinkJobManagerMemoryMetaspaceSize=${15}
   flinkTaskManagerMemoryProcessSize=${16}
   dimMdmFlinkInstallon1bFlag=${17}
+  zkClientPort=${18}
+  zkInitLimit=${19}
+  zkSyncLimit=${20}
+  zkTickTime=${21}
 
   echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "${10}" logsFolderZK "${11}" currentHost:"$currentHost
   echo "flinkJobManagerMemoryMetaspaceSize $flinkJobManagerMemoryMetaspaceSize, flinkTaskManagerMemoryProcessSize=$flinkTaskManagerMemoryProcessSize"
@@ -209,7 +223,7 @@ fi
 echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK" sourceInstallerDirectory "$sourceInstallerDirectory
 tar -xvf install.tar
 home_dir=$(pwd)
-javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
+javaInstalled=$(java -di-flink-jobmanager.serviceversion 2>&1 >/dev/null | egrep "\S+\s+version")
 echo "">>setenv.sh
 
 # Step for KAFKA Unzip and Set KAFKAPATH
@@ -232,11 +246,10 @@ if [[ $id != 4 ]]; then
     sed -i '/export KAFKA_LOGS_PATH/d' setenv.sh
     echo "extracted_folder: "$extracted_folder
     kafka_home_path="export KAFKAPATH="$baseFolderLocation$extracted_folder
+    ln -s $baseFolderLocation$extracted_folder /dbagiga/kafka_latest
     echo "$kafka_home_path">>setenv.sh
     echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
     echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
-
-    cp $sourceInstallerDirectory"/kafka/jolokia-agent.jar" "$baseFolderLocation$extracted_folder/libs/"
 fi
 
 #zookeeper setup
@@ -254,6 +267,7 @@ fi
     replace=""
     extracted_folder=${var//'.tar.gz'/$replace}
     zk_home_path="export ZOOKEEPERPATH="$baseFolderLocation$extracted_folder
+    ln -s $baseFolderLocation$extracted_folder /dbagiga/zookeeper_latest
     echo "$zk_home_path">>setenv.sh
     echo "export ZOOKEEPER_DATA_PATH="$dataFolderZK >> setenv.sh
     echo "export ZOOKEEPER_LOGS_PATH="$logsFolderZK >> setenv.sh
@@ -278,10 +292,11 @@ mkdir -p $dataFolderKafka
 
 cp $ZOOKEEPERPATH/conf/zoo_sample.cfg $ZOOKEEPERPATH/conf/zoo.cfg
 
-sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
 sed -i -e 's|/tmp/zookeeper|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
-sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
-sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/conf/log4j.properties
+
+sed -i -e 's|$ZOOKEEPERPATH/log/kafka|'$dataFolderZK'|g' $ZOOKEEPERPATH/conf/zoo.cfg
+#sed -i -e 's|${kafka.logs.dir}|'$logsFolderKafka'|g' $KAFKAPATH/config/log4j.properties
+#sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPERPATH/conf/log4j.properties
 
 #if [[ ${#kafkaBrokerHost1} -ge 3 ]]; then
   # removing all existing properties
@@ -291,21 +306,21 @@ sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPER
   sed -i '/^server.3/d' $ZOOKEEPERPATH/conf/zoo.cfg
   sed -i '/^initLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
   sed -i '/^syncLimit=/d' $ZOOKEEPERPATH/conf/zoo.cfg
+  sed -i '/^tickTime=/d' $ZOOKEEPERPATH/conf/zoo.cfg
   fi
   if [[ $id != 4 ]]; then
   sed -i '/^broker.id/d' $KAFKAPATH/config/server.properties
   sed -i '/^zookeeper.connect/d' $KAFKAPATH/config/server.properties
   fi
-
-  # adding properties
-  #if [[ $id != 2 ]]; then
   echo "kafkaBrokerCount: "$kafkaBrokerCount
   if [ "$kafkaBrokerCount" == 3 ]; then
     echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "server.2="$kafkaBrokerHost2":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "server.3="$kafkaBrokerHost3":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
-    echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
-    echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "initLimit="$zkInitLimit>>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "syncLimit="$zkSyncLimit>>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "tickTime="$zkTickTime>>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "4lw.commands.whitelist=ruok,stat,mntr">>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "zookeeper.connect="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>$KAFKAPATH/config/server.properties
 
     sed -i '/^offsets.topic.replication.factor/d' $KAFKAPATH/config/server.properties
@@ -320,9 +335,11 @@ sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPER
   fi
   if [ "$kafkaBrokerCount" == 1 ]; then
     echo "server.1="$kafkaBrokerHost1":2888:3888">>$ZOOKEEPERPATH/conf/zoo.cfg
-    echo "initLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
-    echo "syncLimit=1000">>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "initLimit="$zkInitLimit>>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "syncLimit="$zkSyncLimit>>$ZOOKEEPERPATH/conf/zoo.cfg
     echo "zookeeper.connect="$kafkaBrokerHost1":2181">>$KAFKAPATH/config/server.properties
+    echo "tickTime="$zkTickTime>>$ZOOKEEPERPATH/conf/zoo.cfg
+    echo "4lw.commands.whitelist=ruok,stat,mntr">>$ZOOKEEPERPATH/conf/zoo.cfg
 
     sed -i '/^offsets.topic.replication.factor/d' $KAFKAPATH/config/server.properties
     echo "offsets.topic.replication.factor=1">>$KAFKAPATH/config/server.properties
@@ -334,16 +351,15 @@ sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPER
   fi
   if [[ $id != 4 ]]; then
     echo "broker.id="$id"">>$KAFKAPATH/config/server.properties
-
     source setenv.sh
     sed -i -e '/listeners=PLAINTEXT:\/\/:9092/s/^#//g' $KAFKAPATH/config/server.properties
     sed -i -e '/advertised.listeners=PLAINTEXT:/s/^#//g' $KAFKAPATH/config/server.properties
     sed -i '/^min.insync.replicas/d' $KAFKAPATH/config/server.properties
     sed -i '/^exec $base_dir/d' $KAFKAPATH/bin/kafka-server-start.sh
+    echo "log.segment.bytes=1073741824">>$KAFKAPATH/config/server.properties
 
     echo "export JMX_PORT=9999" >> $KAFKAPATH/bin/kafka-server-start.sh
     echo "export RMI_HOSTNAME=127.0.0.1" >> $KAFKAPATH/bin/kafka-server-start.sh
-    echo 'export KAFKA_JMX_OPTS="-javaagent:'$KAFKAPATH'/libs/jolokia-agent.jar=port=8778,host=$RMI_HOSTNAME -Dcom.sun.management.jmxremote -Dcom.sun.management.jmxremote.authenticate=false -Dcom.sun.management.jmxremote.ssl=false -Djava.rmi.server.hostname=$RMI_HOSTNAME -Dcom.sun.management.jmxremote.rmi.port=$JMX_PORT"' >> $KAFKAPATH/bin/kafka-server-start.sh
     echo 'exec $base_dir/kafka-run-class.sh $EXTRA_ARGS kafka.Kafka "$@"' >> $KAFKAPATH/bin/kafka-server-start.sh
   fi
   if [[ $id == 1 ]]; then
@@ -355,16 +371,10 @@ sed -i -e 's|zookeeper.log.dir=.|zookeeper.log.dir='$logsFolderZK'|g' $ZOOKEEPER
   elif [[ $id == 3 ]]; then
     sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$kafkaBrokerHost3':9092|g' $KAFKAPATH/config/server.properties
     sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$kafkaBrokerHost3'' $KAFKAPATH/config/server.properties
- # elif [[ $id == 4 ]]; then
- #   sed -i -e 's|advertised.listeners=PLAINTEXT://your.host.name:9092|advertised.listeners=PLAINTEXT://'$witnessHost':9092|g' $KAFKAPATH/config/server.properties
- #   sed -i -e '/advertised.listeners=PLAINTEXT/a advertised.host.name='$witnessHost'' $KAFKAPATH/config/server.properties
   fi
-  #if [[ $id != 2 ]]; then
     echo "$dataFolderZK"myid
     echo "$id">"$dataFolderZK"myid
-  #fi
   echo "added params"
-#fi
 
 #sed -i -e 's|$KAFKAPATH/log/kafka|'$KAFKAPATH'/log/kafka|g' $KAFKAPATH/config/server.properties
 sed -i -e 's|log.dirs=/tmp/kafka-logs|log.dirs='$dataFolderKafka'|g' $KAFKAPATH/config/server.properties
@@ -377,25 +387,23 @@ kafka_service_file="odsxkafka.service"
 zookeeper_service_file="odsxzookeeper.service"
 
 source setenv.sh
-#if [[ $id != 2 ]]; then
-  echo "line 149 === $id"
-  cmd="$ZOOKEEPERPATH/bin/zkServer.sh --config $ZOOKEEPERPATH/conf start"
-  echo "$cmd">>$start_zookeeper_file
+echo "line 149 === $id"
+cmd="$ZOOKEEPERPATH/bin/zkServer.sh --config $ZOOKEEPERPATH/conf start"
+echo "$cmd">>$start_zookeeper_file
 
-  # stop Zookeeper
-  cmd="$ZOOKEEPERPATH/bin/zookeeper-server-stop.sh --config $ZOOKEEPERPATH/conf stop"
-  echo "$cmd">>$stop_zookeeper_file
+# stop Zookeeper
+cmd="$ZOOKEEPERPATH/bin/zookeeper-server-stop.sh --config $ZOOKEEPERPATH/conf stop"
+echo "$cmd">>$stop_zookeeper_file
 
-  source setenv.sh
-  home_dir_sh=$(pwd)
-  source $home_dir_sh/setenv.sh
+source setenv.sh
+home_dir_sh=$(pwd)
+source $home_dir_sh/setenv.sh
 
-  mv $home_dir_sh/st*_zookeeper.sh /tmp
-  mv $home_dir_sh/install/zookeeper/$zookeeper_service_file /tmp
-  mv /tmp/st*_zookeeper.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_zookeeper.sh
-  mv /tmp/$zookeeper_service_file /etc/systemd/system/
-#fi
+mv $home_dir_sh/st*_zookeeper.sh /tmp
+mv $home_dir_sh/install/zookeeper/$zookeeper_service_file /tmp
+mv /tmp/st*_zookeeper.sh /usr/local/bin/
+chmod +x /usr/local/bin/st*_zookeeper.sh
+mv /tmp/$zookeeper_service_file /etc/systemd/system/
 
 if [[ $id != 4 ]]; then
   echo "line 168 === $id"
@@ -418,47 +426,43 @@ if [[ $id != 4 ]]; then
   mv /tmp/st*_kafka.sh /usr/local/bin/
   chmod +x /usr/local/bin/st*_kafka.sh
   mv /tmp/$kafka_service_file /etc/systemd/system/
-  if [ $id != 2 ] ; then
-    installFlink
-    installDIMatadata
+  if [ $id == 1 ]; then
+    chown gsods:gsods -R $baseFolderLocation*
+    chown gsods:gsods -R $logsFolderKafka
+    chown gsods:gsods -R $dataFolderKafka
+    chown gsods:gsods -R $dataFolderZK
+
+    chmod 777 -R $baseFolderLocation
+    chmod 777 -R $logsFolderKafka
+    chmod 777 -R $dataFolderKafka
+    chmod 777 -R $dataFolderZK
+
+    restorecon /etc/systemd/system/odsx*
+    systemctl daemon-reload
+    sudo systemctl enable --now odsxzookeeper.service
+    sudo systemctl enable --now odsxkafka.service
+    systemctl daemon-reload
     installDIManager
-  fi
-  if [ $id == 2 ] && [ $dimMdmFlinkInstallon1bFlag == "y" ] ; then
-    installFlink
     installDIMatadata
-    installDIManager
+    installFlink
   fi
 fi
 
-if [[ $installtelegrafFlag == "y" ]]; then
-  # Install Telegraf
-  echo "Installing Telegraf"
-  installation_path=$sourceInstallerDirectory/telegraf
-  echo "InstallationPath :"$installation_path
-  installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
-  echo "Installation File :"$installation_file
-  echo $installation_path"/"$installation_file
-  yum install -y $installation_path"/"$installation_file
-  cp $home_dir"/install/kafka/kafka.conf" /etc/telegraf/telegraf.d/
-  sed -i -e 's|"http://KAFKA_SERVER_IP_ADDRESS:8778/jolokia"|"http://'$kafkaBrokerHost1':8778/jolokia","http://'$kafkaBrokerHost2':8778/jolokia","http://'$kafkaBrokerHost3':8778/jolokia"|g' /etc/telegraf/telegraf.d/kafka.conf
-  sed -i -e 's|":2181"|"'$kafkaBrokerHost1':2181","'$kafkaBrokerHost2':2181","'$kafkaBrokerHost3':2181"|g' /etc/telegraf/telegraf.d/kafka.conf
 
+
+if [[ $id != 1 ]]; then
+  chown gsods:gsods -R $baseFolderLocation*
+  chown gsods:gsods -R $logsFolderKafka
+  chown gsods:gsods -R $dataFolderKafka
+  chown gsods:gsods -R $dataFolderZK
+
+  chmod 777 -R $baseFolderLocation
+  chmod 777 -R $logsFolderKafka
+  chmod 777 -R $dataFolderKafka
+  chmod 777 -R $dataFolderZK
+  restorecon /etc/systemd/system/odsx*
+  systemctl daemon-reload
+  sudo systemctl enable --now odsxzookeeper.service
+  sudo systemctl enable --now odsxkafka.service
+  systemctl daemon-reload
 fi
-
-chown gsods:gsods -R $baseFolderLocation*
-chown gsods:gsods -R $logsFolderKafka
-chown gsods:gsods -R $dataFolderKafka
-chown gsods:gsods -R $dataFolderZK
-
-chmod 777 -R $baseFolderLocation
-chmod 777 -R $logsFolderKafka
-chmod 777 -R $dataFolderKafka
-chmod 777 -R $dataFolderZK
-
-#sudo service mongod stop
-#sudo yum erase $(rpm -qa | grep mongodb-enterprise)
-#sudo rm -r /var/log/mongodb
-#sudo rm -r /var/lib/mongo
-
-systemctl daemon-reload
-

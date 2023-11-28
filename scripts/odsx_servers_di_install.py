@@ -92,6 +92,11 @@ def installCluster():
     global flinkTaskManagerMemoryProcessSize
     global flinkJobManagerMemoryMetaspaceSize
     global dimMdmFlinkInstallon1bFlag
+    global zkClientPort
+    global zkDataDir
+    global zkInitLimit
+    global zkSyncLimit
+    global zkTickTime
 
     kafkaBrokerHost1 = str(os.getenv("di1"))
     logger.info("kafkaBrokerHost1 : " + str(kafkaBrokerHost1))
@@ -187,6 +192,13 @@ def installCluster():
     srNo=srNo+1
     dimMdmFlinkInstallon1bFlag = str(readValuefromAppConfig("app.di.flink.dim.mdm.install1b.confirm"))
     verboseHandle.printConsoleInfo(str(srNo)+". Install Flink/DIM/MDM on kafka broker 1b : "+ str(dimMdmFlinkInstallon1bFlag))
+    srNo=srNo+1
+    zkClientPort = str(readValuefromAppConfig("app.di.base.zk.clientPort"))
+    zkDataDir = str(readValuefromAppConfig("app.di.base.zk.data"))
+    zkInitLimit = str(readValuefromAppConfig("app.di.base.zk.initLimit"))
+    zkSyncLimit = str(readValuefromAppConfig("app.di.base.zk.syncLimit"))
+    zkTickTime = str(readValuefromAppConfig("app.di.base.zk.tickTime"))
+    verboseHandle.printConsoleInfo(str(srNo)+". zoo.cfg : clientPort="+ str(zkClientPort)+", dataDir="+str(zkDataDir)+", initLimit="+str(zkInitLimit)+", syncLimit="+str(zkSyncLimit)+", tickTime="+str(zkTickTime))
 
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
@@ -240,15 +252,15 @@ def executeCommandForInstall(host, type, count,nodeListSize):
     try:
         additionalParam = ""
         additionalParam = telegrafInstallFlag + ' '
-        if (len(clusterHosts) == 4):
-            commandToExecute = "scripts/servers_di_install.sh"
-            additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
+        #if (len(clusterHosts) == 4):
+        #    commandToExecute = "scripts/servers_di_install.sh"
+        #    additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag + ' ' +zkClientPort+ ' ' + zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' +zkClientPort+ ' ' +zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)
