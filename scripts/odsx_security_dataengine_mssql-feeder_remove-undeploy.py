@@ -381,8 +381,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 managerHostConfig = str(userInputWrapper(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
                 if(len(str(managerHostConfig))>0):
                     managerHost = managerHostConfig

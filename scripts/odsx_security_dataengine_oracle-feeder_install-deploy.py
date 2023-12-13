@@ -257,7 +257,7 @@ def proceedToCreateGSC(zoneGSC,newGSCCount):
     idx = newGSCCount % len(spaceNodes)
     host = spaceNodes[idx]
 
-    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
     verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
     logger.info(commandToExecute)
     with Spinner():
@@ -417,13 +417,12 @@ def proceedToDeployPU():
     try:
         logger.info("proceedToDeployPU()")
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
-        logger.info("url : "+"http://"+managerHost+":8090/v2/pus",auth = HTTPBasicAuth(username, password))
+        logger.info("url : "+"http://"+managerHost+":8090/v2/pus + auth")
         sqlLiteCreateTableDB()
         directory = os.getcwd()
         os.chdir(sourceOracleFeederShFilePath)
         #os.system("pwd")
-        restPort = 8015 #8025
-        restPort = restPort+1
+        restPort = str(readValueByConfigObj("app.dataengine.oracle-feeder.rest.port")).replace('"','').replace(' ','')
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
@@ -451,7 +450,7 @@ def proceedToDeployPU():
                 data = getDataPUREST(resource,puName,zoneGSC,str(restPort),managerHost)
                 logger.info("data of payload :"+str(data))
 
-                response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers)
+                response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
                 deployResponseCode = str(response.content.decode('utf-8'))
                 print("deployResponseCode : "+str(deployResponseCode))
                 logger.info("deployResponseCode :"+str(deployResponseCode))
@@ -601,8 +600,8 @@ if __name__ == '__main__':
                 #updateAndCopyJarFileFromSourceToShFolder()
                 logger.info("managerHost : main"+str(managerHost))
                 if(len(str(managerHost))>0):
-                    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username = str(getUsernameByHost())
+                    password = str(getPasswordByHost())
                     listSpacesOnServer(managerNodes)
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)

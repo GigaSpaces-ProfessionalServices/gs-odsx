@@ -384,8 +384,8 @@ if __name__ == '__main__':
     while exitMenu:
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes)
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
         streamDict = instancelistFromHosts(managerNodes)
         if len(str(streamDict)) != 0:
             verboseHandle.printConsoleInfo("Delete using individual, with comma(1,2) or range(1-3)")

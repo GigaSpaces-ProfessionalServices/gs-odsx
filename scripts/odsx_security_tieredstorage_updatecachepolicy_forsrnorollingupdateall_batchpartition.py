@@ -849,8 +849,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 logger.info("Manager Host :"+str(managerHost))
                 gs_space_host_dictionary_obj = listSpacesOnServer(managerHost)
                 logger.info(" gs_space_host_dictionary_obj :"+str(len(gs_space_host_dictionary_obj)))

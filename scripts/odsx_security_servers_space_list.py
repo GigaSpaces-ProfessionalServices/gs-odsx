@@ -259,8 +259,8 @@ if __name__ == '__main__':
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes)
         logger.info("managerHost : main"+str(managerHost))
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
         listSpaceServer()
     except Exception as e:
         handleException(e)

@@ -597,8 +597,8 @@ if __name__ == '__main__':
                 #updateAndCopyJarFileFromSourceToShFolder()
                 logger.info("managerHost : main"+str(managerHost))
                 if(len(str(managerHost))>0):
-                    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username = str(getUsernameByHost())
+                    password = str(getPasswordByHost())
                     listSpacesOnServer(managerNodes)
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)

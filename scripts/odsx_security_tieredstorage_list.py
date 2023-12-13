@@ -147,8 +147,8 @@ if __name__ == '__main__':
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
             if(len(str(managerHost))>0):
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 listDeployed(managerHost)
             else:
                 logger.info("Please check manager server status.")

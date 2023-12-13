@@ -5,7 +5,7 @@ After=network.target
 [Service]
 User=root
 Type=simple
-ExecStart=/usr/bin/java -jar $serviceJar --log.location=$log_location --space.name=$space_name --lookup.locator=$lookup_locator --lookup.group=$lookup_group --table.batch.file.path=$table_batch_file_path --ddl.properties.file.path=$ddl_properties_file_path --tier.criteria.file=$tier_criteria_file --odsx.profile=$odsx_profile --safe.appid=$app_id --safe.safeid=$safe_id --safe.objectid=$object_id
+ExecStart=/usr/bin/java -jar $serviceJar --log.location=$log_location --space.name=$space_name --lookup.locator=$lookup_locator --lookup.group=$lookup_group --table.batch.file.path=$table_batch_file_path --ddl.properties.file.path=$ddl_properties_file_path --tier.criteria.file=$tier_criteria_file --odsx.profile=$odsx_profile --gs.username=$gs_username --gs.password=$gs_password
 SuccessExitStatus=143
 Restart=always
 RestartSec=30

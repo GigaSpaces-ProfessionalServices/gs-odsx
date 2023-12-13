@@ -739,14 +739,7 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Space -> Create new space")
     username = ""
     password = ""
-    appId=""
-    safeId=""
-    objectId=""
     try:
-        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
-        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
-        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
-        logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
         global isMemoryAvailable
@@ -757,8 +750,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : main"+str(managerHost))
             if(len(str(managerHost))>0):
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 managerHostConfig = managerHost
                 logger.info("managerHostConfig : "+str(managerHost))
                 listSpacesOnServer(managerNodes)

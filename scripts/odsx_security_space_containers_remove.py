@@ -294,8 +294,8 @@ if __name__ == '__main__':
         logger.info("managerNodes: main" + str(managerNodes))
         managerHost = getManagerHost(managerNodes)
         logger.info(" Container list")
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
         exitMenu = True
         while exitMenu:
             streamDict = getContainersList()

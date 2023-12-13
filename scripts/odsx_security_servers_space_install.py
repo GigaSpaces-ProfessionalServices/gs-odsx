@@ -20,6 +20,7 @@ from utils.ods_cluster_config import config_add_space_node, config_get_cluster_a
     isInstalledAndGetVersion, config_get_manager_node
 from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload,scp_upload_specific_extension
+from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
 from utils.odsx_keypress import userInputWrapper
 
 #from scripts.odsx_servers_manager_install import getManagerHostFromEnv
@@ -224,15 +225,12 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
 
-        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-        objectId= str(readValuefromAppConfig("app.space.security.objectId")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         if(len(additionalParam)==0):
-            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
+            additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory
         else:
-            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+appId+' '+safeId+' '+objectId+' '+sourceInstallerDirectory
+            additionalParam='true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory
         #print('additional param :'+additionalParam)
         logger.debug('additional param :'+additionalParam)
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
@@ -280,16 +278,20 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
 
         springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
+        springconfigJarInput = str(getYamlFilePathInsideFolder(".security.jars.springconfig")).replace('[','').replace(']','')
+        springcoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcore")).replace('[','').replace(']','')
+        springcryptoJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcrypto")).replace('[','').replace(']','')
+        springwebJarInput = str(getYamlFilePathInsideFolder(".security.jars.springweb")).replace('[','').replace(']','')
+        xapsecurityJarInput = str(getYamlFilePathInsideFolder(".security.jars.xapsecurity")).replace('[','').replace(']','')
+
         springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
-        vaultSupportJarInput = str(getYamlFilePathInsideFolder(".security.jars.vaultsupportjar")).replace('[','').replace(']','')
-        javaPasswordJarInput = str(getYamlFilePathInsideFolder(".security.jars.javapassword")).replace('[','').replace(']','')
 
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
         msSqlFeederFilePath="."
         msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
-        sourceJar = springLdapCoreJarInput+' '+springLdapJarInput+' '+vaultSupportJarInput+' '+javaPasswordJarInput
+        sourceJar = springLdapCoreJarInput+' '+springLdapJarInput + ' ' + springconfigJarInput + ' ' + springcoreJarInput+ ' ' + springcryptoJarInput + ' ' + springwebJarInput+ ' ' + xapsecurityJarInput
 
         ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..security.ldapsourcefile"))
         ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
@@ -367,39 +369,33 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+"spring-security-ldap-5.1.7.RELEASE.jar source : "+Fore.RESET,
               Fore.GREEN+str(springLdapJarInput).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"21. "+
-              Fore.GREEN+"VaultSupport-1.0-SNAPSHOT.jar source : "+Fore.RESET,
-              Fore.GREEN+str(vaultSupportJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"22. "+
-              Fore.GREEN+"JavaPasswordSDK.jar source : "+Fore.RESET,
-              Fore.GREEN+str(javaPasswordJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"23. "+
               Fore.GREEN+"Spring jar target : "+Fore.RESET,
               Fore.GREEN+str(springTargetJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"24. "+
+        print(Fore.GREEN+"22. "+
               Fore.GREEN+"ldap-security-config.xml source : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"25. "+
+        print(Fore.GREEN+"23. "+
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"26. "+
+        print(Fore.GREEN+"24. "+
               Fore.GREEN+"MsSQL Feeder files source : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileSource).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"27. "+
+        print(Fore.GREEN+"25. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"28. "+
+        print(Fore.GREEN+"26. "+
               Fore.GREEN+"Space server installation : "+Fore.RESET,
               Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"19. "+
+        print(Fore.GREEN+"27. "+
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"20. "+
+        print(Fore.GREEN+"28. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"21. "+
+        print(Fore.GREEN+"29. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"22. "+
+        print(Fore.GREEN+"30. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
 
@@ -420,88 +416,96 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         handleException(e)
 
 def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled):
-    installStatus='No'
-    install = isInstalledAndGetVersion(host)
-    logger.info("install : "+str(install))
-    if(len(str(install))>8):
-        installStatus='Yes'
-    if installStatus == 'No':
-        gsNicAddress = host_nic_dict_obj[host]
-        #print(host+"  "+gsNicAddress)
-        additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' ' + gsNicAddress
-        sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
-        # print("---------------------"+str(additionalParam))
-        logger.info("additionalParam - Installation :")
-        logger.info("Building .tar file : tar -cvf install/install.tar install")
-        '''
-        userCMD = os.getlogin()
-        if userCMD == 'ec2-user':
-            cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+    try:
+        installStatus='No'
+        install = isInstalledAndGetVersion(host)
+        logger.info("install : "+str(install))
+        if(len(str(install))>8):
+            installStatus='Yes'
+        if installStatus == 'No':
+            gsNicAddress = host_nic_dict_obj[host]
+            #print(host+"  "+gsNicAddress)
+            gs_user = getUsernameByHost()
+            gs_pass = getPasswordByHost()
+
+            additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' '+gs_user+' '+gs_pass +' '+ gsNicAddress
+            sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
+            # print("---------------------"+str(additionalParam))
+            logger.info("additionalParam - Installation :")
+            logger.info("Building .tar file : tar -cvf install/install.tar install")
+            '''
+            userCMD = os.getlogin()
+            if userCMD == 'ec2-user':
+                cmd = 'sudo cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+            else:
+                cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
+            with Spinner():
+                status = os.system(cmd)
+            '''
+            cmd = 'tar -cvf install/install.tar install'
+            with Spinner():
+                status = os.system(cmd)
+                logger.info("Creating tar file status : "+str(status))
+            with Spinner():
+                scp_upload(host, user, 'install/install.tar', '')
+                #scp_upload(host, user, 'install/gs.service', '')
+            cmd = 'tar -xvf install.tar'
+            verboseHandle.printConsoleInfo("Extracting..")
+            logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
+            output = executeRemoteCommandAndGetOutput(host, user, cmd)
+            logger.debug("Execute RemoteCommand output:"+str(output))
+            verboseHandle.printConsoleInfo(output)
+            # additionalParam=additionalParam+' '+logSourcePath+' '+logTargetPath
+            commandToExecute="scripts/security_space_install.sh"
+            logger.info("additionalParam : "+str(additionalParam))
+            logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
+            with Spinner():
+                outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
+                #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+                logger.debug("script output"+str(outputShFile))
+                newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
+                #for newZkJar in newZkJars:
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
+
+                newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
+                for newZkJar in newZkJars:
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
+
+                #print(outputShFile)
+                #Upload CEF logging jar
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
+                #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
+                #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.keytab").replace("keytab","*keytab")+" "+msSqlFeederFileTarget)
+                #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
+                #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
+                #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
+                #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
+                logger.info(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
+                configureMetricsXML(host)
+            serverHost=''
+            try:
+                serverHost = socket.gethostbyaddr(host).__getitem__(0)
+            except Exception as e:
+                serverHost=host
+            #managerList = config_add_space_node(host, host, "N/A", "true")
+            logger.info("Installation of space server "+str(host)+" has been done!")
+            verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
         else:
-            cmd = 'cp install/gs/* '+sourceInstallerDirectory+"/gs/"
-        with Spinner():
-            status = os.system(cmd)
-        '''
-        cmd = 'tar -cvf install/install.tar install'
-        with Spinner():
-            status = os.system(cmd)
-            logger.info("Creating tar file status : "+str(status))
-        with Spinner():
-            scp_upload(host, user, 'install/install.tar', '')
-            #scp_upload(host, user, 'install/gs.service', '')
-        cmd = 'tar -xvf install.tar'
-        verboseHandle.printConsoleInfo("Extracting..")
-        logger.debug("host : "+str(host)+" user:"+str(user)+" cmd "+str(cmd))
-        output = executeRemoteCommandAndGetOutput(host, user, cmd)
-        logger.debug("Execute RemoteCommand output:"+str(output))
-        verboseHandle.printConsoleInfo(output)
-        # additionalParam=additionalParam+' '+logSourcePath+' '+logTargetPath
-        commandToExecute="scripts/security_space_install.sh"
-        logger.info("additionalParam : "+str(additionalParam))
-        logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
-        with Spinner():
-            outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-            #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
-            logger.debug("script output"+str(outputShFile))
-            newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
-            #for newZkJar in newZkJars:
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
-
-            newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
-            for newZkJar in newZkJars:
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
-
-            #print(outputShFile)
-            #Upload CEF logging jar
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
-
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
-            #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
-            #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.keytab").replace("keytab","*keytab")+" "+msSqlFeederFileTarget)
-            #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
-            #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
-            #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
-            #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
-            configureMetricsXML(host)
-        serverHost=''
-        try:
-            serverHost = socket.gethostbyaddr(host).__getitem__(0)
-        except Exception as e:
-            serverHost=host
-        #managerList = config_add_space_node(host, host, "N/A", "true")
-        logger.info("Installation of space server "+str(host)+" has been done!")
-        verboseHandle.printConsoleInfo("Installation of space server "+host+" has been done!")
-    else:
-        verboseHandle.printConsoleInfo("Found installation. skipping installation for host "+host)
-        logger.info("Found installation. skipping installation for host "+host)
+            verboseHandle.printConsoleInfo("Found installation. skipping installation for host "+host)
+            logger.info("Found installation. skipping installation for host "+host)
+    except Exception as e:
+        handleException(e)
 if __name__ == '__main__':
     logger.info("odsx_security_space-install")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Space -> Install')

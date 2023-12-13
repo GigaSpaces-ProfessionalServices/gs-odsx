@@ -394,8 +394,8 @@ if __name__ == '__main__':
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 gs_space_dictionary_obj = listDeployed(managerHost)
                 if(len(str(gs_space_dictionary_obj))>0):
                     proceedToUndeployPU(managerHost)

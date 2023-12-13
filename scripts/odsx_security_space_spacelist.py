@@ -107,8 +107,8 @@ def listSpaceFromHosts(managerNodes):
             if(len(str(managerHost))>0):
                 logger.info("Manager Host :"+str(managerHost))
                 managerHost= getManagerHost(managerNodes)
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 listDeployed(managerHost,username,password)
             else:
                 logger.info("Please check manager server status.")

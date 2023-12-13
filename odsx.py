@@ -150,13 +150,21 @@ def displayMainMenu(menu,currentMenu):
                 defaultMenu = defaultMenu[:defaultMenu.rindex('_')]
                 displayMainMenu(defaultMenu[defaultMenu.rindex('_')+1:], defaultMenu[:defaultMenu.rindex('_')])
             else:
-                logger.error("File "+scriptsFolder+'/'+scriptMenu+'.py'+' does not exist.')
-                verboseHandle.printConsoleInfo("===================TBD==================")
-                #Removing last cmd from filename hence its not part of menu
-                defaultMenu = defaultMenu[:defaultMenu.rindex('_')]
-                #passing Submenu and cuurentPath
-                displayMainMenu(defaultMenu[defaultMenu.rindex('_')+1:], defaultMenu[:defaultMenu.rindex('_')])
-                quit()
+                logger.info("==="+scriptMenu)
+                scriptMenu = defaultMenu.replace('menu','odsx')
+                logger.info("+++ "+scriptMenu)
+                if(path.exists(scriptsFolder+'/'+scriptMenu+'.py')):
+                    os.system('python3 '+scriptsFolder+'/'+scriptMenu+'.py '+menuDrivenFlag)
+                    defaultMenu = defaultMenu[:defaultMenu.rindex('_')]
+                    displayMainMenu(defaultMenu[defaultMenu.rindex('_')+1:], defaultMenu[:defaultMenu.rindex('_')])
+                else:
+                    logger.error("File "+scriptsFolder+'/'+scriptMenu+'.py'+' does not exist.')
+                    verboseHandle.printConsoleInfo("===================TBD==================")
+                    #Removing last cmd from filename hence its not part of menu
+                    defaultMenu = defaultMenu[:defaultMenu.rindex('_')]
+                    #passing Submenu and cuurentPath
+                    displayMainMenu(defaultMenu[defaultMenu.rindex('_')+1:], defaultMenu[:defaultMenu.rindex('_')])
+                    quit()
         except Exception as e:
             #print('defMennnu',defaultMenu)
             #print('currMennn',currentMenu)
@@ -274,8 +282,14 @@ def main(**args):
                     #print(scriptsFolder+'/'+scriptMenu+'.py')
                     os.system('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
                 else:
-                    verboseHandle.printConsoleInfo("===================TBD==================")
-                    logger.error('File not exist. : '+scriptsFolder+'/'+initialFileName)
+                    logger.info("== "+initialFileName)
+                    initialFileName = initialFileName.replace('odsx_security','odsx')
+                    logger.info("++ "+initialFileName)
+                    if(path.exists(scriptsFolder+'/'+initialFileName)):
+                        os.system('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
+                    else:
+                        verboseHandle.printConsoleInfo("===================TBD==================")
+                        logger.error('File not exist. : '+scriptsFolder+'/'+initialFileName)
             except Exception as e:
                 print(e)
     else:

@@ -176,8 +176,8 @@ def getZoneList():
         safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
         objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
     try:
         if profile == 'security':
             response = requests.get("http://"+managerHost+":8090/v2/containers",auth = HTTPBasicAuth(username, password))

@@ -33,8 +33,8 @@
       spring-security-config-location=../config/security/security-config.xml
   - Go to respected scripts files and mention user / password = gs-admin (ONLY FOR AWS EC2 these changes shold not committed) 
      Example : odsx_security_servers_manager_list.py
-        username = "gs-admin"#str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = "gs-admin"#str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = "gs-admin"#str(getUsernameByHost())
+        password = "gs-admin"#str(getPasswordByHost())
 
 ### <u>ODSX Configuration new host / supporting jar setup</u>
   - Configurations for new host section need to be done under utils/ods_cluster_config.py

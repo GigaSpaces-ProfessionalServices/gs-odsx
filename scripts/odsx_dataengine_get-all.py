@@ -74,8 +74,8 @@ def listAllFeeders():
         safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
         objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
 
     try:
         response=""
@@ -179,8 +179,8 @@ def getAllFeeders():
         safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
         objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-        username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
 
     try:
         response=""
@@ -383,8 +383,8 @@ if __name__ == '__main__':
                     safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
                     objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
                     logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-                    username =str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password =str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username =str(getUsernameByHost())
+                    password =str(getPasswordByHost())
                 listDeployed()
             else:
                 logger.info("No manager status ON.")

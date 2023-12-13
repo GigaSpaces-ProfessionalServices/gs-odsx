@@ -308,22 +308,12 @@ def getOracleQueryStatusFromSqlLite(feederName):
         handleException(e)
 
 
-def getUsernameByHost(managerHost,appId,safeId,objectId):
+def getUsernameByHost():
     logger.info("getUsernameByHost()")
-    return "gs-admin"
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Username : "+output)
-    return output
+    username = str(readValueByConfigObj("app.manager.security.username"))
+    return username
 
-def getPasswordByHost(managerHost,appId,safeId,objectId):
+def getPasswordByHost():
     logger.info("getPasswordByHost()")
-    return "gs-admin"
-    cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("Password : "+output)
-    return  output
+    password = str(readValueByConfigObj("app.manager.security.password"))
+    return password

@@ -98,8 +98,8 @@ def config_get_manager_listWithStatus(filePath='config/cluster.config'):
     global password
     managerNodes = config_get_manager_node()
     for node in managerNodes:
-        username = str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
-        password = str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
         status = getSpaceServerStatus(os.getenv(node.ip))
         counter = counter + 1
         managerDict.update({counter: node})

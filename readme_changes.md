@@ -157,3 +157,20 @@
     app.di.base.zk.syncLimit=1000
     app.di.base.zk.tickTime=2000
 49. Make sure di-flink-taskmanager.service & di-flink-jobmanager.service are located in folder /dbagigashare/current/data-integration/di-flink/
+### TAU v4.43-tau-release tag
+50. Verify app.config has dataengine for secured env
+    app.security.menu=manager,space,tieredstorage,feeder,mq,object,dataengine
+51. Rebuild objectManagement jar from https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/objectManagement/src/main/java/com/gigaspaces/objectManagement and reinstall objecmanagement service
+52. Add below section in app.yaml under security & copy the jars in current/security/jars folder
+    security:
+      jars:
+        springconfig: spring-security-config-5.6.2.jar
+        springcore: spring-security-core-5.6.2.jar
+        springcrypto: spring-security-crypto-5.6.2.jar
+        springweb: spring-security-web-5.6.2.jar
+        xapsecurity: xap-security.jar
+53. Add ldappropertysourcefile below ldapsourcefile under env_config
+    ldappropertysourcefile: security.properties
+54. Configure manager user and password in app.config file :
+    app.manager.security.username=
+    app.manager.security.password=

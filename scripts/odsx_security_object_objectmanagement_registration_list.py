@@ -104,8 +104,8 @@ def getData():
     logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
         
     
-    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+    username = str(getUsernameByHost())
+    password = str(getPasswordByHost())
     
     managerInfo = getManagerInfo(True,username,password)
     lookupGroup = str(managerInfo['lookupGroups'])

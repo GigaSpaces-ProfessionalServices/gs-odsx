@@ -241,8 +241,8 @@ if __name__ == '__main__':
         if (len(str(managerNodes)) > 0):
             spaceNodes = config_get_space_hosts()
             logger.info("managerHost : main" + str(managerHost))
-            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = str(getUsernameByHost())
+            password = str(getPasswordByHost())
             exitMenu = True
             while exitMenu:
                 hostID = hostList()

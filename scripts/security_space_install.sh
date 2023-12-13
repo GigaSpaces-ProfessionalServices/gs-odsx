@@ -376,11 +376,6 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  prefix1='$'
-  prefix2='(/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='$appId' -p Query="Safe='$safeId';Folder=;Object='$objectId';" -o PassProps.UserName)'
-  userNameParam=$prefix1$prefix2
-  prefix3='(/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='$appId' -p Query="Safe='$safeId';Folder=;Object='$objectId';" -o Password)'
-  passwordParam=$prefix1$prefix3
   cmd="$GS_HOME/bin/gs.sh --username=$userNameParam --password=$passwordParam container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
   cat "$startSpaceGsc/start_gsc.sh" >> $start_gsc_file
   echo "$cmd">>$start_gsc_file
@@ -452,15 +447,14 @@ wantInstallUnzip=${11}
 gscCount=${12}
 memoryGSC=${13}
 zoneGSC=${14}
-appId=${15}
-safeId=${16}
-objectId=${17}
-sourceInstallerDirectory=${18}
-logTargetPath=${19}
-logSourcePath=${20}
-startSpaceGsc=${21}
-selinux=${22}
-gsNicAddress=${23}
+sourceInstallerDirectory=${15}
+logTargetPath=${16}
+logSourcePath=${17}
+startSpaceGsc=${18}
+selinux=${19}
+userNameParam=${20}
+passwordParam=${21}
+gsNicAddress=${22}
 
 #logTargetPath=${20}
 echo "param1"$1

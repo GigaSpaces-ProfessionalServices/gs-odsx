@@ -209,21 +209,14 @@ if __name__ == '__main__':
     profile=str(readValuefromAppConfig("app.setup.profile"))
     username = ""
     password = ""
-    appId=""
-    safeId=""
-    objectId=""
     try:
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):
             managerHost = getManagerHost(managerNodes)
             if(len(str(managerHost))>0):
                 if profile=='security':
-                    appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
-                    safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
-                    objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
-                    logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
-                    username =str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password =str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username =str(getUsernameByHost())
+                    password =str(getPasswordByHost())
                 listDeployed(managerHost)
             else:
                 logger.info("No manager status ON.")

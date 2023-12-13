@@ -16,9 +16,6 @@ polling_container_file=${10}
 odsx_profile=${11}
 gs_username=${12}
 gs_password=${13}
-appId=${14}
-safeId=${15}
-objectId=${16}
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -52,11 +49,8 @@ sed -i 's,$adapter_property_file,'$adapter_property_file',g' /tmp/$service_name
 sed -i 's,$batch_index_file,'$batch_index_file',g' /tmp/$service_name
 sed -i 's,$polling_container_file,'$polling_container_file',g' /tmp/$service_name
 sed -i 's,$odsx_profile,'$odsx_profile',g' /tmp/$service_name
-#sed -i 's,$gs_username,'$gs_username',g' /tmp/$service_name
-#sed -i 's,$gs_password,'$gs_password',g' /tmp/$service_name
-sed -i 's,$app_id,'$appId',g' /tmp/$service_name
-sed -i 's,$safe_id,'$safeId',g' /tmp/$service_name
-sed -i 's,$object_id,'$objectId',g' /tmp/$service_name
+sed -i 's,$gs_username,'$gs_username',g' /tmp/$service_name
+sed -i 's,$gs_password,'$gs_password',g' /tmp/$service_name
 
 sudo mv -f /tmp/$service_name /etc/systemd/system/
 sudo systemctl daemon-reload

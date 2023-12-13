@@ -425,17 +425,9 @@ if __name__ == '__main__':
 
     global username
     global password
-    global appId;
-    global safeId;
-    global objectId;
 
-    appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"', '')
-    safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"', '')
-    objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"', '')
-    logger.info("appId : " + appId + " safeID : " + safeId + " objectID : " + objectId)
-
-    username = str(getUsernameByHost(managerHost, appId, safeId, objectId))
-    password = str(getPasswordByHost(managerHost, appId, safeId, objectId))
+    username = str(getUsernameByHost())
+    password = str(getPasswordByHost())
 
     managerInfo = getManagerInfo(True, username, password)
     lookupGroup = str(managerInfo['lookupGroups'])

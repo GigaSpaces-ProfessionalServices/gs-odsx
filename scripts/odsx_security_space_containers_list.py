@@ -209,8 +209,8 @@ if __name__ == '__main__':
         while exitMenu:
             containerListType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] For Zone. \nPress [Enter] for All. \nPress [99] for exit.: "+Fore.RESET))
             logger.info("containerRemoveType:"+str(containerListType))
-            username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-            password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+            username = str(getUsernameByHost())
+            password = str(getPasswordByHost())
             if(containerListType=='1'):
                 getContainersbyZone()
             elif(len(str(containerListType))==0):

@@ -606,8 +606,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
-                username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 logger.info("Manager Host :"+str(managerHost))
                 global sourceFile
                 sourceFile = str(readValuefromAppConfig("app.tieredstorage.criteria.filepath")).replace('"','')

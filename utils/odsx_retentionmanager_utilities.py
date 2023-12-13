@@ -105,8 +105,8 @@ def setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,re
 
     profile = str(readValuefromAppConfig("app.setup.profile"))
     if(profile is not None and len(profile)>0 and profile.casefold=="security"):
-        username = str(getUsernameByHost(managerServer,appId,safeId,objectId))
-        password = str(getPasswordByHost(managerServer,appId,safeId,objectId))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
 
 
         managerInfo = getManagerInfo(True,username,password)

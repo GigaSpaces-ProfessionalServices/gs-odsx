@@ -302,8 +302,8 @@ def listSpaceFromHosts(managerNodes):
                 managerHost = getManagerHost(managerNodes)
                 logger.info("managerHost : "+str(managerHost))
                 if(len(str(managerHost))>0):
-                    username = str(getUsernameByHost(managerHost,appId,safeId,objectId))
-                    password = str(getPasswordByHost(managerHost,appId,safeId,objectId))
+                    username = str(getUsernameByHost())
+                    password = str(getPasswordByHost())
                     logger.info("Manager Host :"+str(managerHost))
                     spacename = listOfSpacename(managerHost,username,password)
                     if(len(spacename)>0):

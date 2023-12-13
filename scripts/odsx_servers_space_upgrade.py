@@ -101,8 +101,8 @@ def config_get_space_listWithStatus(filePath='config/cluster.config'):
     global previousVersion
     spaceNodes = config_get_space_node()
     for node in spaceNodes:
-        #username = "gs-admin"#str(getUsernameByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
-        #password = "gs-admin"#str(getPasswordByHost(str(os.getenv(node.ip)),appId,safeId,objectId))
+        #username = "gs-admin"#str(getUsernameByHost())
+        #password = "gs-admin"#str(getPasswordByHost())
         status = getStatusOfSpaceHost(os.getenv(node.ip))
         # print(status)
         counter = counter + 1

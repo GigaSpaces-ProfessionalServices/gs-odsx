@@ -50,17 +50,9 @@ def setupService():
 
     global username
     global password
-    global appId;
-    global safeId;
-    global objectId;
 
-    appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"', '')
-    safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"', '')
-    objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"', '')
-    logger.info("appId : " + appId + " safeID : " + safeId + " objectID : " + objectId)
-
-    username = str(getUsernameByHost(managerServer, appId, safeId, objectId))
-    password = str(getPasswordByHost(managerServer, appId, safeId, objectId))
+    username = str(getUsernameByHost())
+    password = str(getPasswordByHost())
 
     managerInfo = getManagerInfo(True, username, password)
     lookupGroup = str(managerInfo['lookupGroups'])
@@ -102,7 +94,7 @@ def setupService():
     indexBatchConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace('"','')
     pollingContainerFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.pollingFileName")).replace('"','')
 
-    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath + " " + odsx_profile + " " + username + " " + password + " " + appId + " " + safeId + " " + objectId
+    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath + " " + odsx_profile + " " + username + " " + password
     commandToExecute = "scripts/objectmanagement_service_setup.sh " + args
     logger.info("Command " + commandToExecute)
     try:
