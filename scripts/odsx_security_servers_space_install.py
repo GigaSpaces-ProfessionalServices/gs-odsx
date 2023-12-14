@@ -491,7 +491,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
-                logger.info(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
+                #logger.info(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                 configureMetricsXML(host)
             serverHost=''
             try:

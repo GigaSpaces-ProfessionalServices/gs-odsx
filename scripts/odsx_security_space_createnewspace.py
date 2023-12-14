@@ -472,7 +472,7 @@ def createNewSpaceREST(managerHostConfig):
     try:
         global confirmCreateSpace
         logger.info("createNewSpaceREST() : managerHostConfig:"+str(managerHostConfig))
-        confirmCreateSpace = str(userInputWrapper("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
+        confirmCreateSpace = "y"#str(userInputWrapper("Do you want to create space ? (y/n) [y] :"+Fore.RESET))
         if(len(confirmCreateSpace)==0 or confirmCreateSpace == 'y'):
             confirmCreateSpace='y'
             if(confirmCreateSpace=='y'):
