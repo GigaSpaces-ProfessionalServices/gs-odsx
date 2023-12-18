@@ -174,3 +174,15 @@
 54. Configure manager user and password in app.config file :
     app.manager.security.username=
     app.manager.security.password=
+### TAU v4.44-tau-release tag
+55. Add below section in app.yaml after oracle. Make folder under current notifier/jars and copy this jar files 
+   notifier:
+      config: null
+      jars:
+        notifierPersonalJarFile: Personal_Message_Notifier-0.4-jar-with-dependencies.jar
+        notifierMessageJarFile: Group_Message_Notifier-0.7-jar-with-dependencies.jar
+56. Add following properties in app.config
+    app.dataengine.notifier.gsc.memory=256m
+    app.dataengine.notifier.gsc.create=y
+    app.dataengine.notifier.gscpercluster=1
+    app.dataengine.notifier.space.name=dih-tau-space

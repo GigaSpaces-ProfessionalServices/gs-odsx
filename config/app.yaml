@@ -82,6 +82,11 @@ current:
     jars:
       oracleJarFile: OracleFeeder-1.0-SNAPSHOT.jar
     scripts: null
+  notifier:
+    config: null
+    jars:
+      notifierPersonalJarFile: Personal_Message_Notifier-0.4-jar-with-dependencies.jar
+      notifierMessageJarFile: Group_Message_Notifier-0.7-jar-with-dependencies.jar
   object:
     config:
       ddlparser:
