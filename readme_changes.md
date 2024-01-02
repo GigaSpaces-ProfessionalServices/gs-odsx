@@ -186,3 +186,8 @@
     app.dataengine.notifier.gsc.create=y
     app.dataengine.notifier.gscpercluster=1
     app.dataengine.notifier.space.name=dih-tau-space
+### TAU v4.45-tau-release tag
+57. Change following property value in app.config
+    app.dv.install.target=/dbagiga/datavalidator
+58. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+59. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
