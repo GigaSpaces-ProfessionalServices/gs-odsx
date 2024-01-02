@@ -13,6 +13,7 @@ from utils.ods_cluster_config import config_get_dataValidation_nodes, config_get
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -153,6 +154,11 @@ def installSingle():
         if(len(str(confirmInstall))==0):
             confirmInstall='y'
         if(confirmInstall=='y'):
+            with Spinner():
+                executeRemoteCommandAndGetOutputValuePython36(serverHost, user,
+                                                              "mkdir -p "+targetInstallDir)
+                verboseHandle.printConsoleInfo("Created target directory "+str(targetInstallDir)+" on Host "+str(serverHost))
+
             buildTarFileToLocalMachine(serverHost)
             buildUploadInstallTarToServer(serverHost)
             executeCommandForInstall(serverHost,'DataValidation',0,'Server')
