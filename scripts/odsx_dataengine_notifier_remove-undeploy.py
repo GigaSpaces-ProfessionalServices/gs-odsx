@@ -201,8 +201,6 @@ def proceedForAllUndeploy(managerHost):
             logger.info(str(key)+" : "+str(value))
             spaceTobeUndeploy = gs_space_dictionary_obj.get(str(key))
             logger.info("spaceTobeUndeploy : "+str(spaceTobeUndeploy))
-
-            #response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy))
             logger.info("managerHost All: "+str(managerHost)+" drainMode: "+str(drainMode)+" drainTimeout: "+str(drainTimeout))
             logger.info("URL DrainMode : http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
             response = requests.delete("http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
@@ -232,9 +230,21 @@ def proceedForAllUndeploy(managerHost):
                 managerHost = getManagerHost(managerNodes)
                 removeGSC(managerHost,str(counter),'all')
             counter=counter+1
+        if(gscRemove=='y'):
+            response = requests.get('http://' + managerHost + ':8090/v2/containers',
+                                    headers={'Accept': 'application/json'})
+            for key in response.json():
+                for zone in key["zones"]:
+                    if str(zone).__contains__("notifier"):
+                        removeGSCByZoneName(str(zone))
     except Exception as e:
         handleException(e)
 
+def removeGSCByZoneName(zoneToDeleteGSC):
+    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)
+    with Spinner():
+        output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
+        print(output)
 def proceedToUndeployPU(managerHost):
     logger.info("proceedToUndeployPU()")
     try:

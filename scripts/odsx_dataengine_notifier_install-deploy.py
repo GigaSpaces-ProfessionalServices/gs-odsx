@@ -231,17 +231,17 @@ def createGSCInputParam():
     logger.info("numberOfGSC :"+str(numberOfGSC))
     memoryGSC = str(readValuefromAppConfig("app.dataengine.notifier.gsc.memory"))
 
-def uploadFileRest(managerHostConfig,pathOfSourcePU):
+def uploadFileRest(managerHostConfig):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         pathOfSourcePU=str(getYamlFilePathInsideFolder(".notifier.jars.notifierPersonalJarFile"))
-        verboseHandle.printConsoleWarning("Proceeding for1 : "+pathOfSourcePU)
+        verboseHandle.printConsoleWarning("Proceeding for 1 : "+pathOfSourcePU)
         status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         print("\n")
         logger.info("status : "+str(status))
         pathOfSourcePU=str(getYamlFilePathInsideFolder(".notifier.jars.notifierMessageJarFile"))
-        verboseHandle.printConsoleWarning("Proceeding for2 : "+pathOfSourcePU)
-        status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u")
+        verboseHandle.printConsoleWarning("Proceeding for 2 : "+pathOfSourcePU)
+        status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         print("\n")
         logger.info("status : "+str(status))
     except Exception as e:

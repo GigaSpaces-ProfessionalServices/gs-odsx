@@ -232,9 +232,21 @@ def proceedForAllUndeploy(managerHost):
                 managerHost = getManagerHost(managerNodes)
                 removeGSC(managerHost,str(counter),'all')
             counter=counter+1
+        if(gscRemove=='y'):
+            response = requests.get('http://' + managerHost + ':8090/v2/containers',
+                                    headers={'Accept': 'application/json'}, auth=HTTPBasicAuth(username, password))
+            for key in response.json():
+                for zone in key["zones"]:
+                    if str(zone).__contains__("notifier"):
+                        removeGSCByZoneName(str(zone))
     except Exception as e:
         handleException(e)
 
+def removeGSCByZoneName(zoneToDeleteGSC):
+    cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill --zones "+str(zoneToDeleteGSC)
+    with Spinner():
+        output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
+        print(output)
 def proceedToUndeployPU(managerHost):
     logger.info("proceedToUndeployPU()")
     try:
