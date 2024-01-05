@@ -68,10 +68,12 @@ def stopDataValidationService(args):
             optionMainMenu = int(userInputWrapper("Enter host Sr Number to stop: "))
             if len(host_dict_obj) >= optionMainMenu:
                 hostToStart = host_dict_obj.get(str(optionMainMenu))
+                hostType = hostToStart[1]
+                hostToStart = hostToStart[0]
                 # start individual
-                if len(str(isServiceInstalled(hostToStart)))>0:
-                    cmd = "systemctl stop odsxdatavalidation.service"
-                    logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                if len(str(isServiceInstalled(hostToStart, hostType)))>0:
+                    cmd = "systemctl stop odsxdatavalidation"+hostType+".service"
+                    logger.info("Getting status.. odsxdatavalidation"+hostType+":"+str(cmd))
                     user = 'root'
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
@@ -91,8 +93,8 @@ def stopDataValidationService(args):
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'): # Start all
                 for node in config_get_dataValidation_nodes():
-                    cmd = "systemctl stop odsxdatavalidation.service"
-                    logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                    cmd = "systemctl stop odsxdatavalidation"+str(node.type)+".service"
+                    logger.info("Getting status.. odsxdatavalidation"+str(node.type)+":"+str(cmd))
                     user = 'root'
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)

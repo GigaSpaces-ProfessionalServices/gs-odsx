@@ -75,12 +75,13 @@ def proceedForIndividualRemove(host_dict_obj, nodes):
     while(len(str(hostNumer))==0):
         hostNumer = str(userInputWrapper(Fore.YELLOW+"Enter serial number to remove : "+Fore.RESET))
     host = host_dict_obj.get(hostNumer)
+    hostType = host[1]
+    host = host[0]
     confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove "+str(host)+" ? (y/n) [y]"+Fore.RESET))
     if(confirm=='y' or len(str(confirm))==0 ):
         logger.info("Individual host : "+str(host))
-        commandToExecute="scripts/servers_datavalidation_remove.sh"
+        commandToExecute="scripts/servers_datavalidation_remove_"+hostType+".sh"
         outputShFile= connectExecuteSSH(host, user,commandToExecute,'')
-        print(outputShFile)
         config_remove_dataValidation_byNameIP(host,host)
         hostAppConfig = str(readValuefromAppConfig("app.di.hosts")).replace('"','')
         logger.info("hostAppConfig :"+str(hostAppConfig))
@@ -112,11 +113,13 @@ def executeCommandForUnInstall():
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
-                    commandToExecute="scripts/servers_datavalidation_remove.sh"
                     additionalParam=""
-                    logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
+                    #logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
                     with Spinner():
-                        for host in nodes.split(','):
+                        #for host in nodes.split(','):
+                        for node in config_get_dataValidation_nodes():
+                            host = os.getenv(node.ip)
+                            commandToExecute="scripts/servers_datavalidation_remove_"+str(node.type)+".sh"
                             if(dataValidationHost != ''):
                                 response = requests.delete(
                                     "http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/agent/remove/" + host)

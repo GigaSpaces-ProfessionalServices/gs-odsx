@@ -72,10 +72,12 @@ def startDataValidationService(args):
             optionMainMenu = int(userInputWrapper("Enter host Sr Number to start: "))
             if len(host_dict_obj) >= optionMainMenu:
                 hostToStart = host_dict_obj.get(str(optionMainMenu))
+                hostType = hostToStart[1]
+                hostToStart = hostToStart[0]
                 # start individual
-                if len(str(isServiceInstalled(hostToStart)))>0:
-                    cmd = "systemctl start odsxdatavalidation.service"
-                    logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                if len(str(isServiceInstalled(hostToStart,hostType)))>0:
+                    cmd = "systemctl start odsxdatavalidation"+hostType+".service"
+                    logger.info("Getting status.. odsxdatavalidation"+hostType+":"+str(cmd))
                     user = 'root'
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
@@ -95,12 +97,12 @@ def startDataValidationService(args):
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'): # Start all
                 for node in config_get_dataValidation_nodes():
-                    output = getConsolidatedStatus(os.getenv(node.ip))
+                    output = getConsolidatedStatus(os.getenv(node.ip),str(node.type))
                     if (output == 0):
                         continue
-                    if len(str(isServiceInstalled(os.getenv(node.ip))))>0:
-                        cmd = "systemctl start odsxdatavalidation.service"
-                        logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
+                    if len(str(isServiceInstalled(os.getenv(node.ip), str(node.type))))>0:
+                        cmd = "systemctl start odsxdatavalidation"+str(node.type)+".service"
+                        logger.info("Getting status.. odsxdatavalidation"+str(node.type)+":"+str(cmd))
                         user = 'root'
                         with Spinner():
                             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)

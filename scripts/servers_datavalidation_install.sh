@@ -1,4 +1,4 @@
-echo "Starting Data Validation Installation."
+echo "Starting Data Validation Server Installation."
 #echo "Extracting install.tar to "$targetDir
 sourceInstallerDirectory=$1
 targetInstallDir=$2
@@ -29,9 +29,9 @@ else
   echo "Java already installed.!!!"
 fi
 
-start_data_validation_file="start_data_validation.sh"
-stop_data_validation_file="stop_data_validation.sh"
-data_validation_service_file="odsxdatavalidation.service"
+start_data_validation_file="start_data_validation_server.sh"
+stop_data_validation_file="stop_data_validation_server.sh"
+data_validation_service_file="odsxdatavalidationserver.service"
 
 cp $sourceDvServerJar $home_dir/install/data-validation/
 
@@ -46,13 +46,13 @@ echo "$cmd">>$stop_data_validation_file
 home_dir_sh=$(pwd)
 source $home_dir_sh/setenv.sh
 
-mv $home_dir_sh/st*_data_validation.sh /tmp
+mv $home_dir_sh/st*_data_validation_server.sh /tmp
 
 mv $home_dir_sh/install/$data_validation_service_file /tmp
 
-mv /tmp/st*_data_validation.sh /usr/local/bin/
+mv /tmp/st*_data_validation_server.sh /usr/local/bin/
 
-chmod +x /usr/local/bin/st*_data_validation.sh
+chmod +x /usr/local/bin/st*_data_validation_server.sh
 
 mv /tmp/$data_validation_service_file /etc/systemd/system/
 

@@ -76,7 +76,7 @@ def installSingle():
         global sourceDvServerJar
         global logFilepath
         global dbPath
-        targetInstallDir=str(readValuefromAppConfig("app.dv.install.target"))
+        targetInstallDir=str(readValuefromAppConfig("app.dv.agent.install.target"))
         agentHosts = getDataValidationAgentHostFromEnv()#str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
         #while(len(str(agentHosts))==0):
         #    agentHosts = str(userInputWrapper(Fore.YELLOW+"Enter hosts(comma separated) to install Data Validation Agents: "+Fore.RESET))
@@ -89,7 +89,7 @@ def installSingle():
         dbPath= str(readValuefromAppConfig("app.dv.server.db")) #userInputWrapper(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
         #if(len(str(dbPath))==0):
         #    dbPath='/dbagigawork/sqlite/datavalidator.db'
-        logFilepath= str(readValuefromAppConfig("app.dv.server.log")) #userInputWrapper(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
+        logFilepath= str(readValuefromAppConfig("app.dv.agent.log")) #userInputWrapper(Fore.YELLOW+"Enter log file path[/home/gsods/datavalidator.log] : "+Fore.RESET))
         #if(len(str(logFilepath))==0):
         #    logFilepath='/dbagigalogs/datavalidator.log'
         sourceDvServerJar = str(getYamlFilePathInsideFolder(".data-validator.jars.agentjar"))
@@ -101,6 +101,8 @@ def installSingle():
          f.write('logging.file.name='+logFilepath)
          f.write('\n')
          f.write('pathToDataBase='+dbPath)
+         f.write('\n')
+         f.write('logging.level.com.gigaspaces.datavalidator=INFO')
 
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
         verboseHandle.printConsoleInfo("***Summary***")

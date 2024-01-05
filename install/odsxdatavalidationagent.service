@@ -1,0 +1,14 @@
+[Unit]
+Description="Data Validation Agent Service"
+After=network.target
+
+[Service]
+Type=simple
+User=root
+Group=root
+ExecStart=/bin/bash /usr/local/bin/start_data_validation_agent.sh
+ExecStop=/bin/bash /usr/local/bin/stop_data_validation_agent.sh
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -102,7 +102,7 @@ def installSingle():
         global dbPath
         global influxdbHost
         influxdbHost = getInfluxdbHostFromEnv()
-        targetInstallDir=str(readValuefromAppConfig("app.dv.install.target"))
+        targetInstallDir=str(readValuefromAppConfig("app.dv.server.install.target"))
         serverHost = getDataValidationServerHostFromEnv()#str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
         #while(len(str(serverHost))==0):
         #    serverHost = str(userInputWrapper(Fore.YELLOW+"Enter host to install Data Validation Server: "+Fore.RESET))
@@ -139,6 +139,8 @@ def installSingle():
          f.write('envName='+os.getenv('ENV_NAME',default='test'))
          f.write('\n')
          f.write('host='+socket.gethostname())
+         f.write('\n')
+         f.write('logging.level.com.gigaspaces.datavalidator=INFO')
 
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
         verboseHandle.printConsoleInfo("***Summary***")

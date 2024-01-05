@@ -67,10 +67,10 @@ def myCheckArg(args=None):
     return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
 
 
-def getConsolidatedStatus(ip):
+def getConsolidatedStatus(ip, type):
     output = ''
     logger.info("getConsolidatedStatus() : " + str(ip))
-    cmdList = ["systemctl status odsxdatavalidation"]
+    cmdList = ["systemctl status odsxdatavalidation"+type]
     for cmd in cmdList:
         logger.info("cmd :" + str(cmd) + " host :" + str(ip))
         logger.info("Getting status.. :" + str(cmd))
@@ -84,9 +84,9 @@ def getConsolidatedStatus(ip):
                 return output
     return output
 
-def isServiceInstalled(host):
+def isServiceInstalled(host, type):
     logger.info("isInstalledAndGetVersion")
-    commandToExecute='ls /etc/systemd/system/odsxdatavalidation*'
+    commandToExecute='ls /etc/systemd/system/odsxdatavalidation'+type+'*'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
@@ -106,10 +106,10 @@ def listDVServers():
     data = []
     counter = 1
     for node in dVServers:
-        host_dict_obj.add(str(counter), str(os.getenv(node.ip)))
-        output = getConsolidatedStatus(os.getenv(node.ip))
+        host_dict_obj.add(str(counter), [str(os.getenv(node.ip)),str(node.type)])
+        output = getConsolidatedStatus(os.getenv(node.ip),str(node.type))
         installStatus='No'
-        install = isServiceInstalled(str(os.getenv(node.ip)))
+        install = isServiceInstalled(str(os.getenv(node.ip)), str(node.type))
         if(len(str(install))>0):
             installStatus='Yes'
         if (output == 0):

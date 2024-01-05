@@ -29,9 +29,9 @@ else
   echo "Java already installed.!!!"
 fi
 
-start_data_validation_file="start_data_validation.sh"
-stop_data_validation_file="stop_data_validation.sh"
-data_validation_service_file="odsxdatavalidation.service"
+start_data_validation_file="start_data_validation_agent.sh"
+stop_data_validation_file="stop_data_validation_agent.sh"
+data_validation_service_file="odsxdatavalidationagent.service"
 
 #Replace keytab path according to agent machine
 #sed -i '/keyTab/c\keyTab=\'$home_dir'"/UTKA02E.keytab\"' $home_dir/SQLJDBCDriver.conf
@@ -40,7 +40,7 @@ cp $sourceDvServerJar $home_dir/install/data-validation/
 
 # start data validation service
 source setenv.sh
-cmd="java -Djava.security.auth.login.config=$home_dir/SQLJDBCDriver.conf -jar $home_dir/install/data-validation/$serverJarFileName --spring.config.location=$home_dir/install/data-validation/application.properties"
+cmd="java -Djava.security.auth.login.config=/dbagigashare/env_config/security/SQLJDBCDriver.conf -jar $home_dir/install/data-validation/$serverJarFileName --spring.config.location=$home_dir/install/data-validation/application.properties"
 echo "$cmd">>$start_data_validation_file
 # stop data validation service
 cmd="pkill -9 -f "$serverJarFileName
@@ -49,13 +49,13 @@ echo "$cmd">>$stop_data_validation_file
 home_dir_sh=$(pwd)
 source $home_dir_sh/setenv.sh
 
-mv $home_dir_sh/st*_data_validation.sh /tmp
+mv $home_dir_sh/st*_data_validation_agent.sh /tmp
 
 mv $home_dir_sh/install/$data_validation_service_file /tmp
 
-mv /tmp/st*_data_validation.sh /usr/local/bin/
+mv /tmp/st*_data_validation_agent.sh /usr/local/bin/
 
-chmod +x /usr/local/bin/st*_data_validation.sh
+chmod +x /usr/local/bin/st*_data_validation_agent.sh
 
 mv /tmp/$data_validation_service_file /etc/systemd/system/
 

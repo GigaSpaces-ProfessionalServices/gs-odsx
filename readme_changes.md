@@ -191,3 +191,16 @@
     app.dv.install.target=/dbagiga/datavalidator
 58. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 59. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+### TAU v4.47-tau-release tag
+60. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+61. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+62. Changes in host.yaml
+    Change host ip for data_validator_server and data_validator_agent
+    Remove second dv agent host line if you want to run 1:1 server:agent topology
+63. Changes in cluster.config
+    Remove second dv agent node if you want to run 1:1 server:agent topology
+64. Changes in app.config
+    app.dv.server.log=/dbagigalogs/datavalidatorserver.log
+    app.dv.agent.log=/dbagigalogs/datavalidatoragent.log
+    app.dv.server.install.target=/dbagiga/datavalidator/server
+    app.dv.agent.install.target=/dbagiga/datavalidator/agent
