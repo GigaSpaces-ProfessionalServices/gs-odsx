@@ -69,33 +69,24 @@ def myCheckArg(args=None):
 
 def getConsolidatedStatus(ip, type):
     output = ''
-    logger.info("getConsolidatedStatus() : " + str(ip))
     cmdList = ["systemctl status odsxdatavalidation"+type]
     for cmd in cmdList:
-        logger.info("cmd :" + str(cmd) + " host :" + str(ip))
-        logger.info("Getting status.. :" + str(cmd))
         user = 'root'
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(ip, user, cmd)
-            logger.info("output1 : " + str(output))
             if (output != 0):
                 # verboseHandle.printConsoleInfo(" Service :"+str(cmd)+" not started.")
-                logger.info(" Service :" + str(cmd) + " not started." + str(ip))
                 return output
     return output
 
 def isServiceInstalled(host, type):
-    logger.info("isInstalledAndGetVersion")
     commandToExecute='ls /etc/systemd/system/odsxdatavalidation'+type+'*'
-    logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
-    logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 
 
 def listDVServers():
-    logger.info("listDVServers()")
     host_dict_obj = obj_type_dictionary()
     dVServers = config_get_dataValidation_nodes()
     headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
@@ -162,11 +153,9 @@ def listDVAgents():
     printTabular(None, headers, data)
 
 def getDataValidationHost(dataValidationNodes):
-    logger.info("getDataValidationHost()")
     dataValidationHost = ""
     status = ""
     try:
-        logger.info("getDataValidationHost() : dataValidationNodes :" + str(dataValidationNodes))
         for node in dataValidationNodes:
             if(str(node.type).casefold() == 'server'):
                 dvServicePort=str(readValuefromAppConfig("app.dv.server.port"))

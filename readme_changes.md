@@ -204,3 +204,9 @@
     app.dv.agent.log=/dbagigalogs/datavalidatoragent.log
     app.dv.server.install.target=/dbagiga/datavalidator/server
     app.dv.agent.install.target=/dbagiga/datavalidator/agent
+### TAU v4.48-tau-release tag
+65. Re-Build data validator agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+66. Copy generated agent jars to /dbagigashare/current/data-validator/jars on pivot machine
+67. Add following properties in app.config
+    app.dv.server.log.level=INFO
+    app.dv.agent.log.level=INFO

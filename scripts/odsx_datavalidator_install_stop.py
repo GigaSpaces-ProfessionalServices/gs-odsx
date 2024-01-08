@@ -78,9 +78,9 @@ def stopDataValidationService(args):
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
                         if (output == 0):
-                            verboseHandle.printConsoleInfo("Service data validation stop successfully on "+str(hostToStart))
+                            verboseHandle.printConsoleInfo("Service data validation "+hostType+" stop successfully on "+str(hostToStart))
                         else:
-                            verboseHandle.printConsoleError("Service data validation failed to stop on "+str(hostToStart))
+                            verboseHandle.printConsoleError("Service data validation "+hostType+" failed to stop on "+str(hostToStart))
                 else:
                     verboseHandle.printConsoleError("No service installed for host:"+str(hostToStart))
         elif(serverStartType =='99'):
@@ -99,9 +99,9 @@ def stopDataValidationService(args):
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                         if (output == 0):
-                            verboseHandle.printConsoleInfo("Service data validation stop successfully on "+str(os.getenv(node.ip)))
+                            verboseHandle.printConsoleInfo("Service data validation "+str(node.type)+" stop successfully on "+str(os.getenv(node.ip)))
                         else:
-                            verboseHandle.printConsoleError("Service data validation failed to stop")
+                            verboseHandle.printConsoleError("Service data validation "+str(node.type)+" failed to stop")
             else:
                 exit(0)
 

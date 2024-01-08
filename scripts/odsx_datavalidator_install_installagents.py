@@ -102,7 +102,7 @@ def installSingle():
          f.write('\n')
          f.write('pathToDataBase='+dbPath)
          f.write('\n')
-         f.write('logging.level.com.gigaspaces.datavalidator=INFO')
+         f.write('logging.level.com.gigaspaces.datavalidator='+str(readValuefromAppConfig("app.dv.agent.log.level")))
 
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
         verboseHandle.printConsoleInfo("***Summary***")

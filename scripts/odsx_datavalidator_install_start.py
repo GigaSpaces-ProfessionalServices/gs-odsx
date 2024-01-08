@@ -82,9 +82,9 @@ def startDataValidationService(args):
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
                         if (output == 0):
-                            verboseHandle.printConsoleInfo("Service data validation started successfully on "+str(hostToStart))
+                            verboseHandle.printConsoleInfo("Service data validation "+hostType+" started successfully on "+str(hostToStart))
                         else:
-                            verboseHandle.printConsoleError("Service data validation failed to start on "+str(hostToStart))
+                            verboseHandle.printConsoleError("Service data validation "+hostType+" failed to start on "+str(hostToStart))
                 else:
                     verboseHandle.printConsoleError("No service installed for host:"+str(hostToStart))
         elif(serverStartType =='99'):
@@ -107,9 +107,9 @@ def startDataValidationService(args):
                         with Spinner():
                             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                             if (output == 0):
-                                verboseHandle.printConsoleInfo("Service data validation started successfully on "+str(os.getenv(node.ip)))
+                                verboseHandle.printConsoleInfo("Service data validation "+str(node.type)+" started successfully on "+str(os.getenv(node.ip)))
                             else:
-                                verboseHandle.printConsoleError("Service data validation failed to start on "+str(os.getenv(node.ip)))
+                                verboseHandle.printConsoleError("Service data validation "+str(node.type)+" failed to start on "+str(os.getenv(node.ip)))
                     else:
                         verboseHandle.printConsoleError("No service installed for host:"+str(os.getenv(node.ip)))
             else:

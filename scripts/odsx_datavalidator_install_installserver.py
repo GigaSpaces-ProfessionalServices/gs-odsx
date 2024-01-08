@@ -140,7 +140,7 @@ def installSingle():
          f.write('\n')
          f.write('host='+socket.gethostname())
          f.write('\n')
-         f.write('logging.level.com.gigaspaces.datavalidator=INFO')
+         f.write('logging.level.com.gigaspaces.datavalidator='+str(readValuefromAppConfig("app.dv.server.log.level")))
 
         verboseHandle.printConsoleInfo("------------------------------------------------------------")
         verboseHandle.printConsoleInfo("***Summary***")

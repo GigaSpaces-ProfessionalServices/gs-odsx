@@ -35,7 +35,6 @@ class host_dictionary_obj(dict):
 def doValidate():
     dataValidationNodes = config_get_dataValidation_nodes()
     dataValidationHost = getDataValidationHost(dataValidationNodes)
-    logger.info("dataValidationHost : " + str(dataValidationHost))
 
     if str(dataValidationHost) == "":
         verboseHandle.printConsoleError("")
@@ -113,11 +112,8 @@ def printmeasurementtable(dataValidatorServiceHost):
         print("An exception occurred")
 
     if response.status_code == 200:
-        # logger.info(str(response.status_code))
         jsonArray = json.loads(response.text)
         response = json.loads(jsonArray["response"])
-        # print("response2 "+response[0])
-        # print(isinstance(response, list))
 
         headers = [Fore.YELLOW + "Id" + Fore.RESET,
                    Fore.YELLOW + "Datasource Name" + Fore.RESET,
@@ -148,7 +144,6 @@ def printmeasurementtable(dataValidatorServiceHost):
 
 
 if __name__ == '__main__':
-    logger.info("MENU -> Data Validator -> Perform Validation -> Run Test -> Compare Test")
     verboseHandle.printConsoleWarning('MENU -> Data Validator -> Perform Validation -> Run Test -> Compare Test')
     verboseHandle.printConsoleWarning('');
     try:
