@@ -210,3 +210,6 @@
 67. Add following properties in app.config
     app.dv.server.log.level=INFO
     app.dv.agent.log.level=INFO
+### TAU v4.49-tau-release tag
+68. Add following properties in app.config
+    odsx.utilities.scripts.folder=/giga/utils
