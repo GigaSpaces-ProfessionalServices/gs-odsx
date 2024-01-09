@@ -156,7 +156,7 @@ def listObjects():
     countResponse = requests.get("http://" + managerHost + ":8090/v2/internal/spaces/utilization")
     logger.info(response.text)
    # jsonData = json.loads(response.text)
-    jsonCountData = json.loads(countResponse.text)
+  #  jsonCountData = json.loads(countResponse.text)
 
    # logger.info("response : " + str(jsonData))
     # logger.info("response : " + str(countResponse))
