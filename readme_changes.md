@@ -213,3 +213,6 @@
 ### TAU v4.49-tau-release tag
 68. Add following properties in app.config
     odsx.utilities.scripts.folder=/giga/utils
+### TAU v4.50-tau-release tag
+69. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+70. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
