@@ -7,6 +7,7 @@ import requests, json, math
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
@@ -402,7 +403,7 @@ def dataPuREST(resource,resourceName,zone,partition,maxInstancesPerMachine,backU
         spacePropertyConfigFilePath=''
         spacePropertyConfigFilePathTarget=''
         if(isSpacePropertyRequired=='y'):
-            spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.space.spacepropertyfile"))
+            spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.imspace.imspacepropertyfile"))
             logger.info("gs.config.ts.spaceproperty :"+str(spacePropertyConfigFilePath))
             #spacePropertyConfigFilePathInput = str(userInputWrapper(Fore.YELLOW+"Enter space.property.filePath ["+str(spacePropertyConfigFilePath)+"]: "+Fore.RESET))
             #if(len(str(spacePropertyConfigFilePathInput))>0):
@@ -540,6 +541,7 @@ def createNewSpaceREST(managerHostConfig):
                 if(createConfirm=='y'):
                     if(confirmCreateGSC == 'y'):
                         createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConfirm)
+                    copyFilesFromODSXToSpaceServer()
                     uploadFileRest(managerHostConfig)
                     data = dataPuREST(resource,resourceName,zoneOfPU,partitions,maxInstancesPerMachine,backUpRequired)
                     headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
@@ -716,6 +718,40 @@ def createNewSpaceREST(managerHostConfig):
 #                 proceedForValidateResponse(response)
 #                 verboseHandle.printConsoleInfo("Space "+spaceName+" created.")
 
+def getSpaceNodeIps():
+    logger.info("spaceNodes() ")
+    ips = []
+    spaceNodes = config_get_space_hosts()
+    for node in spaceNodes:
+        ips.append(os.getenv(node.ip))
+    logger.info("ips : "+str(ips))
+    return ips
+
+def copyFilesFromODSXToSpaceServer():
+    logger.info("copyFilesFromODSXToSpaceServer()")
+    ips = getSpaceNodeIps()
+    logger.info(" ips : "+str(ips)+" spacePropertyConfigFilePath : "+str(spacePropertyConfigFilePath)+" spacePropertyConfigFilePathTarget : "+str(spacePropertyConfigFilePathTarget))
+    copyFile(ips,spacePropertyConfigFilePath , spacePropertyConfigFilePathTarget)
+
+def copyFile(hostips, srcPath, destPath, dryrun=False):
+    logger.info("copyFile :"+str(hostips)+" : "+str(srcPath)+" : "+str(destPath))
+    username = "root"
+    '''
+    if not dryrun:
+        username = userInputWrapper("Enter username for host [root] : ")
+        if username == "":
+            username = "root"
+    else:
+        username = "root"
+    '''
+    for hostip in hostips:
+        if scp_upload(hostip, username, srcPath, destPath):
+            verboseHandle.printConsoleInfo(hostip)
+            logger.info(
+                "Done copying, hostip=" + hostip + ", username=" + username + ", srcPath=" + srcPath + ", destPath=" + destPath)
+        else:
+            return False
+    return True
 def validateResponseGetDescription(responseCode):
     logger.info("validateResponse() "+str(responseCode))
     response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode),auth = HTTPBasicAuth(username,password))
