@@ -153,8 +153,8 @@ def listObjects():
     if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
     #  response = requests.get("http://" + managerHost + ":8090/v2/spaces/" + str(spaceName) + "/statistics/types")
-    countResponse = requests.get("http://" + managerHost + ":8090/v2/internal/spaces/utilization")
-    logger.info(response.text)
+    #countResponse = requests.get("http://" + managerHost + ":8090/v2/internal/spaces/utilization")
+    #logger.info(response.text)
    # jsonData = json.loads(response.text)
   #  jsonCountData = json.loads(countResponse.text)
 

@@ -106,17 +106,7 @@ current:
         retentionjar: retention-manager.jar
   security:
     jars:
-      cef:
-        cefjar: CEFLogger-1.0-SNAPSHOT.jar
-      javapassword: JavaPasswordSDK.jar
-      springldapcore: spring-ldap-core-2.3.3.RELEASE.jar
-      springldapjar: spring-security-ldap-5.1.7.RELEASE.jar
-      vaultsupportjar: VaultSupport-1.0-SNAPSHOT.jar
-      springconfig: spring-security-config-5.6.2.jar
-      springcore: spring-security-core-5.6.2.jar
-      springcrypto: spring-security-crypto-5.6.2.jar
-      springweb: spring-security-web-5.6.2.jar
-      xapsecurity: xap-security.jar
+      all: "*"
   telegraf:
     config:
       pivot:
@@ -130,10 +120,10 @@ current:
       readfromshobjar: readFromShob-1.0.0.jar
 env_config:
   security:
-    sqljdbc: SQLJDBCDriver.conf
-    keytab: keytab
-    ldapsourcefile: ldap-security-config.xml
-    ldappropertysourcefile: security.properties
+    conf:
+      - "*.xml"
+      - "*.jks"
+      - "*.properties"
   kapacitor:
     config:
       kapacitorconfigfile: kapacitor.conf.template

@@ -8,7 +8,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
-    getYamlFileNamesInsideFolderList
+    getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
 from colorama import Fore
 
 from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
@@ -267,7 +267,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
+       # cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
         db2ccJarPath = ".db2.jars.db2ccjar"
         db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
@@ -277,24 +277,25 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
 
-        springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
-        springconfigJarInput = str(getYamlFilePathInsideFolder(".security.jars.springconfig")).replace('[','').replace(']','')
-        springcoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcore")).replace('[','').replace(']','')
-        springcryptoJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcrypto")).replace('[','').replace(']','')
-        springwebJarInput = str(getYamlFilePathInsideFolder(".security.jars.springweb")).replace('[','').replace(']','')
-        xapsecurityJarInput = str(getYamlFilePathInsideFolder(".security.jars.xapsecurity")).replace('[','').replace(']','')
+       # springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
+       # springconfigJarInput = str(getYamlFilePathInsideFolder(".security.jars.springconfig")).replace('[','').replace(']','')
+       # springcoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcore")).replace('[','').replace(']','')
+       # springcryptoJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcrypto")).replace('[','').replace(']','')
+       # springwebJarInput = str(getYamlFilePathInsideFolder(".security.jars.springweb")).replace('[','').replace(']','')
+       # xapsecurityJarInput = str(getYamlFilePathInsideFolder(".security.jars.xapsecurity")).replace('[','').replace(']','')
 
-        springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
+#        springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
 
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
+        sourceJar = str(getYamlFilePathInsideFolder(".security.jars.all")).replace('"','').replace('[','').replace(']','') #springLdapCoreJarInput+' '+springLdapJarInput + ' ' + springconfigJarInput + ' ' + springcoreJarInput+ ' ' + springcryptoJarInput + ' ' + springwebJarInput+ ' ' + xapsecurityJarInput
         msSqlFeederFilePath="."
         msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
 
-        sourceJar = springLdapCoreJarInput+' '+springLdapJarInput + ' ' + springconfigJarInput + ' ' + springcoreJarInput+ ' ' + springcryptoJarInput + ' ' + springwebJarInput+ ' ' + xapsecurityJarInput
+       # sourceJar = springLdapCoreJarInput+' '+springLdapJarInput + ' ' + springconfigJarInput + ' ' + springcoreJarInput+ ' ' + springcryptoJarInput + ' ' + springwebJarInput+ ' ' + xapsecurityJarInput
 
-        ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..security.ldapsourcefile"))
-        ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
+       # ldapSecurityConfigInput = str(getYamlFilePathInsideConfigFolder("..security.ldapsourcefile"))
+       # ldapSecurityConfigTargetInput = str(readValuefromAppConfig("app.manager.security.config.ldap.target.file"))
 
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
@@ -344,46 +345,46 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"13. "+
               Fore.GREEN+"Enter zone to create GSC : "+Fore.RESET,
               Fore.GREEN+zoneGSC+Fore.RESET)
+      #  print(Fore.GREEN+"14. "+
+      #        Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
+      #        Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"14. "+
-              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
-              Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"15. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"15A. "+
+        print(Fore.GREEN+"14A. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
               Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
-        print(Fore.GREEN+"16. "+
+        print(Fore.GREEN+"15. "+
               Fore.GREEN+"db2jcc-4.26.14.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"17. "+
+        print(Fore.GREEN+"16. "+
               Fore.GREEN+"db2jcc_license_cu-4.16.53.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarLicenseInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"18. "+
+        print(Fore.GREEN+"17. "+
               Fore.GREEN+"DB2 Feeder jars target : "+Fore.RESET,
               Fore.GREEN+str(db2FeederJarTargetInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"19. "+
-              Fore.GREEN+"spring-ldap-core-2.3.3.RELEASE.jar source : "+Fore.RESET,
-              Fore.GREEN+str(springLdapCoreJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"20. "+
-              Fore.GREEN+"spring-security-ldap-5.1.7.RELEASE.jar source : "+Fore.RESET,
-              Fore.GREEN+str(springLdapJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"21. "+
+     #   print(Fore.GREEN+"19. "+
+     #         Fore.GREEN+"spring-ldap-core-2.3.3.RELEASE.jar source : "+Fore.RESET,
+     #         Fore.GREEN+str(springLdapCoreJarInput).replace('"','')+Fore.RESET)
+    #    print(Fore.GREEN+"20. "+
+    #          Fore.GREEN+"spring-security-ldap-5.1.7.RELEASE.jar source : "+Fore.RESET,
+    #          Fore.GREEN+str(springLdapJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"18. "+
               Fore.GREEN+"Spring jar target : "+Fore.RESET,
               Fore.GREEN+str(springTargetJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"22. "+
-              Fore.GREEN+"ldap-security-config.xml source : "+Fore.RESET,
-              Fore.GREEN+str(ldapSecurityConfigInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"23. "+
-              Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
-              Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"24. "+
+     #   print(Fore.GREEN+"22. "+
+     #         Fore.GREEN+"ldap-security-config.xml source : "+Fore.RESET,
+     #         Fore.GREEN+str(ldapSecurityConfigInput).replace('"','')+Fore.RESET)
+    #    print(Fore.GREEN+"23. "+
+    #          Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
+    #          Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"19. "+
               Fore.GREEN+"MsSQL Feeder files source : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileSource).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"25. "+
+        print(Fore.GREEN+"20. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"26. "+
+        print(Fore.GREEN+"21s. "+
               Fore.GREEN+"Space server installation : "+Fore.RESET,
               Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"27. "+
@@ -408,7 +409,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength=len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
+                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,None,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -428,7 +429,6 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             gs_user = getUsernameByHost()
             gs_pass = getPasswordByHost()
 
-            additionalParam=additionalParam+' '+startSpaceGsc+' '+selinuxEnabled +' '+gs_user+' '+gs_pass +' '+ gsNicAddress
             sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
             # print("---------------------"+str(additionalParam))
             logger.info("additionalParam - Installation :")
@@ -460,6 +460,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             logger.info("additionalParam : "+str(additionalParam))
             logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
             with Spinner():
+                additionalParam=additionalParam+' '+startSpaceGsc+ ' ' + selinuxEnabled +' '+gs_user+' '+gs_pass +' '+ gsNicAddress
                 outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
                 #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                 logger.debug("script output"+str(outputShFile))
@@ -473,23 +474,27 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
 
                 #print(outputShFile)
                 #Upload CEF logging jar
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+                #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
 
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
+               # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
                 #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
+               # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarLicenseInput+" "+db2FeederJarTargetInput)
                 #scp_upload(host,user,db2jccJarLicenseInput,db2FeederJarTargetInput)
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.keytab").replace("keytab","*keytab")+" "+msSqlFeederFileTarget)
+               # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.keytab").replace("keytab","*keytab")+" "+msSqlFeederFileTarget)
                 #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'keytab')
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
+               # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
                 #scp_upload_specific_extension(host,user,msSqlFeederFileSource,msSqlFeederFileTarget,'conf')
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+sourceJar+" "+springTargetJarInput)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)
                 #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
+                # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+                securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
+                for securityFile in securityFiles:
+                    securityFile = str(securityFile).replace('"',"")
+                    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+securityFile+" "+readValuefromAppConfig("app.manager.security.config.target"))
+                # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
                 #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+springTargetJarInput)
+                #sexecuteRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/xap-security.jar "+springTargetJarInput)
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                 #logger.info(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                 configureMetricsXML(host)
