@@ -215,4 +215,12 @@
     odsx.utilities.scripts.folder=/giga/utils
 ### TAU v4.50-tau-release tag
 69. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
-70. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars on pivot machine
+70. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars
+### TAU v4.51-tau-release tag
+71. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+72. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars 
+72. Update table properties to add index for optimize max calculation for gigaspace data sources
+    Go to /dbagigashare/current/object/config/ddlparser
+    Add following to each <table_name>.properties for which max measurement will be created
+     index=T_IDKUN  (Here 'T_IDKUN' is the property name for which max value needs to be compare in data validation 
+     indexType=ORDERED,EQUAL
