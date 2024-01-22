@@ -7,7 +7,8 @@ from concurrent.futures import ThreadPoolExecutor
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
-    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideFolderList, getYamlFileNamesInsideFolderList
+    getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideFolderList, getYamlFileNamesInsideFolderList, \
+    getYamlFilePathInsideFolderList1
 from colorama import Fore
 
 from utils.ods_list import configureMetricsXML
@@ -353,7 +354,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print(Fore.YELLOW+"Source directory to copy files "+sourceDirectoryForJar+Fore.RESET)
         #if(len(str(sourceDirectoryForJar))==0):
         #    sourceDirectoryForJar='/dbagiga'
-        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
+        cefLoggingJarInput=""
+        securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
+        for securityFile in securityFiles:
+            securityFile = str(securityFile).replace('"',"")
+            if securityFile.__contains__("cef"):
+                cefLoggingJarInput = securityFile+"/cef/"
+                break
+
+        #cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::

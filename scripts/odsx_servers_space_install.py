@@ -8,7 +8,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
-    getYamlFileNamesInsideFolderList
+    getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
 from colorama import Fore
 
 from utils.ods_list import getManagerHostFromEnv, configureMetricsXML
@@ -265,7 +265,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
 
-        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
+        securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
+        cefLoggingJarInput=""
+        for securityFile in securityFiles:
+            securityFile = str(securityFile).replace('"',"")
+            if securityFile.__contains__("cef"):
+                cefLoggingJarInput = securityFile+"/cef/"
+                break
+
+        #cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
         db2ccJarPath = ".db2.jars.db2ccjar"
         db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
