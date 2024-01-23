@@ -225,7 +225,7 @@
      index=T_IDKUN  (Here 'T_IDKUN' is the property name for which max value needs to be compare in data validation 
      indexType=ORDERED,EQUAL
 ### TAU v4.52-tau-release tag
-75. Update app.yaml above telegraf section :
+74. Update app.yaml above telegraf section :
     security:
       jars:
         all: "*"
@@ -236,3 +236,6 @@
           - "*.xml"
           - "*.jks"
           - "*.properties"
+### TAU v4.53-tau-release tag
+76. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+77. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars

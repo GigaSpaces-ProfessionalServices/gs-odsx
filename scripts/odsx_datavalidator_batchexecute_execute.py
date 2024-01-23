@@ -11,6 +11,7 @@ from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.odsx_print_tabular_data import printTabular
+from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -23,7 +24,7 @@ class bcolors:
     RESET = '\033[0m'  # RESET COLOR
 
 
-
+testTypes =["count","avg","min","max","sum","all",""]
 def doValidate():
 
     verboseHandle.printConsoleWarning('Results:');
@@ -37,8 +38,16 @@ def doValidate():
         verboseHandle.printConsoleError("Failed to connect to the Data validation server. Please check that it is running.")
         return
 
+    test = str(userInputWrapper("Select Test type (count/avg/min/max/sum/all) [count]: "))
+    while(test not in testTypes):
+        print(Fore.YELLOW +"Please select Test type from given list"+Fore.RESET)
+        test = str(userInputWrapper("Test type (count/avg/min/max/sum/all) [count]: "))
+
+    if (len(str(test)) == 0):
+        test = 'count'
+
     try:
-        response = requests.get("http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/batchcompare/count")
+        response = requests.get("http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/batchcompare/"+str(test))
     except:
         print("An exception occurred")
 
