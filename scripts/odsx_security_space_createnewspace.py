@@ -730,6 +730,8 @@ def getSpaceNodeIps():
 def copyFilesFromODSXToSpaceServer():
     logger.info("copyFilesFromODSXToSpaceServer()")
     ips = getSpaceNodeIps()
+    spacePropertyConfigFilePath = str(getYamlFilePathInsideFolder(".gs.config.imspace.imspacepropertyfile"))
+    spacePropertyConfigFilePathTarget = str(readValuefromAppConfig("app.newspace.spaceproperty.filepath.target")).replace('"','')
     logger.info(" ips : "+str(ips)+" spacePropertyConfigFilePath : "+str(spacePropertyConfigFilePath)+" spacePropertyConfigFilePathTarget : "+str(spacePropertyConfigFilePathTarget))
     copyFile(ips,spacePropertyConfigFilePath , spacePropertyConfigFilePathTarget)
 
