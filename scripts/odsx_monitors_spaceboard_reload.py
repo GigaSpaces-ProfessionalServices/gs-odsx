@@ -56,14 +56,15 @@ def reloadSpaceboardServiceByHost():
     else:
         filename = ""
     gsConfigSpaceboardTarget = str(readValuefromAppConfig("app.grafana.provisioning.dashboards.target"))
+    gsConfigdashTarget = str(readValuefromAppConfig("app.grafana.gsconfigyaml.target"))
     #sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     verboseHandle.printConsoleWarning("***Summary***")
-    print(Fore.GREEN+"1. "+
-          Fore.GREEN+"Grafana dashboard files  = "+sourceInstallerDirectory+"/grafana/dashboards/"+
-          Fore.GREEN+str(filename)+Fore.RESET)
-    verboseHandle.printConsoleInfo("2. Target path : "+str(gsConfigSpaceboardTarget))
+    verboseHandle.printConsoleInfo("1. Grafana config source = "+str(os.getenv("ODSXARTIFACTS"))+"grafana/"+str(filename))
+    verboseHandle.printConsoleInfo("2. Grafana config target = "+gsConfigdashTarget)
+    verboseHandle.printConsoleInfo("3. Grafana dashboards source = "+sourceInstallerDirectory+"grafana/dashboards/")
+    verboseHandle.printConsoleInfo("4. Grafana dashboards target = "+str(gsConfigSpaceboardTarget))
     verboseHandle.printConsoleWarning("------------------------------------------------------------")
     if(len(nodes)>0):
         confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to reload grafana servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
