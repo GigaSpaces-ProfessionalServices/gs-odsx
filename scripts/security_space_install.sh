@@ -275,6 +275,8 @@ function installAirGapGS {
 
    #sudo -u 'root' -H sh -c "cd /;echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh"
    echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$vaultDbPath -jar $vaultJar --get $passPropertyName)">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
    #if [ $gsLicenseConfig == "tryme" ]; then
    # licenseConfig="export GS_LICENSE="$gsLicenseConfig
    #else
@@ -376,8 +378,9 @@ function gsCreateGSServeice {
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
   cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
   echo "$cmd">>$start_gsa_file
-  cmd="$GS_HOME/bin/gs.sh --username=$userNameParam --password=$passwordParam container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
+  cmd="$GS_HOME/bin/gs.sh --username=$userNameParam --password=\$VAULT_MANAGER_PASS container create --count=$gscCount --zone=$zoneGSC --memory=$memoryGSC "`hostname`""
   cat "$startSpaceGsc/start_gsc.sh" >> $start_gsc_file
+  echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$vaultDbPath -jar $vaultJar --get $passPropertyName)" >> $start_gsc_file
   echo "$cmd">>$start_gsc_file
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
@@ -451,10 +454,13 @@ sourceInstallerDirectory=${15}
 logTargetPath=${16}
 logSourcePath=${17}
 startSpaceGsc=${18}
-selinux=${19}
-userNameParam=${20}
-passwordParam=${21}
-gsNicAddress=${22}
+passPropertyName=${19}
+vaultJar=${20}
+vaultDbPath=${21}
+selinux=${22}
+userNameParam=${23}
+passwordParam=${24}
+gsNicAddress=${25}
 
 #logTargetPath=${20}
 echo "param1"$1

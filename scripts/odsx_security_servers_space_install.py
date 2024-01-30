@@ -348,19 +348,19 @@ def execute_ssh_server_manager_install(hostsConfig,user):
       #  print(Fore.GREEN+"14. "+
       #        Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
       #        Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"14. "+
+        print(Fore.GREEN+"15. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"14A. "+
+        print(Fore.GREEN+"15A. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
               Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
-        print(Fore.GREEN+"15. "+
+        print(Fore.GREEN+"16. "+
               Fore.GREEN+"db2jcc-4.26.14.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"16. "+
+        print(Fore.GREEN+"17. "+
               Fore.GREEN+"db2jcc_license_cu-4.16.53.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarLicenseInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"17. "+
+        print(Fore.GREEN+"18. "+
               Fore.GREEN+"DB2 Feeder jars target : "+Fore.RESET,
               Fore.GREEN+str(db2FeederJarTargetInput).replace('"','')+Fore.RESET)
      #   print(Fore.GREEN+"19. "+
@@ -460,7 +460,11 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             logger.info("additionalParam : "+str(additionalParam))
             logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
             with Spinner():
-                additionalParam=additionalParam+' '+startSpaceGsc+ ' ' + selinuxEnabled +' '+gs_user+' '+gs_pass +' '+ gsNicAddress
+                managerWork = str(readValueByConfigObj("app.space.workDir"))
+                vaultJar = str(readValueByConfigObj("app.vault.jar.location"))
+                passProperty = str(readValueByConfigObj("app.manager.security.password"))
+                spaceWorkTarget = managerWork + "/sqlite/"
+                additionalParam=additionalParam+' '+startSpaceGsc+ ' ' + passProperty + ' ' + vaultJar + ' ' + spaceWorkTarget + ' ' + selinuxEnabled +' '+gs_user+' '+gs_pass +' '+ gsNicAddress
                 outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
                 #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                 logger.debug("script output"+str(outputShFile))
@@ -488,13 +492,18 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)
                 #scp_upload_multiple(host,user,sourceJar,springTargetJarInput)
                 # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+                spaceWorkSrc = str(readValueByConfigObj("app.vault.db.location"))
+                spaceWorkSrc = spaceWorkSrc + "/vault.db"
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + spaceWorkTarget)
+                spaceWorkTarget = spaceWorkTarget + "vault.db"
+                scp_upload(host, "root", spaceWorkSrc, spaceWorkTarget)
                 securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
                 for securityFile in securityFiles:
                     securityFile = str(securityFile).replace('"',"")
                     executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+securityFile+" "+readValuefromAppConfig("app.manager.security.config.target"))
                 # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
                 #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
-                #sexecuteRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/xap-security.jar "+springTargetJarInput)
+                #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/xap-security.jar "+springTargetJarInput)
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                 #logger.info(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                 configureMetricsXML(host)

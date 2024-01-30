@@ -239,3 +239,15 @@
 ### TAU v4.53-tau-release tag
 76. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 77. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars
+### TAU v4.54-tau-vault-release tag
+78. Add below in app.config, change paths as required
+    app.vault.jar.location=/dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar
+    app.vault.db.location=/dbagigawork/current/gs/db/
+    app.manager.workDir=/dbagigawork/
+    app.space.workDir=/dbagigadata/
+79. Update property app.config (this property value will be used to fetch password from vault) : 
+    app.manager.security.password=manager_pass
+80. Initialize vault by running below in pivot. Replace ORIGINAL_PASSWORD_TO_ENCRYPT_IN_VAULT with password :
+    java -Dapp.db.path=/dbagigawork/sqlite/ -jar /dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --init
+    java -Dapp.db.path=/dbagigawork/sqlite/ -jar /dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --set manager_pass=<ORIGINAL_PASSWORD_TO_ENCRYPT_IN_VAULT>
+

@@ -315,5 +315,13 @@ def getUsernameByHost():
 
 def getPasswordByHost():
     logger.info("getPasswordByHost()")
-    password = str(readValueByConfigObj("app.manager.security.password"))
+    #password = str(readValueByConfigObj("app.manager.security.password"))
+    passPropertyName = str(readValueByConfigObj("app.manager.security.password"))
+    vaultJar = str(readValueByConfigObj("app.vault.jar.location"))
+    vaultDBLocation = str(readValueByConfigObj("app.vault.db.location"))
+    vaultDBLocation = "-Dapp.db.path=" + vaultDBLocation
+    cmdToExecute = 'java '+vaultDBLocation+' -jar '+vaultJar+' --get '+passPropertyName
+    #verboseHandle.printConsoleInfo("cmdToExecute : "+str(cmdToExecute))
+    output = executeLocalCommandAndGetOutput(cmdToExecute)
+    password=str(output).replace('\n','')
     return password

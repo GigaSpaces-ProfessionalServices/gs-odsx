@@ -504,7 +504,11 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
     logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
     with Spinner():
         print(">>>>>>>>>>>>>>><<<<<<<<<")
-        additionalParam= additionalParam + ' ' + selinuxEnabled+' '+gsNicAddress
+        managerWork = str(readValueByConfigObj("app.manager.workDir"))
+        vaultJar = str(readValueByConfigObj("app.vault.jar.location"))
+        passProperty = str(readValueByConfigObj("app.manager.security.password"))
+        managerWorkTarget = managerWork + "/sqlite/"
+        additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + selinuxEnabled+' '+gsNicAddress
         outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
         newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
 #        for newZkJar in newZkJars:
@@ -518,6 +522,11 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)
     #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+        managerWorkSrc = str(readValueByConfigObj("app.vault.db.location"))
+        managerWorkSrc = managerWorkSrc + "/vault.db"
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + managerWorkTarget)
+        managerWorkTarget = managerWorkTarget + "vault.db"
+        scp_upload(host, "root", managerWorkSrc, managerWorkTarget)
         securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
         for securityFile in securityFiles:
             securityFile = str(securityFile).replace('"',"")

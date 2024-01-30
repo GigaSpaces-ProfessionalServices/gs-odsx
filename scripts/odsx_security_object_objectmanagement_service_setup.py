@@ -93,8 +93,11 @@ def setupService():
     adapterPropertyConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.adapterPropertyFileName")).replace('"','')
     indexBatchConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace('"','')
     pollingContainerFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.pollingFileName")).replace('"','')
+    vaultJar = str(readValuefromAppConfig("app.vault.jar.location"))
+    passProperty = str(readValuefromAppConfig("app.manager.security.password"))
+    dblocation = str(readValuefromAppConfig("app.vault.db.location"))
 
-    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath + " " + odsx_profile + " " + username + " " + password
+    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath + " " + odsx_profile + " " + username + " " + vaultJar + " "+ passProperty + " "+ dblocation
     commandToExecute = "scripts/objectmanagement_service_setup.sh " + args
     logger.info("Command " + commandToExecute)
     try:
