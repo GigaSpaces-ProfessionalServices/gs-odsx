@@ -43,17 +43,20 @@ printNoColor() {
 }
 
 sourceInstallerDirectory=$1
+hostType=$2
 #echo "sourceInstallerDirectory: "$sourceInstallerDirectory
 cp $sourceInstallerDirectory/telegraf/scripts/space/telegraf_wal-size.sh /usr/local/bin/
 sleep 5
 #cat "" >> /etc/telegraf/telegraf.conf
 
-if (! grep -q "inputs.exec" /etc/telegraf/telegraf.conf); then
+#if (! grep -q "inputs.exec" /etc/telegraf/telegraf.conf); then
+if [ "$hostType" == "space" ]; then
   echo "" >> /etc/telegraf/telegraf.conf
   echo "# Telegraf config START" >> /etc/telegraf/telegraf.conf
   cat $sourceInstallerDirectory/telegraf/config/space/space.telegraf.conf >> /etc/telegraf/telegraf.conf
   echo "# Telegraf config END " >> /etc/telegraf/telegraf.conf
 fi
+#fi
 
 info " Stopping service\n"
 systemctl stop telegraf
