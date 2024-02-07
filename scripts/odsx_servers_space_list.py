@@ -141,7 +141,12 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
         logger.info("status : "+str(status))
         logger.info("Host:"+str(host))
         #adding split to get just hostname and not fully qualified name
-        gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
+        isAwsEnv = readValuefromAppConfig("app.isaws.env")
+        gsc=''
+        if isAwsEnv == 'True':
+            gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+        else:
+            gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
         #gsc = host_gsc_dict_obj.get(str(host))
         logger.info("GSC : "+str(gsc))
     else:
