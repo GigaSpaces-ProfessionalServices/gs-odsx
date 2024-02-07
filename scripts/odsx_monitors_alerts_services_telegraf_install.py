@@ -7,6 +7,8 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
+from scripts.odsx_servers_northbound_applicative_install import update_app_config_file_shared, \
+    getNBApplicativeHostFromEnv, validateAndConfigureInfluxdb
 from scripts.odsx_servers_northbound_management_remove import getNBFolderName
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
@@ -84,7 +86,7 @@ def proceedForPreInstallation(param,hostip):
         remotePath='/dbagiga'
         commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
     logger.info("commandToExecute :"+commandToExecute)
-    nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf.template"
+    nbConfig = str(os.getenv("ENV_CONFIG")) +"/nb/applicative/nb.conf.template"
     nbConfig = createPropertiesMapFromFile(nbConfig)
     sslCert = str(nbConfig.get("SSL_CERTIFICATE"))
     sslKey = str(nbConfig.get("SSL_PRIVATE_KEY"))
@@ -115,7 +117,7 @@ def executeCommandForInstall(host, hostType):
         commandToExecute="scripts/monitors_alerts_service_telegraf_install.sh"
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         additionalParam=sourceInstallerDirectory+' '+getManagerHostFromEnv() + ' '+hostType
-        logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+host+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
+        logger.info("Additional Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+host+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
         with Spinner():
 
                 outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
@@ -130,7 +132,7 @@ def agentCommandForInstall(host,hostType):
         commandToExecute="scripts/monitors_alerts_service_telegraf_agent_install.sh"
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         additionalParam=sourceInstallerDirectory+ ' '+hostType
-        logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
+        logger.info("Additional Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user)+" sourceInstaller:"+sourceInstallerDirectory)
         with Spinner():
             outputShFile= connectExecuteSSH(host, user,commandToExecute,additionalParam)
             verboseHandle.printConsoleInfo("Telegraf  has been installed on host :"+str(host))
@@ -138,10 +140,23 @@ def agentCommandForInstall(host,hostType):
         handleException(e)
     logger.info("executeCommandForInstall(): end")
 
-def executeCommandForAgentPathCopy(hostType):
-    nodelist = getSpaceServerList()
-    for node in nodelist.split(','):
-        agentCommandForInstall(node,hostType)
+def proceedForEnvHostConfiguration(sourceNbConfFile,flag):
+    logger.info("proceedForEnvHostConfiguration()")
+    userCMD = os.getlogin()
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
+    if userCMD == 'ec2-user':
+        cmd = 'sudo cp '+sourceInstallerDirectory+'/nb/'+flag+'/nb.conf.template '+sourceNbConfFile+';sudo chown ec2-user:ec2-user '+sourceNbConfFile # Creating .tar file on Pivot machine
+    else :
+        cmd = 'cp '+sourceInstallerDirectory+'/nb/'+flag+'/nb.conf.template '+sourceNbConfFile # Creating .tar file on Pivot machine
+    with Spinner():
+        status = os.system(cmd)
+    nbConfig = createPropertiesMapFromFile(sourceNbConfFile)
+    existingConsul_server = str(nbConfig.get("CONSUL_SERVERS")).replace('"','')
+    #update_app_config_file_shared(linePatternToReplace, value, lines1,fileName)
+    lines = update_app_config_file_shared("consul_servers=".upper(), getNBApplicativeHostFromEnv(), None,sourceNbConfFile,flag)
+    lines = update_app_config_file_shared("influxdb_servers=".upper(), validateAndConfigureInfluxdb(), lines,sourceNbConfFile,flag)
+    lines = update_app_config_file_shared("pivot_servers=".upper(), str(os.getenv('pivot1')), lines,sourceNbConfFile,flag)
+    update_app_config_file_shared("CONSUL_REPLICA_NUMBER=".upper(), str(len(getNBApplicativeHostFromEnv().split(","))), lines,sourceNbConfFile,flag)
 
 def getSpaceServerList():
     nodeList = config_get_space_node()
@@ -347,10 +362,14 @@ if __name__ == '__main__':
                         else:
                             exitAndDisplay(isMenuDriven)
                     elif(choice.casefold()=='yes' or choice.casefold()=='y'):
+                        sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
+                        nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf"
+                        proceedForEnvHostConfiguration(nbConfig,'applicative')
+                        verboseHandle.printConsoleInfo(">>>>>>>>>>>>>>>>>>")
                         proceedForNBInstallation(host)
                         if(os.getenv("pivot1")==host):
                            executeCommandForInstall(host,hostAndType.get(optionMainMenu))
-                           executeCommandForAgentPathCopy(hostAndType.get(optionMainMenu))
+                           agentCommandForInstall(host,hostAndType.get(optionMainMenu))
                         else:
                             executeCommandForInstall(host,hostAndType.get(optionMainMenu))
 
@@ -365,10 +384,13 @@ if __name__ == '__main__':
             if(confirm=='yes' or confirm=='y'):
                 count=1
                 for host in streamDict:
+                    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
+                    nbConfig = sourceInstallerDirectory+"/nb/applicative/nb.conf"
+                    proceedForEnvHostConfiguration(nbConfig,'applicative')
                     proceedForNBInstallation(host)
                     if(os.getenv("pivot1")==streamDict.get(host)):
                       executeCommandForInstall(streamDict.get(host, hostAndType.get(count)))
-                      executeCommandForAgentPathCopy(hostAndType.get(count))
+                      agentCommandForInstall(host,hostAndType.get(count))
                     else:
                       executeCommandForInstall(streamDict.get(host, hostAndType.get(count)))
                     count = count + 1
