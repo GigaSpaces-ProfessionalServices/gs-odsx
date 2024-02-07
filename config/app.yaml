@@ -52,6 +52,8 @@ current:
           - xap-zookeeper.jar
           - zookeeper-3.6.3.jar
           - zookeeper-jute-3.6.3.jar
+      cef:
+        cefjar: CEFLogger-1.0-SNAPSHOT.jar
     upgrade:
   iidr:
     watchdog:

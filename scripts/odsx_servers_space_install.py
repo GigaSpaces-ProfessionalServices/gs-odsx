@@ -265,16 +265,16 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 host_nic_dict_obj.add(host,nicAddr)
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
 
-        securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
-        cefLoggingJarInput=""
-        for securityFile in securityFiles:
-            securityFile = str(securityFile).replace('"',"")
-            if securityFile.__contains__("cef"):
-                cefLoggingJarInput = securityFile+"/cef/"
-                break
+        #securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
+        #cefLoggingJarInput=""
+        #for securityFile in securityFiles:
+        #    securityFile = str(securityFile).replace('"',"")
+        #    if securityFile.__contains__("cef"):
+        #        cefLoggingJarInput = securityFile+"/cef/"
+        #        break
 
-        #cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".gs.jars.cef.cefjar")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")).replace('[','').replace(']','')
         db2ccJarPath = ".db2.jars.db2ccjar"
         db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
         db2jccJarInput =getYamlJarFilePath(".db2.jars",db2jccJarInput)

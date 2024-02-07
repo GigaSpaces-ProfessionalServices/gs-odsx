@@ -356,10 +356,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print(Fore.YELLOW+"Source directory to copy files "+sourceDirectoryForJar+Fore.RESET)
         #if(len(str(sourceDirectoryForJar))==0):
 
+        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".gs.jars.cef.cefjar")).replace('[','').replace(']','')
 
-#        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")).replace('[','').replace(']','')
 
 #        springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
 #        springconfigJarInput = str(getYamlFilePathInsideFolder(".security.jars.springconfig")).replace('[','').replace(']','')
@@ -411,40 +410,40 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"9. "+
               Fore.GREEN+"Do you want to install Unzip ? "+Fore.RESET,
               Fore.GREEN+wantToInstallUnzip+Fore.RESET)
-      #  print(Fore.GREEN+"10. "+
-      #        Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
-      #        Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"10. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"11. "+
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
               Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"10A. "+
-              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
-              Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
+        #print(Fore.GREEN+"10A. "+
+        #      Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
+        #      Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
       #  print(Fore.GREEN+"12. "+
       #        Fore.GREEN+"spring-ldap-core-2.3.3.RELEASE.jar source : "+Fore.RESET,
       #        Fore.GREEN+str(springLdapCoreJarInput).replace('"','')+Fore.RESET)
        # print(Fore.GREEN+"13. "+
         #      Fore.GREEN+"spring-security-ldap-5.1.7.RELEASE.jar source : "+Fore.RESET,
        #       Fore.GREEN+str(springLdapJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"11. "+
+        print(Fore.GREEN+"12. "+
               Fore.GREEN+"Spring jar target : "+Fore.RESET,
               Fore.GREEN+str(springTargetJarInput).replace('"','')+Fore.RESET)
       #  print(Fore.GREEN+"15. "+
       #        Fore.GREEN+"ldap-security-config.xml source : "+Fore.RESET,
       #        Fore.GREEN+str(ldapSecurityConfigInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"12. "+
+        print(Fore.GREEN+"13. "+
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"13. "+
+        print(Fore.GREEN+"14. "+
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"14. "+
+        print(Fore.GREEN+"15. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"15. "+
+        print(Fore.GREEN+"16. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"16. "+
+        print(Fore.GREEN+"17. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -474,7 +473,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installSecureManagerServer,host,additionalParam,output,None,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,None,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled)
+                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,None,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -513,7 +512,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
         for newZkJar in newZkJars:
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
-       # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
        # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)

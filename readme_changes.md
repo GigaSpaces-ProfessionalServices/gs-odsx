@@ -239,3 +239,14 @@
 ### TAU v4.53-tau-release tag
 76. Re-Build data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
 77. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars
+### TAU v4.57-tau-release tag
+78. Remove below from app.confg
+    app.manager.cefLogging.jar.target=/dbagiga/gigaspaces-smart-ods/lib/required/
+    app.manager.cefLogging.jar.target2=/dbagiga/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
+    app.manager.cefXapLogging.target.file=/../../dbagiga/gs_config/xap_logging.properties
+    app.space.cefLogging.jar.target=/dbagiga/gigaspaces-smart-ods/lib/required/
+79. Add below from app.confg  
+    app.cefLogging.jar.target=/dbagiga/gigaspaces-smart-ods/lib/required/
+80. In app.yaml add below in parallel to zookeeper in gs section:
+    cef:
+      cefjar: CEFLogger-1.0-SNAPSHOT.jar
