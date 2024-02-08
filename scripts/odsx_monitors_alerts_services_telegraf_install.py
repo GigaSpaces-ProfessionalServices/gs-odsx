@@ -111,6 +111,21 @@ def proceedForNBInstallation(host):
     logger.info("Completed installation for all agent server")
     verboseHandle.printConsoleInfo("Completed installation for all agent server")
 
+def cleanNbConfig():
+    logger.info("cleanNbConfig()")
+    userCMD = os.getlogin()
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
+    direcrotyArray = ['applicative']
+    for dir in direcrotyArray:
+        if userCMD == 'ec2-user':
+            cmd = 'sudo rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
+            logger.info(cmd)
+        else:
+            cmd = 'rm -f '+sourceInstallerDirectory+'/nb/'+dir+'/nb.conf'
+        with Spinner():
+            status = os.system(cmd)
+            logger.info("removed nb.conf status "+str(status))
+
 def executeCommandForInstall(host, hostType):
     logger.info("executeCommandForInstall(): start")
     try:
@@ -370,6 +385,7 @@ if __name__ == '__main__':
                         if(os.getenv("pivot1")==host):
                            executeCommandForInstall(host,hostAndType.get(optionMainMenu))
                            agentCommandForInstall(host,hostAndType.get(optionMainMenu))
+                           cleanNbConfig()
                         else:
                             executeCommandForInstall(host,hostAndType.get(optionMainMenu))
 
@@ -391,6 +407,7 @@ if __name__ == '__main__':
                     if(os.getenv("pivot1")==streamDict.get(host)):
                       executeCommandForInstall(streamDict.get(host, hostAndType.get(count)))
                       agentCommandForInstall(host,hostAndType.get(count))
+                      cleanNbConfig()
                     else:
                       executeCommandForInstall(streamDict.get(host, hostAndType.get(count)))
                     count = count + 1

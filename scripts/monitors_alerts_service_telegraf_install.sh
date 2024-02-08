@@ -36,6 +36,6 @@ fi
 #fi
 
 systemctl daemon-reload
-info " Starting service\n"
+echo "Starting service"
 systemctl start telegraf
 sleep 5
