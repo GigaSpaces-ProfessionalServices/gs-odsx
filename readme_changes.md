@@ -250,3 +250,6 @@
 80. In app.yaml add below in parallel to zookeeper in gs section:
     cef:
       cefjar: CEFLogger-1.0-SNAPSHOT.jar
+### TAU v4.58-tau-release tag
+81. Re-Build common, data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau
+82. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars
