@@ -37,6 +37,9 @@ if [[ $crtFiles -gt 0 ]]
 then
     echo "Copying cert file"
     cp $dbagigashareApplicativePath/ssl/$sslCert $targetDir/$nb_foldername/ssl/
+else
+    echo "Copying cert file from pkg"
+    cp $dbagigashareApplicativePath/ssl/applicative/$sslCert $targetDir/$nb_foldername/ssl/
 fi
 cacertFiles=$(ls $dbagigashareApplicativePath/ssl/$sslCaCert 2> /dev/null | wc -l)
 echo "cacertFiles:"$cacertFiles
@@ -44,6 +47,9 @@ if [[  $cacertFiles -gt 0 ]]
 then
     echo "Copying cacert file"
     cp $dbagigashareApplicativePath/ssl/$sslCaCert $targetDir/$nb_foldername/ssl/
+else
+    echo "Copying cacert file from pkg"
+    cp $dbagigashareApplicativePath/ssl/applicative/$sslCaCert $targetDir/$nb_foldername/ssl/
 fi
 keyFiles=$(ls $dbagigashareApplicativePath/ssl/$sslKey 2> /dev/null | wc -l)
 echo "keyFiles:"$keyFiles
@@ -51,4 +57,7 @@ if [[ $keyFiles -gt 0 ]]
 then
     echo "Copying key file"
     cp $dbagigashareApplicativePath/ssl/$sslKey $targetDir/$nb_foldername/ssl/
+else
+    echo "Copying key file from pkg"
+    cp $dbagigashareApplicativePath/ssl/applicative/$sslKey $targetDir/$nb_foldername/ssl/
 fi
