@@ -39,7 +39,7 @@ then
     cp $dbagigashareManagementPath/ssl/$sslCert $targetDir/$nb_foldername/ssl/
 else
     echo "Copying cert file from pkg"
-    cp $dbagigashareManagementPath/ssl/management/$sslCert $targetDir/$nb_foldername/ssl/
+    cp $targetDir/$nb_foldername/ssl/management/$sslCert $targetDir/$nb_foldername/ssl/
 fi
 cacertFiles=$(ls $dbagigashareManagementPath/ssl/$sslCaCert 2> /dev/null | wc -l)
 echo "cacertFiles:"$cacertFiles
@@ -49,7 +49,7 @@ then
     cp $dbagigashareManagementPath/ssl/$sslCaCert $targetDir/$nb_foldername/ssl/
 else
     echo "Copying cacert file from pkg"
-    cp $dbagigashareManagementPath/ssl/management/$sslCaCert $targetDir/$nb_foldername/ssl/
+    cp $targetDir/$nb_foldername/ssl/management/$sslCaCert $targetDir/$nb_foldername/ssl/
 fi
 keyFiles=$(ls $dbagigashareManagementPath/ssl/$sslKey 2> /dev/null | wc -l)
 echo "keyFiles:"$keyFiles
@@ -59,5 +59,5 @@ then
     cp $dbagigashareManagementPath/ssl/$sslKey $targetDir/$nb_foldername/ssl/
 else
     echo "Copying key file from pkg"
-    cp $dbagigashareManagementPath/ssl/management/$sslKey $targetDir/$nb_foldername/ssl/
+    cp $targetDir/$nb_foldername/ssl/management/$sslKey $targetDir/$nb_foldername/ssl/
 fi
