@@ -187,7 +187,7 @@ def isMemoryAvailableOnHost(managerNodes,host, memory,memoryRequiredGSCInBytes):
         logger.info(response.content)
         jsonArray = json.loads(response.text)
         global freePhysicalMemorySizeInBytes
-        freePhysicalMemorySizeInBytes = jsonArray['actualFreePhysicalMemorySizeInBytes']
+        freePhysicalMemorySizeInBytes = jsonArray['freePhysicalMemorySizeInBytes']
         actualFreePhysicalMemorySizeInBytes = jsonArray['actualFreePhysicalMemorySizeInBytes']
         logger.info("freePhysicalMemorySizeInBytes :"+str(freePhysicalMemorySizeInBytes))
         logger.info("memoryRequiredGSCInBytes :"+str(memoryRequiredGSCInBytes))
@@ -213,8 +213,6 @@ def convertMemoryGSCToBytes(memoryGSC, type, bsize=1024):
 def checkIsMemoryAvailableOnHost(managerNodes,memoryGSC,memoryRequiredGSCInBytes,zoneGSC,numberOfGSC,managerHostConfig):
     logger.info("checkIsMemoryAvailableOnHost()")
     try:
-        isMemoryAvailable=True
-        verboseHandle.printConsoleInfo(str(space_dict_obj))
         for i in range(1,len(space_dict_obj)+1):
             host = space_dict_obj.get(str(i))
             isMemoryAvailable = isMemoryAvailableOnHost(managerNodes,host,memoryGSC,memoryRequiredGSCInBytes)

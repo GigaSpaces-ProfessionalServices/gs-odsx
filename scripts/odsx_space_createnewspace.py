@@ -185,7 +185,7 @@ def isMemoryAvailableOnHost(managerNodes,host, memory,memoryRequiredGSCInBytes):
     logger.info(response.content)
     jsonArray = json.loads(response.text)
     global freePhysicalMemorySizeInBytes
-    freePhysicalMemorySizeInBytes = jsonArray['actualFreePhysicalMemorySizeInBytes']
+    freePhysicalMemorySizeInBytes = jsonArray['freePhysicalMemorySizeInBytes']
     actualFreePhysicalMemorySizeInBytes = jsonArray['actualFreePhysicalMemorySizeInBytes']
     logger.info("freePhysicalMemorySizeInBytes :"+str(freePhysicalMemorySizeInBytes))
     logger.info("memoryRequiredGSCInBytes :"+str(memoryRequiredGSCInBytes))
