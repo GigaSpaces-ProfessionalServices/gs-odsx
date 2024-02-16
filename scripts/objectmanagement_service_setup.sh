@@ -17,7 +17,8 @@ odsx_profile=${11}
 gs_username=${12}
 vaultJar=${13}
 passProperty=${14}
-dblocation=${15}
+useVault=${15}
+dblocation=${16}
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -55,7 +56,12 @@ sed -i 's,$gs_username,'$gs_username',g' /tmp/$service_name
 sed -i 's,$vaultJar,'$vaultJar',g' /tmp/$service_name
 sed -i 's,$vaultDbPath,'$dblocation',g' /tmp/$service_name
 sed -i 's,$passPropertyName,'$passProperty',g' /tmp/$service_name
-echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /usr/local/bin/objectmanagement_service.sh
+if [ "$useVault" != "false" ]; then
+    echo  "export VAULT_MANAGER_PASS=$passProperty" >> $targetDir/$extracted_folder/bin/setenv-overrides.sh
+else
+    echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /usr/local/bin/objectmanagement_service.sh
+fi
+#echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /usr/local/bin/objectmanagement_service.sh
 echo  "/usr/bin/java -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=$log_location -jar $serviceJar --log.location=$log_location --space.name=$space_name --lookup.locator=$lookup_locator --lookup.group=$lookup_group --table.batch.file.path=$table_batch_file_path --ddl.properties.file.path=$ddl_properties_file_path --tier.criteria.file=$tier_criteria_file --adapter.property.file=$adapter_property_file --batch.index.file=$batch_index_file --polling.container.file=$polling_container_file --odsx.profile=$odsx_profile --gs.username=$gs_username --gs.password=\$VAULT_MANAGER_PASS" >> /usr/local/bin/objectmanagement_service.sh
 chmod +x /usr/local/bin/objectmanagement_service.sh
 sudo mv -f /tmp/$service_name /etc/systemd/system/

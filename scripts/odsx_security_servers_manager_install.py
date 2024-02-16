@@ -506,9 +506,14 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         print(">>>>>>>>>>>>>>><<<<<<<<<")
         managerWork = str(readValueByConfigObj("app.manager.workDir"))
         vaultJar = str(readValueByConfigObj("app.vault.jar.location"))
-        passProperty = str(readValueByConfigObj("app.manager.security.password"))
+        passProperty = ""
+        useVault = str(readValueByConfigObj("app.vault.use"))
+        if useVault == "false":
+            passProperty = str(readValueByConfigObj("app.manager.security.password"))
+        else:
+            passProperty = str(readValueByConfigObj("app.manager.security.password.vault"))
         managerWorkTarget = managerWork + "/sqlite/"
-        additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + selinuxEnabled+' '+gsNicAddress
+        additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress
         outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
         newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
 #        for newZkJar in newZkJars:

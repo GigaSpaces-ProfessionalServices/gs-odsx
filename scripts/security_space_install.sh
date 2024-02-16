@@ -275,7 +275,11 @@ function installAirGapGS {
 
    #sudo -u 'root' -H sh -c "cd /;echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh"
    echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
-   echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$vaultDbPath -jar $vaultJar --get $passPropertyName)">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   if [ "$useVault" != "false" ]; then
+      echo  "export VAULT_MANAGER_PASS=$passPropertyName" >> $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   else
+      echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$vaultDbPath -jar $vaultJar --get $passPropertyName)">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   fi
 
    #if [ $gsLicenseConfig == "tryme" ]; then
    # licenseConfig="export GS_LICENSE="$gsLicenseConfig
@@ -457,10 +461,11 @@ startSpaceGsc=${18}
 passPropertyName=${19}
 vaultJar=${20}
 vaultDbPath=${21}
-selinux=${22}
-userNameParam=${23}
-passwordParam=${24}
-gsNicAddress=${25}
+useVault=${22}
+selinux=${23}
+userNameParam=${24}
+passwordParam=${25}
+gsNicAddress=${26}
 
 #logTargetPath=${20}
 echo "param1"$1

@@ -462,9 +462,14 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             with Spinner():
                 managerWork = str(readValueByConfigObj("app.space.workDir"))
                 vaultJar = str(readValueByConfigObj("app.vault.jar.location"))
-                passProperty = str(readValueByConfigObj("app.manager.security.password"))
+                passProperty = ""
+                useVault = str(readValueByConfigObj("app.vault.use"))
+                if useVault == "false":
+                    passProperty = str(readValueByConfigObj("app.manager.security.password"))
+                else:
+                    passProperty = str(readValueByConfigObj("app.manager.security.password.vault"))
                 spaceWorkTarget = managerWork + "/sqlite/"
-                additionalParam=additionalParam+' '+startSpaceGsc+ ' ' + passProperty + ' ' + vaultJar + ' ' + spaceWorkTarget + ' ' + selinuxEnabled +' '+gs_user+' '+gs_pass +' '+ gsNicAddress
+                additionalParam=additionalParam+' '+startSpaceGsc+ ' ' + passProperty + ' ' + vaultJar + ' ' + spaceWorkTarget + ' ' +useVault + ' '+ selinuxEnabled +' '+gs_user+' '+gs_pass +' '+ gsNicAddress
                 outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
                 #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
                 logger.debug("script output"+str(outputShFile))

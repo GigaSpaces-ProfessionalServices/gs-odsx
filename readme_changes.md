@@ -250,4 +250,9 @@
 80. Initialize vault by running below in pivot. Replace ORIGINAL_PASSWORD_TO_ENCRYPT_IN_VAULT with password :
     java -Dapp.db.path=/dbagigawork/sqlite/ -jar /dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --init
     java -Dapp.db.path=/dbagigawork/sqlite/ -jar /dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --set manager_pass=<ORIGINAL_PASSWORD_TO_ENCRYPT_IN_VAULT>
-
+### TAU v4.60-tau-vault-release tag
+81. Add/ update below flags
+    app.manager.security.password=gs-admin    # set original password of manager server
+    app.manager.security.password.vault=manager_pass       # property used in vault to fetch password
+    app.vault.use=true    # set to true if use vault 
+82. Note whenever app.vault.use flag is changed reinstall manager, space servers, object management service 

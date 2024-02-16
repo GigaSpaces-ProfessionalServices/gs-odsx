@@ -94,10 +94,15 @@ def setupService():
     indexBatchConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace('"','')
     pollingContainerFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.pollingFileName")).replace('"','')
     vaultJar = str(readValuefromAppConfig("app.vault.jar.location"))
-    passProperty = str(readValuefromAppConfig("app.manager.security.password"))
+    passProperty = ""
+    useVault = str(readValuefromAppConfig("app.vault.use"))
+    if useVault == "false":
+        passProperty = str(readValuefromAppConfig("app.manager.security.password"))
+    else:
+        passProperty = str(readValuefromAppConfig("app.manager.security.password.vault"))
     dblocation = str(readValuefromAppConfig("app.vault.db.location"))
 
-    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath + " " + odsx_profile + " " + username + " " + vaultJar + " "+ passProperty + " "+ dblocation
+    args = spaceName + " " + lookupLocator + " " + lookupGroup + " " + serviceJar + " " + ddlAndPropertiesBasePath + " " + tableListfilePath + " " + tieredCriteriaConfigFilePath + " " + adapterPropertyConfigFilePath + " " + indexBatchConfigFilePath + " " + pollingContainerFilePath + " " + odsx_profile + " " + username + " " + vaultJar + " "+ passProperty +" " + useVault + " "+ dblocation
     commandToExecute = "scripts/objectmanagement_service_setup.sh " + args
     logger.info("Command " + commandToExecute)
     try:
