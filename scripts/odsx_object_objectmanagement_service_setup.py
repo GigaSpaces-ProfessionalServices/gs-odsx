@@ -87,6 +87,7 @@ def setupService():
     logger.info("Command "+commandToExecute)
     try:
         with Spinner():
+            os.system("cp utils/odsx_vault_cred_details.sh /usr/local/bin/")
             os.system(commandToExecute)
 
             os.system('sudo systemctl daemon-reload')
