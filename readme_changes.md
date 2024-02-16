@@ -255,4 +255,5 @@
     app.manager.security.password=gs-admin    # set original password of manager server
     app.manager.security.password.vault=manager_pass       # property used in vault to fetch password
     app.vault.use=true    # set to true if use vault 
-82. Note whenever app.vault.use flag is changed reinstall manager, space servers, object management service 
+82. Rebuilt the jar https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement
+83. Note whenever app.vault.use flag is changed reinstall manager, space servers, object management service 
