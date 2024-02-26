@@ -256,4 +256,40 @@
     app.manager.security.password.vault=manager_pass       # property used in vault to fetch password
     app.vault.use=true    # set to true if use vault 
 82. Rebuilt the jar https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement
-83. Note whenever app.vault.use flag is changed reinstall manager, space servers, object management service 
+83. Note whenever app.vault.use flag is changed reinstall manager, space servers, object management service
+### TAU v4.57-tau-release tag
+84. Remove below from app.confg
+    app.manager.cefLogging.jar.target=/dbagiga/gigaspaces-smart-ods/lib/required/
+    app.manager.cefLogging.jar.target2=/dbagiga/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
+    app.manager.cefXapLogging.target.file=/../../dbagiga/gs_config/xap_logging.properties
+    app.space.cefLogging.jar.target=/dbagiga/gigaspaces-smart-ods/lib/required/
+85. Add below from app.confg  
+    app.cefLogging.jar.target=/dbagiga/gigaspaces-smart-ods/lib/required/
+86. In app.yaml add below in parallel to zookeeper in gs section:
+    cef:
+      cefjar: CEFLogger-1.0-SNAPSHOT.jar
+### TAU v4.58-tau-release tag
+87. Re-Build common, data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau
+88. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars
+### TAU v4.63-tau-release tag
+89. Add below in app.config file
+    app.iidr.username=admin
+    app.iidr.password=admin11
+    app.iidrkafka.username=tsuser
+    app.iidrkafka.password=tsuser11
+    app.iidr-kafka.user-exit.properties.file.read-path=/giga/iidr/kafka/instance/KAFKA/conf
+    app.iidr-kafka.user-exit.properties.file.write-path=/giga/iidr/kafka/instance/KAFKA/conf
+89. In host.yaml file add below after dataIntegration section
+    iidrdataIntegration :
+       host1 : 10.0.0.5
+90. In cluster.config file add below after dataIntegration section
+    "iidrdataIntegration": {
+        "nodes": [
+        ]
+    }
+91. In /dbagigashare/current/data-integration/di-flink/ make sure following jar exist :
+    flink-connector-kafka-1.17.0.jar
+    kafka-clients-3.2.3.jar
+    flink-connector-jdbc-3.1.0-1.17.jar
+    flink-sql-connector-kafka-1.17.0.jar
+    postgresql-42.5.4.jar

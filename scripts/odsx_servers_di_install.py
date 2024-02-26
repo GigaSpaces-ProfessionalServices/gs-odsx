@@ -10,7 +10,9 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cleanup import signal_handler
-from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_manager_node, \
+    config_get_dataIntegrationiidr_nodes
+from utils.ods_manager import getManagerInfo
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
@@ -65,6 +67,7 @@ def getDIServerHostList():
     nodeList = config_get_dataIntegration_nodes()
     nodes = ""
     for node in nodeList:
+        print("aa : "+str(node.ip))
         if (len(nodeList) == 1):
             nodes = os.getenv(node.ip)
         else:
@@ -97,6 +100,10 @@ def installCluster():
     global zkInitLimit
     global zkSyncLimit
     global zkTickTime
+
+    global iidrHost
+    global iidrUser
+    global iidrPass
 
     kafkaBrokerHost1 = str(os.getenv("di1"))
     logger.info("kafkaBrokerHost1 : " + str(kafkaBrokerHost1))
@@ -193,11 +200,20 @@ def installCluster():
     dimMdmFlinkInstallon1bFlag = str(readValuefromAppConfig("app.di.flink.dim.mdm.install1b.confirm"))
     verboseHandle.printConsoleInfo(str(srNo)+". Install Flink/DIM/MDM on kafka broker 1b : "+ str(dimMdmFlinkInstallon1bFlag))
     srNo=srNo+1
+
     zkClientPort = str(readValuefromAppConfig("app.di.base.zk.clientPort"))
     zkDataDir = str(readValuefromAppConfig("app.di.base.zk.data"))
     zkInitLimit = str(readValuefromAppConfig("app.di.base.zk.initLimit"))
     zkSyncLimit = str(readValuefromAppConfig("app.di.base.zk.syncLimit"))
     zkTickTime = str(readValuefromAppConfig("app.di.base.zk.tickTime"))
+    #iidrHost = str(readValuefromAppConfig("app.iidr.host"))
+    iidrUser = str(readValuefromAppConfig("app.iidr.username"))
+    iidrPass = str(readValuefromAppConfig("app.iidr.password"))
+    iidrKafkaUser = str(readValuefromAppConfig("app.iidrkafka.username"))
+    iidrKafkaPass = str(readValuefromAppConfig("app.iidrkafka.password"))
+    iidrKafkaReadpath = str(readValuefromAppConfig("app.iidr-kafka.user-exit.properties.file.read-path"))
+    iidrKafkaWritepath = str(readValuefromAppConfig("app.iidr-kafka.user-exit.properties.file.write-path"))
+
     verboseHandle.printConsoleInfo(str(srNo)+". zoo.cfg : clientPort="+ str(zkClientPort)+", dataDir="+str(zkDataDir)+", initLimit="+str(zkInitLimit)+", syncLimit="+str(zkSyncLimit)+", tickTime="+str(zkTickTime))
 
     logger.info("clusterHosts : " + str(clusterHosts))
@@ -208,13 +224,40 @@ def installCluster():
         confirmInstall = 'y'
     if (confirmInstall == 'y'):
         counter = 1
+        diserver1=""
+        di_all_servers=""
+        managerHost1=""
         for host in clusterHosts:
             logger.info("proceeding for host : " + str(host))
             if (counter == 1):
                 buildTarFileToLocalMachine(host)
+                diserver1=host
+            di_all_servers +=host+":9092"
+            if counter != 3:
+                di_all_servers +=","
             buildUploadInstallTarToServer(host)
             executeCommandForInstall(host, host_type_dictionary_obj.get(host), counter,nodeListSize)
             counter = counter + 1
+
+        managerNodes = config_get_manager_node()
+        for node in managerNodes:
+            managerHost1=str(os.getenv(str(node.ip)))
+            break
+        managerInfo = getManagerInfo()
+        lookupGroup = str(managerInfo['lookupGroups'])
+
+        nodeiidrList = config_get_dataIntegrationiidr_nodes()
+        for nodes in nodeiidrList:
+            commandToExecute = "scripts/servers_di_install_all_subscription.sh"
+            iidrHost=os.getenv(nodes.ip)
+            additionalParam = iidrHost + ' '+ iidrUser + ' '+ iidrPass + ' ' + iidrKafkaUser + ' ' + iidrKafkaPass + ' '+ kafkaBrokerHost1 + ' '+sourceInstallerDirectory +' ' + iidrKafkaReadpath + ' '+iidrKafkaWritepath
+            outputShFile = connectExecuteSSH(iidrHost, user, commandToExecute, additionalParam)
+            logger.info("outputShFile iidr subscription : " + str(outputShFile))
+
+            #Post DI install setup
+            additionalParam = diserver1 +" "+ iidrHost + ' '+ managerHost1 + ' '+ lookupGroup + ' '+ di_all_servers
+            commandToExecute = "scripts/servers_di_post_install.sh "+additionalParam
+            os.system(commandToExecute)
 
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :" + str(host))
@@ -257,14 +300,19 @@ def executeCommandForInstall(host, type, count,nodeListSize):
         #    additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag + ' ' +zkClientPort+ ' ' + zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag + ' ' +zkClientPort+ ' ' + zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' '+ iidrHost + ' '+ iidrUser + ' '+ iidrPass
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' +zkClientPort+ ' ' +zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' +zkClientPort+ ' ' +zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' ' + iidrHost+ ' '+ iidrUser + ' '+ iidrPass
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)
         with Spinner():
+            verboseHandle.printConsoleInfo("S==========="+str(host))
+            verboseHandle.printConsoleInfo(commandToExecute)
+            verboseHandle.printConsoleInfo(additionalParam)
+            verboseHandle.printConsoleInfo("E==========="+str(host))
+
             outputShFile = connectExecuteSSH(host, user, commandToExecute, additionalParam)
             logger.info("outputShFile kafka : " + str(outputShFile))
             print("Checking for Type ::::" + str(type))

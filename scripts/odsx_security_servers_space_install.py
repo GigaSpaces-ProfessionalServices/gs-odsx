@@ -267,8 +267,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logger.debug("hostNicAddr :"+str(host_nic_dict_obj))
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-       # cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        cefLoggingJarInput = str(getYamlFilePathInsideFolder(".gs.jars.cef.cefjar")).replace('[','').replace(']','')
+        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")).replace('[','').replace(']','')
         db2ccJarPath = ".db2.jars.db2ccjar"
         db2jccJarInput =str(readValueFromYaml(db2ccJarPath)).replace('[','').replace(']','')
         db2jccJarInput =getYamlJarFilePath(".db2.jars",db2jccJarInput)
@@ -355,12 +355,21 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
               Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
         print(Fore.GREEN+"16. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"17. "+
+              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
+              Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
+        #print(Fore.GREEN+"14A. "+
+        #      Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
+        #      Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
+        print(Fore.GREEN+"18. "+
               Fore.GREEN+"db2jcc-4.26.14.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"17. "+
+        print(Fore.GREEN+"19. "+
               Fore.GREEN+"db2jcc_license_cu-4.16.53.jar source : "+Fore.RESET,
               Fore.GREEN+str(db2jccJarLicenseInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"18. "+
+        print(Fore.GREEN+"20. "+
               Fore.GREEN+"DB2 Feeder jars target : "+Fore.RESET,
               Fore.GREEN+str(db2FeederJarTargetInput).replace('"','')+Fore.RESET)
      #   print(Fore.GREEN+"19. "+
@@ -369,7 +378,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     #    print(Fore.GREEN+"20. "+
     #          Fore.GREEN+"spring-security-ldap-5.1.7.RELEASE.jar source : "+Fore.RESET,
     #          Fore.GREEN+str(springLdapJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"18. "+
+        print(Fore.GREEN+"21. "+
               Fore.GREEN+"Spring jar target : "+Fore.RESET,
               Fore.GREEN+str(springTargetJarInput).replace('"','')+Fore.RESET)
      #   print(Fore.GREEN+"22. "+
@@ -378,25 +387,25 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     #    print(Fore.GREEN+"23. "+
     #          Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
     #          Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"19. "+
+        print(Fore.GREEN+"22. "+
               Fore.GREEN+"MsSQL Feeder files source : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileSource).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"20. "+
+        print(Fore.GREEN+"23. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"21s. "+
+        print(Fore.GREEN+"24. "+
               Fore.GREEN+"Space server installation : "+Fore.RESET,
               Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"27. "+
+        print(Fore.GREEN+"25. "+
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"28. "+
+        print(Fore.GREEN+"26. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"29. "+
+        print(Fore.GREEN+"27. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"30. "+
+        print(Fore.GREEN+"28. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
 
@@ -409,7 +418,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength=len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,None,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
+                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -483,7 +492,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
 
                 #print(outputShFile)
                 #Upload CEF logging jar
-                #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
                 #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
 
                # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)

@@ -61,6 +61,7 @@ function installFlink() {
   extracted_folder_flink=$(ls -I "*.tgz" /dbagiga/di-flink/)
   cd /dbagiga/di-flink/
   ln -s $extracted_folder_flink latest-flink
+  ln -s $extracted_folder_manager /home/gsods/di-flink/
   cd
   sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' /dbagiga/di-flink/latest-flink/conf/flink-conf.yaml
@@ -103,6 +104,7 @@ function installDIMatadata {
   cd /dbagiga/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
   ln -s $extracted_folder_mdm latest-di-mdm
+  ln -s $extracted_folder_manager /home/gsods/di-mdm/
   cd latest-di-mdm
   sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|/dbagigalogs/di-mdm|g' config/di-mdm.service
   sed -i -e 's|/home/gsods|/dbagiga|g' config/di-mdm.service
@@ -136,6 +138,7 @@ function installDIManager {
   cd /dbagiga/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
   ln -s $extracted_folder_manager latest-di-manager
+  ln -s $extracted_folder_manager /home/gsods/di-manager/
   cd latest-di-manager
   sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|/dbagigalogs/di-manager|g' config/di-manager.service
   sed -i -e 's|/home/gsods|/dbagiga|g' config/di-manager.service
@@ -151,6 +154,85 @@ function installDIManager {
   systemctl enable di-manager
   #systemctl start di-manager
   info "\n Installation DI-Manager completed.\n"
+}
+
+function installDIProcessor {
+
+}
+
+function installDISubscription {
+  info "\n Installing DI-Subscription-Manager\n"
+    installation_path_manager=$sourceInstallerDirectory/data-integration/di-subscription-manager
+    installation_file_manager=$(find $installation_path_manager -name "di-subscription-manager*.tgz" -printf "%f\n")
+    info "InstallationFile:"$installation_file_manager"\n"
+    mkdir -p /dbagiga/di-subscription-manager
+    mkdir -p /dbagigalogs/di-subscription-manager
+    chown gsods:gsods /dbagigalogs/di-subscription-manager
+    info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-subscription-manager \n"
+    cp $installation_path_manager/$installation_file_manager /dbagiga/di-subscription-manager
+    info "\nExtracting zip file...\n"
+    tar -xzf /dbagiga/di-subscription-manager/$installation_file_manager --directory /dbagiga/di-subscription-manager/
+    extracted_folder_manager=$(ls -I "*.gz" /dbagiga/di-subscription-manager/)
+    cd /dbagiga/di-subscription-manager/
+    info "Creating symlink for :"$extracted_folder_manager
+    ln -s $extracted_folder_manager latest-di-subscription-manager
+    ln -s $extracted_folder_manager /home/gsods/di-subscription-manager/
+    #cd latest-di-subscription-manager
+
+    echo "##iidr.as##" > /dbagiga/di-subscription-manager.properties
+    echo "iidr-as.hostname=$iidrHost" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-as.port=10101" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-as.username=$iidrUsername" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-as.password=$iidrPassword" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-as.source-datastore.mirror_auto_restart_interval_seconds=15" >> /dbagiga/di-subscription-manager.properties
+    echo "" >> /dbagiga/di-subscription-manager.properties
+    echo "datastore.save-credentials-in-mdm=false" >> /dbagiga/di-subscription-manager.properties
+    echo "" >> /dbagiga/di-subscription-manager.properties
+    echo "###kafka properties" >> /dbagiga/di-subscription-manager.properties
+    echo "kafka.host=gstest-di1.tau.ac.il" >> /dbagiga/di-subscription-manager.properties
+    echo "kafka.port=9092" >> /dbagiga/di-subscription-manager.properties
+    echo "kafka.topic.prefix=" >> /dbagiga/di-subscription-manager.properties
+    echo "" >> /dbagiga/di-subscription-manager.properties
+    echo "###iidr kafka properties" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.host=gstest-iidr1.tau.ac.il" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.port=11701" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.username=tsuser" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.password=<password>" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.properties.manager.client.timeouts.connection.ms=10000" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.properties.manager.client.timeouts.read.ms=60000" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.properties.manager.server.url=http://$iidrHost:6085" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.use-api=false" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.read-path=/giga/iidr/kafka/instance/KAFKA/conf" >> /dbagiga/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.write-path=/giga/iidr/kafka/instance/KAFKA/conf" >> /dbagiga/di-subscription-manager.properties
+    echo "" >> /dbagiga/di-subscription-manager.properties
+    echo "##mdm##" >> /dbagiga/di-subscription-manager.properties
+    echo "mdm.client.timeouts.connection.ms=10000" >> /dbagiga/di-subscription-manager.properties
+    echo "mdm.client.timeouts.read.ms=60000" >> /dbagiga/di-subscription-manager.properties
+    echo "mdm.url=/api/v1" >> /dbagiga/di-subscription-manager.properties
+    echo "mdm.server.url=http://gstest-di1.tau.ac.il:6081" >> /dbagiga/di-subscription-manager.properties
+    echo "" >> /dbagiga/di-subscription-manager.properties
+    echo "##subscription manager" >> /dbagiga/di-subscription-manager.properties
+    echo "subscription-manager.server.url=http://:gstest-iidr1.tau.ac.il:6082" >> /dbagiga/di-subscription-manager.properties
+    echo "subscription-manager.feature.supports-transaction=true" >> /dbagiga/di-subscription-manager.properties
+    echo "#mdm-waiting-timeout is in seconds" >> /dbagiga/di-subscription-manager.properties
+    echo "subscription-manager.mdm-availability-waiting-timeout-seconds=300" >> /dbagiga/di-subscription-manager.properties
+    echo "server.port=6082" >> /dbagiga/di-subscription-manager.properties
+
+    echo "##swagger-ui##" >> /dbagiga/di-subscription-manager.properties
+    echo "springdoc.api-docs.path=/api-docs" >> /dbagiga/di-subscription-manager.properties
+    echo "springdoc.swagger-ui.operationsSorter=method" >> /dbagiga/di-subscription-manager.properties
+    echo "springdoc.swagger-ui.path=/swagger-ui" >> /dbagiga/di-subscription-manager.properties
+    echo "springdoc.swagger-ui.request-timeout=10000 # Timeout value in milliseconds" >> /dbagiga/di-subscription-manager.properties
+    echo "" >> /dbagiga/di-subscription-manager.properties
+    echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> /dbagiga/di-subscription-manager.properties
+    sed -i -e 's|logs/di-subscription-manager.log|/dbagigalogs/di-iidr/di-subscription-manager.log|g' /etc/systemd/system/di-subscription-manager-iidr.service
+    cd /home/gsods/di-subscription-manager/latest-di-subscription-manager/utils
+    sudo ./install_new_version.sh /dbagiga/di-subscription-manager.properties
+    systemctl daemon-reload
+    systemctl enable di-subscription-manager
+    systemctl restart di-subscription-manager
+    #systemctl start di-manager
+    info "\n Installation DI-Manager completed.\n"
 }
 
 echo " kafkaBrokerHost1 "$2" kafkaBrokerHost2 "$3" kafkaBrokerHost3 "$4" witnessHost "$5" counter ID "$6" installtelegrafFlag "$1" baseFolderLocation "$7
@@ -170,6 +252,9 @@ sourceInstallerDirectory=${13}
 flinkJobManagerMemoryMetaspaceSize=${15}
 flinkTaskManagerMemoryProcessSize=${16}
 dimMdmFlinkInstallon1bFlag=${17}
+iidrHost=${18}
+iidrUsername=${19}
+iidrPassword=${20}
 
 if [ "$wantInstallJava" == "y" ]; then
     echo "Setup AirGapJava"

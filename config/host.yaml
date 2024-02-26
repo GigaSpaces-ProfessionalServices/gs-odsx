@@ -11,6 +11,8 @@ servers :
     host2 : 10.0.0.2
     host3 : 10.0.0.3
     host4 : 10.0.0.4
+  iidrdataIntegration :
+    host1 : 10.0.0.5
   grafana :
     host1 : 10.0.0.137
   influxdb :

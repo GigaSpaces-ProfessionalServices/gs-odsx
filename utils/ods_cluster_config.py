@@ -111,13 +111,14 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, managers, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation):
+    def __init__(self, managers, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation,iidrdataIntegration):
         self.managers = managers
         self.nb = nb
         self.spaces = spaces
         self.grafana = grafana
         self.influxdb = influxdb
         self.dataIntegration = dataIntegration
+        self.iidrdataIntegration = iidrdataIntegration
         self.dataValidation = dataValidation
         self.dataEngine = dataEngine
 
@@ -138,6 +139,10 @@ class Influxdb:
         self.node = node
 
 class DataIntegration:
+    def __init__(self,nodes):
+        self.nodes = nodes
+
+class IidrdataIntegration:
     def __init__(self,nodes):
         self.nodes = nodes
 
@@ -269,6 +274,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     grafana = []
     influxdb = []
     dataIntegration = []
+    iidrdataIntegration = []
     dataValidation = []
     dataEngine = []
     if hasattr(config_data.cluster.servers, 'grafana'):
@@ -286,6 +292,11 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         for node1 in list(config_data.cluster.servers.dataIntegration.nodes):
             nodes.append(Nodes(node1.ip, node1.name, node1.role,  node1.type))
         dataIntegration = DataIntegration(nodes)
+    nodes = []
+    if hasattr(config_data.cluster.servers, 'iidrdataIntegration'):
+        for node1 in list(config_data.cluster.servers.iidrdataIntegration.nodes):
+            nodes.append(Nodes(node1.ip, node1.name, node1.role,  node1.type))
+        iidrdataIntegration = IidrdataIntegration(nodes)
 
     nodes = []
     if hasattr(config_data.cluster.servers, 'dataValidation'):
@@ -306,7 +317,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         hosts.append(Host(host.ip, host.name, host.gsc))
 
     spaces = Spaces(Servers(hosts))
-    allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation)
+    allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation, iidrdataIntegration)
 
     # print(config_data.cluster.timestamp)
     cluster = Cluster(config_data.cluster.name, config_data.cluster.configVersion,
@@ -814,6 +825,9 @@ def config_get_influxdb_node(filePath='config/cluster.config'):
 def config_get_dataIntegration_nodes(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.dataIntegration.nodes
 
+def config_get_dataIntegrationiidr_nodes(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.iidrdataIntegration.nodes
+
 def config_get_dataValidation_nodes(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.dataValidation.nodes
 
@@ -922,6 +936,36 @@ def config_add_dataIntegration_node(hostIp, hostName, role, type, filePath='conf
         logger.info("ADDING NODE..."+str(hostIp))
         return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
 
+def config_add_dataIntegrationiidr_node(hostIp, hostName, role, type, filePath='config/cluster.config'):
+    logger.info("config_add_dataIntegrationiidr_node")
+    newNode = Nodes(hostIp, hostName, role, type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.iidrdataIntegration.nodes
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isdataIntegrationNodeExist(existingNodes,hostIp) "+isDataIntegrationNodeExist(existingNodes,hostIp))
+        if(isDataIntegrationNodeExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            #verboseHandle.printConsoleInfo("Host is already exist."+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.iidrdataIntegration.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+
 def config_remove_dataIntegration_byNameIP(dataIntegrationName,dataIntegrationIP,filePath='config/cluster.config', verbose=False):
     logger.info("config_remove_dataIntegration_byNameIP () : dataIntegrationName :"+str(dataIntegrationName)+" nbIp:"+str(dataIntegrationIP))
     if verbose:
@@ -937,6 +981,24 @@ def config_remove_dataIntegration_byNameIP(dataIntegrationName,dataIntegrationIP
         counter=counter+1
 
     config_data.cluster.servers.dataIntegration.nodes = dataIntegrationNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+def config_remove_dataIntegrationiidr_byNameIP(dataIntegrationName,dataIntegrationIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_dataIntegration_byNameIP () : dataIntegrationName :"+str(dataIntegrationName)+" nbIp:"+str(dataIntegrationIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    dataIntegrationNodes = config_data.cluster.servers.iidrdataIntegration.nodes
+    counter=0
+    for dataIntegrationNode in dataIntegrationNodes:
+        logger.info(dataIntegrationNode.name+" :: "+dataIntegrationName)
+        if(dataIntegrationNode.name==dataIntegrationName and dataIntegrationNode.role=='dataIntegration iidr'):
+            logger.info("dataIntegration name : "+dataIntegrationName+" dataIntegration IP:"+dataIntegrationIP+" has been removed.")
+            dataIntegrationNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.iidrdataIntegration.nodes = dataIntegrationNodes
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
 
@@ -1289,6 +1351,7 @@ def cleanDIHostFronConfig():
     # with Spinner():
     for host in nodes.split(','):
             config_remove_dataIntegration_byNameIP(host,host)
+            config_remove_dataIntegrationiidr_byNameIP(host,host)
             config_remove_dataEngine_byNameIP(host,host)
     logger.info("Clean DI host completed.")
 
@@ -1463,6 +1526,14 @@ def discoverHostConfig():
                 if updateClusterConfigFileFlag:
                     config_add_dataValidation_node(host, host,'DataValidation', 'agent')
                 dvHostCount+=1
+        diidrCount=1
+        if 'iidrdataIntegration' in content['servers']:
+            for host,v in content['servers']['iidrdataIntegration'].items():
+                host = 'iidrdataIntegration'+str(diidrCount)
+                os.environ[host]=str(v)
+                if updateClusterConfigFileFlag:
+                    config_add_dataIntegrationiidr_node(host, host,'dataIntegration iidr', 'server')
+                diidrCount+=1
         if 'pivot' in content['servers']:
             pivotHostCount=1
             for host,v in content['servers']['pivot'].items():

@@ -31,24 +31,33 @@ cp $dbagigashareManagementPath/nb.conf $targetDir/$nb_foldername/
 
 echo "copying ssl files to $targetDir/$nb_foldername/ssl"
 
-crtFiles=$(ls $dbagigashareApplicativePath/ssl/$sslCert 2> /dev/null | wc -l)
+crtFiles=$(ls $dbagigashareManagementPath/ssl/$sslCert 2> /dev/null | wc -l)
 echo "crtFiles:"$crtFiles
 if [[ $crtFiles -gt 0 ]]
 then
     echo "Copying cert file"
-    cp $dbagigashareApplicativePath/ssl/$sslCert $targetDir/$nb_foldername/ssl/
+    cp $dbagigashareManagementPath/ssl/$sslCert $targetDir/$nb_foldername/ssl/
+else
+    echo "Copying cert file from pkg"
+    cp $targetDir/$nb_foldername/ssl/management/$sslCert $targetDir/$nb_foldername/ssl/
 fi
-cacertFiles=$(ls $dbagigashareApplicativePath/ssl/$sslCaCert 2> /dev/null | wc -l)
+cacertFiles=$(ls $dbagigashareManagementPath/ssl/$sslCaCert 2> /dev/null | wc -l)
 echo "cacertFiles:"$cacertFiles
 if [[  $cacertFiles -gt 0 ]]
 then
     echo "Copying cacert file"
-    cp $dbagigashareApplicativePath/ssl/$sslCaCert $targetDir/$nb_foldername/ssl/
+    cp $dbagigashareManagementPath/ssl/$sslCaCert $targetDir/$nb_foldername/ssl/
+else
+    echo "Copying cacert file from pkg"
+    cp $targetDir/$nb_foldername/ssl/management/$sslCaCert $targetDir/$nb_foldername/ssl/
 fi
-keyFiles=$(ls $dbagigashareApplicativePath/ssl/$sslKey 2> /dev/null | wc -l)
+keyFiles=$(ls $dbagigashareManagementPath/ssl/$sslKey 2> /dev/null | wc -l)
 echo "keyFiles:"$keyFiles
 if [[ $keyFiles -gt 0 ]]
 then
     echo "Copying key file"
-    cp $dbagigashareApplicativePath/ssl/$sslKey $targetDir/$nb_foldername/ssl/
+    cp $dbagigashareManagementPath/ssl/$sslKey $targetDir/$nb_foldername/ssl/
+else
+    echo "Copying key file from pkg"
+    cp $targetDir/$nb_foldername/ssl/management/$sslKey $targetDir/$nb_foldername/ssl/
 fi
