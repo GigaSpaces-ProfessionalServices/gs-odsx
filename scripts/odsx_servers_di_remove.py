@@ -8,7 +8,8 @@ from scripts.logManager import LogManager
 from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
+    config_get_dataIntegrationiidr_nodes
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
 
@@ -123,6 +124,11 @@ def executeCommandForUnInstall():
                             #config_remove_dataIntegration_byNameIP(host,host)
                             #set_value_in_property_file('app.di.hosts','')
                             verboseHandle.printConsoleInfo("Node has been removed :"+str(host))
+
+                        nodeiidrList = config_get_dataIntegrationiidr_nodes()
+                        for nodes in nodeiidrList:
+                            iidrHost=os.getenv(nodes.ip)
+                            outputShFile= connectExecuteSSH(iidrHost, user,commandToExecute,additionalParam)
             if(removeType=='1'):
                 proceedForIndividualRemove(host_dict_obj,nodes)
             if(removeType=='99'):

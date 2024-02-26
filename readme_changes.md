@@ -253,3 +253,25 @@
 ### TAU v4.58-tau-release tag
 81. Re-Build common, data validator server and agent code from - https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau
 82. Copy generated agent and server jars to /dbagigashare/current/data-validator/jars
+### TAU v4.62-tau-release tag
+83. Add below in app.config file
+    app.iidr.username=admin
+    app.iidr.password=admin11
+    app.iidrkafka.username=tsuser
+    app.iidrkafka.password=tsuser11
+    app.iidr-kafka.user-exit.properties.file.read-path=/giga/iidr/kafka/instance/KAFKA/conf
+    app.iidr-kafka.user-exit.properties.file.write-path=/giga/iidr/kafka/instance/KAFKA/conf
+84. In host.yaml file add below after dataIntegration section
+    iidrdataIntegration :
+       host1 : 10.0.0.5
+85. In cluster.config file add below after dataIntegration section
+    "iidrdataIntegration": {
+        "nodes": [
+        ]
+    }
+86. In /dbagigashare/current/data-integration/di-flink/ make sure following jar exist :
+    flink-connector-kafka-1.17.0.jar
+    kafka-clients-3.2.3.jar
+    flink-connector-jdbc-3.1.0-1.17.jar
+    flink-sql-connector-kafka-1.17.0.jar
+    postgresql-42.5.4.jar
