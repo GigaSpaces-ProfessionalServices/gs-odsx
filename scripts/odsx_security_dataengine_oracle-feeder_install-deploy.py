@@ -19,7 +19,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper,userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_db2feeder_utilities import getPortNotExistInOracleFeeder
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
@@ -301,7 +301,7 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     logger.info("home: "+str(home))
     return targetJarFile
 
-def uploadFileRest(managerHostConfig):
+def uploadFileRest(managerHostConfig,feederName):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         directory = os.getcwd()
@@ -312,6 +312,8 @@ def uploadFileRest(managerHostConfig):
             exitsFeeder = str(file).replace('load','oraclefeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load','').replace('.sh','').casefold()
+                if feederName != "" and "_"+feederName != puName:
+                    continue
                 pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
                 #print("pathOfSourcePU : "+str(pathOfSourcePU))
                 #print("jarName :"+jarName)
@@ -412,7 +414,7 @@ def newInstallOracleFeeder():
         if exitsFeeder not in activefeeder:
             newInstall.append(exitsFeeder)
 
-def proceedToDeployPU():
+def proceedToDeployPU(feederName):
     global restPort
     try:
         logger.info("proceedToDeployPU()")
@@ -431,6 +433,8 @@ def proceedToDeployPU():
             exitsFeeder = str(file).replace('load','oraclefeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load_','').replace('.sh','').casefold()
+                if feederName != "" and feederName != puName:
+                    continue
                 zoneGSC = 'oracle_'+puName
                 logger.info("filePrefix : "+filePrefix)
                 resource = filePrefix+'_'+puName+'.jar'
@@ -504,7 +508,7 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter sqlite3 db file :"+str(db_file))
     verboseHandle.printConsoleInfo("Enter source file path of oracle-feeder .jar file including file name : "+str(sourceOracleJarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of oracle-feeder *.sh file : "+str(sourceOracleFeederShFilePath))
-    verboseHandle.printConsoleInfo("Enter source file of oracle-feeder *.sh file : "+str(newInstall))
+    #verboseHandle.printConsoleInfo("Enter source file of oracle-feeder *.sh file : "+str(newInstall))
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
@@ -565,15 +569,62 @@ def proceedToDeployPUInputParam(managerHost):
         feederSleepAfterWrite='500'
 
     displaySummaryOfInputParam()
-    finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
-    if(len(str(finalConfirm))==0):
-        finalConfirm='y'
-    if(finalConfirm=='y'):
-        logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
-        uploadFileRest(managerHost)
-        proceedToDeployPU()
+    feeder_dict_obj = displayAvailableFeederList()
+    feederStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to deploy individual feeder. \nPress [Enter] to deploy all feeder. \nPress [99] for exit.: "+Fore.RESET))
+    if(feederStartType=='1'):
+        optionMainMenu = int(userInputWrapper("Enter Feeder Sr Number to Deploy: "))
+        if len(feeder_dict_obj) >= optionMainMenu:
+            feederToDeploy = feeder_dict_obj.get(str(optionMainMenu))
+            # start individual
+            finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with '"+feederToDeploy+"' feeder ? (y/n) [y] :"+Fore.RESET))
+            if(len(str(finalConfirm))==0):
+                finalConfirm='y'
+            if(finalConfirm=='y'):
+                logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+                uploadFileRest(managerHost,feederToDeploy)
+                proceedToDeployPU(feederToDeploy)
+    elif(feederStartType =='99'):
+        logger.info("99 - Exist start")
     else:
-        return
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with all feeders ? (y/n) [y] :"+Fore.RESET))
+        if(len(str(finalConfirm))==0):
+            finalConfirm='y'
+        if(finalConfirm=='y'):
+            logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+            uploadFileRest(managerHost,"")
+            proceedToDeployPU("")
+        else:
+            return
+
+def displayAvailableFeederList():
+    global gs_avail_feeder_dictionary_obj
+    gs_avail_feeder_dictionary_obj = host_dictionary_obj()
+    verboseHandle.printConsoleWarning("Available Feeders:")
+    headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
+               Fore.YELLOW + "Name" + Fore.RESET
+               ]
+
+    counter = 0
+    dataTable = []
+    dataArray=[]
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
+    sourceOraleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+    directory = os.getcwd()
+    os.chdir(sourceOraleFeederShFilePath)
+
+    for file in glob.glob("load_*.sh"):
+        os.chdir(directory)
+        puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+        dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                     Fore.GREEN + 'oraclefeeder_'+ puName + Fore.RESET
+                     ]
+        gs_avail_feeder_dictionary_obj.add(str(counter + 1), str(puName))
+        counter = counter + 1
+        dataTable.append(dataArray)
+
+    printTabular(None, headers, dataTable)
+    return gs_avail_feeder_dictionary_obj
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_oracle-feeder_install")
