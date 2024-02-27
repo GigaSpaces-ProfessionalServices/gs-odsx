@@ -67,7 +67,6 @@ def getDIServerHostList():
     nodeList = config_get_dataIntegration_nodes()
     nodes = ""
     for node in nodeList:
-        print("aa : "+str(node.ip))
         if (len(nodeList) == 1):
             nodes = os.getenv(node.ip)
         else:
@@ -218,6 +217,10 @@ def installCluster():
 
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
+    nodeiidrList = config_get_dataIntegrationiidr_nodes()
+    for nodes in nodeiidrList:
+        iidrHost=os.getenv(nodes.ip)
+
     confirmInstall = str(userInputWrapper(
         Fore.YELLOW + "Are you sure want to install DI servers on " + str(clusterHosts) + " (y/n) [y]: " + Fore.RESET))
     if (len(str(confirmInstall)) == 0):
