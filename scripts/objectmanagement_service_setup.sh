@@ -60,7 +60,7 @@ if [ "$useVault" != "false" ]; then
     #echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /usr/local/bin/objectmanagement_service.sh
     echo  "export VAULT_MANAGER_PASS=" > /usr/local/bin/objectmanagement_service.sh
 else
-    echo  "export VAULT_MANAGER_PASS=$passProperty" >> $targetDir/$extracted_folder/bin/setenv-overrides.sh
+    echo  "export VAULT_MANAGER_PASS=$passProperty" > /usr/local/bin/objectmanagement_service.sh
 fi
 #echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /usr/local/bin/objectmanagement_service.sh
 echo  "/usr/bin/java -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=$log_location -jar $serviceJar --log.location=$log_location --space.name=$space_name --lookup.locator=$lookup_locator --lookup.group=$lookup_group --table.batch.file.path=$table_batch_file_path --ddl.properties.file.path=$ddl_properties_file_path --tier.criteria.file=$tier_criteria_file --adapter.property.file=$adapter_property_file --batch.index.file=$batch_index_file --polling.container.file=$polling_container_file --odsx.profile=$odsx_profile --gs.username=$gs_username --gs.password=\$VAULT_MANAGER_PASS" >> /usr/local/bin/objectmanagement_service.sh

@@ -95,7 +95,7 @@ def setupService():
     pollingContainerFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.pollingFileName")).replace('"','')
     vaultJar = str(readValuefromAppConfig("app.vault.jar.location"))
     passProperty = ""
-    useVault = str(readValuefromAppConfig("app.vault.use"))
+    useVault = str(readValuefromAppConfig("app.vault.objectmanagement.use"))
     if useVault == "false":
         passProperty = str(readValuefromAppConfig("app.manager.security.password"))
     else:
@@ -107,6 +107,8 @@ def setupService():
     logger.info("Command " + commandToExecute)
     try:
         with Spinner():
+            os.system("cp utils/odsx_vault_cred_details.sh /usr/local/bin/")
+            os.system("chmod +x /usr/local/bin/odsx_vault_cred_details.sh")
             os.system(commandToExecute)
 
             os.system('sudo systemctl daemon-reload')

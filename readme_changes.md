@@ -293,3 +293,6 @@
     flink-connector-jdbc-3.1.0-1.17.jar
     flink-sql-connector-kafka-1.17.0.jar
     postgresql-42.5.4.jar
+### TAU v4.64-tau-release tag
+92. Adding flag for controlling objectmanagent for vault
+    app.vault.objectmanagement.use=false
