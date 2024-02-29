@@ -105,7 +105,7 @@ def getData():
         
     
     username = str(getUsernameByHost())
-    password = str(getPasswordByHost())
+    password = str(getPasswordByHost("object"))
     
     managerInfo = getManagerInfo(True,username,password)
     lookupGroup = str(managerInfo['lookupGroups'])

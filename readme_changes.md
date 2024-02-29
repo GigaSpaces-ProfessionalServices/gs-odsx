@@ -296,3 +296,4 @@
 ### TAU v4.64-tau-release tag
 92. Adding flag for controlling objectmanagent for vault
     app.vault.objectmanagement.use=false
+93. Rebuilt the jar https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement

@@ -87,7 +87,7 @@ def setUserInputs():
     logger.info("appId : " + appId + " safeID : " + safeId + " objectID : " + objectId)
 
     username = str(getUsernameByHost())
-    password = str(getPasswordByHost())
+    password = str(getPasswordByHost("object"))
 
     managerInfo = getManagerInfo(True, username, password)
 

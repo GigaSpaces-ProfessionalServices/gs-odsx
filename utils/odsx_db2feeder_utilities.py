@@ -313,10 +313,14 @@ def getUsernameByHost():
     username = str(readValueByConfigObj("app.manager.security.username"))
     return username
 
-def getPasswordByHost():
+def getPasswordByHost(type="default"):
     logger.info("getPasswordByHost()")
     #password = str(readValueByConfigObj("app.manager.security.password"))
-    useVault = str(readValueByConfigObj("app.vault.use"))
+    useVault = ""
+    if type=="object":
+        useVault = str(readValueByConfigObj("app.vault.objectmanagement.use"))
+    else:
+        useVault = str(readValueByConfigObj("app.vault.use"))
     password=""
     if useVault == "false":
         password = str(readValueByConfigObj("app.manager.security.password"))

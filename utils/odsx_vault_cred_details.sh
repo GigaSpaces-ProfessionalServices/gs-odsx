@@ -1,4 +1,6 @@
 #!/bin/bash
+source ~/.bashrc
+export ENV_CONFIG=$ENV_CONFIG
 passProperty=$(awk -F= '/app.manager.security.password.vault=/ {print $2}' ${ENV_CONFIG}/app.config)
 dblocation=$(awk -F= '/app.vault.db.location=/ {print $2}' ${ENV_CONFIG}/app.config)
 vaultJar=$(awk -F= '/app.vault.jar.location=/ {print $2}' ${ENV_CONFIG}/app.config)

@@ -92,7 +92,7 @@ def setUserInputs():
         
     
     username = str(getUsernameByHost())
-    password = str(getPasswordByHost())
+    password = str(getPasswordByHost("object"))
 
 
     managerInfo = getManagerInfo(True,username,password)

@@ -427,7 +427,7 @@ if __name__ == '__main__':
     global password
 
     username = str(getUsernameByHost())
-    password = str(getPasswordByHost())
+    password = str(getPasswordByHost("object"))
 
     managerInfo = getManagerInfo(True, username, password)
     lookupGroup = str(managerInfo['lookupGroups'])
