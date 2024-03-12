@@ -16,8 +16,10 @@ home_dir=$(pwd)
 echo "homedir: "$home_dir
 installation_path=$sourceInstallerDirectory/nb/
 installation_path_tar=$sourceInstallerDirectoryTar/nb
+tmppath=$(pwd)
+cd $installation_path_tar
 installation_file=$(find $installation_path_tar -name *.tar.gz -printf "%f\n")
-
+cd $tmppath
 nb_foldername=$(tar -ztvf $installation_path_tar/$installation_file | head -1 | awk '{print $NF}' | cut -d/ -f1)
 
 echo $installation_path_tar"/"$installation_file
