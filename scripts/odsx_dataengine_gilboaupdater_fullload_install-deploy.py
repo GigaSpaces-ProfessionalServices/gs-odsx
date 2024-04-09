@@ -523,7 +523,7 @@ def proceedToDeployPUInputParam(managerHost):
     sourceMSSQLJarFileConfig = str(getYamlFilePathInsideFolder(".mssql.jars.mssqlJarFile"))
     #print(Fore.YELLOW+"Enter source file path of mssql-feeder .jar file including file name ["+sourceMSSQLJarFileConfig+"] : "+Fore.RESET)
     #if(len(str(sourceMSSQLJarFilePath))==0):
-    sourceMSSQLJarFilePath = sourceMSSQLJarFileConfigproceedToDeployPUInputParam
+    sourceMSSQLJarFilePath = sourceMSSQLJarFileConfig
     #set_value_in_property_file("app.dataengine.mssql-feeder.jar",sourceMSSQLJarFilePath)
 
     global sourceMSSQLFeederShFilePath
