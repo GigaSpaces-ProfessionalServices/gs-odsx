@@ -255,7 +255,7 @@ def setUserInputs2(tableNameFromddlFileName, ddlAndPropertiesBasePath):
     #    set_value_in_property_file("supportDynamicProperties", supportDynamicProperties)
 
 
-def setInputs(isSandbox):
+def setInputs(isSandbox, ddlFileNameFromUser=""):
     global spaceName
     global objectMgmtHost
     global ddlAndPropertiesBasePath
@@ -275,58 +275,64 @@ def setInputs(isSandbox):
     tableNameFromddlFileName = ''
     objectMgmtHost = getPivotHost()
 
+    if(len(str(ddlFileNameFromUser)) > 0):
+        tableNameFromddlFileName = ddlFileNameFromUser.replace(".ddl", "")
+
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
         config_set_value_in_property_file("app.objectmanagement.space", spaceName)
 
-    ddlfileOptions = {}
-    counter = 1
-    for file in os.listdir(ddlAndPropertiesBasePath):
-        if file.endswith(".ddl"):
-            print("[" + str(counter) + "]  " + file)
-            ddlfileOptions.update({counter: file})
-            counter = counter + 1
 
-    selectedOption = str(
-        userInputWrapper(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
-    if (selectedOption.isnumeric() == True):
-        if len(selectedOption) <= 0 or int(selectedOption) not in ddlfileOptions:
+    if ddlFileNameFromUser == "":
+        ddlfileOptions = {}
+        counter = 1
+        for file in os.listdir(ddlAndPropertiesBasePath):
+            if file.endswith(".ddl"):
+                print("[" + str(counter) + "]  " + file)
+                ddlfileOptions.update({counter: file})
+                counter = counter + 1
+
+        selectedOption = str(
+            userInputWrapper(Fore.YELLOW + "Select file to load ddl :" + Fore.RESET))
+        if (selectedOption.isnumeric() == True):
+            if len(selectedOption) <= 0 or int(selectedOption) not in ddlfileOptions:
+                verboseHandle.printConsoleError("Invalid Option!")
+                exit(0)
+        else:
             verboseHandle.printConsoleError("Invalid Option!")
             exit(0)
-    else:
-        verboseHandle.printConsoleError("Invalid Option!")
-        exit(0)
-    selectedddlFilename = ddlfileOptions.get(int(selectedOption))
-    tableNameFromddlFileName = selectedddlFilename.replace(".ddl", "")
-    reportFilePath = ""
-    if isSandbox == True:
-        timestr = time.strftime("%Y%m%d-%H%M%S")
+        selectedddlFilename = ddlfileOptions.get(int(selectedOption))
+        tableNameFromddlFileName = selectedddlFilename.replace(".ddl", "")
 
-        reportFilePath = readValuefromAppConfig("app.objectmanagement.validate.reportlocation")
-        if reportFilePath is None or reportFilePath=="" or len(str(reportFilePath))<0:
-            reportFilePath = ddlAndPropertiesBasePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
-            set_value_in_property_file("app.objectmanagement.validate.reportlocation",ddlAndPropertiesBasePath)
+        reportFilePath = ""
+        if isSandbox == True:
+            timestr = time.strftime("%Y%m%d-%H%M%S")
+
+            reportFilePath = readValuefromAppConfig("app.objectmanagement.validate.reportlocation")
+            if reportFilePath is None or reportFilePath=="" or len(str(reportFilePath))<0:
+                reportFilePath = ddlAndPropertiesBasePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
+                set_value_in_property_file("app.objectmanagement.validate.reportlocation",ddlAndPropertiesBasePath)
+            else:
+                if not os.path.exists(reportFilePath):
+                    os.mkdir(reportFilePath)
+                reportFilePath = reportFilePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
+
+            displaySummary(lookupLocator, lookupGroup, objectMgmtHost, sandboxSpaceName, selectedddlFilename,
+                           tableNameFromddlFileName)
         else:
-            if not os.path.exists(reportFilePath):
-                os.mkdir(reportFilePath)
-            reportFilePath = reportFilePath+"/validate_report_"+tableNameFromddlFileName+"_"+timestr+".txt"
+            displaySummary(lookupLocator, lookupGroup, objectMgmtHost, spaceName, selectedddlFilename,
+                           tableNameFromddlFileName)
 
-        displaySummary(lookupLocator, lookupGroup, objectMgmtHost, sandboxSpaceName, selectedddlFilename,
-                       tableNameFromddlFileName)
-    else:
-        displaySummary(lookupLocator, lookupGroup, objectMgmtHost, spaceName, selectedddlFilename,
-                       tableNameFromddlFileName)
-
-    summaryConfirm = str(userInputWrapper(
-        Fore.YELLOW + "Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: " + Fore.RESET))
-    while (len(str(summaryConfirm)) == 0):
         summaryConfirm = str(userInputWrapper(
             Fore.YELLOW + "Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: " + Fore.RESET))
+        while (len(str(summaryConfirm)) == 0):
+            summaryConfirm = str(userInputWrapper(
+                Fore.YELLOW + "Do you want to continue object registration with above inputs ? [Yes (y) / No (n)]: " + Fore.RESET))
 
-    if (str(summaryConfirm).casefold() == 'n' or str(summaryConfirm).casefold() == 'no'):
-        logger.info("Exiting without registering object")
-        exit(0)
+        if (str(summaryConfirm).casefold() == 'n' or str(summaryConfirm).casefold() == 'no'):
+            logger.info("Exiting without registering object")
+            exit(0)
 
 
 def displaySummary(lookupLocator, lookupGroup, objectMgmtHost, spaceName, selectedddlFilename, tableName):
@@ -437,8 +443,14 @@ if __name__ == '__main__':
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
         args.append(sys.argv[0])
         myCheckArg()
-        showMenuOptions()
         selectedOption = ""
+        if len(sys.argv) > 1 and sys.argv[1] != "m":
+            setInputs(False, sys.argv[1] +".ddl")
+            registerInSingle()
+            exit(0)
+
+        showMenuOptions()
+        verboseHandle.printConsoleWarning("=========================")
         if len(sys.argv) > 1 and sys.argv[1] != menuDrivenFlag:
             arguments = myCheckArg(sys.argv[1:])
             if arguments.m== "editproperties":

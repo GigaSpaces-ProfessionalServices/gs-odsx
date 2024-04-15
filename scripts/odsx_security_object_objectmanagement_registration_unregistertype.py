@@ -110,6 +110,8 @@ def validateUserInput():
             isValid = True
             selectedSpace = dataSpaceDict.get(objectMgmtTableInput)
             selectedType = dataTableDict.get(objectMgmtTableInput)
+            verboseHandle.printConsoleWarning('selectedSpace: '+selectedSpace)
+            verboseHandle.printConsoleWarning('selectedType: '+selectedType)
             displaySummary()
             summaryConfirm = str(userInputWrapper(
                 Fore.YELLOW + "Do you want to unregister object with above inputs ? [Yes (y) / No (n)] [n]: " + Fore.RESET))
@@ -207,11 +209,26 @@ def unregisterType():
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> Object Management -> Registration -> Unregister type')
+    global objectMgmtHost
+    global lookupGroup
+    global lookupLocator
+    global managerHost
     try:
         args = []
         menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
         args.append(sys.argv[0])
         myCheckArg()
+        verboseHandle.printConsoleWarning('')
+        if len(sys.argv) > 1 and sys.argv[1] != "m":
+            objectMgmtHost = getPivotHost();
+            managerHost = getManagerHost();
+            managerInfo = getManagerInfo();
+            lookupGroup = str(managerInfo['lookupGroups']);
+            lookupLocator = str(managerHost) + ":4174";
+            selectedType = sys.argv[1];
+            unregisterType();
+            exit(0);
+
         setUserInputs()
         listObjects()
         validateUserInput()
