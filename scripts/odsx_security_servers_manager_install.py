@@ -514,13 +514,13 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         managerWorkTarget = managerWork + "/sqlite/"
         additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress
         outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
-        newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
+        #newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
 #        for newZkJar in newZkJars:
-        executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
+        #executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
 
-        newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
-        for newZkJar in newZkJars:
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
+        #newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
+        #for newZkJar in newZkJars:
+        #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
        # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))

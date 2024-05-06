@@ -287,7 +287,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+       # newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         #To Display Summary ::
@@ -362,10 +362,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"23. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
+      #  print(Fore.GREEN+"24. "+
+      #        Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
+      #        Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"24. "+
-              Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
-              Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"25. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
 
@@ -379,7 +379,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostListLength = len(host_nic_dict_obj)+1
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,newZkJarTarget,selinuxEnabled)
+                    executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,None,selinuxEnabled)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -430,13 +430,13 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
             #print(outputShFile)
             #Upload CEF logging jar
             #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-            newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
+            #newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
             #for newZkJar in newZkJars:
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
+            #executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
 
-            newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
-            for newZkJar in newZkJars:
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
+            #newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
+            #for newZkJar in newZkJars:
+            #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
             verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
             #UPLOAD DB2FEEDER JAR

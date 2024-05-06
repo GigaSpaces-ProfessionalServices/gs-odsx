@@ -368,7 +368,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #To Display Summary ::
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-        newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+      #  newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -412,9 +412,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"13. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"14. "+
-              Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
-              Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
+       # print(Fore.GREEN+"14. "+
+       #       Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
+       #       Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"15. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
@@ -447,7 +447,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget,selinuxEnabled)
+                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,None,selinuxEnabled)
 
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
@@ -485,13 +485,13 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
         #logger.info("Output : scripts/servers_manager_install.sh :"+str(outputShFile))
         #Upload CEF logging jar
         #scp_upload(host,user,cefLoggingJarInput,cefLoggingJarInputTarget)
-        newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
+        #newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
         #for newZkJar in newZkJars:
-        executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
+        #executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
 
-        newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
-        for newZkJar in newZkJars:
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
+        #newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
+        #for newZkJar in newZkJars:
+        #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
 
         verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
