@@ -242,7 +242,7 @@
 ### TAU v4.54-tau-vault-release tag
 78. Add below in app.config, change paths as required
     app.vault.jar.location=/dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar
-    app.vault.db.location=/dbagigawork/current/gs/db/
+    app.vault.db.location=/dbagigawork/sqlite/
     app.manager.workDir=/dbagigawork/
     app.space.workDir=/dbagigadata/
 79. Update property app.config (this property value will be used to fetch password from vault) : 
@@ -297,3 +297,6 @@
 92. Adding flag for controlling objectmanagent for vault
     app.vault.objectmanagement.use=false
 93. Rebuilt the jar https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/objectManagement
+### TAU v4.67-tau-release tag
+94. In app.yaml remove full zookeeper: section
+95. In app.config remove app.xap.newzk.jar.target
