@@ -300,3 +300,10 @@
 ### TAU v4.67-tau-release tag
 94. In app.yaml remove full zookeeper: section
 95. In app.config remove app.xap.newzk.jar.target
+### TAU v4.68-tau-release tag
+96. In app.config added new properties and set values accordingly
+    app.dataengine.apiPushUri=
+    app.dataengine.apiPushXClientID=
+98. Updated jar version in app.yaml as mentioned:
+    notifierPersonalJarFile: Personal_Message_Notifier-0.5-jar-with-dependencies.jar
+    notifierMessageJarFile: Group_Message_Notifier-0.8-jar-with-dependencies.jar

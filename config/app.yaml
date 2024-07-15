@@ -76,8 +76,8 @@ current:
   notifier:
     config: null
     jars:
-      notifierPersonalJarFile: Personal_Message_Notifier-0.4-jar-with-dependencies.jar
-      notifierMessageJarFile: Group_Message_Notifier-0.7-jar-with-dependencies.jar
+      notifierPersonalJarFile: Personal_Message_Notifier-0.5-jar-with-dependencies.jar
+      notifierMessageJarFile: Group_Message_Notifier-0.8-jar-with-dependencies.jar
   object:
     config:
       ddlparser:

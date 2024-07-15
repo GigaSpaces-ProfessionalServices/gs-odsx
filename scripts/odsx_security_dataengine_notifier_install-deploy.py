@@ -249,7 +249,7 @@ def uploadFileRest(managerHostConfig):
     except Exception as e:
         handleException(e)
 
-def getDataPUREST(resource,resourceName,zoneOfPU):
+def getDataPUREST(resource,resourceName,zoneOfPU,apiPushUri,apiPushXClientID):
     data={
         "resource": ""+resource+"",
         "topology": {
@@ -265,11 +265,15 @@ def getDataPUREST(resource,resourceName,zoneOfPU):
         "contextProperties": {
             "minPort" : "8113",
             "maxPort" : "8311",
-            "apiPushUri" : "https://apigwit.tau.ac.il/test/os/v1/OSPushNotification/SendPushNotification",
+            "apiPushUri" : apiPushUri,
+            "apiPushXClientID" : apiPushXClientID,
             "space.name" : ""+spaceName+"",
             "lookup.locators" : ""+managerHost+""
         }
     }
+    filtered_context = {key: value for key, value in data["contextProperties"].items() if value != ""}
+    data["contextProperties"] = filtered_context
+
     #print(data)
     return data
 
@@ -322,12 +326,15 @@ def proceedToDeployPU():
             newGSCCount=newGSCCount+1
             proceedToCreateGSC('group_message_notifier',newGSCCount)
         puName = "personal_message_notifier_service"
-        data = getDataPUREST(resource,puName,'personal_message_notifier')
+        apiPushXClientID = str(readValueByConfigObj("app.dataengine.apiPushXClientID"))
+        apiPushUri = str(readValueByConfigObj("app.dataengine.apiPushUri"))
+
+        data = getDataPUREST(resource,puName,'personal_message_notifier', apiPushUri, apiPushXClientID)
         logger.info("data of payload2 :"+str(data))
         checkResponse(data)
         resource = str(getYamlFileNamesInsideFolderList(".notifier.jars.notifierMessageJarFile"))
         puName = "group_message_notifier_service"
-        data = getDataPUREST(resource,puName,'group_message_notifier')
+        data = getDataPUREST(resource,puName,'group_message_notifier', apiPushUri, apiPushUri)
         logger.info("data of payload2 :"+str(data))
         checkResponse(data)
     except Exception as e :
