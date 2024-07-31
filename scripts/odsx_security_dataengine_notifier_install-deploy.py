@@ -334,7 +334,7 @@ def proceedToDeployPU():
         checkResponse(data)
         resource = str(getYamlFileNamesInsideFolderList(".notifier.jars.notifierMessageJarFile"))
         puName = "group_message_notifier_service"
-        data = getDataPUREST(resource,puName,'group_message_notifier', apiPushUri, apiPushUri)
+        data = getDataPUREST(resource,puName,'group_message_notifier', apiPushUri, apiPushXClientID)
         logger.info("data of payload2 :"+str(data))
         checkResponse(data)
     except Exception as e :
