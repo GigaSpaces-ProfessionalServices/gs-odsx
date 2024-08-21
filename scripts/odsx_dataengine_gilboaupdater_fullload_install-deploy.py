@@ -308,6 +308,8 @@ def getDataPUREST(resource,resourceName,zoneOfPU,restPort):
     mssqlPassword = str(readValueByConfigObj("app.dataengine.mssql-feeder.mssql.password")).replace('"','').replace(' ','')
     mssqlDatabase = str(readValueByConfigObj("app.dataengine.mssql-feeder.mssql.databasename")).replace('"','').replace(' ','')
     mssqlAuthScheme = str(readValueByConfigObj("app.dataengine.mssql-feeder.mssql.authenticationscheme")).replace('"','').replace(' ','')
+    loginTimeout = str(readValueByConfigObj("app.dataengine.mssql-feeder.mssql.loginTimeout")).replace('"','').replace(' ','')
+    queryTimeOut = str(readValueByConfigObj("app.dataengine.mssql-feeder.mssql.queryTimeOut")).replace('"','').replace(' ','')
 
     data={
         "resource": ""+resource+"",
@@ -332,7 +334,9 @@ def getDataPUREST(resource,resourceName,zoneOfPU,restPort):
             "mssql.authenticationScheme" : ""+mssqlAuthScheme+"",
             "feeder.writeBatchSize" : ""+feederWriteBatchSize+"",
             "space.name" : ""+spaceName+"",
-            "feeder.sleepAfterWriteInMillis" : ""+feederSleepAfterWrite+""
+            "feeder.sleepAfterWriteInMillis" : ""+feederSleepAfterWrite+"",
+            "loginTimeout": ""+loginTimeout+"",
+            "queryTimeOut": ""+queryTimeOut+""
         }
     }
     #print(data)

@@ -307,3 +307,7 @@
 98. Updated jar version in app.yaml as mentioned:
     notifierPersonalJarFile: Personal_Message_Notifier-0.5-jar-with-dependencies.jar
     notifierMessageJarFile: Group_Message_Notifier-0.8-jar-with-dependencies.jar
+### TAU v4.70-tau-release tag 
+99. Add below in app.config file
+    app.dataengine.mssql-feeder.mssql.loginTimeout=20
+    app.dataengine.mssql-feeder.mssql.queryTimeOut=300
