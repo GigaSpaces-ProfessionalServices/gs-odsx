@@ -74,8 +74,8 @@ ddl_name="${DDL_NAME}" column_detail="${COLUMN_DETAIL}" add_index="${ADD_INDEX}"
       send -- "\r"  ; # Simulate pressing Enter
   }
 
-  # cd /dbagiga/gs-odsx
-  cd ~/gs-odsx
+  cd /dbagiga/gs-odsx
+  # cd ~/gs-odsx
   set timeout -1
   set force_conservative 1
   spawn ./odsx.py dataengine oracle-feeder schema-change
