@@ -74,8 +74,8 @@ ddl_name="${DDL_NAME}" column_detail="${COLUMN_DETAIL}" add_index="${ADD_INDEX}"
       send -- "\r"  ; # Simulate pressing Enter
   }
 
-  cd /dbagiga/gs-odsx
-  # cd ~/gs-odsx
+  # cd /dbagiga/gs-odsx
+  cd ~/gs-odsx
   set timeout -1
   set force_conservative 1
   spawn ./odsx.py dataengine oracle-feeder schema-change
@@ -93,20 +93,21 @@ ddl_name="${DDL_NAME}" column_detail="${COLUMN_DETAIL}" add_index="${ADD_INDEX}"
   # Send the column detail
   send_each_char $column_detail
   sleep .1
+  expect -re ".*add index.*"
+    sleep .1
+   # send -- "\r"
+    send_each_char $add_index
+    sleep .1
+    if { $add_index == "y" } {
+      expect -re ".*modified index.*"
+      sleep .1
+      send_each_char $index_column_detail
+    }
+    sleep .1
   expect "Object is removed successfully!!"
   sleep .1
   expect "Object is registered successfully!!"
   sleep .1
-  expect -re ".*add index.*"
-  sleep .1
- # send -- "\r"
-  send_each_char $add_index
-  sleep .1
-  if { $add_index == "y" } {
-    expect -re ".*modified index.*"
-    sleep .1
-    send_each_char $index_column_detail
-  }
-  sleep .1
+
   expect eof
 '

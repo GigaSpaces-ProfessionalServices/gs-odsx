@@ -429,8 +429,9 @@ def recreateType():
     if wantToAddIndex == 'y':
         os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + " " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + ".backup." + filename_suffix)
         addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
+        addedIndex = addedIndex.replace(" ","\t")
         with open(ddlAndPropertiesBasePath+"/batchIndexes.txt", 'a') as file:
-            file.write(addedIndex)
+            file.write("\n"+addedIndex)
 
     #Drop the appropriate table/type
     objectMgmtHost = getPivotHost()
