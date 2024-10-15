@@ -233,19 +233,21 @@ def createGSCInputParam():
     logger.info("numberOfGSC :"+str(numberOfGSC))
     memoryGSC = str(readValuefromAppConfig("app.dataengine.notifier.gsc.memory"))
 
-def uploadFileRest(managerHostConfig):
+def uploadFileRest(managerHostConfig, feederType):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
-        pathOfSourcePU=str(getYamlFilePathInsideFolder(".notifier.jars.notifierPersonalJarFile"))
-        verboseHandle.printConsoleWarning("Proceeding for 1 : "+pathOfSourcePU)
-        status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
-        print("\n")
-        logger.info("status : "+str(status))
-        pathOfSourcePU=str(getYamlFilePathInsideFolder(".notifier.jars.notifierMessageJarFile"))
-        verboseHandle.printConsoleWarning("Proceeding for 2 : "+pathOfSourcePU)
-        status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
-        print("\n")
-        logger.info("status : "+str(status))
+        if feederType == "Personal_Message_Notifier" or feederType == "all":
+            pathOfSourcePU=str(getYamlFilePathInsideFolder(".notifier.jars.notifierPersonalJarFile"))
+            verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
+            status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
+            print("\n")
+            logger.info("status : "+str(status))
+        if feederType == "Group_Message_Notifier" or feederType == "all":
+            pathOfSourcePU=str(getYamlFilePathInsideFolder(".notifier.jars.notifierMessageJarFile"))
+            verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
+            status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
+            print("\n")
+            logger.info("status : "+str(status))
     except Exception as e:
         handleException(e)
 
@@ -315,28 +317,31 @@ def checkResponse(data):
         logger.info("Unable to deploy 1 :"+str(status))
         verboseHandle.printConsoleInfo("Unable to deploy 1 : "+str(status))
 
-def proceedToDeployPU():
+def proceedToDeployPU(feederType):
     try:
         logger.info("proceedToDeployPU()")
-        #logger.info("url : "+"http://"+managerHost+":8090/v2/pus", auth=HTTPBasicAuth(username, password))
+        logger.info("url : "+"http://"+managerHost+":8090/v2/pus")
         newGSCCount=0
-        resource = str(getYamlFileNamesInsideFolderList(".notifier.jars.notifierPersonalJarFile"))
         if(confirmCreateGSC=='y'):
-            proceedToCreateGSC('personal_message_notifier',newGSCCount)
-            newGSCCount=newGSCCount+1
-            proceedToCreateGSC('group_message_notifier',newGSCCount)
-        puName = "personal_message_notifier_service"
+            if feederType == "Personal_Message_Notifier" or feederType == "all":
+                proceedToCreateGSC('personal_message_notifier',newGSCCount)
+                newGSCCount=newGSCCount+1
+            if feederType == "Group_Message_Notifier" or feederType == "all":
+                proceedToCreateGSC('group_message_notifier',newGSCCount)
         apiPushXClientID = str(readValueByConfigObj("app.dataengine.apiPushXClientID"))
         apiPushUri = str(readValueByConfigObj("app.dataengine.apiPushUri"))
-
-        data = getDataPUREST(resource,puName,'personal_message_notifier', apiPushUri, apiPushXClientID)
-        logger.info("data of payload2 :"+str(data))
-        checkResponse(data)
-        resource = str(getYamlFileNamesInsideFolderList(".notifier.jars.notifierMessageJarFile"))
-        puName = "group_message_notifier_service"
-        data = getDataPUREST(resource,puName,'group_message_notifier', apiPushUri, apiPushXClientID)
-        logger.info("data of payload2 :"+str(data))
-        checkResponse(data)
+        if feederType == "Personal_Message_Notifier" or feederType == "all":
+            resource = str(getYamlFileNamesInsideFolderList(".notifier.jars.notifierPersonalJarFile"))
+            puName = "personal_message_notifier_service"
+            data = getDataPUREST(resource,puName,'personal_message_notifier', apiPushUri, apiPushXClientID)
+            logger.info("data of payload2 :"+str(data))
+            checkResponse(data)
+        if feederType == "Group_Message_Notifier" or feederType == "all":
+            resource = str(getYamlFileNamesInsideFolderList(".notifier.jars.notifierMessageJarFile"))
+            puName = "group_message_notifier_service"
+            data = getDataPUREST(resource,puName,'group_message_notifier', apiPushUri, apiPushXClientID)
+            logger.info("data of payload2 :"+str(data))
+            checkResponse(data)
     except Exception as e :
         handleException(e)
 
@@ -350,6 +355,34 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter source file path of notifier personal jar file including file name : "+str(getYamlFilePathInsideFolder(".notifier.jars.notifierPersonalJarFile")))
     verboseHandle.printConsoleInfo("Enter source file path of notifier message jar file including file name : "+str(getYamlFilePathInsideFolder(".notifier.jars.notifierMessageJarFile")))
 
+def displayAvailableFeederList():
+    global gs_avail_feeder_dictionary_obj
+    gs_avail_feeder_dictionary_obj = host_dictionary_obj()
+    verboseHandle.printConsoleWarning("Available Feeders:")
+    headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
+               Fore.YELLOW + "Name" + Fore.RESET
+               ]
+
+    counter = 0
+    dataTable = []
+    dataArray=[]
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
+    dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                 Fore.GREEN + 'Personal_Message_Notifier' + Fore.RESET
+                 ]
+    gs_avail_feeder_dictionary_obj.add(str(counter + 1), str("Personal_Message_Notifier"))
+    counter = counter + 1
+    dataTable.append(dataArray)
+    dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                 Fore.GREEN + 'Group_Message_Notifier' + Fore.RESET
+                 ]
+    gs_avail_feeder_dictionary_obj.add(str(counter + 1), str("Group_Message_Notifier"))
+    dataTable.append(dataArray)
+
+    printTabular(None, headers, dataTable)
+    return gs_avail_feeder_dictionary_obj
+
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
     global partition
@@ -361,14 +394,31 @@ def proceedToDeployPUInputParam(managerHost):
     maxInstancesPerMachine = '1'
     logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
     displaySummaryOfInputParam()
-    finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
-    if(len(str(finalConfirm))==0):
-        finalConfirm='y'
-    if(finalConfirm=='y'):
-        uploadFileRest(managerHost)
-        proceedToDeployPU()
+    feeder_dict_obj = displayAvailableFeederList()
+    feederStartType = str(userInputWrapper(Fore.YELLOW+"press [1] if you want to deploy individual feeder. \nPress [Enter] to deploy all feeder. \nPress [99] for exit.: "+Fore.RESET))
+    if(feederStartType=='1'):
+        optionMainMenu = int(userInputWrapper("Enter Feeder Sr Number to Deploy: "))
+        if len(feeder_dict_obj) >= optionMainMenu:
+            feederToDeploy = feeder_dict_obj.get(str(optionMainMenu))
+            # start individual
+            finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with '"+feederToDeploy+"' feeder ? (y/n) [y] :"+Fore.RESET))
+            if(len(str(finalConfirm))==0):
+                finalConfirm='y'
+            if(finalConfirm=='y'):
+                logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+                uploadFileRest(managerHost,feederToDeploy)
+                proceedToDeployPU(feederToDeploy)
+    elif(feederStartType =='99'):
+        logger.info("99 - Exist start")
     else:
-        return
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
+        if(len(str(finalConfirm))==0):
+            finalConfirm='y'
+        if(finalConfirm=='y'):
+            uploadFileRest(managerHost,"all")
+            proceedToDeployPU()
+        else:
+            return
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_notifier_install")
