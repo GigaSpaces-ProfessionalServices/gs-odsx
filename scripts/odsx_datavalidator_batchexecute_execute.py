@@ -47,7 +47,10 @@ def doValidate():
         test = 'count'
 
     try:
-        response = requests.get("http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/batchcompare/"+str(test))
+        batchCompareParams = { 'executionTime' : str(readValuefromAppConfig("db.influx.executionTime")) ,
+                               'influxdbResultStore': str(readValuefromAppConfig("db.influx.influxdbResultStore"))}
+        response = requests.get("http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/measurement/batchcompare/"+str(test),
+                                params=batchCompareParams)
     except:
         print("An exception occurred")
 
