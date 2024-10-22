@@ -311,3 +311,7 @@
 99. Add below in app.config file
     app.dataengine.mssql-feeder.mssql.loginTimeout=20
     app.dataengine.mssql-feeder.mssql.queryTimeOut=300
+### TAU v4.74-tau-release tag
+100. Add below in app.config file
+    app.cdc.ashost=10.0.1.129
+    app.cdc.ashostport=10101
