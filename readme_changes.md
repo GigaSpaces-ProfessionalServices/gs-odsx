@@ -315,3 +315,4 @@
 100. Add below in app.config file
     app.cdc.ashost=10.0.1.129
     app.cdc.ashostport=10101
+101. Re-Build common, data validator server and agent code from https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
