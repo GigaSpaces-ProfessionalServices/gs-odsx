@@ -16,6 +16,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
     readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPortNotExistInOracleFeeder
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
@@ -464,10 +465,17 @@ def recreateType():
     logger.info("indexes response : "+str(response))
     verboseHandle.printConsoleInfo("Added indexes")
 
+def killManagersWebUI():
+    managerNodes = config_get_manager_node()
+    #commandToExecute = "kill -9 `ps -ef | grep webui | grep -v grep | awk '{print $2}'`"
+    commandToExecute = "ps -ef | grep 'services=WEBUI' | grep java | awk '{print $2}' | xargs kill"
+    for node in managerNodes:
+        managerHost=str(os.getenv(str(node.ip)))
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, 'root', commandToExecute)
+        verboseHandle.printConsoleInfo("Restarted web-ui for host:"+str(os.getenv(str(node.ip))))
+
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle-Feeder -> Schema change')
-    global username
-    global password
     global tableName
     global sourceOracleFeederShFilePath
     tableName = str(userInputWithEscWrapper("DDL filename :"))
@@ -487,3 +495,5 @@ if __name__ == '__main__':
     proceedToDeployPUInputParam(tableName)
     #Start the feeder
     proceedToStartOracleFeederWithName(puName)
+    killManagersWebUI()
+    verboseHandle.printConsoleWarning("Please redeploy services which are using this table")

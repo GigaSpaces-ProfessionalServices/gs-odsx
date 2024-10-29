@@ -3,13 +3,16 @@ import time
 import requests
 from colorama import Fore
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes, \
     config_get_dataIntegrationiidr_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
+from utils.odsx_objectmanagement_utilities import getPivotHost
 
 from utils.odsx_print_tabular_data import printTabular
+from datetime import datetime
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -116,6 +119,29 @@ def cdcTypeRedeplyment(spaceType,diManagerHost, iidrHost):
     commandToExecute = "scripts/cdc_schema_change.sh "+args
     os.system(commandToExecute)
 
+def killManagersWebUI():
+    managerNodes = config_get_manager_node()
+    #commandToExecute = "kill -9 `ps -ef | grep webui | grep -v grep | awk '{print $2}'`"
+    commandToExecute = "ps -ef | grep 'services=WEBUI' | grep java | awk '{print $2}' | xargs kill"
+    for node in managerNodes:
+        managerHost=str(os.getenv(str(node.ip)))
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, 'root', commandToExecute)
+        verboseHandle.printConsoleInfo("Restarted web-ui for host:"+str(os.getenv(str(node.ip))))
+
+def restartSpacedeck():
+    managerNodes = config_get_manager_node()
+    #commandToExecute = "kill -9 `ps -ef | grep webui | grep -v grep | awk '{print $2}'`"
+    commandToExecute = '[ "$(docker ps | grep spacedeck-spacedeck-1)" ] && docker stop spacedeck-spacedeck-1 && docker start spacedeck-spacedeck-1'
+    for node in managerNodes:
+        managerHost=str(os.getenv(str(node.ip)))
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, 'root', commandToExecute)
+        #verboseHandle.printConsoleInfo("Restarted for host:"+str(os.getenv(str(node.ip))))
+
+    diNodes = config_get_dataIntegration_nodes()
+    for node in diNodes:
+        diHost=str(os.getenv(str(node.ip)))
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(diHost, 'root', commandToExecute)
+
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Schema change')
     logger.info('Menu -> DataEngine -> Oracle CDC Schema change')
@@ -147,5 +173,31 @@ if __name__ == '__main__':
             exit(0)
         spaceType = gs_space_dictionary_obj.get(optionMainMenu)
         logger.info('gs_space_dictionary_obj : '+str(gs_space_dictionary_obj))
-        cdcTypeRedeplyment(spaceType,diManagerHost, iidrHost)
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
+        if(len(str(finalConfirm))==0):
+            finalConfirm='y'
+        if(finalConfirm=='y'):
+            cdcTypeRedeplyment(spaceType,diManagerHost, iidrHost)
+            killManagersWebUI()
+            tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+            ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
+            wantToAddIndex = str(userInputWithEscWrapper("Do you want to add index (y/n) [n] ?"))
+            if wantToAddIndex == 'y':
+                timestamp = time.time()
+                filename_suffix = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
+                os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + " " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + ".backup." + filename_suffix)
+                addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
+                addedIndex = addedIndex.replace(" ","\t")
+                with open(ddlAndPropertiesBasePath+"/batchIndexes.txt", 'a') as file:
+                    file.write("\n"+addedIndex)
+            #Run the indexes
+            objectMgmtHost = getPivotHost()
+            response = requests.post('http://' + objectMgmtHost + ':7001/index/addinbatch',
+                                     headers={'Accept': 'application/json'})
+            logger.info("indexes response : "+str(response))
+            verboseHandle.printConsoleInfo("Added indexes")
+            verboseHandle.printConsoleWarning("Please redeploy services which are using this table")
+        #restartSpacedeck()
+        else:
+            exit(0)
 
