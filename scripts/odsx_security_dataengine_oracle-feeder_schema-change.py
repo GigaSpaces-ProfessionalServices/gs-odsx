@@ -467,6 +467,7 @@ def recreateType():
     verboseHandle.printConsoleInfo("Added indexes")
 
 def killManagersWebUI():
+    time.sleep(10)
     managerNodes = config_get_manager_node()
     #commandToExecute = "kill -9 `ps -ef | grep webui | grep -v grep | awk '{print $2}'`"
     commandToExecute = "ps -ef | grep 'services=WEBUI' | grep java | awk '{print $2}' | xargs kill"
@@ -492,6 +493,7 @@ if __name__ == '__main__':
         if(status=="ON"):
             managerHost = os.getenv(node.ip)
             break
+    killManagersWebUI()
     username = str(getUsernameByHost())
     password = str(getPasswordByHost())
     tableName = str(tableName).split(".")[1].lower()
@@ -500,5 +502,4 @@ if __name__ == '__main__':
     proceedToDeployPUInputParam(tableName)
     #Start the feeder
     proceedToStartOracleFeederWithName(puName)
-    killManagersWebUI()
     verboseHandle.printConsoleWarning("Please redeploy services which are using this table")
