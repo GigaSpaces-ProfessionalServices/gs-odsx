@@ -13,6 +13,7 @@ AS_USER=$7 #"admin" #bring from vault
 AS_PASS=$8 #"admin11" #bring from vault
 spaceName=$9 #"dih-tau-space"
 ########################
+/dbagiga/utils/di_watchdog_rest_ctl stop
 
 get_pipeline_id_by_object_type() {
   local objectType=$1  # The objectType passed as an argument
@@ -187,3 +188,4 @@ sleep 10
 # Validate PL status
 echo "$plName pipeline [$plId] status:" $(get_pipeline_status_by_plid $plId)
 
+/dbagiga/utils/di_watchdog_rest_ctl start
