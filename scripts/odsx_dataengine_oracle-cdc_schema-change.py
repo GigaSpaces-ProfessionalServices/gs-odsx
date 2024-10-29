@@ -173,9 +173,9 @@ if __name__ == '__main__':
             exit(0)
         spaceType = gs_space_dictionary_obj.get(optionMainMenu)
         logger.info('gs_space_dictionary_obj : '+str(gs_space_dictionary_obj))
-        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed - type will be dropped and reloaded? (y/n) [n] :"+Fore.RESET))
         if(len(str(finalConfirm))==0):
-            finalConfirm='y'
+            finalConfirm='n'
         if(finalConfirm=='y'):
             cdcTypeRedeplyment(spaceType,diManagerHost, iidrHost)
             killManagersWebUI()
@@ -190,7 +190,9 @@ if __name__ == '__main__':
                 addedIndex = addedIndex.replace(" ","\t")
                 with open(ddlAndPropertiesBasePath+"/batchIndexes.txt", 'a') as file:
                     file.write("\n"+addedIndex)
-            #Run the indexes
+                #Run the indexes
+            elif wantToAddIndex== "99":
+                exit(0)
             objectMgmtHost = getPivotHost()
             response = requests.post('http://' + objectMgmtHost + ':7001/index/addinbatch',
                                      headers={'Accept': 'application/json'})

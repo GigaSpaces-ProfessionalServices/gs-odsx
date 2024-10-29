@@ -1,5 +1,4 @@
 import argparse
-import glob
 import os
 import socket
 import sqlite3
@@ -10,17 +9,19 @@ import json
 from datetime import datetime
 
 import requests
+from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
     readValueByConfigObj
-from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPortNotExistInOracleFeeder
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
+from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -79,10 +80,10 @@ def replace_or_add_column_in_ddl(file_path, passedColumn, updatedColumnDef):
 
         # If no line was replaced, add new line before the last line
         #if not lines_replaced and len(lines) > 0:
-        # Insert new line before the last line
-        #file.write(updatedColumnDef + '\n')
-        #file.writelines(lines[-1:])  # Re-write the last line
-        # file.write(modified_sql)
+            # Insert new line before the last line
+            #file.write(updatedColumnDef + '\n')
+            #file.writelines(lines[-1:])  # Re-write the last line
+            # file.write(modified_sql)
     with open(file_path, 'w') as file:
         if not lines_replaced:
             file.write(modified_sql)
@@ -420,12 +421,13 @@ def recreateType():
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
     timestamp = time.time()
     filename_suffix = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
-    os.system("cp " +ddlAndPropertiesBasePath+"/"+ ddlFilename + " " +ddlAndPropertiesBasePath+"/"+ ddlFilename + ".backup." + filename_suffix)
     #Copy the new DDL file to the server
     updatedColumnDef = str(userInputWithEscWrapper("modified ddl column (Ex. BZ00_TOKEN	DECIMAL(11, 0)	NOT NULL) :"))
     #add or remove the column from ddl file based on above value
-    columnName = updatedColumnDef.split(" ")[0]
-    replace_or_add_column_in_ddl(ddlAndPropertiesBasePath+"/"+ ddlFilename, columnName, updatedColumnDef)
+    if updatedColumnDef != "":
+        os.system("cp " +ddlAndPropertiesBasePath+"/"+ ddlFilename + " " +ddlAndPropertiesBasePath+"/"+ ddlFilename + ".backup." + filename_suffix)
+        columnName = updatedColumnDef.split(" ")[0]
+        replace_or_add_column_in_ddl(ddlAndPropertiesBasePath+"/"+ ddlFilename, columnName, updatedColumnDef)
     wantToAddIndex = str(userInputWithEscWrapper("Do you want to add index (y/n) [n] ?"))
     if wantToAddIndex == 'y':
         os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + " " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + ".backup." + filename_suffix)
@@ -465,6 +467,88 @@ def recreateType():
     logger.info("indexes response : "+str(response))
     verboseHandle.printConsoleInfo("Added indexes")
 
+class host_dictionary_obj(dict):
+    # __init__ function
+    def __init__(self):
+        self = dict()
+
+    # Function to add key:value
+    def add(self, key, value):
+        self[key] = value
+
+
+def getPipelineTables(managerHost):
+    di_manager_url = "http://"+managerHost+":6080"  # replace with actual URL
+
+    # Get pipeline IDs
+    response = requests.get(f"{di_manager_url}/api/v1/pipeline/")
+    pipeline_ids = [pipeline["pipelineId"] for pipeline in response.json()]
+
+    # Get table names for each pipeline
+    dataTable = []
+    counter = 0
+    ##global gs_space_dictionary_obj
+    #gs_space_dictionary_obj = host_dictionary_obj()
+    global cdc_table_names
+    cdc_table_names = []
+
+    for pipeline_id in pipeline_ids:
+        pipeline_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}")
+        pipeline_name = pipeline_response.json()["name"]
+
+        tables_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}/tablepipeline")
+        table_names = [table["spaceTypeName"] for table in tables_response.json()]
+
+        for table_name in table_names:
+            cdc_table_names.append(str(table_name))
+
+def listObjects():
+    global tableName
+    logger.info("list object")
+
+    objectMgmtHost = getPivotHost()
+    response = requests.get('http://' + objectMgmtHost + ':7001/list',
+                            headers={'Accept': 'application/json'})
+    objectJson = json.loads(response.text)
+    space_type_names=[]
+    dataColumnsDict = {}
+    dataTableColumnsDict = {}
+    data = []
+    counter = 1
+    headers = [Fore.YELLOW + "Sr Num" + Fore.RESET,
+               Fore.YELLOW + "Object Name" + Fore.RESET
+               ]
+    for spaces in objectJson:
+        for object in spaces["objects"]:
+            #print(str(object["tablename"]))
+            if str(object["tablename"]) in cdc_table_names:
+                continue
+            tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+            ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
+            if not os.path.isfile(ddlAndPropertiesBasePath + str(object["tablename"]) + ".ddl"):
+                continue
+            space_type_names.append(str(object["tablename"]))
+            dataArray = [Fore.GREEN + str(counter) + Fore.RESET,
+                         Fore.GREEN + str(object["tablename"]) + Fore.RESET
+                         ]
+            dataColumnsDict.update({counter: object["columns"]})
+            dataTableColumnsDict.update({counter: object["tablename"]})
+            counter = counter + 1
+            data.append(dataArray)
+
+    printTabular(None, headers, data)
+    selectedFeederTable = str(
+        userInputWithEscWrapper(Fore.YELLOW + "Select Space Type object or exit [99] :" + Fore.RESET))
+
+    if len(selectedFeederTable)<0:
+        selectedFeederTable = "99"
+    if selectedFeederTable == "0" or selectedFeederTable == "99":
+        exit(0)
+
+    if (selectedFeederTable.isnumeric()==True and selectedFeederTable!="99"):
+        verboseHandle.printConsoleInfo("Selected Table Name : " + dataTableColumnsDict.get(int(selectedFeederTable)))
+        tableName = dataTableColumnsDict.get(int(selectedFeederTable))
+
 def killManagersWebUI():
     time.sleep(10)
     managerNodes = config_get_manager_node()
@@ -475,13 +559,19 @@ def killManagersWebUI():
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Restarted web-ui for host:"+str(os.getenv(str(node.ip))))
 
+def getDIServerHost():
+    nodeList = config_get_dataIntegration_nodes()
+    nodes = ""
+    for node in nodeList:
+        # if(str(node.role).casefold() == 'server'):
+        if (len(nodes) == 0):
+            return os.getenv(node.ip)
+    return nodes
+
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle-Feeder -> Schema change')
     global tableName
     global sourceOracleFeederShFilePath
-    tableName = str(userInputWithEscWrapper("DDL filename :"))
-    recreateType()
-    #Redeploy the appropriate feeder that fills the table
     global managerHost
     managerHost=''
     for node in config_get_manager_node():
@@ -490,6 +580,12 @@ if __name__ == '__main__':
         if(status=="ON"):
             managerHost = os.getenv(node.ip)
             break
+    diManagerHost = getDIServerHost()
+    getPipelineTables(diManagerHost)
+    listObjects()
+    #tableName = str(userInputWithEscWrapper("DDL filename :"))
+    recreateType()
+    #Redeploy the appropriate feeder that fills the table
     killManagersWebUI()
     tableName = str(tableName).split(".")[1].lower()
     puName = "oraclefeeder_" + tableName
