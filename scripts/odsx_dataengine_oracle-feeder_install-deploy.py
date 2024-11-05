@@ -306,7 +306,6 @@ def uploadFileRest(managerHostConfig,feederName):
         os.chdir(sourceOracleFeederShFilePath)
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
-
             exitsFeeder = str(file).replace('load','oraclefeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load','').replace('.sh','').casefold()
@@ -316,14 +315,35 @@ def uploadFileRest(managerHostConfig,feederName):
                 #print("pathOfSourcePU : "+str(pathOfSourcePU))
                 #print("jarName :"+jarName)
                 zoneGSC = 'oracle_'+puName
-                verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
-                logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-                logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-                status = os.system("curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+                #verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
+                verboseHandle.printConsoleWarning("Proceeding for : "+sourceOracleJarFilePath)
+                logger.info("url : "+"curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+                status = os.system("curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
                 print("\n")
                 logger.info("status : "+str(status))
     except Exception as e:
         handleException(e)
+
+def checkIfPUIsUploaded(managerHostConfig,resource):
+    url = "http://"+managerHostConfig+":8090/v2/pus"
+    #url = "http://"+managerHostConfig+":8090/v2/pus/resources"
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+    isUploaded=False
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        for item in data:
+            #verboseHandle.printConsoleInfo("item : "+str(item))
+            if resource == item.get('resource'):
+            #if resource == item:
+                isUploaded=True
+                break
+    else:
+        print(f"Error: {response.status_code} - {response.text}")
+    return isUploaded
 
 def getDataPUREST(resource,resourceName,zoneOfPU,restPort,managerHost):
     backUpRequired=0
@@ -434,8 +454,9 @@ def proceedToDeployPU(feederName):
                 if feederName != "" and feederName != puName:
                     continue
                 zoneGSC = 'oracle_'+puName
-                logger.info("filePrefix : "+filePrefix)
-                resource = filePrefix+'_'+puName+'.jar'
+              #  logger.info("filePrefix : "+filePrefix)
+               # resource = filePrefix+'_'+puName+'.jar'
+                resource = str(getYamlFilePathInsideFolder(".oracle.jars.oracleJarFile"))
                 puName = 'oraclefeeder_'+puName
                 port = getPortNotExistInOracleFeeder(restPort)
                 logger.info("dbPort : "+str(port))
@@ -449,6 +470,9 @@ def proceedToDeployPU(feederName):
                     proceedToCreateGSC(zoneGSC,newGSCCount)
                     newGSCCount=newGSCCount+1
                 verboseHandle.printConsoleInfo("Resource : "+resource+" : rest.port : "+str(restPort))
+                head , tail = os.path.split(resource)
+                verboseHandle.printConsoleInfo("tail : "+str(tail))
+                resource=str(tail)
                 data = getDataPUREST(resource,puName,zoneGSC,str(restPort),managerHost)
                 logger.info("data of payload :"+str(data))
 
@@ -479,7 +503,7 @@ def proceedToDeployPU(feederName):
                                 else:
                                     cmd = "rm -f "+sourceOracleFeederShFilePath+resource
                                 logger.info("cmd : "+str(cmd))
-                                home = executeLocalCommandAndGetOutput(cmd)
+                                #home = executeLocalCommandAndGetOutput(cmd)
                                 break
                             elif(str(status).casefold().__contains__('failed')):
                                 break
@@ -569,6 +593,7 @@ def proceedToDeployPUInputParam(managerHost):
     displaySummaryOfInputParam()
     feeder_dict_obj = displayAvailableFeederList()
     feederStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to deploy individual feeder. \nPress [Enter] to deploy all feeder. \nPress [99] for exit.: "+Fore.RESET))
+    head , tail = os.path.split(sourceOracleJarFilePath)
     if(feederStartType=='1'):
         optionMainMenu = int(userInputWrapper("Enter Feeder Sr Number to Deploy: "))
         if len(feeder_dict_obj) >= optionMainMenu:
@@ -578,8 +603,9 @@ def proceedToDeployPUInputParam(managerHost):
             if(len(str(finalConfirm))==0):
                 finalConfirm='y'
             if(finalConfirm=='y'):
-                logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
-                uploadFileRest(managerHost,feederToDeploy)
+                logger.info("oracle feeder confirmCreateGSC "+confirmCreateGSC)
+                if not checkIfPUIsUploaded(managerHost,str(tail)):
+                    uploadFileRest(managerHost,feederToDeploy)
                 proceedToDeployPU(feederToDeploy)
     elif(feederStartType =='99'):
         logger.info("99 - Exist start")
@@ -588,8 +614,9 @@ def proceedToDeployPUInputParam(managerHost):
         if(len(str(finalConfirm))==0):
             finalConfirm='y'
         if(finalConfirm=='y'):
-            logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
-            uploadFileRest(managerHost,"")
+            logger.info("oracle feeder confirmCreateGSC "+confirmCreateGSC)
+            if not checkIfPUIsUploaded(managerHost,str(tail)):
+                uploadFileRest(managerHost,"")
             proceedToDeployPU("")
         else:
             return
