@@ -430,10 +430,10 @@ def recreateType():
         replace_or_add_column_in_ddl(ddlAndPropertiesBasePath+"/"+ ddlFilename, columnName, updatedColumnDef)
     wantToAddIndex = str(userInputWithEscWrapper("Do you want to add index (y/n) [n] ?"))
     if wantToAddIndex == 'y':
-        os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + " " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + ".backup." + filename_suffix)
+        os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + " " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + ".backup." + filename_suffix)
         addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
         addedIndex = addedIndex.replace(" ","\t")
-        with open(ddlAndPropertiesBasePath+"/batchIndexes.txt", 'a') as file:
+        with open(ddlAndPropertiesBasePath+"/batchIndexes.csv", 'a') as file:
             file.write("\n"+addedIndex)
 
     #Drop the appropriate table/type

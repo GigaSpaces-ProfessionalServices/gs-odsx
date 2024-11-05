@@ -223,7 +223,7 @@ def createOracleEntryInSqlLite(puName, file, restPort):
             hostId = str(data["hostId"])
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
-        cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
+        cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('load_"+str(file).upper()+".sh', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -412,7 +412,7 @@ def proceedToStartOracleFeederWithName(puName):
     port = str(hostAndPort[1])
     shFileName = str(hostAndPort[2])
     host=str(socket.gethostbyaddr(host).__getitem__(2)[0])
-    cmd = str(sourceOracleFeederShFilePath)+'/'+"load_"+shFileName.upper()+'.sh '+host+" "+port
+    cmd = str(sourceOracleFeederShFilePath)+'/'+shFileName+' '+host+" "+port
     logger.info("cmd : "+str(cmd))
     os.system(cmd)
 
@@ -432,10 +432,10 @@ def recreateType():
         replace_or_add_column_in_ddl(ddlAndPropertiesBasePath+"/"+ ddlFilename, columnName, updatedColumnDef)
     wantToAddIndex = str(userInputWithEscWrapper("Do you want to add index (y/n) [n] ?"))
     if wantToAddIndex == 'y':
-        os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + " " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + ".backup." + filename_suffix)
+        os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + " " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + ".backup." + filename_suffix)
         addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
         addedIndex = addedIndex.replace(" ","\t")
-        with open(ddlAndPropertiesBasePath+"/batchIndexes.txt", 'a') as file:
+        with open(ddlAndPropertiesBasePath+"/batchIndexes.csv", 'a') as file:
             file.write("\n"+addedIndex)
 
     #Drop the appropriate table/type

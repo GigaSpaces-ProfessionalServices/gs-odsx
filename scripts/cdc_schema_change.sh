@@ -4,14 +4,16 @@ objectType=$1
 MANAGER=$2
 GS_USER="gsods"
 diManagerURL=$3 #"10.0.1.201:6080"
-iidrHost=$4 #"10.0.1.137:6082"  #only di-subscription manager is running here
+iidrSubscriptionMangerHost=$4 #"10.0.1.137:6082"  #only di-subscription manager is running here
 dataSource="ORACLE"
 AS_HOME=/giga/iidr/as
 AS_HOST=$5 #"10.0.1.129" # IIDR Access Server, IIDR Kafka Agent, IIDR DB Agent, KAFKA SERVER & ZK, ORACLE DB.
 AS_PORT=$6
 AS_USER=$7 #"admin" #bring from vault
 AS_PASS=$8 #"admin11" #bring from vault
-spaceName=$9 #"dih-tau-space"
+spaceName=$9
+iidr_kafka_gs_properties_path=${10}
+iidrSubscriptionMangerPort=${11}
 ########################
 /dbagiga/utils/di_watchdog_rest_ctl stop
 
@@ -122,7 +124,7 @@ result=$(curl -sX 'POST'  "http://$diManagerURL/api/v1/pipeline/$plId/tablepipel
     echo "schema: $schema   table:$table   dataSource:$dataSource   subName:$subName"
     echo "Table is being flagged for refresh ..."
       output=$(curl -sX 'POST' \
-      "http://$iidrHost/api/v1/$dataSource/subscriptions/$subName/refresh" \
+      "http://$iidrSubscriptionMangerHost:$iidrSubscriptionMangerPort/api/v1/$dataSource/subscriptions/$subName/refresh" \
       -H 'accept: */*' \
       -H 'Content-Type: application/json' \
       -d '{
@@ -143,8 +145,6 @@ updateTableDefinition $dataSource $schema $table $subName
 
 
 ####################### Replace with odsx cli ####################################################
-# Drop the space object type before starting the PL ----> move to odsx CLI
-#  auto_objectunregistertype $objectType
 /usr/bin/expect -c '
 proc send_each_char {str} {
       set delay 0.1  ; # Adjust the delay as needed
@@ -164,9 +164,25 @@ proc send_each_char {str} {
   expect eof
 ' |grep  $objectType | awk -F'|' '{gsub(/^[ \t]+|[ \t]+$/, "", $8); print "Count for '$objectType' before unregister type :" $8}'
 
+# Drop the space object type before starting the PL ----> move to odsx CLI
+#  auto_objectunregistertype $objectType
 ./odsx.py object objectmanagement registration unregistertype $objectType
 ############################################################################
 
+# Delete the old GS_xxxx.properties file
+
+#iidr_ip=$(sudo su - root -c  "/giga/utils/runall/runall.sh -c -l" |grep -v ==)
+echo "Deleting the old properties file from  [$AS_HOST:$iidr_kafka_gs_properties_path/$subName.properties] ..."
+ssh $AS_HOST "rm -f $iidr_kafka_gs_properties_path/$subName.properties"
+#ssh $AS_HOST "if [-f $iidr_kafka_gs_properties_path/$subName.properties];then echo "Failed to delete the properties file from  [$AS_HOST:$iidr_kafka_gs_properties_path/$subName.properties]."  fi
+#exit_code=$(ssh $AS_HOST 'if [ ! -f $iidr_kafka_gs_properties_path/$subName.properties ];then echo 0;  else echo 1; fi')
+ssh $AS_HOST "ls $iidr_kafka_gs_properties_path/$subName.properties > /dev/null 2>&1"
+# echo $exit_code
+if [[ $? -eq 0 ]];then
+#if [[ $exit_code -ne 0 ]];then
+  echo "Failed to delete the properties file."
+  exit 1
+fi
 
 # Start the pipeline
 echo "Starting the pipeline: $plName [$plId] ..."

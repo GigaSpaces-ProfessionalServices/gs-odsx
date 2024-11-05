@@ -114,8 +114,8 @@ def getIIDRHost():
 
 def cdcTypeRedeplyment(spaceType,diManagerHost, iidrHost):
     diManagerHost = diManagerHost + ":6080"
-    iidrHost = iidrHost + ":6082"
-    args = spaceType+" "+managerHost+" "+diManagerHost+" "+iidrHost+" "+asHost+" "+asHostPort+" "+asUser+" "+asPass+" "+spaceName
+    #iidrHost = iidrHost + ":6082"
+    args = spaceType+" "+managerHost+" "+diManagerHost+" "+iidrHost+" "+asHost+" "+asHostPort+" "+asUser+" "+asPass+" "+spaceName+" "+iidr_kafka_gs_properties_path+" "+iidrSubscriptionMangerPort
     commandToExecute = "scripts/cdc_schema_change.sh "+args
     os.system(commandToExecute)
 
@@ -154,6 +154,8 @@ if __name__ == '__main__':
     global asHostPort
     global asPass
     global spaceName
+    global iidr_kafka_gs_properties_path
+    global iidrSubscriptionMangerPort
 
     logger.info("managerNodes: main" + str(managerNodes))
     if (len(str(managerNodes)) > 0):
@@ -165,7 +167,8 @@ if __name__ == '__main__':
         asUser = str(readValuefromAppConfig("app.iidr.username"))
         asPass = str(readValuefromAppConfig("app.iidr.password"))
         spaceName = str(readValuefromAppConfig("app.spacejar.space.name"))
-
+        iidr_kafka_gs_properties_path = str(readValuefromAppConfig("app.iidr-kafka.user-exit.properties.file.read-path"))
+        iidrSubscriptionMangerPort = str(readValuefromAppConfig("app.iidr.iidrSubscriptionMangerPort"))
         printPipelineTables(diManagerHost)
         optionMainMenu = str(userInputWrapper("Enter Type Sr Number : "))
         if(len(optionMainMenu)==0):
@@ -185,10 +188,10 @@ if __name__ == '__main__':
             if wantToAddIndex == 'y':
                 timestamp = time.time()
                 filename_suffix = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
-                os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + " " +ddlAndPropertiesBasePath+"/batchIndexes.txt" + ".backup." + filename_suffix)
+                os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + " " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + ".backup." + filename_suffix)
                 addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
                 addedIndex = addedIndex.replace(" ","\t")
-                with open(ddlAndPropertiesBasePath+"/batchIndexes.txt", 'a') as file:
+                with open(ddlAndPropertiesBasePath+"/batchIndexes.csv", 'a') as file:
                     file.write("\n"+addedIndex)
                 #Run the indexes
             elif wantToAddIndex== "99":

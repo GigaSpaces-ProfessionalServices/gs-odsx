@@ -319,3 +319,6 @@
      db.influx.executionTime=0
      db.influx.influxdbResultStore=true
 102. Re-Build common, data validator server and agent code from https://github.com/GigaSpaces-ProfessionalServices/CSM-Magic-Tools/tree/tau/data-validator
+### TAU v4.75-tau-release tag
+103. Add below in app.config file
+     app.iidr.iidrSubscriptionMangerPort=6082
