@@ -87,14 +87,14 @@ echo "Sleeping 10 sec ..."
 sleep 10
 status=$(get_pipeline_status_by_plid "${plId}")
 if [[ $status == "RUNNING" ]];then
-    echo "PL failed to stop. Abortted."
+    echo "PL [$plId] failed to stop. Abortted."
     exit
-else echo "PL is not running."
+else echo "PL [$plId] is not running."
 fi
 
 
 # Delete a table from PL
-echo "Deleting the $objectType from $plId ..."
+echo "Removing the $objectType from $plId ..."
 curl -X 'DELETE' \
   "http://$diManagerURL/api/v1/pipeline/$plId/tablepipeline/$objectType" \
   -H 'accept: */*'
@@ -164,24 +164,21 @@ proc send_each_char {str} {
   expect eof
 ' |grep  $objectType | awk -F'|' '{gsub(/^[ \t]+|[ \t]+$/, "", $8); print "Count for '$objectType' before unregister type :" $8}'
 
-# Drop the space object type before starting the PL ----> move to odsx CLI
-#  auto_objectunregistertype $objectType
+# Drop the space object type before starting the PL
 ./odsx.py object objectmanagement registration unregistertype $objectType
-############################################################################
 
 # Delete the old GS_xxxx.properties file
-
-#iidr_ip=$(sudo su - root -c  "/giga/utils/runall/runall.sh -c -l" |grep -v ==)
 echo "Deleting the old properties file from  [$AS_HOST:$iidr_kafka_gs_properties_path/$subName.properties] ..."
 ssh $AS_HOST "rm -f $iidr_kafka_gs_properties_path/$subName.properties"
-#ssh $AS_HOST "if [-f $iidr_kafka_gs_properties_path/$subName.properties];then echo "Failed to delete the properties file from  [$AS_HOST:$iidr_kafka_gs_properties_path/$subName.properties]."  fi
-#exit_code=$(ssh $AS_HOST 'if [ ! -f $iidr_kafka_gs_properties_path/$subName.properties ];then echo 0;  else echo 1; fi')
+
+# Check the properties file was removed
 ssh $AS_HOST "ls $iidr_kafka_gs_properties_path/$subName.properties > /dev/null 2>&1"
-# echo $exit_code
 if [[ $? -eq 0 ]];then
 #if [[ $exit_code -ne 0 ]];then
-  echo "Failed to delete the properties file."
+  echo "Failed to delete $AS_HOST:$iidr_kafka_gs_properties_path/$subName.properties."
   exit 1
+else
+  echo "$AS_HOST:$iidr_kafka_gs_properties_path/$subName.properties has been deleted."
 fi
 
 # Start the pipeline

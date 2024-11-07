@@ -301,6 +301,13 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     logger.info("home: "+str(home))
     return targetJarFile
 
+def uploadFileRestAll(managerHostConfig,feederName):
+    verboseHandle.printConsoleWarning("Proceeding for : "+sourceOracleJarFilePath)
+    logger.info("url : "+"curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+    status = os.system("curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
+    print("\n")
+    logger.info("status : "+str(status))
+
 def uploadFileRest(managerHostConfig,feederName):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
@@ -327,8 +334,8 @@ def uploadFileRest(managerHostConfig,feederName):
         handleException(e)
 
 def checkIfPUIsUploaded(managerHostConfig,resource):
-    url = "http://"+managerHostConfig+":8090/v2/pus"
-    #url = "http://"+managerHostConfig+":8090/v2/pus/resources"
+    #url = "http://"+managerHostConfig+":8090/v2/pus"
+    url = "http://"+managerHostConfig+":8090/v2/pus/resources"
     headers = {
         'Accept': 'application/json'
     }
@@ -339,13 +346,14 @@ def checkIfPUIsUploaded(managerHostConfig,resource):
         data = json.loads(response.text)
         for item in data:
             #verboseHandle.printConsoleInfo("item : "+str(item))
-            if resource == item.get('resource'):
-            #if resource == item:
+            #if resource == item.get('resource'):
+            if resource == item:
                 isUploaded=True
                 #verboseHandle.printConsoleInfo("isUploaded true : "+str(item))
+                verboseHandle.printConsoleInfo(f"Resource exists")
                 break
     else:
-        print(f"Error: {response.status_code} - {response.text}")
+        verboseHandle.printConsoleInfo(f"Resource does not exists")
     return isUploaded
 
 def getDataPUREST(resource,resourceName,zoneOfPU,restPort,managerHost):
@@ -619,7 +627,7 @@ def proceedToDeployPUInputParam(managerHost):
         if(finalConfirm=='y'):
             logger.info("oracle feeder confirmCreateGSC "+confirmCreateGSC)
             if not checkIfPUIsUploaded(managerHost,str(tail)):
-                uploadFileRest(managerHost,"")
+                uploadFileRestAll(managerHost,"")
             proceedToDeployPU("")
         else:
             return
