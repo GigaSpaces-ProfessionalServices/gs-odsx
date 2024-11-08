@@ -221,7 +221,7 @@ def createOracleEntryInSqlLite(puName, file, restPort):
             hostId = str(data["hostId"])
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
-        cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
+        cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('load_"+str(file).upper()+".sh', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -410,7 +410,7 @@ def proceedToStartOracleFeederWithName(puName):
     port = str(hostAndPort[1])
     shFileName = str(hostAndPort[2])
     host=str(socket.gethostbyaddr(host).__getitem__(2)[0])
-    cmd = str(sourceOracleFeederShFilePath)+'/'+"load_"+shFileName.upper()+'.sh '+host+" "+port
+    cmd = str(sourceOracleFeederShFilePath)+'/'+shFileName+' '+host+" "+port
     logger.info("cmd : "+str(cmd))
     os.system(cmd)
 
@@ -478,29 +478,32 @@ class host_dictionary_obj(dict):
 
 
 def getPipelineTables(managerHost):
-    di_manager_url = "http://"+managerHost+":6080"  # replace with actual URL
-
-    # Get pipeline IDs
-    response = requests.get(f"{di_manager_url}/api/v1/pipeline/")
-    pipeline_ids = [pipeline["pipelineId"] for pipeline in response.json()]
-
-    # Get table names for each pipeline
-    dataTable = []
-    counter = 0
-    ##global gs_space_dictionary_obj
-    #gs_space_dictionary_obj = host_dictionary_obj()
     global cdc_table_names
     cdc_table_names = []
+    di_manager_url = "http://"+managerHost+":6080"  # replace with actual URL
+    try:
+        # Get pipeline IDs
+        response = requests.get(f"{di_manager_url}/api/v1/pipeline/")
+        pipeline_ids = [pipeline["pipelineId"] for pipeline in response.json()]
 
-    for pipeline_id in pipeline_ids:
-        pipeline_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}")
-        pipeline_name = pipeline_response.json()["name"]
+        # Get table names for each pipeline
+        dataTable = []
+        counter = 0
+        ##global gs_space_dictionary_obj
+        #gs_space_dictionary_obj = host_dictionary_obj()
 
-        tables_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}/tablepipeline")
-        table_names = [table["spaceTypeName"] for table in tables_response.json()]
 
-        for table_name in table_names:
-            cdc_table_names.append(str(table_name))
+        for pipeline_id in pipeline_ids:
+            pipeline_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}")
+            pipeline_name = pipeline_response.json()["name"]
+
+            tables_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}/tablepipeline")
+            table_names = [table["spaceTypeName"] for table in tables_response.json()]
+
+            for table_name in table_names:
+                cdc_table_names.append(str(table_name))
+    except requests.RequestException as e:
+        verboseHandle.printConsoleWarning("IIDR/CDC not configured")
 
 def listObjects():
     global tableName

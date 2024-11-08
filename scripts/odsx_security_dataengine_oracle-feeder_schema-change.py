@@ -480,29 +480,32 @@ class host_dictionary_obj(dict):
 
 
 def getPipelineTables(managerHost):
-    di_manager_url = "http://"+managerHost+":6080"  # replace with actual URL
-
-    # Get pipeline IDs
-    response = requests.get(f"{di_manager_url}/api/v1/pipeline/")
-    pipeline_ids = [pipeline["pipelineId"] for pipeline in response.json()]
-
-    # Get table names for each pipeline
-    dataTable = []
-    counter = 0
-    ##global gs_space_dictionary_obj
-    #gs_space_dictionary_obj = host_dictionary_obj()
     global cdc_table_names
     cdc_table_names = []
+    di_manager_url = "http://"+managerHost+":6080"  # replace with actual URL
+    try:
+        # Get pipeline IDs
+        response = requests.get(f"{di_manager_url}/api/v1/pipeline/")
+        pipeline_ids = [pipeline["pipelineId"] for pipeline in response.json()]
 
-    for pipeline_id in pipeline_ids:
-        pipeline_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}")
-        pipeline_name = pipeline_response.json()["name"]
+        # Get table names for each pipeline
+        dataTable = []
+        counter = 0
+        ##global gs_space_dictionary_obj
+        #gs_space_dictionary_obj = host_dictionary_obj()
 
-        tables_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}/tablepipeline")
-        table_names = [table["spaceTypeName"] for table in tables_response.json()]
 
-        for table_name in table_names:
-            cdc_table_names.append(str(table_name))
+        for pipeline_id in pipeline_ids:
+            pipeline_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}")
+            pipeline_name = pipeline_response.json()["name"]
+
+            tables_response = requests.get(f"{di_manager_url}/api/v1/pipeline/{pipeline_id}/tablepipeline")
+            table_names = [table["spaceTypeName"] for table in tables_response.json()]
+
+            for table_name in table_names:
+                cdc_table_names.append(str(table_name))
+    except requests.RequestException as e:
+        verboseHandle.printConsoleWarning("IIDR/CDC not configured")
 
 def listObjects():
     global tableName
