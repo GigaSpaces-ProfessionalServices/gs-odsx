@@ -416,7 +416,7 @@ def proceedToDeployPUInputParam(managerHost):
             finalConfirm='y'
         if(finalConfirm=='y'):
             uploadFileRest(managerHost,"all")
-            proceedToDeployPU()
+            proceedToDeployPU("all")
         else:
             return
 

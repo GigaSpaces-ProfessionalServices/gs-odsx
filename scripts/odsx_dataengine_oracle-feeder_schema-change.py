@@ -192,8 +192,8 @@ def uploadFileRest(managerHostConfig,feederName):
         #puName = str(file).replace('load','').replace('.sh','').casefold()
         pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(feederName)
         zoneGSC = 'oracle_'+feederName
-        logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-        cmdToExecute = "curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources"
+        logger.info("url : "+"curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
+        cmdToExecute = "curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources"
         status = os.system(cmdToExecute)
         logger.info("status : "+str(status))
 
@@ -226,6 +226,29 @@ def createOracleEntryInSqlLite(puName, file, restPort):
         cnx.close()
     except Exception as e:
         handleException(e)
+
+def checkIfPUIsUploaded(managerHostConfig,resource):
+    #url = "http://"+managerHostConfig+":8090/v2/pus"
+    url = "http://"+managerHostConfig+":8090/v2/pus/resources"
+    headers = {
+        'Accept': 'application/json'
+    }
+
+    response = requests.get(url, headers=headers)
+    isUploaded=False
+    if response.status_code == 200:
+        data = json.loads(response.text)
+        for item in data:
+            #verboseHandle.printConsoleInfo("item : "+str(item))
+            #if resource == item.get('resource'):
+            if resource == item:
+                isUploaded=True
+                #verboseHandle.printConsoleInfo("isUploaded true : "+str(item))
+                verboseHandle.printConsoleInfo(f"Resource exists")
+                break
+    else:
+        verboseHandle.printConsoleInfo(f"Resource does not exists")
+    return isUploaded
 
 def getDataPUREST(resource,resourceName,zoneOfPU,restPort,managerHost):
     backUpRequired=0
@@ -294,7 +317,8 @@ def proceedToDeployPU(feederName):
         puName = str(file).replace('load_','').replace('.sh','').casefold()
         zoneGSC = 'oracle_'+puName
         logger.info("filePrefix : "+filePrefix)
-        resource = filePrefix+'_'+puName+'.jar'
+        #resource = filePrefix+'_'+puName+'.jar'
+        resource = str(getYamlFilePathInsideFolder(".oracle.jars.oracleJarFile"))
         puName = 'oraclefeeder_'+puName
         port = getPortNotExistInOracleFeeder(restPort)
         logger.info("dbPort : "+str(port))
@@ -304,6 +328,9 @@ def proceedToDeployPU(feederName):
                 port = getPortNotExistInOracleFeeder(restPort)
             #else:
             #    dbPort = restPort
+        head , tail = os.path.split(resource)
+        verboseHandle.printConsoleInfo("tail : "+str(tail))
+        resource=str(tail)
         data = getDataPUREST(resource,puName,zoneGSC,str(restPort),managerHost)
         logger.info("data of payload :"+str(data))
 
@@ -332,7 +359,7 @@ def proceedToDeployPU(feederName):
                         else:
                             cmd = "rm -f "+sourceOracleFeederShFilePath+resource
                         logger.info("cmd : "+str(cmd))
-                        home = executeLocalCommandAndGetOutput(cmd)
+                        #home = executeLocalCommandAndGetOutput(cmd)
                         break
                     elif(str(status).casefold().__contains__('failed')):
                         break
@@ -382,6 +409,8 @@ def proceedToDeployPUInputParam(tableName):
         feederSleepAfterWrite='500'
 
     uploadFileRest(managerHost,tableName)
+    if not checkIfPUIsUploaded(managerHost,tableName):
+        uploadFileRest(managerHost,tableName)
     proceedToDeployPU(tableName)
 
 def sqlLiteGetHostAndPortByFileName(puName):
