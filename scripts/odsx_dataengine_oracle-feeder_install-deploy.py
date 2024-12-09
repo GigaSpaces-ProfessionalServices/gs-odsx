@@ -302,7 +302,7 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
 def uploadFileRestAll(managerHostConfig,feederName):
     verboseHandle.printConsoleWarning("Proceeding for : "+sourceOracleJarFilePath)
     logger.info("url : "+"curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-    status = os.system("curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+"")
+    status = os.system("curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
     print("\n")
     logger.info("status : "+str(status))
 
@@ -318,7 +318,7 @@ def uploadFileRest(managerHostConfig,feederName):
                 puName = str(file).replace('load','').replace('.sh','').casefold()
                 if feederName != "" and "_"+feederName != puName:
                     continue
-                pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
+                #pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
                 #print("pathOfSourcePU : "+str(pathOfSourcePU))
                 #print("jarName :"+jarName)
                 zoneGSC = 'oracle_'+puName
