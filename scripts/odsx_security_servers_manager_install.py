@@ -329,6 +329,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
+        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17"))
+        gsLicenseFile_16_4=""
+        if gs_version_17=='true':
+            licenseConfig_16_4 = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense_16_4"))
+            gsLicenseFile_16_4 = licenseConfig_16_4
+            gsLicenseFile_16_4='"\\"{}\\""'.format(gsLicenseFile_16_4)
+            verboseHandle.printConsoleInfo("gsLicenseFile_16_4 -> " + gsLicenseFile_16_4)
+
         applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
         #print("Applicative User: "+str(applicativeUser))
 
@@ -360,14 +368,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         cefLoggingJarInputTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")).replace('[','').replace(']','')
 
-#        springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
-#        springconfigJarInput = str(getYamlFilePathInsideFolder(".security.jars.springconfig")).replace('[','').replace(']','')
-#        springcoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcore")).replace('[','').replace(']','')
-#        springcryptoJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcrypto")).replace('[','').replace(']','')
-#        springwebJarInput = str(getYamlFilePathInsideFolder(".security.jars.springweb")).replace('[','').replace(']','')
-#        xapsecurityJarInput = str(getYamlFilePathInsideFolder(".security.jars.xapsecurity")).replace('[','').replace(']','')
+        #        springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
+        #        springconfigJarInput = str(getYamlFilePathInsideFolder(".security.jars.springconfig")).replace('[','').replace(']','')
+        #        springcoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcore")).replace('[','').replace(']','')
+        #        springcryptoJarInput = str(getYamlFilePathInsideFolder(".security.jars.springcrypto")).replace('[','').replace(']','')
+        #        springwebJarInput = str(getYamlFilePathInsideFolder(".security.jars.springweb")).replace('[','').replace(']','')
+        #        xapsecurityJarInput = str(getYamlFilePathInsideFolder(".security.jars.xapsecurity")).replace('[','').replace(']','')
 
-#        springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
+        #        springLdapJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapjar")).replace('[','').replace(']','')
 
         springTargetJarInput = str(readValuefromAppConfig("app.manager.security.spring.jar.target")).replace('[','').replace(']','')
         sourceJar = str(getYamlFilePathInsideFolder(".security.jars.all")).replace('"','').replace('[','').replace(']','') #springLdapCoreJarInput+' '+springLdapJarInput + ' ' + springconfigJarInput + ' ' + springcoreJarInput+ ' ' + springcryptoJarInput + ' ' + springwebJarInput+ ' ' + xapsecurityJarInput
@@ -419,18 +427,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #print(Fore.GREEN+"10A. "+
         #      Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target2 : "+Fore.RESET,
         #      Fore.GREEN+str(readValuefromAppConfig("app.manager.security.spring.jar.target"))+Fore.RESET)
-      #  print(Fore.GREEN+"12. "+
-      #        Fore.GREEN+"spring-ldap-core-2.3.3.RELEASE.jar source : "+Fore.RESET,
-      #        Fore.GREEN+str(springLdapCoreJarInput).replace('"','')+Fore.RESET)
-       # print(Fore.GREEN+"13. "+
+        #  print(Fore.GREEN+"12. "+
+        #        Fore.GREEN+"spring-ldap-core-2.3.3.RELEASE.jar source : "+Fore.RESET,
+        #        Fore.GREEN+str(springLdapCoreJarInput).replace('"','')+Fore.RESET)
+        # print(Fore.GREEN+"13. "+
         #      Fore.GREEN+"spring-security-ldap-5.1.7.RELEASE.jar source : "+Fore.RESET,
-       #       Fore.GREEN+str(springLdapJarInput).replace('"','')+Fore.RESET)
+        #       Fore.GREEN+str(springLdapJarInput).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"12. "+
               Fore.GREEN+"Spring jar target : "+Fore.RESET,
               Fore.GREEN+str(springTargetJarInput).replace('"','')+Fore.RESET)
-      #  print(Fore.GREEN+"15. "+
-      #        Fore.GREEN+"ldap-security-config.xml source : "+Fore.RESET,
-      #        Fore.GREEN+str(ldapSecurityConfigInput).replace('"','')+Fore.RESET)
+        #  print(Fore.GREEN+"15. "+
+        #        Fore.GREEN+"ldap-security-config.xml source : "+Fore.RESET,
+        #        Fore.GREEN+str(ldapSecurityConfigInput).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"13. "+
               Fore.GREEN+"ldap-security-config.xml target : "+Fore.RESET,
               Fore.GREEN+str(ldapSecurityConfigTargetInput).replace('"','')+Fore.RESET)
@@ -446,6 +454,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"17. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
+        print(Fore.GREEN+"18. "+
+              Fore.GREEN+"GS_LICENSE_16_4 : "+Fore.RESET,
+              Fore.GREEN+str(gsLicenseFile_16_4)+Fore.RESET)
+
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
@@ -473,7 +485,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,None,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled)
+                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,None,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -481,7 +493,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     except Exception as e:
         handleException(e)
 
-def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled):
+def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4):
     gsNicAddress = host_nic_dict_obj[host]
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
@@ -512,20 +524,26 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         else:
             passProperty = str(readValueByConfigObj("app.manager.security.password.vault"))
         managerWorkTarget = managerWork + "/sqlite/"
-        additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress
+
+        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17"))
+        if gs_version_17=='true':
+            additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress+' '+gs_version_17+' '+gsLicenseFile_16_4
+        else:
+            additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress+' '+gs_version_17
+        verboseHandle.printConsoleInfo(additionalParam)
         outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
         #newZkJars = getYamlFileNamesInsideFolderList(".gs.jars.zookeeper.zkjars")
-#        for newZkJar in newZkJars:
+        #        for newZkJar in newZkJars:
         #executeRemoteCommandAndGetOutputValuePython36(host, user,"rm "+newZkJarTarget+"*")
 
         #newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
         #for newZkJar in newZkJars:
         #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
-       # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+        # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)
-    #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+        #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
         managerWorkSrc = str(readValueByConfigObj("app.vault.db.location"))
         managerWorkSrc = managerWorkSrc + "/vault.db"
         executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + managerWorkTarget)
@@ -537,7 +555,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+securityFile+" "+readValuefromAppConfig("app.manager.security.config.target"))
         #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
         #logger.info("cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
-     #   logger.info("cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
+        #   logger.info("cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
         #print("cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/xap-security.jar "+springTargetJarInput)
         #print("chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"*")

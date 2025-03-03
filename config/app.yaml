@@ -27,6 +27,7 @@ current:
       services: gsa.service
       license:
         gslicense: gs-license.txt
+        gslicense_16_4: gs-license_16_4.txt
       metrics:
         metricsxml: metrics.xml.template
       space:
