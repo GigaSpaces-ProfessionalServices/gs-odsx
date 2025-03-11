@@ -467,13 +467,16 @@ function gsCreateGSServeice {
   echo "GS_HOME :"$GS_HOME
 
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
-  cmd="$GS_HOME/bin/gs.sh host run-agent --auto &"
-  echo "$cmd">>$start_gsa_file
   #cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m '`hostname`'"
   #echo "$cmd">>$start_gsc_file
   if [ "$gs_version_17" == "true" ]; then
+      cmd="$GS_HOME/bin/gs.sh host run-agent --auto &"
+      echo "$cmd">>$start_gsa_file
       run_webUi="$GS_HOME_16_4/tools/gs-webui/gs-webui.sh"
       echo "$run_webUi">>$start_gsa_file
+  else
+      cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
+      echo "$cmd">$start_gsa_file
   fi
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug

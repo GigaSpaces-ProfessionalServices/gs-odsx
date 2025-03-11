@@ -329,7 +329,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
-        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17"))
+        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
         gsLicenseFile_16_4=""
         if gs_version_17=='true':
             licenseConfig_16_4 = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense_16_4"))
@@ -525,7 +525,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
             passProperty = str(readValueByConfigObj("app.manager.security.password.vault"))
         managerWorkTarget = managerWork + "/sqlite/"
 
-        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17"))
+        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
         if gs_version_17=='true':
             additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress+' '+gs_version_17+' '+gsLicenseFile_16_4
         else:

@@ -327,7 +327,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
-        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17"))
+        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
         gsLicenseFile_16_4=""
         if gs_version_17=='true':
             licenseConfig_16_4 = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense_16_4"))
@@ -475,7 +475,7 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
     if(len(str(gsNicAddress))==0):
         gsNicAddress='x'     # put dummy param to maintain position of arguments
 
-    gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17"))
+    gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
     if gs_version_17=='true':
         additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress+' '+gs_version_17+' '+gsLicenseFile_16_4
     else:
