@@ -329,3 +329,5 @@
      add gslicense_16_4: gs-license_16_4.txt under current.gs.config.licence in app.yaml file
 ### TAU v4.82-tau-release tag
 105. In manager install minor changes done for start_gsa.sh script
+### TAU v4.83-tau-release tag
+106. Merged code from TAU-ODSX-17 branch to TAU-ODSX
