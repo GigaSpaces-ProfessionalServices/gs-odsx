@@ -345,6 +345,91 @@ function installAirGapGS {
    #sed -i -e 's|../config/security/security-config.xml|/./../../gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
    cp gigaspaces-smart-ods/config/security/security.properties /dbagiga/gs_config/
    echo "Installation & configuration Gigaspace  -Done!"
+   if [ "$gs_version_17" == "true" ]; then
+      echo "gs_version_17,337 -> "$gs_version_17>>/dbagigashare/current/gs/16.4/16_4.txt
+      installation_file_16_4=$(ls -1 ${sourceInstallerDirectory%/}/gs/16.4/*.zip)
+      unzip -qq $installation_file_16_4 -d  $targetDir
+
+      # Configure license and additional params to setenv-override and set GS home
+       if [ "$gsNicAddress" == "x" ] ; then   # Replaced dummy param with blank and no required to append GS_NIC_ADDR to setenv.over..
+          gsNicAddress=${gsNicAddress//[x]/''}
+       fi
+      echo "gsNicAddress: "$gsNicAddress
+
+      #license="export GS_LICENSE='Product=InsightEdge;Version=15.8;Type=ENTERPRISE;Customer=GigaSpaces_Technologies_-_Internal_rajiv_shah_DEV;Expiration=2021-Dec-31;Hash=gSZQ6OSP83VRn0PRQZNH'"
+      #license="export GS_LICENSE='\"$gsLicenseConfig\"'"
+      GS_HOME_16_4=$(find /dbagiga/ -type d -iname "*16.4*" -exec basename {} \;)
+      echo "GS_HOME_16_4,347 -> "$GS_HOME_16_4>/dbagigashare/current/gs/16.4/16_4.txt
+      var="$GS_HOME_16_4"
+      replace=""
+      extracted_folder=${var//'.zip'/$replace}
+      echo "extracted_folder: "$extracted_folder
+
+      sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+      sed -i '/export GS_LOGS_CONFIG_FILE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+      sed -i '/export GS_MANAGER_OPTIONS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+      sed -i '/export GS_OPTIONS_EXT/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+      if [  "$gsNicAddress" != "" ]; then
+         echo "PRESENT"
+         sed -i '/export GS_NIC_ADDRESS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+      fi
+      echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+      echo  "$gsLicenseFile_16_4 $targetDir/$extracted_folder/" > /dbagigashare/current/gs/16.4/16_4.txt
+      cp $gsLicenseFile_16_4 $targetDir/$extracted_folder/gs-license.txt
+
+      hostCfg="export GS_MANAGER_SERVERS="$gs_clusterhosts
+
+      echo  $hostCfg>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+      echo $gsLogsConfigFile>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+      echo $gsManagerOptions>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+      echo $gsOptionExt>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+      if [ ! "$gsNicAddress" == "" ]; then
+        gsNicAddr="export GS_NIC_ADDRESS="$gsNicAddress
+        echo $gsNicAddr>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+      fi
+
+      cd
+      path="export GS_HOME="$targetDir/gigaspaces-smart-ods
+      echo "">>setenv.sh
+      echo "$path">>setenv.sh
+
+      echo "path: "$path
+      cd
+
+      if [ ! -f "$targetConfigDir/xap_logging.properties" ]; then                #Condition added on 02Feb22 if file exist dont override it
+        sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
+        cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+      fi
+      cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
+
+      limitContent="$applicativeUser hard nofile "$nofileLimitFile
+      limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
+
+      sed -i '/hard nofile/d' /etc/security/limits.conf
+      sed -i '/soft nofile/d' /etc/security/limits.conf
+
+      echo "LimitContent : "$limitContent
+      echo "">>/etc/security/limits.conf
+      echo $limitContent>>/etc/security/limits.conf
+      echo $limitContentSoft>>/etc/security/limits.conf
+
+      cd $targetDir
+      ln -s $extracted_folder gigaspaces-smart-ods
+
+      cd
+      home_dir=$(pwd)
+      GS_HOME_16_4=$(find /dbagiga/ -type d -iname "*16.4*")
+      sed -i '/export GS_HOME_16_4/d' setenv.sh
+      echo "">>setenv.sh
+      echo "export GS_HOME_16_4=$GS_HOME_16_4">>setenv.sh
+      echo "GS_HOME_16_4,454 -> "$GS_HOME_16_4>>/dbagigashare/current/gs/16.4/16_4.txt
+
+   fi
 }
 function loadEnv {
   cd
@@ -382,10 +467,17 @@ function gsCreateGSServeice {
   echo "GS_HOME :"$GS_HOME
 
   #cmd="nohup $GS_HOME/bin/gs.sh host run-agent --auto >  /$logDir/console_out.log 2>&1 &" #24-Aug
-  cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
-  echo "$cmd">>$start_gsa_file
   #cmd="sleep 20;$GS_HOME/bin/gs.sh container create --count=2 --zone=bll --memory=256m '`hostname`'"
   #echo "$cmd">>$start_gsc_file
+  if [ "$gs_version_17" == "true" ]; then
+      cmd="$GS_HOME/bin/gs.sh host run-agent --auto &"
+      echo "$cmd">>$start_gsa_file
+      run_webUi="$GS_HOME_16_4/tools/gs-webui/gs-webui.sh"
+      echo "$run_webUi">>$start_gsa_file
+  else
+      cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
+      echo "$cmd">$start_gsa_file
+  fi
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
@@ -416,7 +508,12 @@ function gsCreateGSServeice {
   chmod 777 -R $GS_HOME/logs/
   chmod 777 -R $GS_HOME/deploy/
   chmod 777 -R $GS_HOME/deploy/*
-  chmod 777 -R $GS_HOME/tools/gs-webui/*
+  if [ "$gs_version_17" == "true" ]; then
+      chmod 777 -R $GS_HOME_16_4/tools/gs-webui/*
+  else
+      chmod 777 -R $GS_HOME/tools/gs-webui/*
+  fi
+
   chmod -R +x /dbagiga
 
   systemctl daemon-reload
@@ -465,6 +562,12 @@ vaultDbPath=${17}
 useVault=${18}
 selinux=${19}
 gsNicAddress=${20}
+gs_version_17=${21}
+
+if [ "$gs_version_17" == 'true' ]; then
+  gsLicenseFile_16_4=${22}
+fi
+
 
 echo "param1"$1
 echo "param2"$targetDir

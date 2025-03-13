@@ -322,3 +322,10 @@
 ### TAU v4.76-tau-release tag
 103. Add below in app.config file
      app.iidr.iidrSubscriptionMangerPort=6082
+### TAU v4.81-tau-release tag
+104. add 16.4 licence at this path /dbagigashare/current/gs/config/license/gs-license_16_4.txt
+     add 16.4 any version zip file at this path /dbagigashare/current/gs/16.4/
+     add app.manager.gs_version_17=true in app.config file
+     add gslicense_16_4: gs-license_16_4.txt under current.gs.config.licence in app.yaml file
+### TAU v4.82-tau-release tag
+105. In manager install minor changes done for start_gsa.sh script

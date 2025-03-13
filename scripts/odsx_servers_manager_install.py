@@ -327,6 +327,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsLicenseFile = str(gsLicenseFile).replace(";","\;")
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
+        gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
+        gsLicenseFile_16_4=""
+        if gs_version_17=='true':
+            licenseConfig_16_4 = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense_16_4"))
+            gsLicenseFile_16_4 = licenseConfig_16_4
+            gsLicenseFile_16_4='"\\"{}\\""'.format(gsLicenseFile_16_4)
+            verboseHandle.printConsoleInfo("gsLicenseFile_16_4 -> " + gsLicenseFile_16_4)
+
         applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
         #print("Applicative User: "+str(applicativeUser))
 
@@ -418,6 +426,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"15. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
+        if gs_version_17=='true':
+            print(Fore.GREEN+"16. "+
+                  Fore.GREEN+"GS_LICENSE_16_4 : "+Fore.RESET,
+                  Fore.GREEN+str(gsLicenseFile_16_4)+Fore.RESET)
+
         additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
@@ -447,7 +460,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,None,selinuxEnabled)
+                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,None,selinuxEnabled,gsLicenseFile_16_4)
 
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
@@ -456,12 +469,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     except Exception as e:
         handleException(e)
 
-def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget,selinuxEnabled):
+def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4):
     gsNicAddress = host_nic_dict_obj[host]
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
         gsNicAddress='x'     # put dummy param to maintain position of arguments
-    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress
+
+    gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
+    if gs_version_17=='true':
+        additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress+' '+gs_version_17+' '+gsLicenseFile_16_4
+    else:
+        additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress+' '+gs_version_17
+
     #print(additionalParam)
     with Spinner():
         scp_upload(host, user, 'install/install.tar', '')
@@ -479,6 +498,7 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
     logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(host)+" User:"+str(user))
     with Spinner():
+        verboseHandle.printConsoleInfo(additionalParam)
         outputShFile= executeRemoteShCommandAndGetOutput(host, user, additionalParam, commandToExecute)
         #outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
         #print(outputShFile)
