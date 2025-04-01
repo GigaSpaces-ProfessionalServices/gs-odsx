@@ -17,11 +17,11 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShComma
     executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
     executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts, \
-    isInstalledAndGetVersion, config_get_manager_node
+    isInstalledAndGetVersion, config_get_manager_node, config_get_space_list_with_status
 from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload,scp_upload_specific_extension
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
 
 #from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
@@ -415,10 +415,49 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
-            hostListLength=len(host_nic_dict_obj)+1
-            with ThreadPoolExecutor(hostListLength) as executor:
-                for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
+            user='root'
+            logger.info("user :"+str(user))
+            streamDict = config_get_space_list_with_status(user)
+            serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all. \nPress [99] for exit.: "+Fore.RESET))
+            logger.info("serverStartType:"+str(serverStartType))
+
+            isMenuDriven=''
+            cliArguments=''
+            if(serverStartType=='1'):
+                optionMainMenu = int(userInputWithEscWrapper("Enter your host number to start: "))
+                logger.info("Enter your host number to start:"+str(optionMainMenu))
+                if(optionMainMenu != 99):
+                    if len(streamDict) >= optionMainMenu:
+                        spaceStart = streamDict.get(optionMainMenu)
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        while(len(str(choice))==0):
+                            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        #print("coice start server:"+str(choice))
+                        logger.info("choice :"+str(choice))
+                        if(choice.casefold()=='no' or choice.casefold()=='n'):
+                            if(isMenuDriven=='m'):
+                                logger.info("menudriven")
+                                os.system('python3 scripts/odsx_security_servers_space_install.py'+' '+isMenuDriven)
+                        elif(choice.casefold()=='yes' or choice.casefold()=='y'):
+                            hostListLength=len(host_nic_dict_obj)+1
+                            with ThreadPoolExecutor(hostListLength) as executor:
+                                for host in host_nic_dict_obj:
+                                    if ((os.getenv(spaceStart.ip)) == str(host)):
+                                        executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
+            elif(serverStartType =='99'):
+                logger.info("99 - Exist start")
+            else:
+                confirm=''
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                while(len(str(confirm))==0):
+                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                logger.info("confirm :"+str(confirm))
+                if(confirm=='yes' or confirm=='y'):
+                    hostListLength=len(host_nic_dict_obj)+1
+                    with ThreadPoolExecutor(hostListLength) as executor:
+                        for host in host_nic_dict_obj:
+                            # verboseHandle.printConsoleWarning(str(host))
+                            executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return

@@ -207,19 +207,21 @@ def listAllServers():
     for server in nbServers:
         host = str(os.getenv(server.ip))
         count = count+1
-        status = getStatusOfNBHost(server)
-        installStatus='No'
-        install = isInstalledAndGetVersion(str(host))
-        logger.info("install : "+str(install))
-        if(len(str(install))>0):
-            installStatus='Yes'
-        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                   Fore.GREEN+"Northbound "+server.role+Fore.RESET,
-                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
-                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
-
-        data.append(dataArray)
+        if os.getenv(server.ip) is not None:
+            status = getStatusOfNBHost(server)
+            installStatus='No'
+            install = isInstalledAndGetVersion(str(host))
+            logger.info("install : "+str(install))
+            if(len(str(install))>0):
+                installStatus='Yes'
+                dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                       Fore.GREEN+"Northbound "+server.role+Fore.RESET,
+                       Fore.GREEN+str(os.getenv(server.ip))+Fore.RESET,
+                       Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                       Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET]
+                data.append(dataArray)
+        else:
+            logger.info("server.ip -> " + str(server.ip) + ", HOST NONE")
 
     logger.info("Grafana server list.")
     grafanaServers = config_get_grafana_list()

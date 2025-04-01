@@ -331,3 +331,5 @@
 105. In manager install minor changes done for start_gsa.sh script
 ### TAU v4.83-tau-release tag
 106. Merged code from TAU-ODSX-17 branch to TAU-ODSX
+### TAU v4.84-tau-release tag
+106. Created new branch with 2 features - install/remove individual space server, Solved bug Menu -> Servers -> List-All 
