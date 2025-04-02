@@ -448,9 +448,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 logger.info("99 - Exist start")
             else:
                 confirm=''
-                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 while(len(str(confirm))==0):
-                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     hostListLength=len(host_nic_dict_obj)+1
