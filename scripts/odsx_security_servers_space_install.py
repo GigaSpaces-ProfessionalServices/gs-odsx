@@ -393,19 +393,19 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"23. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
+        # print(Fore.GREEN+"24. "+
+        #       Fore.GREEN+"Space server installation : "+Fore.RESET,
+        #       Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"24. "+
-              Fore.GREEN+"Space server installation : "+Fore.RESET,
-              Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"25. "+
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"26. "+
+        print(Fore.GREEN+"25. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"27. "+
+        print(Fore.GREEN+"26. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"28. "+
+        print(Fore.GREEN+"27. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
 
@@ -418,20 +418,20 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             user='root'
             logger.info("user :"+str(user))
             streamDict = config_get_space_list_with_status(user)
-            serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all. \nPress [99] for exit.: "+Fore.RESET))
+            serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
             logger.info("serverStartType:"+str(serverStartType))
 
             isMenuDriven=''
             cliArguments=''
             if(serverStartType=='1'):
-                optionMainMenu = int(userInputWithEscWrapper("Enter your host number to start: "))
+                optionMainMenu = int(userInputWithEscWrapper("Enter your host number to install: "))
                 logger.info("Enter your host number to start:"+str(optionMainMenu))
                 if(optionMainMenu != 99):
                     if len(streamDict) >= optionMainMenu:
                         spaceStart = streamDict.get(optionMainMenu)
-                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                         while(len(str(choice))==0):
-                            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
                         #print("coice start server:"+str(choice))
                         logger.info("choice :"+str(choice))
                         if(choice.casefold()=='no' or choice.casefold()=='n'):

@@ -328,8 +328,10 @@
      add app.manager.gs_version_17=true in app.config file
      add gslicense_16_4: gs-license_16_4.txt under current.gs.config.licence in app.yaml file
 ### TAU v4.82-tau-release tag
-105. In manager install minor changes done for start_gsa.sh script
+105. In manager install minor changes done for start_gsa.sh script (Install 16.4 WEBUI If GS version 17 installed)
 ### TAU v4.83-tau-release tag
 106. Merged code from TAU-ODSX-17 branch to TAU-ODSX
 ### TAU v4.84-tau-release tag
-106. Created new branch with 2 features - install/remove individual space server, Solved bug Menu -> Servers -> List-All 
+107. Created new branch with 2 features - install/remove individual space server, Solved bug Menu -> Servers -> List-All removed space server from cluster.config
+### TAU v4.85-tau-release tag
+108. Merged code from TAU-ODSX-Space-Server-Individual-Install branch to TAU-ODSX
