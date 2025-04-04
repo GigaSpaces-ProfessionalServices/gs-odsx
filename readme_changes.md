@@ -335,3 +335,5 @@
 107. Created new branch with 2 features - install/remove individual space server, Solved bug Menu -> Servers -> List-All removed space server from cluster.config
 ### TAU v4.85-tau-release tag
 108. Merged code from TAU-ODSX-Space-Server-Individual-Install branch to TAU-ODSX
+### TAU v4.86-tau-release tag
+109. Add app.dataengine.oracle-feeder.hard.limit=100m in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now will get installed in highest available memory)
