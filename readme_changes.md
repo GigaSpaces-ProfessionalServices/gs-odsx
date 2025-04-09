@@ -336,6 +336,9 @@
 ### TAU v4.85-tau-release tag
 108. Merged code from TAU-ODSX-Space-Server-Individual-Install branch to TAU-ODSX
 ### TAU v4.86-tau-release tag
-109. Add app.dataengine.oracle-feeder.hard.limit=100m in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now will get installed in highest available memory)
+109. Created new Branch for TAU-ODSX-Install-Feeder 
+110. Add app.dataengine.oracle-feeder.hard.limit=100m in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
 ### TAU v4.87-tau-release tag
-110. Added steps for Non-secured Environment
+111. Added steps for Non-secured Environment (Now Oracle feeder will get installed in highest available memory)
+### TAU v4.88-tau-release tag
+112. Merged code from TAU-ODSX-Install-Feeder to TAU-ODSX
