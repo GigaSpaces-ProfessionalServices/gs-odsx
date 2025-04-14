@@ -15,11 +15,13 @@ from utils.ods_list import getManagerHostFromEnv, configureMetricsXML
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
     executeRemoteCommandAndGetOutputValuePython36
-from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion
+from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion, \
+    config_get_space_list_with_status
+
 from scripts.odsx_servers_manager_install import validateRPMS,getPlainOutput
 from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload,scp_upload_specific_extension
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -287,7 +289,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-       # newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
+        # newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
         #To Display Summary ::
@@ -353,19 +355,19 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"20. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
+        # print(Fore.GREEN+"21. "+
+        #       Fore.GREEN+"Space server installation : "+Fore.RESET,
+        #       Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"21. "+
-              Fore.GREEN+"Space server installation : "+Fore.RESET,
-              Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"22. "+
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"23. "+
+        print(Fore.GREEN+"22. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
-      #  print(Fore.GREEN+"24. "+
-      #        Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
-      #        Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"24. "+
+        #  print(Fore.GREEN+"24. "+
+        #        Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
+        #        Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"23. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
 
@@ -376,10 +378,50 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
-            hostListLength = len(host_nic_dict_obj)+1
-            with ThreadPoolExecutor(hostListLength) as executor:
-                for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,None,selinuxEnabled)
+            user='root'
+            logger.info("user :"+str(user))
+            streamDict = config_get_space_list_with_status(user)
+            serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
+            logger.info("serverStartType:"+str(serverStartType))
+
+            isMenuDriven=''
+            cliArguments=''
+            if(serverStartType=='1'):
+                optionMainMenu = int(userInputWithEscWrapper("Enter your host number to install: "))
+                logger.info("Enter your host number to start:"+str(optionMainMenu))
+                if(optionMainMenu != 99):
+                    if len(streamDict) >= optionMainMenu:
+                        spaceStart = streamDict.get(optionMainMenu)
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        while(len(str(choice))==0):
+                            choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                        #print("coice start server:"+str(choice))
+                        logger.info("choice :"+str(choice))
+                        if(choice.casefold()=='no' or choice.casefold()=='n'):
+                            if(isMenuDriven=='m'):
+                                logger.info("menudriven")
+                                os.system('python3 scripts/odsx_servers_space_install.py'+' '+isMenuDriven)
+                        elif(choice.casefold()=='yes' or choice.casefold()=='y'):
+                            hostListLength=len(host_nic_dict_obj)+1
+                            with ThreadPoolExecutor(hostListLength) as executor:
+                                for host in host_nic_dict_obj:
+                                    if ((os.getenv(spaceStart.ip)) == str(host)):
+                                        executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,None,selinuxEnabled)
+            elif(serverStartType =='99'):
+                logger.info("99 - Exist start")
+            else:
+                confirm=''
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                while(len(str(confirm))==0):
+                    confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+                logger.info("confirm :"+str(confirm))
+                if(confirm=='yes' or confirm=='y'):
+                    hostListLength=len(host_nic_dict_obj)+1
+                    with ThreadPoolExecutor(hostListLength) as executor:
+                        for host in host_nic_dict_obj:
+                            # verboseHandle.printConsoleWarning(str(host))
+                            executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,None,selinuxEnabled)
+
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return

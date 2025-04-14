@@ -342,3 +342,5 @@
 111. Added steps for Non-secured Environment (Now Oracle feeder will get installed in highest available memory)
 ### TAU v4.88-tau-release tag
 112. Merged code from TAU-ODSX-Install-Feeder to TAU-ODSX
+### TAU v4.89-tau-release tag
+113. Added install/remove individual space server for Non-Secured Environment
