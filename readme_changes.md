@@ -345,4 +345,17 @@
 ### TAU v4.89-tau-release tag
 113. Added install/remove individual space server for Non-Secured Environment
 ### TAU v4.90-tau-release tag
-114. Created new branch for TAU-ODSX-Oracle-Feeder-ERP added Oracle ERP Feeder code changes
+114. Created new branch for TAU-ODSX-Oracle-Feeder-ERP added Oracle ERP Feeder code changes and add below properties in app.config
+     app.dataengine.oracle-feeder-erp.oracle.server=XXX
+     app.dataengine.oracle-feeder-erp.oracle.username=XXX
+     app.dataengine.oracle-feeder-erp.oracle.password=XXX
+     app.dataengine.oracle-feeder-erp.oracle.databasename=XXX
+     app.dataengine.oracle-feeder-erp.gscpercluster=1
+     app.dataengine.oracle-feeder-erp.gsc.memory=256m
+     app.dataengine.oracle-feeder-erp.gsc.create=y
+     app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/erpOracleFeeder.db
+     app.dataengine.oracle-feeder-erp.space.name=dih-tau-space
+     app.dataengine.oracle-feeder-erp.writeBatchSize=10000
+     app.dataengine.oracle-feeder-erp.sleepAfterWriteInMillis=500
+     app.dataengine.oracle-feeder-erp.rest.port=8600
+     app.dataengine.oracle-feeder-erp.hard.limit=4g
