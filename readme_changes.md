@@ -359,3 +359,5 @@
      app.dataengine.oracle-feeder-erp.sleepAfterWriteInMillis=500
      app.dataengine.oracle-feeder-erp.rest.port=8600
      app.dataengine.oracle-feeder-erp.hard.limit=4g
+### TAU v4.91-tau-release tag
+115. Added steps for differentiate Oracle Feeder and Oracle ERP Feeder
