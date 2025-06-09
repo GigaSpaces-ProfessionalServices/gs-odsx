@@ -18,7 +18,7 @@ from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppCo
 from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getPortNotExistInOracleFeeder, getPasswordByHost, getUsernameByHost
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost, getPortNotExistInOracleErpFeeder
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from requests.auth import HTTPBasicAuth
@@ -106,8 +106,8 @@ def deleteOracleEntryFromSqlLite(puName):
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
-        logger.info("SQL : DELETE FROM oracle_host_port where feeder_name like '%"+str(puName)+"%'")
-        cnx.execute("DELETE FROM oracle_host_port where feeder_name like '%"+str(puName)+"%'")
+        logger.info("SQL : DELETE FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%'")
+        cnx.execute("DELETE FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%'")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -150,13 +150,13 @@ def newInstallOracleFeeder(tableName):
     newInstall=[]
     directory = os.getcwd()
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-    sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+    sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracleerp.scripts.").replace('.', '/')
     os.chdir(sourceOracleFeederShFilePath)
     os.chdir(directory)
     fileName= "load_"+tableName+".sh"
     global activefeeder
     activefeeder=[]
-    exitsFeeder = fileName.replace('load','oraclefeeder').replace('.sh','').casefold()
+    exitsFeeder = fileName.replace('load','oracleerpfeeder').replace('.sh','').casefold()
     activefeeder.append(exitsFeeder)
 
 def executeLocalCommandAndGetOutput(commandToExecute):
@@ -193,7 +193,7 @@ def uploadFileRest(managerHostConfig,feederName):
 
         #puName = str(file).replace('load','').replace('.sh','').casefold()
         pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(feederName)
-        zoneGSC = 'oracle_'+feederName
+        zoneGSC = 'oracleerp_'+feederName
         logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
         cmdToExecute = "curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+""
         status = os.system(cmdToExecute)
@@ -223,7 +223,7 @@ def createOracleEntryInSqlLite(puName, file, restPort):
             hostId = str(data["hostId"])
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
-        cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('load_"+str(file).upper()+".sh', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
+        cnx.execute("INSERT INTO oracleerp_host_port (file, feeder_name, host, port) VALUES ('load_"+str(file).upper()+".sh', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -272,7 +272,7 @@ def sqlLiteCreateTableDB():
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx)+" Sqlite V: "+str(sqlite3.version))
         #cnx.execute("DROP TABLE IF EXISTS db2_host_port")
-        cnx.execute("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.execute("CREATE TABLE IF NOT EXISTS oracleerp_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -292,18 +292,18 @@ def proceedToDeployPU(feederName):
         logger.info("Resport : "+str(restPort))
         file = feederName
         os.chdir(directory)
-        exitsFeeder = str(file).replace('load','oraclefeeder').replace('.sh','').casefold()
+        exitsFeeder = str(file).replace('load','oracleerpfeeder').replace('.sh','').casefold()
         puName = str(file).replace('load_','').replace('.sh','').casefold()
-        zoneGSC = 'oracle_'+puName
+        zoneGSC = 'oracleerp_'+puName
         logger.info("filePrefix : "+filePrefix)
         resource = filePrefix+'_'+puName+'.jar'
-        puName = 'oraclefeeder_'+puName
-        port = getPortNotExistInOracleFeeder(restPort)
+        puName = 'oracleerpfeeder_'+puName
+        port = getPortNotExistInOracleErpFeeder(restPort)
         logger.info("dbPort : "+str(port))
         if(len(str(port))!=0):
             while(len(str(port))!=0):
                 restPort = int(port)+1
-                port = getPortNotExistInOracleFeeder(restPort)
+                port = getPortNotExistInOracleErpFeeder(restPort)
             #else:
             #    dbPort = restPort
         data = getDataPUREST(resource,puName,zoneGSC,str(restPort),managerHost)
@@ -348,13 +348,13 @@ def proceedToDeployPUInputParam(tableName):
     logger.info("proceedToDeployPUInputParam()")
 
     global sourceOracleJarFilePath
-    sourceOracleJarFileConfig = str(getYamlFilePathInsideFolder(".oracle.jars.oracleJarFile"))
+    sourceOracleJarFileConfig = str(getYamlFilePathInsideFolder(".oracleerp.jars.oracleErpJarFile"))
     sourceOracleJarFilePath = sourceOracleJarFileConfig
 
     global sourceOracleFeederShFilePath
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    sourceOracleFeederShFilePathConfig = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
+    sourceOracleFeederShFilePathConfig = str(sourceInstallerDirectory+".oracleerp.scripts.").replace('.','/')
 
     sourceOracleFeederShFilePath = sourceOracleFeederShFilePathConfig
     lastChar = str(sourceOracleFeederShFilePath[-1])
@@ -392,8 +392,8 @@ def sqlLiteGetHostAndPortByFileName(puName):
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL : SELECT host,port,file FROM oracle_host_port where feeder_name = '"+str(puName)+"' ")
-        mycursor = cnx.execute("SELECT host,port,file FROM oracle_host_port where feeder_name = '"+str(puName)+"' ")
+        logger.info("SQL : SELECT host,port,file FROM oracleerp_host_port where feeder_name = '"+str(puName)+"' ")
+        mycursor = cnx.execute("SELECT host,port,file FROM oracleerp_host_port where feeder_name = '"+str(puName)+"' ")
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
@@ -598,7 +598,7 @@ if __name__ == '__main__':
     username = str(getUsernameByHost())
     password = str(getPasswordByHost())
     tableName = str(tableName).split(".")[1].lower()
-    puName = "oraclefeeder_" + tableName
+    puName = "oracleerpfeeder_" + tableName
     feeder_undeploy(puName)
     proceedToDeployPUInputParam(tableName)
     #Start the feeder

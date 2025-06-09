@@ -17,7 +17,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_db2feeder_utilities import getOracleQueryStatusFromSqlLite
+from utils.odsx_db2feeder_utilities import getOracleErpQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -149,8 +149,8 @@ def deleteOracleEntryFromSqlLite(puName):
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
-        logger.info("SQL : DELETE FROM oracle_host_port where feeder_name like '%"+str(puName)+"%'")
-        cnx.execute("DELETE FROM oracle_host_port where feeder_name like '%"+str(puName)+"%'")
+        logger.info("SQL : DELETE FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%'")
+        cnx.execute("DELETE FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%'")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -195,8 +195,8 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            queryStatus = str(getOracleQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
-            if(str(data["name"]).__contains__('oracle')):
+            queryStatus = str(getOracleErpQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
+            if(str(data["name"]).__contains__('oracleerp')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,

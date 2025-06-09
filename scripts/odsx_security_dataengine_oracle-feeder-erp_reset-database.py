@@ -47,15 +47,15 @@ def handleException(e):
     })))
 
 
-def sqlLiteDeleteTableOracleFeeder():
-    logger.info("sqlLiteDeleteTableOracleFeeder() ")
+def sqlLiteDeleteTableOracleErpFeeder():
+    logger.info("sqlLiteDeleteTableOracleErpFeeder() ")
     try:
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("DELETE FROM oracle_host_port")
-        cnx.execute("DELETE FROM oracle_host_port")
-        verboseHandle.printConsoleInfo("Table : oracle_host_port reseted.")
+        logger.info("DELETE FROM oracleerp_host_port")
+        cnx.execute("DELETE FROM oracleerp_host_port")
+        verboseHandle.printConsoleInfo("Table : oracleerp_host_port reseted.")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -65,7 +65,7 @@ if __name__ == '__main__':
     logger.info("odsx_dataengine_Oracle-feeder-erp_reset")
     verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> Reset")
     try:
-        sqlLiteDeleteTableOracleFeeder()
+        sqlLiteDeleteTableOracleErpFeeder()
     except Exception as e:
         verboseHandle.printConsoleError("Eror in odsx_oracle-feeder-erp_reset : "+str(e))
         handleException(e)

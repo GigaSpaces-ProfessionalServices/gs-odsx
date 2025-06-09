@@ -15,7 +15,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_cluster_config import config_get_space_hosts, config_get_nb_list, config_get_grafana_list, \
-    config_get_influxdb_node, config_get_dataIntegration_nodes
+    config_get_influxdb_node, config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes
 from utils.ods_list import isInstalledAndGetVersionGrafana
 from utils.ods_list import isInstalledAndGetVersionInflux
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput, \
@@ -259,6 +259,24 @@ def listAllServers():
                    Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                    Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
         data.append(dataArray)
+
+    get_dataIntegrationiidrServers = config_get_dataIntegrationiidr_nodes()
+    for server in get_dataIntegrationiidrServers:
+        count=count+1
+        status = getTelnetStatus(os.getenv(server.ip),8086)
+        host = str(os.getenv(server.ip))
+        # installStatus='No'
+        # install = isInstalledAndGetVersionInflux(str(host))
+        # logger.info("install : "+str(install))
+        # if(len(str(install))>0):
+        #     installStatus='Yes'
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"IIDR1"+Fore.RESET,
+                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
+        data.append(dataArray)
+
     env = str(readValuefromAppConfig("app.setup.env"))
     if env != "dr":
         logger.info("DI servers list")

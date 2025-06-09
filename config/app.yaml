@@ -74,6 +74,11 @@ current:
     jars:
       oracleJarFile: OracleFeeder-1.0-SNAPSHOT.jar
     scripts: null
+  oracleerp:
+    config: null
+    jars:
+      oracleErpJarFile: OracleFeeder-1.0-SNAPSHOT.jar
+    scripts: null
   notifier:
     config: null
     jars:

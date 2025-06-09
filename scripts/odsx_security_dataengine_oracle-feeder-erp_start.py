@@ -20,7 +20,7 @@ from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_db2feeder_utilities import getOracleQueryStatusFromSqlLite, getUsernameByHost, getPasswordByHost
+from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost, getOracleErpQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -84,13 +84,13 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     return str(out).replace('\n', '')
 
 def displayOracleFeederShFiles():
-    logger.info("startOracleFeeder()")
+    logger.info("startOracleErpFeeder()")
     global fileNameDict
     global sourceOracleFeederShFilePath
     global fileNamePuNameDict
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    sourceOracleFeederShFilePath = str(str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/'))
+    sourceOracleFeederShFilePath = str(str(sourceInstallerDirectory+".oracleerp.scripts.").replace('.','/'))
     logger.info("sourceDB2FeederShFilePath: "+str(sourceOracleFeederShFilePath))
     counter=1
     directory = os.getcwd()
@@ -98,7 +98,7 @@ def displayOracleFeederShFiles():
     fileNameDict = host_dictionary_obj()
     fileNamePuNameDict = host_dictionary_obj()
     headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-               Fore.YELLOW+"Name of oracle-feeder file"+Fore.RESET
+               Fore.YELLOW+"Name of oracle-erp-feeder file"+Fore.RESET
                ]
     dataTable=[]
     for file in glob.glob("load_*.sh"):
@@ -108,7 +108,7 @@ def displayOracleFeederShFiles():
         dataTable.append(dataArray)
         fileNameDict.add(str(counter),str(file))
         puName = str(file).replace('load','').replace('.sh','').casefold()
-        puName = 'oraclefeeder'+puName
+        puName = 'oracleerpfeeder'+puName
         fileNamePuNameDict.add(str(puName),str(file))
         counter=counter+1
     logger.info("fileNameDict : "+str(fileNameDict))
@@ -159,9 +159,9 @@ def listDeployed(managerHost):
         dataTable=[]
         flag = False
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-        sourceOracleFeederShFilePath = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
+        sourceOracleFeederShFilePath = str(sourceInstallerDirectory+".oracleerp.scripts.").replace('.','/')
         for i in jsonArray:
-            if(str(i['name']).__contains__("oracle")):
+            if(str(i['name']).__contains__("oracleerp")):
                 flag = True
         if(len(jsonArray) == 0 or flag == False):
 
@@ -181,15 +181,15 @@ def listDeployed(managerHost):
                         if(myString.find(startString) != -1):
                             mySubString = myString[
                                           myString.find(startString) + len(startString):myString.find(endString)]
-                            puName = 'oraclefeeder_'+puName
+                            puName = 'oracleerpfeeder_'+puName
                             conditionDate = getFormattedDate(mySubString)
                         else:
-                            puName = 'oraclefeeder_'+puName
+                            puName = 'oracleerpfeeder_'+puName
                             conditionDate = "-"
                         # global mySubString
                         # mySubString = myString[
                         #               myString.find(startString) + len(startString):myString.find(endString)]
-                        # puName = 'oraclefeeder_'+puName
+                        # puName = 'oracleerpfeeder_'+puName
                         # conditionDate = getFormattedDate(mySubString)
                         dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                      Fore.GREEN + puName + Fore.RESET,
@@ -207,16 +207,16 @@ def listDeployed(managerHost):
                 response2 = requests.get(
                     "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances",auth = HTTPBasicAuth(username, password))
                 jsonArray2 = json.loads(response2.text)
-                queryStatus = str(getOracleQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
+                queryStatus = str(getOracleErpQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
                 for data2 in jsonArray2:
                     hostId = data2["hostId"]
                 if (len(str(hostId)) == 0):
                     hostId = "N/A"
-                if (str(data["name"]).__contains__('oracle')):
+                if (str(data["name"]).__contains__('oracleerp')):
                     os.getcwd()
                     os.chdir(sourceOracleFeederShFilePath)
                     for file in glob.glob("load_*.sh"):
-                        puName = str(str(data["name"])).replace('oraclefeeder_', 'load_').casefold()
+                        puName = str(str(data["name"])).replace('oracleerpfeeder_', 'load_').casefold()
                         puName = puName + ".sh"
                         if (file.casefold() == puName):
                             file = open(file, "r")
@@ -231,7 +231,7 @@ def listDeployed(managerHost):
                                     if(myString.find(startString) != -1):
                                         mySubString = myString[
                                                       myString.find(startString) + len(startString):myString.find(endString)]
-                                        # puName = 'oraclefeeder_'+puName
+                                        # puName = 'oracleerpfeeder_'+puName
                                         conditionDate = getFormattedDate(mySubString)
                                     else:
                                         conditionDate = "-"
@@ -243,8 +243,8 @@ def listDeployed(managerHost):
                                                  Fore.GREEN + data["status"] + Fore.RESET,
                                                  Fore.GREEN + str(conditionDate) + Fore.RESET
                                                  ]
-                    logger.info("UPDATE oracle_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                    mycursor = cnx.execute("UPDATE oracle_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    logger.info("UPDATE oracleerp_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    mycursor = cnx.execute("UPDATE oracleerp_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
                     logger.info("query result:"+str(mycursor.rowcount))
 
                     gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -266,9 +266,9 @@ def inputParam():
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):
-        inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start oracle-feeder : "+Fore.RESET))
+        inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start oracle-Erp-feeder : "+Fore.RESET))
         if(len(str(inputNumberToStart))==0):
-            inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start oracle-feeder : "+Fore.RESET))
+            inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start oracle-Erp-feeder : "+Fore.RESET))
         proceedToStartOracleFeeder(inputNumberToStart)
     if(len(str(inputChoice))==0):
         elements = len(fileNameDict)
@@ -281,8 +281,8 @@ def sqlLiteGetHostAndPortByFileName(puName):
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL : SELECT host,port,file FROM oracle_host_port where feeder_name = '"+str(puName)+"' ")
-        mycursor = cnx.execute("SELECT host,port,file FROM oracle_host_port where feeder_name = '"+str(puName)+"' ")
+        logger.info("SQL : SELECT host,port,file FROM oracleerp_host_port where feeder_name = '"+str(puName)+"' ")
+        mycursor = cnx.execute("SELECT host,port,file FROM oracleerp_host_port where feeder_name = '"+str(puName)+"' ")
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
