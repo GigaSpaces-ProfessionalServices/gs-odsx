@@ -361,3 +361,12 @@
      app.dataengine.oracle-feeder-erp.hard.limit=4g
 ### TAU v4.91-tau-release tag
 115. Added steps for differentiate Oracle Feeder and Oracle ERP Feeder
+116. Add oracleerp section in app.yaml
+     oracleerp:
+       config: null
+       jars:
+         oracleErpJarFile: OracleFeeder-1.0-SNAPSHOT.jar
+       scripts: null
+117. Create oracleerp folder under /dbagigashare/current/ with same folders as oracle
+### TAU v4.92-tau-release tag
+118. Minor bug fixes for Oracle feeder

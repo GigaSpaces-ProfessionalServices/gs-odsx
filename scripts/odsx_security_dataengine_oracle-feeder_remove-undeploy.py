@@ -197,7 +197,7 @@ def listDeployed(managerHost):
         dataTable=[]
         for data in jsonArray:
             queryStatus = str(getOracleQueryStatusFromSqlLite(str(data["name"]))).replace('"','')
-            if(str(data["name"]).__contains__('oracle')):
+            if(str(data["name"]).__contains__('oraclefeeder')):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,
