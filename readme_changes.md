@@ -370,3 +370,10 @@
 117. Create oracleerp folder under /dbagigashare/current/ with same folders as oracle
 ### TAU v4.92-tau-release tag
 118. Minor bug fixes for Oracle feeder
+### TAU v4.93-tau-release tag
+119. For Service creator added infra jar to Space server installation
+120. Add app.space.infra.jar.target=/dbagiga/gigaspaces-smart-ods/lib/optional/pu-common in app.config
+121. Add below property under gs.config.jars section
+     infra:
+       infrajar: infra-1.1-SNAPSHOT-jar-with-dependencies.jar
+120. For Space Server ip selection installations steps reversed
