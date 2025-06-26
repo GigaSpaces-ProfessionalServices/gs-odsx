@@ -377,3 +377,40 @@
      infra:
        infrajar: infra-1.1-SNAPSHOT-jar-with-dependencies.jar
 120. For Space Server ip selection installations steps reversed
+### TAU v4.94-tau-release tag
+121. For Data Engine Gilboa Updater Full Load and Gilboa Updater Update updated installation hard limit
+122. Add app.dataengine.gilboa-feeder.required.available.memory=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+123. For Data Engine Notifier updated installation hard limit 
+124. Add app.dataengine.notifier.required.available.memory=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+125. Updated DI List and Server List All visibility for added DI Subscription Manager, IIDR Access Server, IIDR Kafka Agent, IIDR Oracle Agent
+126. In host.yaml file add below after dataIntegration section
+     dataIntegrationSubscriptionManager :
+       host1 : 10.0.1.137
+     iidrAccessServer :
+       host1 : 10.0.1.137
+     iidrKafkaAgent :
+       host1 : 10.0.1.137
+     iidrOracleAgent :
+       host1 : 10.0.1.137
+127. In cluster.config file add below after dataIntegration section
+    "dataIntegrationSubscriptionManager": {
+        "nodes": [
+        ]
+    }
+    "iidrAccessServer": {
+        "nodes": [
+        ]
+    }
+    "iidrKafkaAgent": {
+        "nodes": [
+        ]
+    }
+    "iidrOracleAgent": {
+        "nodes": [
+        ]
+    }
+128. Add below properties in app.config
+     app.iidr.Access.Server.Port=10101
+     app.iidr.Kafka.Agent.Port=11701
+     app.iidr.Oracle.DB.Agent.Port=11001
+     app.di.kafka.Port=9092

@@ -111,7 +111,7 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, managers, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation,iidrdataIntegration):
+    def __init__(self, managers, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation,iidrdataIntegration, dataIntegrationSubscriptionManager, iidrAccessServer, iidrKafkaAgent, iidrOracleAgent):
         self.managers = managers
         self.nb = nb
         self.spaces = spaces
@@ -121,6 +121,10 @@ class AllServers:
         self.iidrdataIntegration = iidrdataIntegration
         self.dataValidation = dataValidation
         self.dataEngine = dataEngine
+        self.dataIntegrationSubscriptionManager = dataIntegrationSubscriptionManager
+        self.iidrAccessServer = iidrAccessServer
+        self.iidrKafkaAgent = iidrKafkaAgent
+        self.iidrOracleAgent = iidrOracleAgent
 
 class Managers:
     def __init__(self, node):
@@ -143,6 +147,22 @@ class DataIntegration:
         self.nodes = nodes
 
 class IidrdataIntegration:
+    def __init__(self,nodes):
+        self.nodes = nodes
+
+class DataIntegrationSubscriptionManager:
+    def __init__(self,nodes):
+        self.nodes = nodes
+
+class IidrAccessServer:
+    def __init__(self,nodes):
+        self.nodes = nodes
+
+class IidrKafkaAgent:
+    def __init__(self,nodes):
+        self.nodes = nodes
+
+class IidrOracleAgent:
     def __init__(self,nodes):
         self.nodes = nodes
 
@@ -277,6 +297,10 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
     iidrdataIntegration = []
     dataValidation = []
     dataEngine = []
+    dataIntegrationSubscriptionManager = []
+    iidrAccessServer = []
+    iidrKafkaAgent = []
+    iidrOracleAgent = []
     if hasattr(config_data.cluster.servers, 'grafana'):
         for node1 in list(config_data.cluster.servers.grafana.node):
             nodes.append(Node(node1.ip, node1.name, node1.role))
@@ -299,12 +323,36 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         iidrdataIntegration = IidrdataIntegration(nodes)
 
     nodes = []
+    if hasattr(config_data.cluster.servers, 'dataIntegrationSubscriptionManager'):
+        for node1 in list(config_data.cluster.servers.dataIntegrationSubscriptionManager.nodes):
+            nodes.append(Nodes(node1.ip, node1.name, node1.role,  node1.type))
+        dataIntegrationSubscriptionManager = DataIntegrationSubscriptionManager(nodes)
+
+    nodes = []
+    if hasattr(config_data.cluster.servers, 'iidrAccessServer'):
+        for node1 in list(config_data.cluster.servers.iidrAccessServer.nodes):
+            nodes.append(Nodes(node1.ip, node1.name, node1.role,  node1.type))
+        iidrAccessServer = IidrAccessServer(nodes)
+
+    nodes = []
+    if hasattr(config_data.cluster.servers, 'iidrKafkaAgent'):
+        for node1 in list(config_data.cluster.servers.iidrKafkaAgent.nodes):
+            nodes.append(Nodes(node1.ip, node1.name, node1.role,  node1.type))
+        iidrKafkaAgent = IidrKafkaAgent(nodes)
+
+    nodes = []
+    if hasattr(config_data.cluster.servers, 'iidrOracleAgent'):
+        for node1 in list(config_data.cluster.servers.iidrOracleAgent.nodes):
+            nodes.append(Nodes(node1.ip, node1.name, node1.role,  node1.type))
+        iidrOracleAgent = IidrOracleAgent(nodes)
+
+    nodes = []
     if hasattr(config_data.cluster.servers, 'dataValidation'):
         for node1 in list(config_data.cluster.servers.dataValidation.nodes):
             nodes.append(Nodes(node1.ip, node1.name, node1.role, node1.type))
         dataValidation = DataValidation(nodes)
-        
-    nodes = []    
+
+    nodes = []
     if hasattr(config_data.cluster.servers, 'dataEngine'):
         for node1 in list(config_data.cluster.servers.dataEngine.nodes):
             nodes.append(Nodes1(node1.ip, node1.name, node1.engine, node1.role, node1.type))
@@ -317,7 +365,7 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         hosts.append(Host(host.ip, host.name, host.gsc))
 
     spaces = Spaces(Servers(hosts))
-    allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation, iidrdataIntegration)
+    allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation, iidrdataIntegration, dataIntegrationSubscriptionManager, iidrAccessServer, iidrKafkaAgent, iidrOracleAgent)
 
     # print(config_data.cluster.timestamp)
     cluster = Cluster(config_data.cluster.name, config_data.cluster.configVersion,
@@ -494,6 +542,9 @@ def config_get_space_list_with_threading(server,host_nic_dict_obj):
             logger.info("services!=GSA")
             host_nic_dict_obj.add(spaceHost,"OFF")
     return host_nic_dict_obj
+
+def config_get_space_hosts(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.spaces.servers.host
 
 def config_get_space_list_with_status(user,filePath='config/cluster.config'):
     logger.info("config_get_space_list_with_status()")
@@ -834,6 +885,18 @@ def config_get_dataValidation_nodes(filePath='config/cluster.config'):
 def config_get_dataEngine_nodes(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.dataEngine.nodes
 
+def config_get_dataIntegrationSubscriptionManager_node(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.dataIntegrationSubscriptionManager.nodes
+
+def config_get_iidrAccessServer_node(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.iidrAccessServer.nodes
+
+def config_get_iidrKafkaAgent_node(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.iidrKafkaAgent.nodes
+
+def config_get_iidrOracleAgent_node(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.iidrOracleAgent.nodes
+
 def isInfluxdbNodeExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
@@ -853,6 +916,30 @@ def isDataValidationNodeExist(existingNodes, hostIp):
     return "false"
 
 def isDataEngineNodeExist(existingNodes, hostIp):
+    for node in existingNodes:
+        if(str(node.ip)==str(hostIp)):
+            return 'true'
+    return "false"
+
+def isdataIntegrationSubscriptionManagerExist(existingNodes, hostIp):
+    for node in existingNodes:
+        if(str(node.ip)==str(hostIp)):
+            return 'true'
+    return "false"
+
+def isiidrAccessServerExist(existingNodes, hostIp):
+    for node in existingNodes:
+        if(str(node.ip)==str(hostIp)):
+            return 'true'
+    return "false"
+
+def isiidrKafkaAgentExist(existingNodes, hostIp):
+    for node in existingNodes:
+        if(str(node.ip)==str(hostIp)):
+            return 'true'
+    return "false"
+
+def isiidrOracleAgentExist(existingNodes, hostIp):
     for node in existingNodes:
         if(str(node.ip)==str(hostIp)):
             return 'true'
@@ -905,6 +992,202 @@ def config_remove_influxdb_byNameIP(influxdbName,influxdbIP,filePath='config/clu
     config_data.cluster.servers.influxdb.node = influxdbNodes
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+def config_add_dataIntegrationSubscriptionManager_node(hostIp, hostName, role, type, filePath='config/cluster.config'):
+    logger.info("dataIntegrationSubscriptionManager")
+    newNode = Nodes(hostIp, hostName, role, type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.dataIntegrationSubscriptionManager.nodes
+
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isdataIntegrationSubscriptionManagerExist(existingNodes,hostIp) "+isdataIntegrationSubscriptionManagerExist(existingNodes,hostIp))
+        if(isdataIntegrationSubscriptionManagerExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.dataIntegrationSubscriptionManager.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+
+def config_remove_dataIntegrationSubscriptionManager_byNameIP(dataIntegrationSubscriptionManagerName,dataIntegrationSubscriptionManagerIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_dataIntegrationSubscriptionManager_byNameIP () : dataIntegrationSubscriptionManagerName :"+str(dataIntegrationSubscriptionManagerName)+" nbIp:"+str(dataIntegrationSubscriptionManagerIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    dataIntegrationSubscriptionManagerNodes = config_data.cluster.servers.dataIntegrationSubscriptionManager.nodes
+    counter=0
+    for dataIntegrationSubscriptionManager in dataIntegrationSubscriptionManagerNodes:
+        logger.info(dataIntegrationSubscriptionManager.name+" :: "+dataIntegrationSubscriptionManagerName)
+        if(dataIntegrationSubscriptionManager.name==dataIntegrationSubscriptionManagerName and dataIntegrationSubscriptionManager.role=='dataIntegration'):
+            logger.info("dataIntegration name : "+dataIntegrationSubscriptionManagerName+" dataIntegration IP:"+dataIntegrationSubscriptionManagerIP+" has been removed.")
+            dataIntegrationSubscriptionManagerNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.dataIntegrationSubscriptionManager.nodes = dataIntegrationSubscriptionManagerNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+
+
+def config_add_iidrAccessServer_node(hostIp, hostName, role, type, filePath='config/cluster.config'):
+    logger.info("iidrAccessServer")
+    newNode = Nodes(hostIp, hostName, role, type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.iidrAccessServer.nodes
+
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isiidrAccessServerExist(existingNodes,hostIp) "+isiidrAccessServerExist(existingNodes,hostIp))
+        if(isiidrAccessServerExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.iidrAccessServer.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+
+def config_remove_iidrAccessServer_byNameIP(iidrAccessServerName,iidrAccessServerIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_iidrAccessServer_byNameIP () : iidrAccessServerName :"+str(iidrAccessServerName)+" nbIp:"+str(iidrAccessServerIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    iidrAccessServerNodes = config_data.cluster.servers.iidrAccessServer.nodes
+    counter=0
+    for iidrAccessServer in iidrAccessServerNodes:
+        logger.info(iidrAccessServer.name+" :: "+iidrAccessServerName)
+        if(iidrAccessServer.name==iidrAccessServerName and iidrAccessServer.role=='dataIntegration'):
+            logger.info("dataIntegration name : "+iidrAccessServerName+" dataIntegration IP:"+iidrAccessServerIP+" has been removed.")
+            iidrAccessServerNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.iidrAccessServer.nodes = iidrAccessServerNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+
+def config_add_iidrKafkaAgent_node(hostIp, hostName, role, type, filePath='config/cluster.config'):
+    logger.info("iidrKafkaAgent")
+    newNode = Nodes(hostIp, hostName, role, type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.iidrKafkaAgent.nodes
+
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isiidrKafkaAgentExist(existingNodes,hostIp) "+isiidrKafkaAgentExist(existingNodes,hostIp))
+        if(isiidrKafkaAgentExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.iidrKafkaAgent.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+
+def config_remove_iidrKafkaAgent_byNameIP(iidrKafkaAgentName,iidrKafkaAgentIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_iidrKafkaAgent_byNameIP () : iidrKafkaAgentName :"+str(iidrKafkaAgentName)+" nbIp:"+str(iidrKafkaAgentIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    iidrKafkaAgentNodes = config_data.cluster.servers.iidrKafkaAgent.nodes
+    counter=0
+    for iidrKafkaAgent in iidrKafkaAgentNodes:
+        logger.info(iidrKafkaAgent.name+" :: "+iidrKafkaAgentName)
+        if(iidrKafkaAgent.name==iidrKafkaAgentName and iidrKafkaAgent.role=='dataIntegration'):
+            logger.info("dataIntegration name : "+iidrKafkaAgentName+" dataIntegration IP:"+iidrKafkaAgentIP+" has been removed.")
+            iidrKafkaAgentNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.iidrKafkaAgent.nodes = iidrKafkaAgentNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+def config_add_iidrOracleAgent_node(hostIp, hostName, role, type, filePath='config/cluster.config'):
+    logger.info("iidrOracleAgent")
+    newNode = Nodes(hostIp, hostName, role, type)
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.iidrOracleAgent.nodes
+
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        logger.info("isiidrOracleAgentExist(existingNodes,hostIp) "+isiidrOracleAgentExist(existingNodes,hostIp))
+        if(isiidrOracleAgentExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist. Node overrides"+str(hostIp))
+            for node in existingNodes:
+                if(str(node.ip)==str(hostIp)):
+                    logger.info("OVERRIDING IP : "+str(node.ip))
+                    node.ip=hostIp
+                    node.name=hostName
+                    node.type=type
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.iidrOracleAgent.nodes = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+        else:
+            logger.info("ADDING NODE"+str(hostIp))
+            return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE..."+str(hostIp))
+        return addToExistingNode(newNode,hostIp,hostName,filePath,config_data,existingNodes)
+
+def config_remove_iidrOracleAgent_byNameIP(iidrOracleAgentName,iidrOracleAgentIP,filePath='config/cluster.config', verbose=False):
+    logger.info("config_remove_iidrOracleAgent_byNameIP () : iidrOracleAgentName :"+str(iidrOracleAgentName)+" nbIp:"+str(iidrOracleAgentIP))
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    iidrOracleAgentNodes = config_data.cluster.servers.iidrOracleAgent.nodes
+    counter=0
+    for iidrOracleAgent in iidrOracleAgentNodes:
+        logger.info(iidrOracleAgent.name+" :: "+iidrOracleAgentName)
+        if(iidrOracleAgent.name==iidrOracleAgentName and iidrOracleAgent.role=='dataIntegration'):
+            logger.info("dataIntegration name : "+iidrOracleAgentName+" dataIntegration IP:"+iidrOracleAgentIP+" has been removed.")
+            iidrOracleAgentNodes.pop(counter)
+        counter=counter+1
+
+    config_data.cluster.servers.iidrOracleAgent.nodes = iidrOracleAgentNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
 
 def config_add_dataIntegration_node(hostIp, hostName, role, type, filePath='config/cluster.config'):
     logger.info("config_add_dataIntegration_node")
@@ -1046,7 +1329,7 @@ def config_remove_dataValidation_byNameIP(dataValidationName,dataValidationIP,fi
         counter=counter+1
 
     config_data.cluster.servers.dataValidation.nodes = dataValidationNodes
-    
+
 def config_add_dataEngine_node(hostIp, hostName, engine, role, type, filePath='config/cluster.config'):
     logger.info("config_add_dataEngine_node")
     newNode = Nodes1(hostIp, hostName, engine, role, type)
@@ -1259,10 +1542,6 @@ def getStreamIdAndName():
 
 def config_get_cluster_airgap(filePath='config/cluster.config'):
     return 'true'
-
-
-def config_get_space_hosts(filePath='config/cluster.config'):
-    return get_cluster_obj(filePath).cluster.servers.spaces.servers.host
 
 def config_add_cdc_node(filePath='config/cluster.config'):
     return get_cluster_obj(filePath).cluster.servers.cdc.node
@@ -1539,6 +1818,49 @@ def discoverHostConfig():
             for host,v in content['servers']['pivot'].items():
                 host='pivot'+str(pivotHostCount)
                 os.environ[host]=str(v)
+
+        if 'dataIntegrationSubscriptionManager' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['dataIntegrationSubscriptionManager'].items():
+                host = 'dataIntegrationSubscriptionManager'+str(nbHostCount)
+                os.environ[host] = str(v)
+                updateClusterConfigFileFlag = True
+                if updateClusterConfigFileFlag:
+                    config_add_dataIntegrationSubscriptionManager_node(host,host,'dataIntegrationSubscriptionManager', "config/cluster.config")
+                nbHostCount+=1
+
+
+        if 'iidrAccessServer' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['iidrAccessServer'].items():
+                host = 'iidrAccessServer'+str(nbHostCount)
+                os.environ[host] = str(v)
+                updateClusterConfigFileFlag = True
+                if updateClusterConfigFileFlag:
+                    config_add_iidrAccessServer_node(host,host,'iidrAccessServer', "config/cluster.config")
+                nbHostCount+=1
+
+        if 'iidrKafkaAgent' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['iidrKafkaAgent'].items():
+                host = 'iidrKafkaAgent'+str(nbHostCount)
+                os.environ[host] = str(v)
+                updateClusterConfigFileFlag = True
+                if updateClusterConfigFileFlag:
+                    config_add_iidrKafkaAgent_node(host,host,'iidrKafkaAgent', "config/cluster.config")
+                nbHostCount+=1
+
+
+        if 'iidrOracleAgent' in content['servers']:
+            nbHostCount=1
+            for host,v in content['servers']['iidrOracleAgent'].items():
+                host = 'iidrOracleAgent'+str(nbHostCount)
+                os.environ[host] = str(v)
+                updateClusterConfigFileFlag = True
+                if updateClusterConfigFileFlag:
+                    config_add_iidrOracleAgent_node(host,host,'iidrOracleAgent', "config/cluster.config")
+                nbHostCount+=1
+
     except Exception as e:
         handleException(e)
 

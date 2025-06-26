@@ -13,11 +13,12 @@ from scripts.odsx_servers_northbound_all_list import isInstalledAndGetVersion
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cleanup import signal_handler
-from utils.ods_cluster_config import config_get_manager_node
+from utils.ods_cluster_config import config_get_manager_node, config_get_iidrAccessServer_node, \
+    config_get_iidrKafkaAgent_node, config_get_iidrOracleAgent_node, config_get_dataIntegrationSubscriptionManager_node
 from utils.ods_cluster_config import config_get_space_hosts, config_get_nb_list, config_get_grafana_list, \
     config_get_influxdb_node, config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes
-from utils.ods_list import isInstalledAndGetVersionGrafana
-from utils.ods_list import isInstalledAndGetVersionInflux
+from utils.ods_list import isInstalledAndGetVersionGrafana, isInstalledAndGetVersionInflux, isInstalledIIDRAccessServer, \
+                            isInstalledIIDROracleAgent, isInstalledIIDRKafkaAgent, isInstalledIIDRSubscriptionManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput, \
     executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
@@ -260,22 +261,86 @@ def listAllServers():
                    Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
         data.append(dataArray)
 
-    get_dataIntegrationiidrServers = config_get_dataIntegrationiidr_nodes()
-    for server in get_dataIntegrationiidrServers:
+    get_iidrAccessServerServers = config_get_iidrAccessServer_node()
+    for server in get_iidrAccessServerServers:
         count=count+1
-        status = getTelnetStatus(os.getenv(server.ip),8086)
         host = str(os.getenv(server.ip))
-        # installStatus='No'
-        # install = isInstalledAndGetVersionInflux(str(host))
-        # logger.info("install : "+str(install))
-        # if(len(str(install))>0):
-        #     installStatus='Yes'
-        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
-                   Fore.GREEN+"IIDR1"+Fore.RESET,
+
+        IIDRAccessServerPort = readValuefromAppConfig("app.iidr.Access.Server.Port")
+        IIDRAccessServerStatus = getTelnetStatus(os.getenv(server.ip),IIDRAccessServerPort)
+        IIDRAccessServerInstallStatus='No'
+        IIDRAccessServerInstall = isInstalledIIDRAccessServer(str(host))
+        logger.info("IIDRAccessServerInstall : "+str(IIDRAccessServerInstall))
+        if(len(str(IIDRAccessServerInstall))>0):
+            IIDRAccessServerInstallStatus='Yes'
+
+        IIDRAccessServerdataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                                       Fore.GREEN+"IIDR Access Server"+Fore.RESET,
+                                       Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                                       Fore.GREEN+IIDRAccessServerInstallStatus+Fore.RESET if(IIDRAccessServerInstallStatus=='Yes') else Fore.RED+IIDRAccessServerInstallStatus+Fore.RESET,
+                                       Fore.GREEN+IIDRAccessServerStatus+Fore.RESET if(IIDRAccessServerStatus=='ON') else Fore.RED+IIDRAccessServerStatus+Fore.RESET,]
+        data.append(IIDRAccessServerdataArray)
+
+
+    get_iidrKafkaAgentServers = config_get_iidrKafkaAgent_node()
+    for server in get_iidrKafkaAgentServers:
+        count=count+1
+        host = str(os.getenv(server.ip))
+
+        IIDRKafkaAgentPort = readValuefromAppConfig("app.iidr.Kafka.Agent.Port")
+        IIDRKafkaAgentStatus = getTelnetStatus(os.getenv(server.ip),IIDRKafkaAgentPort)
+        IIDRKafkaAgentInstallStatus='No'
+        IIDRKafkaAgentInstall = isInstalledIIDRKafkaAgent(str(host))
+        logger.info("IIDRKafkaAgentInstall : "+str(IIDRKafkaAgentInstall))
+        if(len(str(IIDRKafkaAgentInstall))>0):
+            IIDRKafkaAgentInstallStatus='Yes'
+
+        IIDRKafkaAgentdataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                                     Fore.GREEN+"IIDR Kafka Agent"+Fore.RESET,
+                                     Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                                     Fore.GREEN+IIDRKafkaAgentInstallStatus+Fore.RESET if(IIDRKafkaAgentInstallStatus=='Yes') else Fore.RED+IIDRKafkaAgentInstallStatus+Fore.RESET,
+                                     Fore.GREEN+IIDRKafkaAgentStatus+Fore.RESET if(IIDRKafkaAgentStatus=='ON') else Fore.RED+IIDRKafkaAgentStatus+Fore.RESET,]
+        data.append(IIDRKafkaAgentdataArray)
+
+    get_iidrOracleAgentServers = config_get_iidrOracleAgent_node()
+    for server in get_iidrOracleAgentServers:
+        count=count+1
+        host = str(os.getenv(server.ip))
+
+        IIDROracleAgentPort = readValuefromAppConfig("app.iidr.Oracle.DB.Agent.Port")
+        IIDROracleDBAgentStatus = getTelnetStatus(os.getenv(server.ip),IIDROracleAgentPort)
+        IIDROracleAgentInstallStatus='No'
+        IIDROracleAgentInstall = isInstalledIIDROracleAgent(str(host))
+        logger.info("IIDROracleAgentInstall : "+str(IIDROracleAgentInstall))
+        if(len(str(IIDROracleAgentInstall))>0):
+            IIDROracleAgentInstallStatus='Yes'
+
+        IIDROracleAgentdataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"IIDR Oracle Agent"+Fore.RESET,
                    Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
-                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
-        data.append(dataArray)
+                   Fore.GREEN+IIDROracleAgentInstallStatus+Fore.RESET if(IIDROracleAgentInstallStatus=='Yes') else Fore.RED+IIDROracleAgentInstallStatus+Fore.RESET,
+                   Fore.GREEN+IIDROracleDBAgentStatus+Fore.RESET if(IIDROracleDBAgentStatus=='ON') else Fore.RED+IIDROracleDBAgentStatus+Fore.RESET,]
+        data.append(IIDROracleAgentdataArray)
+
+    get_dataIntegrationSubscriptionManagerServers = config_get_dataIntegrationSubscriptionManager_node()
+    for server in get_dataIntegrationSubscriptionManagerServers:
+        count=count+1
+        host = str(os.getenv(server.ip))
+
+        IIDRSubscriptionMangerPort = readValuefromAppConfig("app.iidr.iidrSubscriptionMangerPort")
+        IIDRSubscriptionMangerStatus = getTelnetStatus(os.getenv(server.ip),IIDRSubscriptionMangerPort)
+        IIDRSubscriptionMangerInstallStatus='No'
+        IIDRSubscriptionMangerInstall = isInstalledIIDRSubscriptionManager(str(host))
+        logger.info("IIDRSubscriptionMangerInstall : "+str(IIDRSubscriptionMangerInstall))
+        if(len(str(IIDRSubscriptionMangerInstall))>0):
+            IIDRSubscriptionMangerInstallStatus='Yes'
+
+        IIDRdataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"IIDR Subscription Manger"+Fore.RESET,
+                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                   Fore.GREEN+IIDRSubscriptionMangerInstallStatus+Fore.RESET if(IIDRSubscriptionMangerInstallStatus=='Yes') else Fore.RED+IIDRSubscriptionMangerInstallStatus+Fore.RESET,
+                   Fore.GREEN+IIDRSubscriptionMangerStatus+Fore.RESET if(IIDRSubscriptionMangerStatus=='ON') else Fore.RED+IIDRSubscriptionMangerStatus+Fore.RESET,]
+        data.append(IIDRdataArray)
 
     env = str(readValuefromAppConfig("app.setup.env"))
     if env != "dr":

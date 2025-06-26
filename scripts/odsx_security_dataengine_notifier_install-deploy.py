@@ -15,8 +15,8 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFolder, getYamlFileNamesInsideFolderList
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
-from utils.ods_validation import getSpaceServerStatus
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_validation import getSpaceServerStatus, port_check_config
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -93,6 +93,71 @@ def getManagerHost(managerNodes):
         return managerHost
     except Exception as e:
         handleException(e)
+
+def getHardLimitMemoryInBytes(hardLimit):
+    if hardLimit[-1] == "m" or hardLimit[-1] == "M":
+        # Convert MB to bytes (1 MB = 1024 * 1024 bytes)
+        mbHardLimit = int(hardLimit[:-1]) * 1024 * 1024
+        logger.info("mbHardLimit - > " + str(mbHardLimit))
+        return mbHardLimit
+    elif hardLimit[-1] == "g" or hardLimit[-1] == "G":
+        #Convert GB to bytes (1 GB = 1024 * 1024 * 1024 bytes)
+        gbHardLimit = int(hardLimit[:-1]) * 1024 * 1024 * 1024
+        logger.info("gbHardLimit - > " + str(gbHardLimit))
+        return gbHardLimit
+    else:
+        logger.info("Dataengine Notifier Required Available Memory Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        verboseHandle.printConsoleInfo("Dataengine Notifier Required Available Memory Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        return 0
+
+def getHighestAvailableMemoryManagerHost(spaceNodes,newGSCCount,feederType):
+    managerHost=""
+    try:
+        logger.info("getSpaceHost() : spaceNodes :"+str(spaceNodes))
+        SpaceActiveHostList = []
+        for node in spaceNodes:
+            status = port_check_config(str(os.getenv(node.ip)),22)
+            if(status):
+                SpaceActiveHostList.append(str(os.getenv(node.ip)))
+
+        GetFreeSpaceFromManager = {}
+        for host in SpaceActiveHostList:
+            _AvailableMemory = executeRemoteCommandAndGetOutputValuePython36(host,'root',"df -h / | awk 'NR==2 {print $4}'")
+            GetFreeSpaceFromManager[host] = getHardLimitMemoryInBytes(str(_AvailableMemory.strip()))
+
+        if feederType == "Personal_Message_Notifier":
+            SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
+        if feederType == "Group_Message_Notifier":
+            SpaceHostHighestAvailableMemory = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)[1]
+
+        DataengineNotifierRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.notifier.required.available.memory")
+        DataengineNotifierRequiredAvaiableMemoryLimitBytes = getHardLimitMemoryInBytes(DataengineNotifierRequiredAvaiableMemoryLimit)
+
+        if feederType == "all":
+            if newGSCCount == 0:
+                SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
+            else:
+                SpaceHostHighestAvailableMemory = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)[1]
+
+                if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:
+                    pass
+                else:
+                    SpaceHostHighestAvailableMemory = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)[2]
+
+                if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:
+                    pass
+                else:
+                    SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
+
+        if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:  # Change '/' to another path if needed
+            print(str(DataengineNotifierRequiredAvaiableMemoryLimit) + " Free disk Security space is available on "  + str(SpaceHostHighestAvailableMemory))
+        else:
+            print("Less than " + str(DataengineNotifierRequiredAvaiableMemoryLimit) + " of free disk space.")
+            exit(0)
+        return SpaceHostHighestAvailableMemory
+    except Exception as e:
+        handleException(e)
+
 
 def listDeployed(managerHost):
     global gs_space_dictionary_obj
@@ -212,12 +277,14 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
         handleException(e)
 
 
-def proceedToCreateGSC(zoneGSC,newGSCCount):
+def proceedToCreateGSC(zoneGSC,newGSCCount,feederType):
     logger.info("proceedToCreateGSC()")
     idx = newGSCCount % len(spaceNodes)
     host = spaceNodes[idx]
-    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
-    verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
+    # print(spaceNodes)
+    SpaceHighestAvailableHost = getHighestAvailableMemoryManagerHost(spaceNodes,newGSCCount,feederType)
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" "+str(SpaceHighestAvailableHost)+" | grep -v JAVA_HOME"
+    verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(SpaceHighestAvailableHost))
     logger.info(commandToExecute)
     with Spinner():
         output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
@@ -324,10 +391,10 @@ def proceedToDeployPU(feederType):
         newGSCCount=0
         if(confirmCreateGSC=='y'):
             if feederType == "Personal_Message_Notifier" or feederType == "all":
-                proceedToCreateGSC('personal_message_notifier',newGSCCount)
+                proceedToCreateGSC('personal_message_notifier',newGSCCount, feederType)
                 newGSCCount=newGSCCount+1
             if feederType == "Group_Message_Notifier" or feederType == "all":
-                proceedToCreateGSC('group_message_notifier',newGSCCount)
+                proceedToCreateGSC('group_message_notifier',newGSCCount, feederType)
         apiPushXClientID = str(readValueByConfigObj("app.dataengine.apiPushXClientID"))
         apiPushUri = str(readValueByConfigObj("app.dataengine.apiPushUri"))
         if feederType == "Personal_Message_Notifier" or feederType == "all":
