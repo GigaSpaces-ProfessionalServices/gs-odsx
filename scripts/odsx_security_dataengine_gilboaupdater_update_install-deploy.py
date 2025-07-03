@@ -140,7 +140,7 @@ def getHighestAvailableMemoryManagerHost(managerNodes):
 
         ManagerHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
 
-        DataengineGilboaFeederRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.gilboa-feeder.required.available.memory")
+        DataengineGilboaFeederRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.gilboa-feeder.hard.limit")
         DataengineGilboaFeederRequiredAvaiableMemoryLimitBytes = getHardLimitMemoryInBytes(DataengineGilboaFeederRequiredAvaiableMemoryLimit)
 
         if GetFreeSpaceFromManager[ManagerHostHighestAvailableMemory] >= DataengineGilboaFeederRequiredAvaiableMemoryLimitBytes:  # Change '/' to another path if needed

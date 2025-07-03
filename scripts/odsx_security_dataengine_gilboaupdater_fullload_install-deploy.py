@@ -142,7 +142,7 @@ def getHighestAvailableMemoryManagerHost(spaceNodes):
 
         SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
 
-        DataengineNotifierRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.notifier.required.available.memory")
+        DataengineNotifierRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.mssql-feeder.hard.limit")
         DataengineNotifierRequiredAvaiableMemoryLimitBytes = getHardLimitMemoryInBytes(DataengineNotifierRequiredAvaiableMemoryLimit)
 
         if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:  # Change '/' to another path if needed

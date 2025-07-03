@@ -371,19 +371,19 @@
 ### TAU v4.92-tau-release tag
 118. Minor bug fixes for Oracle feeder
 ### TAU v4.93-tau-release tag
-119. For Service creator added infra jar to Space server installation
+119. For Service creator add infra-1.1-SNAPSHOT-jar-with-dependencies.jar to /dbagigashare/current/gs/jars/infra for Space server installation
 120. Add app.space.infra.jar.target=/dbagiga/gigaspaces-smart-ods/lib/optional/pu-common in app.config
 121. Add below property under gs.config.jars section
      infra:
        infrajar: infra-1.1-SNAPSHOT-jar-with-dependencies.jar
-120. For Space Server ip selection installations steps reversed
+122. For Space Server ip selection installations steps reversed
 ### TAU v4.94-tau-release tag
-121. For Data Engine Gilboa Updater Full Load and Gilboa Updater Update updated installation hard limit
-122. Add app.dataengine.gilboa-feeder.required.available.memory=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
-123. For Data Engine Notifier updated installation hard limit 
-124. Add app.dataengine.notifier.required.available.memory=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
-125. Updated DI List and Server List All visibility for added DI Subscription Manager, IIDR Access Server, IIDR Kafka Agent, IIDR Oracle Agent
-126. In host.yaml file add below after dataIntegration section
+123. For Data Engine Gilboa Updater Full Load and Gilboa Updater Update updated installation hard limit
+124. Add app.dataengine.gilboa-feeder.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+125. For Data Engine Notifier updated installation hard limit 
+126. Add app.dataengine.notifier.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+127. Updated DI List and Server List All visibility for added DI Subscription Manager, IIDR Access Server, IIDR Kafka Agent, IIDR Oracle Agent
+128. In cluster.config file, the following lines have been added after dataIntegration section
      dataIntegrationSubscriptionManager :
        host1 : 10.0.1.137
      iidrAccessServer :
@@ -392,7 +392,7 @@
        host1 : 10.0.1.137
      iidrOracleAgent :
        host1 : 10.0.1.137
-127. In cluster.config file add below after dataIntegration section
+129. In cluster.config file add below after dataIntegration section
     "dataIntegrationSubscriptionManager": {
         "nodes": [
         ]
@@ -409,8 +409,11 @@
         "nodes": [
         ]
     }
-128. Add below properties in app.config
+130. Add below properties in app.config
      app.iidr.Access.Server.Port=10101
      app.iidr.Kafka.Agent.Port=11701
      app.iidr.Oracle.DB.Agent.Port=11001
      app.di.kafka.Port=9092
+     app.dataengine.mssql-feeder.hard.limit=2g
+### TAU v4.95-tau-release tag
+131. Updated Readme and naming convention from app.dataengine.gilboa-feeder.required.available.memory to app.dataengine.gilboa-feeder.hard.limit

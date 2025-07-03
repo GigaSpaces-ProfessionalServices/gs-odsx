@@ -130,7 +130,7 @@ def getHighestAvailableMemoryManagerHost(spaceNodes,newGSCCount,feederType):
         if feederType == "Group_Message_Notifier":
             SpaceHostHighestAvailableMemory = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)[1]
 
-        DataengineNotifierRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.notifier.required.available.memory")
+        DataengineNotifierRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.notifier.hard.limit")
         DataengineNotifierRequiredAvaiableMemoryLimitBytes = getHardLimitMemoryInBytes(DataengineNotifierRequiredAvaiableMemoryLimit)
 
         if feederType == "all":
