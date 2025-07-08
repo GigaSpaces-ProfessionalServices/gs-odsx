@@ -462,6 +462,13 @@ def getHardLimitMemoryInBytes():
         verboseHandle.printConsoleInfo("Oracle-ERP-feeder Hard Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
         exit(0)
 
+def format_bytes(byte_value):
+    gb = int(byte_value) / (1024 ** 3)
+    if gb >= 1:
+        return f"{gb:.2f} GB"
+    else:
+        mb = int(byte_value) / (1024 ** 2)
+        return f"{mb:.2f} MB"
 
 def isMemoryAvailableHostIp(managerNodes,spaceNodes):
     try:
@@ -488,8 +495,8 @@ def isMemoryAvailableHostIp(managerNodes,spaceNodes):
             logger.info("Memory available")
             return MemoryAvailableMemoryHostIp
         else:
-            logger.info("No sufficent memory available: Required Memory:"+str(hardLimit)+" Available Memory:"+str(freePhysicalMemorySizeInBytes) +" on host:"+MemoryAvailableMemoryHostIp)
-            verboseHandle.printConsoleInfo("No sufficent memory available: Required Memory:"+str(hardLimit)+" Available Memory:"+str(freePhysicalMemorySizeInBytes)+" on host:"+MemoryAvailableMemoryHostIp)
+            logger.info("No sufficient memory available: Required Memory:"+str(format_bytes(hardLimit))+" Available Memory:"+str(format_bytes(freePhysicalMemorySizeInBytes)) +" on host:"+MemoryAvailableMemoryHostIp)
+            verboseHandle.printConsoleInfo("No sufficient memory available: Required Memory:"+str(format_bytes(hardLimit))+" Available Memory:"+str(format_bytes(freePhysicalMemorySizeInBytes))+" on host:"+MemoryAvailableMemoryHostIp)
             exit(0)
     except Exception as e:
         handleException(e)
