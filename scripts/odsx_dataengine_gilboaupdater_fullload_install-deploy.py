@@ -123,7 +123,7 @@ def getHardLimitMemoryInBytes(hardLimit):
         return 0
 
 def getHighestAvailableMemoryManagerHost(spaceNodes):
-    managerHost=""
+    # managerHost=""
     try:
 
         logger.info("getSpaceHost() : spaceNodes :"+str(spaceNodes))
@@ -134,13 +134,13 @@ def getHighestAvailableMemoryManagerHost(spaceNodes):
                 SpaceActiveHostList.append(str(os.getenv(node.ip)))
 
         GetFreeSpaceFromManager = {}
-        for host in SpaceActiveHostList:
-            _AvailableMemory = executeRemoteCommandAndGetOutputValuePython36(host,'root',"df -h / | awk 'NR==2 {print $4}'")
-            GetFreeSpaceFromManager[host] = getHardLimitMemoryInBytes(str(_AvailableMemory.strip()))
+        for spaceHost in SpaceActiveHostList:
+            response = requests.get("http://" + managerHost + ":8090/v2/hosts/" + spaceHost + "/statistics/os")
+            jsonData = json.loads(response.text)
+            GetFreeSpaceFromManager[spaceHost] = jsonData["actualFreePhysicalMemorySizeInBytes"]
 
         SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
 
-        DataengineNotifierRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.mssql-feeder.hard.limit")
         DataengineNotifierRequiredAvaiableMemoryLimitBytes = getHardLimitMemoryInBytes(DataengineNotifierRequiredAvaiableMemoryLimit)
 
         if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:  # Change '/' to another path if needed
@@ -565,6 +565,7 @@ def displaySummaryOfInputParam():
     verboseHandle.printConsoleInfo("Enter sqlite3 db file :"+str(db_file))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder .jar file including file name : "+str(sourceMSSQLJarFilePath))
     verboseHandle.printConsoleInfo("Enter source file path of mssql-feeder *.sh file : "+str(sourceMSSQLFeederShFilePath))
+    verboseHandle.printConsoleInfo("Enter mssql-feeder hard limit : "+str(DataengineNotifierRequiredAvaiableMemoryLimit))
     #verboseHandle.printConsoleInfo("Enter source file of mssql-feeder *.sh file : "+str(newInstall))
 
 def proceedToDeployPUInputParam(managerHost):
@@ -624,6 +625,9 @@ def proceedToDeployPUInputParam(managerHost):
     #print(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis ["+feederSleepAfterWrite+"] :"+Fore.RESET)
     if(len(feederSleepAfterWrite)==0):
         feederSleepAfterWrite='500'
+
+    global DataengineNotifierRequiredAvaiableMemoryLimit
+    DataengineNotifierRequiredAvaiableMemoryLimit = readValuefromAppConfig("app.dataengine.mssql-feeder.hard.limit")
 
     displaySummaryOfInputParam()
     feeder_dict_obj = displayAvailableFeederList()

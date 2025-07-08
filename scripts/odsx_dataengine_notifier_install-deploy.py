@@ -109,7 +109,7 @@ def getHardLimitMemoryInBytes(hardLimit):
         return 0
 
 def getHighestAvailableMemoryManagerHost(spaceNodes,newGSCCount,feederType):
-    managerHost=""
+    # managerHost=""
     try:
         logger.info("getSpaceHost() : spaceNodes :"+str(spaceNodes))
         SpaceActiveHostList = []
@@ -119,9 +119,10 @@ def getHighestAvailableMemoryManagerHost(spaceNodes,newGSCCount,feederType):
                 SpaceActiveHostList.append(str(os.getenv(node.ip)))
 
         GetFreeSpaceFromManager = {}
-        for host in SpaceActiveHostList:
-            _AvailableMemory = executeRemoteCommandAndGetOutputValuePython36(host,'root',"df -h / | awk 'NR==2 {print $4}'")
-            GetFreeSpaceFromManager[host] = getHardLimitMemoryInBytes(str(_AvailableMemory.strip()))
+        for spaceHost in SpaceActiveHostList:
+            response = requests.get("http://" + managerHost + ":8090/v2/hosts/" + spaceHost + "/statistics/os")
+            jsonData = json.loads(response.text)
+            GetFreeSpaceFromManager[spaceHost] = jsonData["actualFreePhysicalMemorySizeInBytes"]
 
         if feederType == "Personal_Message_Notifier":
             SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)

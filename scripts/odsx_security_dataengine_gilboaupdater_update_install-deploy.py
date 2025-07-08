@@ -134,9 +134,10 @@ def getHighestAvailableMemoryManagerHost(managerNodes):
                 ManagerActiveHostList.append(os.getenv(node.ip))
 
         GetFreeSpaceFromManager = {}
-        for host in ManagerActiveHostList:
-            _AvailableMemory = executeRemoteCommandAndGetOutputValuePython36(host,'root',"df -h / | awk 'NR==2 {print $4}'")
-            GetFreeSpaceFromManager[host] = getHardLimitMemoryInBytes(str(_AvailableMemory.strip()))
+        for spaceHost in ManagerActiveHostList:
+            response = requests.get("http://"+managerHost+":8090/v2/hosts/"+os.getenv(node.name)+"/statistics/os", headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
+            jsonData = json.loads(response.text)
+            GetFreeSpaceFromManager[spaceHost] = jsonData["actualFreePhysicalMemorySizeInBytes"]
 
         ManagerHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
 

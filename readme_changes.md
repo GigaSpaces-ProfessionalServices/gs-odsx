@@ -376,14 +376,14 @@
 121. Add below property under gs.config.jars section
      infra:
        infrajar: infra-1.1-SNAPSHOT-jar-with-dependencies.jar
-122. For Space Server ip selection installations steps reversed
+122. Feeder list - If reverse DNS fails then go ahead only with IP in display list.
 ### TAU v4.94-tau-release tag
 123. For Data Engine Gilboa Updater Full Load and Gilboa Updater Update updated installation hard limit
 124. Add app.dataengine.gilboa-feeder.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
 125. For Data Engine Notifier updated installation hard limit 
 126. Add app.dataengine.notifier.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
 127. Updated DI List and Server List All visibility for added DI Subscription Manager, IIDR Access Server, IIDR Kafka Agent, IIDR Oracle Agent
-128. In cluster.config file, the following lines have been added after dataIntegration section
+128. In Host.yaml file, the following lines have been added after dataIntegration section
      dataIntegrationSubscriptionManager :
        host1 : 10.0.1.137
      iidrAccessServer :
@@ -392,7 +392,7 @@
        host1 : 10.0.1.137
      iidrOracleAgent :
        host1 : 10.0.1.137
-129. In cluster.config file add below after dataIntegration section
+129. In cluster.config the following has been added after dataIntegration section
     "dataIntegrationSubscriptionManager": {
         "nodes": [
         ]
@@ -417,3 +417,5 @@
      app.dataengine.mssql-feeder.hard.limit=2g
 ### TAU v4.95-tau-release tag
 131. Updated Readme and naming convention from app.dataengine.gilboa-feeder.required.available.memory to app.dataengine.gilboa-feeder.hard.limit
+### TAU v4.96-tau-release tag
+132. Code fixed for Gilboa and Notifier. If the available RAM of all space servers is less than the defined hard.limit of a feeder type then the feeder will not be deployed
