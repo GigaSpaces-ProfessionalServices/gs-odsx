@@ -421,3 +421,5 @@
 132. Code fixed for Gilboa and Notifier. If the available RAM of all space servers is less than the defined hard.limit of a feeder type then the feeder will not be deployed
 ### TAU v4.97-tau-release tag
 133. Logger changed Not enough RAM to GigaBytes instead of Bytes for Oracle and Oracle ERP feeder 
+### TAU v5.0-tau-release tag
+135. Merged code from TAU-ODSX-Oracle-Feeder-ERP to TAU-ODSX
