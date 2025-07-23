@@ -14,7 +14,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getOracleQueryStatusFromSqlLite, getPasswordByHost, getUsernameByHost
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost, getOracleErpQueryStatusFromSqlLite
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -90,7 +90,7 @@ def listDeployed(managerHost):
     logger.info("listDeployed()")
     global gs_space_dictionary_obj
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
 
         logger.info("managerHost :"+str(managerHost))
@@ -111,14 +111,14 @@ def listDeployed(managerHost):
         counter = 0
         dataTable = []
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracleerp.scripts.").replace('.', '/')
         flag = False
         for i in jsonArray:
-            if (str(i['name']).__contains__("oraclefeeder")):
+            if (str(i['name']).__contains__("oracleerp")):
                 flag = True
 
         logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
-        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracleerp.scripts.").replace('.', '/')
         os.chdir(sourceOracleFeederShFilePath)
 
         deployedPUNames = []
@@ -129,16 +129,16 @@ def listDeployed(managerHost):
                 response2 = requests.get(
                     "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances",auth = HTTPBasicAuth(username, password))
                 jsonArray2 = json.loads(response2.text)
-                queryStatus = str(getOracleQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
+                queryStatus = str(getOracleErpQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
                 for data2 in jsonArray2:
                     hostId = data2["hostId"]
                 if (len(str(hostId)) == 0):
                     hostId = "N/A"
-                if (str(data["name"]).__contains__('oraclefeeder')):
+                if (str(data["name"]).__contains__('oracleerp')):
                     os.getcwd()
                     os.chdir(sourceOracleFeederShFilePath)
                     for file in glob.glob("load_*.sh"):
-                        puName = str(str(data["name"])).replace('oraclefeeder_', 'load_').casefold()
+                        puName = str(str(data["name"])).replace('oracleerpfeeder_', 'load_').casefold()
                         puName = puName + ".sh"
                         if (file.casefold() == puName):
                             file = open(file, "r")
@@ -150,7 +150,7 @@ def listDeployed(managerHost):
                                     if(myString.find(startString) != -1):
                                         mySubString = myString[
                                                       myString.find(startString) + len(startString):myString.find(endString)]
-                                        # puName = 'oraclefeeder_'+puName
+                                        # puName = 'oracleerpfeeder_'+puName
                                         conditionDate = getFormattedDate(mySubString)
                                     else:
                                         conditionDate = "-"
@@ -163,10 +163,10 @@ def listDeployed(managerHost):
                                                  Fore.GREEN + data["status"] + Fore.RESET,
                                                  Fore.GREEN + str(conditionDate) + Fore.RESET
                                                  ]
-                    logger.info("UPDATE oracle_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
+                    logger.info("UPDATE oracleerp_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
                         data["name"]) + "%' ")
                     mycursor = cnx.execute(
-                        "UPDATE oracle_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
+                        "UPDATE oracleerp_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
                             data["name"]) + "%' ")
                     logger.info("query result:" + str(mycursor.rowcount))
 
@@ -178,12 +178,12 @@ def listDeployed(managerHost):
             os.chdir(sourceOracleFeederShFilePath)
             puName = str(file).replace('load_', '').replace('.sh', '').casefold()
             file = open(file, "r")
-            puName = 'oraclefeeder_'+puName
+            puName = 'oracleerpfeeder_'+puName
             if puName in deployedPUNames:
                 continue
             for line in file:
                 if (line.startswith("curl")):
-                    #puName = 'oraclefeeder_'+puName
+                    #puName = 'oracleerpfeeder_'+puName
                     myString = line
                     startString = '&condition='
                     endString = "&exclude-columns="
@@ -193,10 +193,10 @@ def listDeployed(managerHost):
                     if(myString.find(startString) != -1):
                         mySubString = myString[
                                     myString.find(startString) + len(startString):myString.find(endString)]
-                        #puName = 'oraclefeeder_'+puName
+                        #puName = 'oracleerpfeeder_'+puName
                         conditionDate = getFormattedDate(mySubString)
                     else:
-                        #puName = 'oraclefeeder_'+puName
+                        #puName = 'oracleerpfeeder_'+puName
                         conditionDate = "-"
                     dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                          Fore.GREEN + puName + Fore.RESET,
@@ -218,8 +218,8 @@ def listDeployed(managerHost):
         handleException(e)
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_oracle-feeder_list")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder -> List")
+    logger.info("odsx_dataengine_oracle-feeder-erp_list")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> List")
     username = ""
     password = ""
 

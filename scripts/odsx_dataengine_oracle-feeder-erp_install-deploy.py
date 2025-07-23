@@ -20,7 +20,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper,userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_db2feeder_utilities import getPortNotExistInOracleFeeder
+from utils.odsx_db2feeder_utilities import getPortNotExistInOracleErpFeeder
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -129,7 +129,7 @@ def listDeployed(managerHost):
         counter=0
         dataTable=[]
         for data in jsonArray:
-            if(str(data["name"]).casefold().__contains__("oraclefeeder")):
+            if(str(data["name"]).casefold().__contains__("oracleerpfeeder")):
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+data["resource"]+Fore.RESET,
@@ -144,13 +144,13 @@ def listDeployed(managerHost):
                 dataTable.append(dataArray)
 
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+        sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracleerp.scripts.").replace('.', '/')
         directory = os.getcwd()
         os.chdir(sourceOracleFeederShFilePath)
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
             puName = str(file).replace('load_', '').replace('.sh', '').casefold()
-            puName = 'oraclefeeder_'+puName
+            puName = 'oracleerpfeeder_'+puName
             if puName in deployedPUNames:
                 continue
 
@@ -267,13 +267,13 @@ def createGSCInputParam():
     global numberOfGSC
     global memoryGSC
 
-    numberOfGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder.gscpercluster"))
+    numberOfGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder-erp.gscpercluster"))
     #str(userInputWrapper(Fore.YELLOW+"Enter number of GSCs per host [1] : "+Fore.RESET))
     #while(len(str(numberOfGSC))==0):
     #    numberOfGSC=1
     logger.info("numberOfGSC :"+str(numberOfGSC))
 
-    memoryGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder.gsc.memory"))
+    memoryGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder-erp.gsc.memory"))
     #str(userInputWrapper(Fore.YELLOW+"Enter memory of GSC [1g] : "+Fore.RESET))
     #while(len(str(memoryGSC))==0):
     #    memoryGSC='1g'
@@ -312,7 +312,7 @@ def uploadFileRest(managerHostConfig,feederName):
         os.chdir(sourceOracleFeederShFilePath)
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
-            exitsFeeder = str(file).replace('load','oraclefeeder').replace('.sh','').casefold()
+            exitsFeeder = str(file).replace('load','oracleerpfeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load','').replace('.sh','').casefold()
                 if feederName != "" and "_"+feederName != puName:
@@ -320,7 +320,7 @@ def uploadFileRest(managerHostConfig,feederName):
                 #pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
                 #print("pathOfSourcePU : "+str(pathOfSourcePU))
                 #print("jarName :"+jarName)
-                zoneGSC = 'oracle_'+puName
+                zoneGSC = 'oracleerp_'+puName
                 #verboseHandle.printConsoleWarning("Proceeding for : "+pathOfSourcePU)
                 verboseHandle.printConsoleWarning("Proceeding for : "+sourceOracleJarFilePath)
                 logger.info("url : "+"curl -X PUT -F 'file=@"+str(sourceOracleJarFilePath)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
@@ -355,10 +355,10 @@ def checkIfPUIsUploaded(managerHostConfig,resource):
 
 def getDataPUREST(resource,resourceName,zoneOfPU,restPort,managerHost):
     backUpRequired=0
-    oracleHost = str(readValueByConfigObj("app.dataengine.oracle-feeder.oracle.server")).replace('"','').replace(' ','')
-    oracleUser = str(readValueByConfigObj("app.dataengine.oracle-feeder.oracle.username")).replace('"','').replace(' ','')
-    oraclePassword = str(readValueByConfigObj("app.dataengine.oracle-feeder.oracle.password")).replace('"','').replace(' ','')
-    oracleDatabase = str(readValueByConfigObj("app.dataengine.oracle-feeder.oracle.databasename")).replace('"','').replace(' ','')
+    oracleHost = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.oracle.server")).replace('"','').replace(' ','')
+    oracleUser = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.oracle.username")).replace('"','').replace(' ','')
+    oraclePassword = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.oracle.password")).replace('"','').replace(' ','')
+    oracleDatabase = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.oracle.databasename")).replace('"','').replace(' ','')
     data={
         "resource": ""+resource+"",
         "topology": {
@@ -400,19 +400,19 @@ def validateResponseGetDescription(responseCode):
 def sqlLiteCreateTableDB():
     logger.info("sqlLiteCreateTableDB()")
     try:
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         logger.info("dbFile : "+str(db_file))
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx)+" Sqlite V: "+str(sqlite3.version))
         #cnx.execute("DROP TABLE IF EXISTS db2_host_port")
-        cnx.execute("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.execute("CREATE TABLE IF NOT EXISTS oracleerp_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.commit()
         cnx.close()
     except Exception as e:
         handleException(e)
 
 def createOracleEntryInSqlLite(puName, file, restPort):
-    logger.info("createOracleEntryInSqlLite()")
+    logger.info("createOracleErpEntryInSqlLite()")
     try:
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(puName)+"/instances")
         jsonArray = json.loads(response.text)
@@ -421,9 +421,9 @@ def createOracleEntryInSqlLite(puName, file, restPort):
         hostId = ''
         for data in jsonArray:
             hostId = str(data["hostId"])
-        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+        db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
-        cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
+        cnx.execute("INSERT INTO oracleerp_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -436,12 +436,12 @@ def newInstallOracleFeeder():
     os.chdir(sourceOracleFeederShFilePath)
     for file in glob.glob("load_*.sh"):
         os.chdir(directory)
-        exitsFeeder = str(file).replace('load','oraclefeeder').replace('.sh','').casefold()
+        exitsFeeder = str(file).replace('load','oracleerpfeeder').replace('.sh','').casefold()
         if exitsFeeder not in activefeeder:
             newInstall.append(exitsFeeder)
 
 def getHardLimitMemoryInBytes():
-    hardLimit = str(readValueByConfigObj("app.dataengine.oracle-feeder.hard.limit"))
+    hardLimit = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.hard.limit"))
     if hardLimit[-1] == "m":
         # Convert MB to bytes (1 MB = 1024 * 1024 bytes)
         mbHardLimit = int(hardLimit[:-1]) * 1024 * 1024
@@ -453,8 +453,8 @@ def getHardLimitMemoryInBytes():
         logger.info("gbHardLimit - > " + str(gbHardLimit))
         return gbHardLimit
     else:
-        logger.info("Oracle-feeder Hard Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
-        verboseHandle.printConsoleInfo("Oracle-feeder Hard Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        logger.info("Oracle-feeder-erp Hard Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        verboseHandle.printConsoleInfo("Oracle-feeder-erp Hard Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
         exit(0)
 
 def format_bytes(byte_value):
@@ -506,28 +506,28 @@ def proceedToDeployPU(feederName):
         directory = os.getcwd()
         os.chdir(sourceOracleFeederShFilePath)
         #os.system("pwd")
-        restPort = str(readValueByConfigObj("app.dataengine.oracle-feeder.rest.port")).replace('"','').replace(' ','')
+        restPort = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.rest.port")).replace('"','').replace(' ','')
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
         for file in glob.glob("load_*.sh"):
             os.chdir(directory)
-            exitsFeeder = str(file).replace('load','oraclefeeder').replace('.sh','').casefold()
+            exitsFeeder = str(file).replace('load','oracleerpfeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load_','').replace('.sh','').casefold()
                 if feederName != "" and feederName != puName:
                     continue
-                zoneGSC = 'oracle_'+puName
+                zoneGSC = 'oracleErp_'+puName
               #  logger.info("filePrefix : "+filePrefix)
                # resource = filePrefix+'_'+puName+'.jar'
-                resource = str(getYamlFilePathInsideFolder(".oracle.jars.oracleJarFile"))
-                puName = 'oraclefeeder_'+puName
-                port = getPortNotExistInOracleFeeder(restPort)
+                resource = str(getYamlFilePathInsideFolder(".oracleerp.jars.oracleErpJarFile"))
+                puName = 'oracleerpfeeder_'+puName
+                port = getPortNotExistInOracleErpFeeder(restPort)
                 logger.info("dbPort : "+str(port))
                 if(len(str(port))!=0):
                     while(len(str(port))!=0):
                         restPort = int(port)+1
-                        port = getPortNotExistInOracleFeeder(restPort)
+                        port = getPortNotExistInOracleErpFeeder(restPort)
                     #else:
                     #    dbPort = restPort
                 if(confirmCreateGSC=='y'):
@@ -580,7 +580,7 @@ def proceedToDeployPU(feederName):
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
-    db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
+    db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
     verboseHandle.printConsoleInfo("------------------------------------------------------------")
     verboseHandle.printConsoleInfo("***Summary***")
     if(confirmCreateGSC=='y'):
@@ -588,29 +588,29 @@ def displaySummaryOfInputParam():
         verboseHandle.printConsoleInfo("Enter memory of GSC :"+memoryGSC)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location source : "+dPipelineLocationSource)
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
-    verboseHandle.printConsoleInfo("Enter oracle.server : "+str(oracleServer))
+    verboseHandle.printConsoleInfo("Enter oracle.Erp.server : "+str(oracleServer))
     verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
-    verboseHandle.printConsoleInfo("Enter oracle-feeder hard.limit: " + str(readValueByConfigObj("app.dataengine.oracle-feeder.hard.limit")))
+    verboseHandle.printConsoleInfo("Enter oracle-feeder-erp hard.limit: " + str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.hard.limit")))
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
     verboseHandle.printConsoleInfo("Enter sqlite3 db file :"+str(db_file))
-    verboseHandle.printConsoleInfo("Enter source file path of oracle-feeder .jar file including file name : "+str(sourceOracleJarFilePath))
-    verboseHandle.printConsoleInfo("Enter source file path of oracle-feeder *.sh file : "+str(sourceOracleFeederShFilePath))
+    verboseHandle.printConsoleInfo("Enter source file path of oracle-Erp-feeder .jar file including file name : "+str(sourceOracleJarFilePath))
+    verboseHandle.printConsoleInfo("Enter source file path of oracle-Erp-feeder *.sh file : "+str(sourceOracleFeederShFilePath))
     #verboseHandle.printConsoleInfo("Enter source file of oracle-feeder *.sh file : "+str(newInstall))
 
 def proceedToDeployPUInputParam(managerHost):
     logger.info("proceedToDeployPUInputParam()")
 
     global sourceOracleJarFilePath
-    sourceOracleJarFileConfig = str(getYamlFilePathInsideFolder(".oracle.jars.oracleJarFile"))
+    sourceOracleJarFileConfig = str(getYamlFilePathInsideFolder(".oracleerp.jars.oracleErpJarFile"))
     #print(Fore.YELLOW+"Enter source file path of oracle-feeder .jar file including file name ["+sourceOracleJarFileConfig+"] : "+Fore.RESET)
     #if(len(str(sourceOracleJarFilePath))==0):
     sourceOracleJarFilePath = sourceOracleJarFileConfig
-    #set_value_in_property_file("app.dataengine.oracle-feeder.jar",sourceOracleJarFilePath)
+    #set_value_in_property_file("app.dataengine.oracle-feeder-erp.jar",sourceOracleJarFilePath)
 
     global sourceOracleFeederShFilePath
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
-    sourceOracleFeederShFilePathConfig = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
+    sourceOracleFeederShFilePathConfig = str(sourceInstallerDirectory+".oracleerp.scripts.").replace('.','/')
 
     #print(Fore.YELLOW+"Enter source file path (directory) of *.sh file ["+sourceOracleFeederShFilePathConfig+"] : "+Fore.RESET)
     #if(len(str(sourceOracleFeederShFilePath))==0):
@@ -619,7 +619,7 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("last char:"+str(lastChar))
     if(lastChar!='/'):
         sourceOracleFeederShFilePath = sourceOracleFeederShFilePath+'/'
-    #set_value_in_property_file("app.dataengine.oracle-feeder.filePath.shFile",sourceOracleFeederShFilePath)
+    #set_value_in_property_file("app.dataengine.oracle-feeder-erp.filePath.shFile",sourceOracleFeederShFilePath)
 
     #uploadFileRest(managerHost)
     newInstallOracleFeeder()
@@ -631,26 +631,26 @@ def proceedToDeployPUInputParam(managerHost):
     logger.info("maxInstancePerVM Of PU :"+str(maxInstancesPerMachine))
 
     global spaceName
-    spaceName = str(readValueByConfigObj("app.dataengine.oracle-feeder.space.name"))
+    spaceName = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.space.name"))
     #print(Fore.YELLOW+"Enter space.name ["+spaceName+"] : "+Fore.RESET)
     #if(len(str(spaceName))==0):
     #    spaceName='bllspace'
 
     global oracleServer
-    oracleServerConfig = str(readValueByConfigObj("app.dataengine.oracle-feeder.oracle.server"))
+    oracleServerConfig = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.oracle.server"))
     #print(Fore.YELLOW+"Enter oracle.server ["+oracleServerConfig+"]: "+Fore.RESET)
     #if(len(str(oracleServer))==0):
     oracleServer = oracleServerConfig
-    # set_value_in_property_file("app.dataengine.oracle-feeder.oracle.server",oracleServer)
+    # set_value_in_property_file("app.dataengine.oracle-feeder-erp.oracle.server",oracleServer)
 
     global feederWriteBatchSize
-    feederWriteBatchSize = str(readValueByConfigObj("app.dataengine.oracle-feeder.writeBatchSize"))
+    feederWriteBatchSize = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.writeBatchSize"))
     #print(Fore.YELLOW+"Enter feeder.writeBatchSize ["+feederWriteBatchSize+"] :"+Fore.RESET)
     #if(len(feederWriteBatchSize)==0):
     #    feederWriteBatchSize='10000'
 
     global feederSleepAfterWrite
-    feederSleepAfterWrite = str(readValueByConfigObj("app.dataengine.oracle-feeder.sleepAfterWriteInMillis"))
+    feederSleepAfterWrite = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sleepAfterWriteInMillis"))
     #print(Fore.YELLOW+"Enter feeder.sleepAfterWriteInMillis ["+feederSleepAfterWrite+"] :"+Fore.RESET)
     if(len(feederSleepAfterWrite)==0):
         feederSleepAfterWrite='500'
@@ -668,7 +668,7 @@ def proceedToDeployPUInputParam(managerHost):
             if(len(str(finalConfirm))==0):
                 finalConfirm='y'
             if(finalConfirm=='y'):
-                logger.info("oracle feeder confirmCreateGSC "+confirmCreateGSC)
+                logger.info("Oracle feeder ERP confirmCreateGSC "+confirmCreateGSC)
                 if not checkIfPUIsUploaded(managerHost,str(tail)):
                     uploadFileRest(managerHost,feederToDeploy)
                 proceedToDeployPU(feederToDeploy)
@@ -679,7 +679,7 @@ def proceedToDeployPUInputParam(managerHost):
         if(len(str(finalConfirm))==0):
             finalConfirm='y'
         if(finalConfirm=='y'):
-            logger.info("oracle feeder confirmCreateGSC "+confirmCreateGSC)
+            logger.info("Oracle feeder ERP confirmCreateGSC "+confirmCreateGSC)
             if not checkIfPUIsUploaded(managerHost,str(tail)):
                 uploadFileRestAll(managerHost,"")
             proceedToDeployPU("")
@@ -699,15 +699,15 @@ def displayAvailableFeederList():
     dataArray=[]
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
-    sourceOraleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
+    sourceOraleErpFeederShFilePath = str(sourceInstallerDirectory + ".oracleerp.scripts.").replace('.', '/')
     directory = os.getcwd()
-    os.chdir(sourceOraleFeederShFilePath)
+    os.chdir(sourceOraleErpFeederShFilePath)
 
     for file in glob.glob("load_*.sh"):
         os.chdir(directory)
         puName = str(file).replace('load_', '').replace('.sh', '').casefold()
         dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
-                     Fore.GREEN + 'oraclefeeder_'+ puName + Fore.RESET
+                     Fore.GREEN + 'oracleerpfeeder_'+ puName + Fore.RESET
                      ]
         gs_avail_feeder_dictionary_obj.add(str(counter + 1), str(puName))
         counter = counter + 1
@@ -717,8 +717,8 @@ def displayAvailableFeederList():
     return gs_avail_feeder_dictionary_obj
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_oracle-feeder_install")
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle-Feeder -> Install-Deploy')
+    logger.info("odsx_dataengine_oracle-feeder-erp_install")
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle-Feeder-ERP -> Install-Deploy')
     try:
         nodes = getDIServerHostList()
         logger.info("DI / kafka host found :"+str(nodes))
@@ -736,7 +736,7 @@ if __name__ == '__main__':
                     listDeployed(managerHost)
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
-                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder.gsc.create"))
+                        confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.oracle-feeder-erp.gsc.create"))
                         #str(userInputWrapper(Fore.YELLOW+"Do you want to create GSC ? (y/n) [y] : "))
                         if(len(str(confirmCreateGSC))==0 or confirmCreateGSC=='y'):
                             confirmCreateGSC='y'

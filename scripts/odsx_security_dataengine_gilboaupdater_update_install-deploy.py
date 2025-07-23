@@ -17,7 +17,7 @@ from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFold
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPortNotExistInGilboaFeeder, getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWrapper
@@ -104,6 +104,52 @@ def getManagerHost(managerNodes):
             if(status=="ON"):
                 managerHost = os.getenv(node.ip)
         return managerHost
+    except Exception as e:
+        handleException(e)
+
+def getHardLimitMemoryInBytes(hardLimit):
+    if hardLimit[-1] == "m" or hardLimit[-1] == "M":
+        # Convert MB to bytes (1 MB = 1024 * 1024 bytes)
+        mbHardLimit = int(hardLimit[:-1]) * 1024 * 1024
+        logger.info("mbHardLimit - > " + str(mbHardLimit))
+        return mbHardLimit
+    elif hardLimit[-1] == "g" or hardLimit[-1] == "G":
+        #Convert GB to bytes (1 GB = 1024 * 1024 * 1024 bytes)
+        gbHardLimit = int(hardLimit[:-1]) * 1024 * 1024 * 1024
+        logger.info("gbHardLimit - > " + str(gbHardLimit))
+        return gbHardLimit
+    else:
+        logger.info("Dataengine Gilboaupdater Required Available Memory Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        verboseHandle.printConsoleInfo("Dataengine Gilboaupdater Required Available Memory Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        return 0
+
+def getHighestAvailableMemoryManagerHost(managerNodes):
+    managerHost=""
+    try:
+        logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
+        ManagerActiveHostList = []
+        for node in managerNodes:
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            if(status=="ON"):
+                ManagerActiveHostList.append(os.getenv(node.ip))
+
+        GetFreeSpaceFromManager = {}
+        for spaceHost in ManagerActiveHostList:
+            response = requests.get("http://"+managerHost+":8090/v2/hosts/"+os.getenv(node.name)+"/statistics/os", headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
+            jsonData = json.loads(response.text)
+            GetFreeSpaceFromManager[spaceHost] = jsonData["actualFreePhysicalMemorySizeInBytes"]
+
+        ManagerHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
+
+        DataengineGilboaFeederRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.gilboa-feeder.hard.limit")
+        DataengineGilboaFeederRequiredAvaiableMemoryLimitBytes = getHardLimitMemoryInBytes(DataengineGilboaFeederRequiredAvaiableMemoryLimit)
+
+        if GetFreeSpaceFromManager[ManagerHostHighestAvailableMemory] >= DataengineGilboaFeederRequiredAvaiableMemoryLimitBytes:  # Change '/' to another path if needed
+            print(DataengineGilboaFeederRequiredAvaiableMemoryLimit + " Free disk space is available on "  + ManagerHostHighestAvailableMemory)
+        else:
+            print("Less than " + DataengineGilboaFeederRequiredAvaiableMemoryLimit + " of free disk space.")
+            exit(0)
+        return ManagerHostHighestAvailableMemory
     except Exception as e:
         handleException(e)
 
@@ -231,8 +277,9 @@ def proceedToCreateGSC(zoneGSC,newGSCCount):
     logger.info("proceedToCreateGSC()")
     idx = newGSCCount % len(spaceNodes)
     host = spaceNodes[idx]
-    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
-    verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
+    SpaceHighestAvailableHost = getHighestAvailableMemoryManagerHost(spaceNodes)
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(SpaceHighestAvailableHost)+" | grep -v JAVA_HOME"
+    verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(SpaceHighestAvailableHost))
     logger.info(commandToExecute)
     with Spinner():
         output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)

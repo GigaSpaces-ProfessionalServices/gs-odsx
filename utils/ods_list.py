@@ -102,6 +102,42 @@ def isInstalledAndGetVersionInflux(host):
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 
+def isInstalledIIDRAccessServer(host):
+    logger.info("isInstalledIIDRAccessServer")
+    commandToExecute='ls /data/gs_software/iidr/as*'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    return str(outputShFile)
+
+def isInstalledIIDRKafkaAgent(host):
+    logger.info("isInstalledIIDRKafkaAgent")
+    commandToExecute='ls /data/gs_software/iidr/kafka*'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    return str(outputShFile)
+
+def isInstalledIIDROracleAgent(host):
+    logger.info("isInstalledIIDROracleAgent")
+    commandToExecute='ls /data/gs_software/iidr/oracle*'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    return str(outputShFile)
+
+def isInstalledIIDRSubscriptionManager(host):
+    logger.info("isInstalledIIDRSubscriptionManager")
+    commandToExecute='ls /home/gsods/di-subscription-manager/latest-di-subscription-manager*'
+    logger.info("commandToExecute :"+str(commandToExecute))
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile=str(outputShFile).replace('\n','')
+    logger.info("outputShFile :"+str(outputShFile))
+    return str(outputShFile)
+
 def getInfluxdbServerDetails(influxdbServers):
     logger.info("getInfluxdbServerDetails()")
     dataArray=[]

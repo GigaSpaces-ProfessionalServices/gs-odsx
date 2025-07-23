@@ -344,3 +344,82 @@
 112. Merged code from TAU-ODSX-Install-Feeder to TAU-ODSX
 ### TAU v4.89-tau-release tag
 113. Added install/remove individual space server for Non-Secured Environment
+### TAU v4.90-tau-release tag
+114. Created new branch for TAU-ODSX-Oracle-Feeder-ERP added Oracle ERP Feeder code changes and add below properties in app.config
+     app.dataengine.oracle-feeder-erp.oracle.server=XXX
+     app.dataengine.oracle-feeder-erp.oracle.username=XXX
+     app.dataengine.oracle-feeder-erp.oracle.password=XXX
+     app.dataengine.oracle-feeder-erp.oracle.databasename=XXX
+     app.dataengine.oracle-feeder-erp.gscpercluster=1
+     app.dataengine.oracle-feeder-erp.gsc.memory=256m
+     app.dataengine.oracle-feeder-erp.gsc.create=y
+     app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/erpOracleFeeder.db
+     app.dataengine.oracle-feeder-erp.space.name=dih-tau-space
+     app.dataengine.oracle-feeder-erp.writeBatchSize=10000
+     app.dataengine.oracle-feeder-erp.sleepAfterWriteInMillis=500
+     app.dataengine.oracle-feeder-erp.rest.port=8600
+     app.dataengine.oracle-feeder-erp.hard.limit=4g
+### TAU v4.91-tau-release tag
+115. Added steps for differentiate Oracle Feeder and Oracle ERP Feeder
+116. Add oracleerp section in app.yaml
+     oracleerp:
+       config: null
+       jars:
+         oracleErpJarFile: OracleFeeder-1.0-SNAPSHOT.jar
+       scripts: null
+117. Create oracleerp folder under /dbagigashare/current/ with same folders as oracle
+### TAU v4.92-tau-release tag
+118. Minor bug fixes for Oracle feeder
+### TAU v4.93-tau-release tag
+119. For Service creator add infra-1.1-SNAPSHOT-jar-with-dependencies.jar to /dbagigashare/current/gs/jars/infra for Space server installation
+120. Add app.space.infra.jar.target=/dbagiga/gigaspaces-smart-ods/lib/optional/pu-common in app.config
+121. Add below property under gs.config.jars section
+     infra:
+       infrajar: infra-1.1-SNAPSHOT-jar-with-dependencies.jar
+122. Feeder list - If reverse DNS fails then go ahead only with IP in display list.
+### TAU v4.94-tau-release tag
+123. For Data Engine Gilboa Updater Full Load and Gilboa Updater Update updated installation hard limit
+124. Add app.dataengine.gilboa-feeder.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+125. For Data Engine Notifier updated installation hard limit 
+126. Add app.dataengine.notifier.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+127. Updated DI List and Server List All visibility for added DI Subscription Manager, IIDR Access Server, IIDR Kafka Agent, IIDR Oracle Agent
+128. In Host.yaml file, the following lines have been added after dataIntegration section
+     dataIntegrationSubscriptionManager :
+       host1 : 10.0.1.137
+     iidrAccessServer :
+       host1 : 10.0.1.137
+     iidrKafkaAgent :
+       host1 : 10.0.1.137
+     iidrOracleAgent :
+       host1 : 10.0.1.137
+129. In cluster.config the following has been added after dataIntegration section
+    "dataIntegrationSubscriptionManager": {
+        "nodes": [
+        ]
+    }
+    "iidrAccessServer": {
+        "nodes": [
+        ]
+    }
+    "iidrKafkaAgent": {
+        "nodes": [
+        ]
+    }
+    "iidrOracleAgent": {
+        "nodes": [
+        ]
+    }
+130. Add below properties in app.config
+     app.iidr.Access.Server.Port=10101
+     app.iidr.Kafka.Agent.Port=11701
+     app.iidr.Oracle.DB.Agent.Port=11001
+     app.di.kafka.Port=9092
+     app.dataengine.mssql-feeder.hard.limit=2g
+### TAU v4.95-tau-release tag
+131. Updated Readme and naming convention from app.dataengine.gilboa-feeder.required.available.memory to app.dataengine.gilboa-feeder.hard.limit
+### TAU v4.96-tau-release tag
+132. Code fixed for Gilboa and Notifier. If the available RAM of all space servers is less than the defined hard.limit of a feeder type then the feeder will not be deployed
+### TAU v4.97-tau-release tag
+133. Logger changed Not enough RAM to GigaBytes instead of Bytes for Oracle and Oracle ERP feeder 
+### TAU v5.0-tau-release tag
+135. Merged code from TAU-ODSX-Oracle-Feeder-ERP to TAU-ODSX

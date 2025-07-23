@@ -44,6 +44,8 @@ current:
         spacejar: in_memory_jar-0.1.jar
       cef:
         cefjar: CEFLogger-1.0-SNAPSHOT.jar
+      infra:
+        infrajar: infra-1.1-SNAPSHOT-jar-with-dependencies.jar
     upgrade:
   iidr:
     watchdog:
@@ -73,6 +75,11 @@ current:
     config: null
     jars:
       oracleJarFile: OracleFeeder-1.0-SNAPSHOT.jar
+    scripts: null
+  oracleerp:
+    config: null
+    jars:
+      oracleErpJarFile: OracleFeeder-1.0-SNAPSHOT.jar
     scripts: null
   notifier:
     config: null
