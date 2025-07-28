@@ -423,3 +423,6 @@
 133. Logger changed Not enough RAM to GigaBytes instead of Bytes for Oracle and Oracle ERP feeder 
 ### TAU v5.0-tau-release tag
 135. Merged code from TAU-ODSX-Oracle-Feeder-ERP to TAU-ODSX
+### TAU v5.1-tau-release tag
+136. Removed link to DIH 16.4 folder that appears inside DIH 17 folder
+137. Removed "/" from the end of the swagger rest API call e.g. from /v2/pus/ to /v2/pus

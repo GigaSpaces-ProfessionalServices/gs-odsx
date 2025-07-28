@@ -81,7 +81,7 @@ def listDeployed(managerHost):
     try:
         logger.info("managerHost :"+str(managerHost))
 
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
