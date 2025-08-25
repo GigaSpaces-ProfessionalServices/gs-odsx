@@ -155,7 +155,7 @@ def listSpacesOnServer(managerNodes):
             if(status=="ON"):
                 managerHost = os.getenv(node.ip);
         logger.info("managerHost :"+managerHost)
-        response = requests.get("http://"+managerHost+":8090/v2
+        response = requests.get("http://"+managerHost+":8090/v2/spaces")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Existing spaces on cluster:")

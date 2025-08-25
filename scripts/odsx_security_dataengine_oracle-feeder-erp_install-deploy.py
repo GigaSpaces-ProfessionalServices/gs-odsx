@@ -410,7 +410,7 @@ def sqlLiteCreateTableDB():
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx)+" Sqlite V: "+str(sqlite3.version))
         #cnx.execute("DROP TABLE IF EXISTS db2_host_port")
-        cnx.execute("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
+        cnx.execute("CREATE TABLE IF NOT EXISTS oracleerp_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -428,7 +428,7 @@ def createOracleEntryInSqlLite(puName, file, restPort):
             hostId = str(data["hostId"])
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
-        cnx.execute("INSERT INTO oracle_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
+        cnx.execute("INSERT INTO oracleerp_host_port (file, feeder_name, host, port) VALUES ('"+str(file)+"', '"+str(puName)+"','"+str(hostId)+"','"+str(restPort)+"')")
         cnx.commit()
         cnx.close()
     except Exception as e:

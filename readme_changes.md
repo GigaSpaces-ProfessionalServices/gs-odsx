@@ -426,3 +426,5 @@
 ### TAU v5.1-tau-release tag
 136. Removed link to DIH 16.4 folder that appears inside DIH 17 folder
 137. Removed "/" from the end of the swagger rest API call e.g. from /v2/pus/ to /v2/pus
+### TAU v5.2-tau-release tag
+138. Code fixed for Oracle ERP table name changes
