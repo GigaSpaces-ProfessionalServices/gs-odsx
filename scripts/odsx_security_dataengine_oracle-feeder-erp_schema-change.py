@@ -14,7 +14,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
-    readValueByConfigObj
+    readValueByConfigObj, readValueFromYaml
 from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
@@ -419,7 +419,7 @@ def proceedToStartOracleFeederWithName(puName):
 def recreateType():
     #Back up the old DDL file
     ddlFilename = tableName + ".ddl"
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
     timestamp = time.time()
     filename_suffix = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
@@ -432,10 +432,10 @@ def recreateType():
         replace_or_add_column_in_ddl(ddlAndPropertiesBasePath+"/"+ ddlFilename, columnName, updatedColumnDef)
     wantToAddIndex = str(userInputWithEscWrapper("Do you want to add index (y/n) [n] ?"))
     if wantToAddIndex == 'y':
-        os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + " " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + ".backup." + filename_suffix)
+        os.system("cp " +ddlAndPropertiesBasePath+ "/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName") + " " +ddlAndPropertiesBasePath+ "/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName") + ".backup." + filename_suffix)
         addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
         addedIndex = addedIndex.replace(" ","\t")
-        with open(ddlAndPropertiesBasePath+"/batchIndexes.csv", 'a') as file:
+        with open(ddlAndPropertiesBasePath+ "/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName"), 'a') as file:
             file.write("\n"+addedIndex)
 
     #Drop the appropriate table/type
@@ -528,7 +528,7 @@ def listObjects():
             #print(str(object["tablename"]))
             if str(object["tablename"]) in cdc_table_names:
                 continue
-            tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+            tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
             ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
             if not os.path.isfile(ddlAndPropertiesBasePath + str(object["tablename"]) + ".ddl"):
                 continue

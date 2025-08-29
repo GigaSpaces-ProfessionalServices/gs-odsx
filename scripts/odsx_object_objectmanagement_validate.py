@@ -124,7 +124,7 @@ def setInputs():
     lookupGroup = str(managerInfo['lookupGroups'])
     lookupLocator = str(managerHost)+":4174"
 
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
+    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
 
     #ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))

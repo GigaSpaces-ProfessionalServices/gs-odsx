@@ -71,7 +71,7 @@ def setUserInputs1():
     global ddlAndPropertiesBasePath
     global tableNameFromddlFileName
 
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
 
     # ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
@@ -268,7 +268,7 @@ def setInputs(isSandbox, ddlFileNameFromUser=""):
         sandboxSpaceName = "demo"
         config_set_value_in_property_file("app.objectmanagement.sandboxspace", sandboxSpaceName)
 
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
     # ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
     tableNameFromddlFileName = ''

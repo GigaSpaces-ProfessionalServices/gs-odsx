@@ -7,7 +7,8 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, set_value_in_property_file
+from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, set_value_in_property_file, \
+    readValueFromYaml
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
@@ -101,13 +102,12 @@ def setUserInputs():
     lookupLocator = str(managerHost)+":4174"
     objectMgmtHost = getPivotHost()
 
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//","/")
+    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
 
-    #ddlAndPropertiesBasePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser"))
-     
 
-    tableListfilePath = ddlAndPropertiesBasePath+"tableList.txt"
+
+    tableListfilePath = ddlAndPropertiesBasePath + readValueFromYaml(".object.config.ddlparser.ddlBatchFileName")
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")

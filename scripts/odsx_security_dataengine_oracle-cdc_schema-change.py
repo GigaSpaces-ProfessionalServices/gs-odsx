@@ -3,7 +3,7 @@ import time
 import requests
 from colorama import Fore
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder, readValueFromYaml
 from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes, \
     config_get_dataIntegrationiidr_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
@@ -182,16 +182,16 @@ if __name__ == '__main__':
         if(finalConfirm=='y'):
             cdcTypeRedeplyment(spaceType,diManagerHost, iidrHost)
             killManagersWebUI()
-            tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+            tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
             ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
             wantToAddIndex = str(userInputWithEscWrapper("Do you want to add index (y/n) [n] ?"))
             if wantToAddIndex == 'y':
                 timestamp = time.time()
                 filename_suffix = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
-                os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + " " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + ".backup." + filename_suffix)
+                os.system("cp " +ddlAndPropertiesBasePath+"/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName") + " " +ddlAndPropertiesBasePath+"/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName") + ".backup." + filename_suffix)
                 addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
                 addedIndex = addedIndex.replace(" ","\t")
-                with open(ddlAndPropertiesBasePath+"/batchIndexes.csv", 'a') as file:
+                with open(ddlAndPropertiesBasePath+"/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName"), 'a') as file:
                     file.write("\n"+addedIndex)
                 #Run the indexes
             elif wantToAddIndex== "99":

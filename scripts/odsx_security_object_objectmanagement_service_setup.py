@@ -6,7 +6,8 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder, \
+    readValueFromYaml
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_manager import getManagerInfo
@@ -43,6 +44,7 @@ def setupService():
     #    ddlAndPropertiesBasePath = ddlAndPropertiesBasePath+"/"
     tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
+    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/" + readValueFromYaml(".object.config.ddlparser.ddlBatchFileName")
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
@@ -91,7 +93,7 @@ def setupService():
     safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"', '')
     objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"', '')
     adapterPropertyConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.adapterPropertyFileName")).replace('"','')
-    indexBatchConfigFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace('"','')
+    indexBatchConfigFilePath = str(os.getenv("ENV_CONFIG")) + "/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName")
     pollingContainerFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.pollingFileName")).replace('"','')
     vaultJar = str(readValuefromAppConfig("app.vault.jar.location"))
     passProperty = ""

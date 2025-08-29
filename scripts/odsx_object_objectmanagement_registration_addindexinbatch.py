@@ -7,7 +7,8 @@ import requests
 from colorama import Fore
 
 from scripts.logManager import LogManager
-from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, set_value_in_property_file
+from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, set_value_in_property_file, \
+    readValueFromYaml
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.ods_manager import getManagerHost, getManagerInfo
@@ -84,10 +85,8 @@ def setUserInputs():
     lookupLocator = str(managerHost)+":4174"
     objectMgmtHost = getPivotHost()
 
-    batchIndexFilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.indexBatchFileName")).replace("//","/")
-    ddlAndPropertiesBasePath = os.path.dirname(batchIndexFilePath) +"/"
-
-    batchIndexFilePath = ddlAndPropertiesBasePath+"batchIndexes.csv"
+    ddlAndPropertiesBasePath = str(os.getenv("ENV_CONFIG")) + "/"
+    batchIndexFilePath = ddlAndPropertiesBasePath + readValueFromYaml(".object.config.ddlparser.indexBatchFileName")
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     if(spaceName is None or spaceName=="" or len(str(spaceName))<0):
         spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
