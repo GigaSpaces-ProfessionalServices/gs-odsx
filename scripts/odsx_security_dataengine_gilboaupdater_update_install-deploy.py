@@ -123,18 +123,19 @@ def getHardLimitMemoryInBytes(hardLimit):
         verboseHandle.printConsoleInfo("Dataengine Gilboaupdater Required Available Memory Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
         return 0
 
-def getHighestAvailableMemoryManagerHost(managerNodes):
-    managerHost=""
+def getHighestAvailableMemoryManagerHost(spaceNodes):
+    managerNodes = config_get_manager_node()
+    managerHost = getManagerHost(managerNodes)
     try:
-        logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
-        ManagerActiveHostList = []
-        for node in managerNodes:
+        logger.info("getManagerHost() : spaceNodes :"+str(spaceNodes))
+        SpaceActiveHostList = []
+        for node in spaceNodes:
             status = getSpaceServerStatus(os.getenv(node.ip))
             if(status=="ON"):
-                ManagerActiveHostList.append(os.getenv(node.ip))
+                SpaceActiveHostList.append(os.getenv(node.ip))
 
         GetFreeSpaceFromManager = {}
-        for spaceHost in ManagerActiveHostList:
+        for spaceHost in SpaceActiveHostList:
             response = requests.get("http://"+managerHost+":8090/v2/hosts/"+os.getenv(node.name)+"/statistics/os", headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
             jsonData = json.loads(response.text)
             GetFreeSpaceFromManager[spaceHost] = jsonData["actualFreePhysicalMemorySizeInBytes"]

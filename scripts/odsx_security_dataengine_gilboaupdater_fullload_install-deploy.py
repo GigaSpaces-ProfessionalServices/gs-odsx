@@ -125,7 +125,8 @@ def getHardLimitMemoryInBytes(hardLimit):
         return 0
 
 def getHighestAvailableMemoryManagerHost(spaceNodes):
-    # managerHost=""
+    managerNodes = config_get_manager_node()
+    managerHost = getManagerHost(managerNodes)
     try:
 
         logger.info("getSpaceHost() : spaceNodes :"+str(spaceNodes))

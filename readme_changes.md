@@ -428,3 +428,5 @@
 137. Removed "/" from the end of the swagger rest API call e.g. from /v2/pus/ to /v2/pus
 ### TAU v5.2-tau-release tag
 138. Code fixed for Oracle ERP table name changes
+### TAU v5.3-tau-release tag
+139. Code fixed for Gilboa and Notifier Data engine (Manager host issue fixed)
