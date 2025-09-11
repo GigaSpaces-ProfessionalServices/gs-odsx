@@ -66,6 +66,11 @@ current:
     jars:
       mssqlJarFile: mssqlFeeder-1.0.0.jar
     scripts: null
+  mysql:
+    config: null
+    jars:
+      mysqlJarFile: MysqlFeeder-1.0.0.jar
+    scripts: null
   gilboa:
     config: null
     jars:
