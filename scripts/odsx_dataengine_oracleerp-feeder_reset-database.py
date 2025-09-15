@@ -63,7 +63,7 @@ def sqlLiteDeleteTableOracleErpFeeder():
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_Oracle-feeder-erp_reset")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> Reset")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> OracleERP-Feeder -> Reset")
     try:
         sqlLiteDeleteTableOracleErpFeeder()
     except Exception as e:

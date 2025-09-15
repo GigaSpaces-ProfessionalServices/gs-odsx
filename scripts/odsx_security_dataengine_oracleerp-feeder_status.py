@@ -13,11 +13,13 @@ import subprocess
 from datetime import date, timedelta
 
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
 
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
+from utils.odsx_db2feeder_utilities import getPasswordByHost,getUsernameByHost
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -84,21 +86,21 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     return str(out).replace('\n', '')
 
 def displayOracleFeederShFiles():
-    logger.info("displayOracleErpFeederShFiles()")
+    logger.info("displayOracleFeederShFiles()")
     global fileNameDict
     global sourceOracleFeederShFilePath
     global fileNamePuNameDict
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
     sourceOracleFeederShFilePath = str(str(sourceInstallerDirectory+".oracleerp.scripts.").replace('.','/'))
-    logger.info("sourceOracleERPFeederShFilePath :"+str(sourceOracleFeederShFilePath))
+    logger.info("sourceOracleFeederShFilePath :"+str(sourceOracleFeederShFilePath))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceOracleFeederShFilePath)
     fileNameDict = host_dictionary_obj()
     fileNamePuNameDict = host_dictionary_obj()
     headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-               Fore.YELLOW+"Name of oracle-ERP-feeder file"+Fore.RESET
+               Fore.YELLOW+"Name of oracle-Erp-feeder file"+Fore.RESET
                ]
     dataTable=[]
     for file in glob.glob("load_*.sh"):
@@ -141,7 +143,7 @@ def listDeployed(managerHost):
         cnx = sqlite3.connect(db_file)
 
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -191,7 +193,7 @@ def listDeployed(managerHost):
             for data in jsonArray:
                 hostId = ''
                 response2 = requests.get(
-                    "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances")
+                    "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances",auth = HTTPBasicAuth(username, password))
                 jsonArray2 = json.loads(response2.text)
                 queryStatus = str(getOracleErpQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
                 for data2 in jsonArray2:
@@ -251,9 +253,9 @@ def inputParam():
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):
-        inputNumberToStatus = str(userInputWrapper(Fore.YELLOW+"Enter serial number to status oracle-ERP-feeder : "+Fore.RESET))
+        inputNumberToStatus = str(userInputWrapper(Fore.YELLOW+"Enter serial number to status oracle-Erp-feeder : "+Fore.RESET))
         if(len(str(inputNumberToStatus))==0):
-            inputNumberToStatus = str(userInputWrapper(Fore.YELLOW+"Enter serial number to get status oracle-ERP-feeder : "+Fore.RESET))
+            inputNumberToStatus = str(userInputWrapper(Fore.YELLOW+"Enter serial number to get status oracle-Erp-feeder : "+Fore.RESET))
         proceedToGetStatusOracleFeeder(gs_space_dictionary_obj.get(str(inputNumberToStatus)))
     #if(len(str(inputChoice))==0):
     #    elements = len(fileNameDict)
@@ -278,7 +280,7 @@ def sqlLiteGetHostAndPortByFileName(puName):
         handleException(e)
 
 def proceedToGetStatusOracleFeeder(puName):
-    logger.info("proceedToGetStatusOracleERPFeeder() " + puName)
+    logger.info("proceedToGetStatusOracleFeeder() " + puName)
     # puName = gs_space_dictionary_obj.get(str(fileNumberToStatus))
     queryStatus = str(getOracleErpQueryStatusFromSqlLite(puName)).replace('"', '')
     verboseHandle.printConsoleInfo(puName + " : " + queryStatus)
@@ -316,12 +318,17 @@ def getOracleErpQueryStatusFromSqlLite(feederName):
 
 if __name__ == '__main__':
     logger.info("odsx_security_dataengine_oracle-feeder-erp_status")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> Status")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> OracleERP-Feeder -> Status")
+    username = ""
+    password = ""
+
     try:
         managerHost=''
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes);
         if(len(str(managerHost))>0):
+            username = str(getUsernameByHost())
+            password = str(getPasswordByHost())
             displayOracleFeederShFiles()
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):

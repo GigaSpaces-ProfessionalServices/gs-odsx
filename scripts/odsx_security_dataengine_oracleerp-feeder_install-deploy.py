@@ -723,7 +723,7 @@ def displayAvailableFeederList():
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_oracle-feeder-erp_install")
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle-Feeder-ERP -> Install-Deploy')
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> OracleERP-Feeder -> Install-Deploy')
     username = ""
     password = ""
     appId=""

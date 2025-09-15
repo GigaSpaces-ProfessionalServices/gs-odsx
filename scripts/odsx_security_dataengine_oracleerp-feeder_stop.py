@@ -317,7 +317,7 @@ def proceedToStopOracleFeederbyName(puName):
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_oracle-feeder-erp_stop")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> Stop")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> OracleERP-Feeder -> Stop")
     username = ""
     password = ""
 

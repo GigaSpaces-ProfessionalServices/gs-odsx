@@ -353,7 +353,7 @@
      app.dataengine.oracle-feeder-erp.gscpercluster=1
      app.dataengine.oracle-feeder-erp.gsc.memory=256m
      app.dataengine.oracle-feeder-erp.gsc.create=y
-     app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/erpOracleFeeder.db
+     app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/oracleerpFeeder.db
      app.dataengine.oracle-feeder-erp.space.name=dih-tau-space
      app.dataengine.oracle-feeder-erp.writeBatchSize=10000
      app.dataengine.oracle-feeder-erp.sleepAfterWriteInMillis=500
@@ -430,3 +430,5 @@
 138. Code fixed for Oracle ERP table name changes
 ### TAU v5.3-tau-release tag
 139. Code fixed for Gilboa and Notifier Data engine (Manager host issue fixed)
+### TAU v5.4-tau-release tag
+140. Code naming changes from erpOracleFeeder.db to oracleerpFeeder.db and files names also

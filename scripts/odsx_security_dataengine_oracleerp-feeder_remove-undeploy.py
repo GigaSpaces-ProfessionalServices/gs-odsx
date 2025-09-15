@@ -7,6 +7,7 @@ import sqlite3
 import json
 import requests
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
@@ -17,7 +18,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.odsx_db2feeder_utilities import getOracleErpQueryStatusFromSqlLite
+from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost, getOracleErpQueryStatusFromSqlLite
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -77,7 +78,7 @@ def listUndeployedPUsOnServer(managerHost):
     global gs_pu_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/undeployed")
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/undeployed",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Persist resources on cluster:")
@@ -109,7 +110,7 @@ def proceedForIndividualUndeployed(managerHost):
         spaceTobeUndeploy = gs_pu_dictionary_obj.get(puSrNumber)
         logger.info("spaceTobeUndeploy :"+str(spaceTobeUndeploy))
         logger.info("managerHost :"+managerHost)
-        response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy))
+        response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy),auth = HTTPBasicAuth(username, password))
         verboseHandle.printConsoleInfo(str(response.status_code))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         if(response.status_code==200):
@@ -130,7 +131,7 @@ def proceedForAllUndeployed(managerHost):
             spaceTobeUndeploy = gs_pu_dictionary_obj.get(str(key))
             print(spaceTobeUndeploy)
 
-            response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy))
+            response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy),auth = HTTPBasicAuth(username, password))
             verboseHandle.printConsoleInfo(str(response.status_code))
             logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
             if(response.status_code==200):
@@ -179,7 +180,7 @@ def listDeployed(managerHost):
     global gs_pu_zone_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -226,7 +227,7 @@ def proceedForAllUndeploy(managerHost):
             #response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy))
             logger.info("managerHost All: "+str(managerHost)+" drainMode: "+str(drainMode)+" drainTimeout: "+str(drainTimeout))
             logger.info("URL DrainMode : http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
-            response = requests.delete("http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
+            response = requests.delete("http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout),auth = HTTPBasicAuth(username, password))
             verboseHandle.printConsoleInfo(str(response.status_code))
             logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
             if(response.status_code==202):
@@ -281,7 +282,7 @@ def proceedToUndeployPU(managerHost):
                 #response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy))
                 logger.info("managerHost undeploy: "+str(managerHost)+" drainMode: "+str(drainMode)+" drainTimeout: "+str(drainTimeout))
                 logger.info("URL DrainMode :   http://"+str(managerHost)+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
-                response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
+                response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(spaceTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout),auth = HTTPBasicAuth(username, password))
                 verboseHandle.printConsoleInfo(str(response.status_code))
                 logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
                 if(response.status_code==202):
@@ -318,7 +319,7 @@ def proceedToUndeployPU(managerHost):
 def validateResponse(responseCode):
     logger.info("validateResponse() "+str(responseCode))
     try:
-        response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode))
+        response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode),auth = HTTPBasicAuth(username, password))
         jsonData = json.loads(response.text)
         logger.info("response : "+str(jsonData))
         return str(jsonData["status"])
@@ -361,7 +362,7 @@ def removeGSC(managerHost,spaceNumberTobeRemove,flag):
         zoneToDeleteGSC = zoneToRemove
         confirmRemoveGSC='y'
     if(confirmRemoveGSC=='y'):
-        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)
+        cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container kill --zones "+str(zoneToDeleteGSC)
         logger.info("cmd : "+str(cmd))
         verboseHandle.printConsoleInfo("Killing container of zone : "+str(zoneToDeleteGSC))
         with Spinner():
@@ -378,7 +379,10 @@ def proceedForPersistUndeploy():
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_oracle-feeder-erp_undeploy")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> Stop-UnDeploy")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> OracleERP-Feeder -> Stop-UnDeploy")
+    username = ""
+    password = ""
+
     try:
         managerNodes = config_get_manager_node()
         if(len(str(managerNodes))>0):
@@ -388,6 +392,8 @@ if __name__ == '__main__':
             managerHost = getManagerHost(managerNodes)
             logger.info("managerHost : "+str(managerHost))
             if(len(str(managerHost))>0):
+                username = str(getUsernameByHost())
+                password = str(getPasswordByHost())
                 managerHostConfig = str(userInputWrapper(Fore.YELLOW+"Proceeding with manager host ["+managerHost+"] : "+Fore.RESET))
                 if(len(str(managerHostConfig))>0):
                     managerHost = managerHostConfig

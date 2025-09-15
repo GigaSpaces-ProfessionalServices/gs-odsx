@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import sys
 import glob
 import json
 import os
@@ -7,7 +8,6 @@ import re
 import requests
 import sqlite3
 import subprocess
-import sys
 import socket
 from datetime import date, timedelta
 
@@ -77,27 +77,28 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     logger.info("executeLocalCommandAndGetOutput() cmd :" + str(commandToExecute))
     cmd = commandToExecute
     cmdArray = cmd.split(" ")
-    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE)
+    #process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE)
+    process = subprocess.Popen(cmdArray, stdout=subprocess.PIPE,stderr=subprocess.PIPE)
     out, error = process.communicate()
     out = out.decode()
     return str(out).replace('\n', '')
 
 def displayOracleFeederShFiles():
-    logger.info("startOracleErpFeeder()")
+    logger.info("stopOracleFeeder()")
     global fileNameDict
     global sourceOracleFeederShFilePath
     global fileNamePuNameDict
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
     sourceOracleFeederShFilePath = str(str(sourceInstallerDirectory+".oracleerp.scripts.").replace('.','/'))
-    logger.info("sourceDB2FeederShFilePath: "+str(sourceOracleFeederShFilePath))
+    logger.info("sourceOracleFeederShFilePath :"+str(sourceOracleFeederShFilePath))
     counter=1
     directory = os.getcwd()
     os.chdir(sourceOracleFeederShFilePath)
     fileNameDict = host_dictionary_obj()
     fileNamePuNameDict = host_dictionary_obj()
     headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
-               Fore.YELLOW+"Name of oracle-erp-feeder file"+Fore.RESET
+               Fore.YELLOW+"Name of oracle-Erp-feeder file"+Fore.RESET
                ]
     dataTable=[]
     for file in glob.glob("load_*.sh"):
@@ -124,7 +125,7 @@ def getFormattedDate(mySubString):
     if(re.search('days', mySubString.casefold())):
         dates = mySubString.split('-')[-1]
         num = [int(x) for x in dates.split() if x.isdigit()]
-        endDate = date.today()-timedelta(days=num[0])
+        endDate = date.today()+timedelta(days=num[0])
         endDate = endDate.strftime('%d/%m/%Y')
     if ( len(str(startDate)) == 0 or len(str(endDate)) == 0):
         conditionDate = mySubString
@@ -177,6 +178,11 @@ def listDeployed(managerHost):
                         myString = line
                         startString = '&condition='
                         endString = "&exclude-columns="
+                        # global mySubString
+                        # mySubString = myString[
+                        #               myString.find(startString) + len(startString):myString.find(endString)]
+                        # puName = 'oracleerpfeeder_'+puName
+                        # conditionDate = getFormattedDate(mySubString)
                         if(myString.find(startString) != -1):
                             mySubString = myString[
                                           myString.find(startString) + len(startString):myString.find(endString)]
@@ -185,11 +191,6 @@ def listDeployed(managerHost):
                         else:
                             puName = 'oracleerpfeeder_'+puName
                             conditionDate = "-"
-                        # global mySubString
-                        # mySubString = myString[
-                        #               myString.find(startString) + len(startString):myString.find(endString)]
-                        # puName = 'oracleerpfeeder_'+puName
-                        # conditionDate = getFormattedDate(mySubString)
                         dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                      Fore.GREEN + puName + Fore.RESET,
                                      Fore.GREEN + str("-") + Fore.RESET,
@@ -233,6 +234,7 @@ def listDeployed(managerHost):
                                         # puName = 'oracleerpfeeder_'+puName
                                         conditionDate = getFormattedDate(mySubString)
                                     else:
+                                        # puName = 'oracleerpfeeder_'+puName
                                         conditionDate = "-"
                                     dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                                                  Fore.GREEN + data["name"] + Fore.RESET,
@@ -259,20 +261,20 @@ def listDeployed(managerHost):
 
 def inputParam():
     logger.info("inputParam()")
-    inputNumberToStart =''
+    inputNumberToStop =''
     inputChoice=''
-    inputChoice = str(userInputWithEscWrapper(Fore.YELLOW+"Enter [1] For individual start \n[Enter] For all \n[99] For exit : "+Fore.RESET))
+    inputChoice = str(userInputWithEscWrapper(Fore.YELLOW+"Enter [1] For individual stop \n[Enter] For all \n[99] For exit : "+Fore.RESET))
     if(str(inputChoice)=='99'):
         return
     if(str(inputChoice)=='1'):
-        inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start oracle-Erp-feeder : "+Fore.RESET))
-        if(len(str(inputNumberToStart))==0):
-            inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start oracle-Erp-feeder : "+Fore.RESET))
-        proceedToStartOracleFeeder(inputNumberToStart)
+        inputNumberToStop = str(userInputWrapper(Fore.YELLOW+"Enter serial number to stop oracle-feeder : "+Fore.RESET))
+        if(len(str(inputNumberToStop))==0):
+            inputNumberToStop = str(userInputWrapper(Fore.YELLOW+"Enter serial number to stop oracle-feeder : "+Fore.RESET))
+        proceedToStopOracleFeeder(inputNumberToStop)
     if(len(str(inputChoice))==0):
         elements = len(fileNameDict)
         for i in range (1,elements+1):
-            proceedToStartOracleFeeder(str(i))
+            proceedToStopOracleFeeder(str(i))
 
 def sqlLiteGetHostAndPortByFileName(puName):
     logger.info("sqlLiteGetHostAndPortByFileName() shFile : "+str(puName))
@@ -280,58 +282,41 @@ def sqlLiteGetHostAndPortByFileName(puName):
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL : SELECT host,port,file FROM oracleerp_host_port where feeder_name = '"+str(puName)+"' ")
-        mycursor = cnx.execute("SELECT host,port,file FROM oracleerp_host_port where feeder_name = '"+str(puName)+"' ")
+        logger.info("SQL: SELECT host,port FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%' ")
+        mycursor = cnx.execute("SELECT host,port FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%' ")
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
             logger.info("host : "+str(row[0]))
             logger.info("port : "+str(row[1]))
-            logger.info("file : "+str(row[2]))
-            return str(row[0])+','+str(row[1])+','+str(row[2])
+            return str(row[0])+','+str(row[1])
     except Exception as e:
         handleException(e)
 
-def proceedToStartOracleFeeder(fileNumberToStart):
-    logger.info("proceedToStartOracleErpFeeder()")
-    #shFileName = fileNameDict.get(str(fileNumberToStart))
-    puName = gs_space_dictionary_obj.get(str(fileNumberToStart))
-    print(puName)
-    proceedToStartOracleFeederWithName(puName)
-    #shFileName = fileNamePuNameDict.get(str(puName))
-    #hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
-    #print("hostAndPort"+str(hostAndPort))
-    #host = str(hostAndPort[0])
-    #port = str(hostAndPort[1])
-    #shFileName = str(hostAndPort[2])
-    #host=str(socket.gethostbyaddr(host).__getitem__(2)[0])
-    #cmd = str(sourceOracleFeederShFilePath)+'/'+shFileName+' '+host+" "+port
-    #logger.info("cmd : "+str(cmd))
-    #print(cmd)
-    #os.system(cmd)
+def proceedToStopOracleFeeder(fileNumberToStop):
+    logger.info("proceedToStopOracleFeeder()")
+    #shFileName = fileNameDict.get(str(fileNumberToStop))
+    puName = gs_space_dictionary_obj.get(str(fileNumberToStop))
+    proceedToStopOracleFeederbyName(puName)
 
-    #output = executeLocalCommandAndGetOutput(cmd)
-    #print(output)
-
-def proceedToStartOracleFeederWithName(puName):
-    logger.info("proceedToStartOracleErpFeederWithName()")
-    #shFileName = fileNameDict.get(str(fileNumberToStart))
-    print(puName)
+def proceedToStopOracleFeederbyName(puName):
+    logger.info("proceedToStopOracleFeeder()")
+    #shFileName = fileNameDict.get(str(fileNumberToStop))
+    verboseHandle.printConsoleInfo("puName :"+str(puName))
     shFileName = fileNamePuNameDict.get(str(puName))
     hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
     print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
-    shFileName = str(hostAndPort[2])
     host=str(socket.gethostbyaddr(host).__getitem__(2)[0])
-    cmd = str(sourceOracleFeederShFilePath)+'/'+shFileName+' '+host+" "+port
-    logger.info("cmd : "+str(cmd))
+    cmd = "curl -XPOST '"+host+":"+port+"/table-feed/stop'"
     print(cmd)
+    logger.info("cmd : "+str(cmd))
     os.system(cmd)
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_oracle-feeder-erp_start")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> Start")
+    logger.info("odsx_dataengine_oracle-feeder-erp_stop")
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> OracleERP-Feeder -> Stop")
     try:
         managerHost=''
         managerNodes = config_get_manager_node()
@@ -341,7 +326,7 @@ if __name__ == '__main__':
             gs_space_dictionary_obj = listDeployed(managerHost)
             if(len(str(gs_space_dictionary_obj))>2):
                 if len(sys.argv) > 1 and sys.argv[1] != "m":
-                    proceedToStartOracleFeederWithName(sys.argv[1])
+                    proceedToStopOracleFeederbyName(sys.argv[1])
                 else:
                     inputParam()
             else:
@@ -351,5 +336,5 @@ if __name__ == '__main__':
             logger.info("No manager status ON.")
             verboseHandle.printConsoleInfo("No manager status ON.")
     except Exception as e:
-        verboseHandle.printConsoleError("Error in odsx_oracle-feeder-erp_start : "+str(e))
+        verboseHandle.printConsoleError("Eror in odsx_oracle-feeder-erp_stop : "+str(e))
         handleException(e)

@@ -14,15 +14,13 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
-    readValueByConfigObj
+    readValueByConfigObj, readValueFromYaml
 from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost, getPortNotExistInOracleErpFeeder
+from utils.odsx_db2feeder_utilities import getPortNotExistInOracleErpFeeder
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
-from requests.auth import HTTPBasicAuth
-
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -93,7 +91,7 @@ def replace_or_add_column_in_ddl(file_path, passedColumn, updatedColumnDef):
 def validateResponse(responseCode):
     logger.info("validateResponse() "+str(responseCode))
     try:
-        response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode),auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode))
         jsonData = json.loads(response.text)
         logger.info("response : "+str(jsonData))
         return str(jsonData["status"])
@@ -114,12 +112,12 @@ def deleteOracleEntryFromSqlLite(puName):
         handleException(e)
 
 def proceedForPersistUndeploy(spaceTobeUndeploy):
-    response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy),auth = HTTPBasicAuth(username, password))
+    response = requests.delete("http://"+managerHost+":8090/v2/pus/undeployed/"+str(spaceTobeUndeploy))
     logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
     if(response.status_code==200):
         logger.info("PU :"+str(spaceTobeUndeploy)+" has been undeployed.")
         verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has been undeployed.")
-       # deleteOracleEntryFromSqlLite(spaceTobeUndeploy)
+    # deleteOracleEntryFromSqlLite(spaceTobeUndeploy)
     else:
         logger.info("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
         verboseHandle.printConsoleInfo("PU :"+str(spaceTobeUndeploy)+" has not been undeployed.")
@@ -127,7 +125,7 @@ def proceedForPersistUndeploy(spaceTobeUndeploy):
 def feeder_undeploy(puTobeUndeploy):
     drainMode = readValuefromAppConfig("app.tieredstorage.drainmode")
     drainTimeout = readValuefromAppConfig("app.tieredstorage.drainTimeout")
-    response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(puTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout),auth = HTTPBasicAuth(username, password))
+    response = requests.delete("http://"+managerHost+":8090/v2/pus/"+str(puTobeUndeploy)+"?drainMode="+str(drainMode)+"&drainTimeout="+str(drainTimeout))
     logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
     if(response.status_code==202):
         undeployResponseCode = str(response.content.decode('utf-8'))
@@ -195,7 +193,7 @@ def uploadFileRest(managerHostConfig,feederName):
         pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(feederName)
         zoneGSC = 'oracleerp_'+feederName
         logger.info("url : "+"curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources")
-        cmdToExecute = "curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources -u "+username+":"+password+""
+        cmdToExecute = "curl -X PUT -F 'file=@"+str(pathOfSourcePU)+"' http://"+managerHostConfig+":8090/v2/pus/resources"
         status = os.system(cmdToExecute)
         logger.info("status : "+str(status))
 
@@ -204,7 +202,7 @@ def uploadFileRest(managerHostConfig,feederName):
 
 def validateResponseGetDescription(responseCode):
     logger.info("validateResponse() "+str(responseCode))
-    response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode),auth = HTTPBasicAuth(username, password))
+    response = requests.get("http://"+managerHost+":8090/v2/requests/"+str(responseCode))
     jsonData = json.loads(response.text)
     logger.info("response : "+str(jsonData))
     if(str(jsonData["status"]).__contains__("failed")):
@@ -215,7 +213,7 @@ def validateResponseGetDescription(responseCode):
 def createOracleEntryInSqlLite(puName, file, restPort):
     logger.info("createOracleEntryInSqlLite()")
     try:
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(puName)+"/instances",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/"+str(puName)+"/instances")
         jsonArray = json.loads(response.text)
         logger.info("response : "+str(jsonArray))
         hostId = ''
@@ -309,7 +307,7 @@ def proceedToDeployPU(feederName):
         data = getDataPUREST(resource,puName,zoneGSC,str(restPort),managerHost)
         logger.info("data of payload :"+str(data))
 
-        response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers,auth = HTTPBasicAuth(username, password))
+        response = requests.post("http://"+managerHost+":8090/v2/pus",data=json.dumps(data),headers=headers)
         deployResponseCode = str(response.content.decode('utf-8'))
         logger.info("deployResponseCode :"+str(deployResponseCode))
 
@@ -406,7 +404,7 @@ def sqlLiteGetHostAndPortByFileName(puName):
 
 
 def proceedToStartOracleFeederWithName(puName):
-    logger.info("proceedToStartOracleFeederWithName()")
+    logger.info("proceedToStartOracleErpFeederWithName()")
     hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
@@ -419,7 +417,7 @@ def proceedToStartOracleFeederWithName(puName):
 def recreateType():
     #Back up the old DDL file
     ddlFilename = tableName + ".ddl"
-    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
     timestamp = time.time()
     filename_suffix = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d_%H-%M-%S')
@@ -432,10 +430,10 @@ def recreateType():
         replace_or_add_column_in_ddl(ddlAndPropertiesBasePath+"/"+ ddlFilename, columnName, updatedColumnDef)
     wantToAddIndex = str(userInputWithEscWrapper("Do you want to add index (y/n) [n] ?"))
     if wantToAddIndex == 'y':
-        os.system("cp " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + " " +ddlAndPropertiesBasePath+"/batchIndexes.csv" + ".backup." + filename_suffix)
+        os.system("cp " +ddlAndPropertiesBasePath+"/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName") + " " +ddlAndPropertiesBasePath+"/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName") + ".backup." + filename_suffix)
         addedIndex = str(userInputWithEscWrapper("modified index (Ex. STUD.TA_PERSON  SHEM_MISHP_ENG  ORDERED :"))
         addedIndex = addedIndex.replace(" ","\t")
-        with open(ddlAndPropertiesBasePath+"/batchIndexes.csv", 'a') as file:
+        with open(ddlAndPropertiesBasePath+"/" + readValueFromYaml(".object.config.ddlparser.indexBatchFileName"), 'a') as file:
             file.write("\n"+addedIndex)
 
     #Drop the appropriate table/type
@@ -528,7 +526,7 @@ def listObjects():
             #print(str(object["tablename"]))
             if str(object["tablename"]) in cdc_table_names:
                 continue
-            tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+            tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
             ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
             if not os.path.isfile(ddlAndPropertiesBasePath + str(object["tablename"]) + ".ddl"):
                 continue
@@ -574,11 +572,9 @@ def getDIServerHost():
     return nodes
 
 if __name__ == '__main__':
-    logger.info("odsx_dataengine_Oracle-feeder-erp_schema_change")
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle-Feeder-ERP -> Schema change')
-    global username
-    global password
-    #global tableName
+    logger.info("odsx_dataengine_Oracle-feeder-erp_Schema_change")
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> OracleERP-Feeder -> Schema change')
+    global tableName
     global sourceOracleFeederShFilePath
     global managerHost
     managerHost=''
@@ -595,8 +591,6 @@ if __name__ == '__main__':
     recreateType()
     #Redeploy the appropriate feeder that fills the table
     killManagersWebUI()
-    username = str(getUsernameByHost())
-    password = str(getPasswordByHost())
     tableName = str(tableName).split(".")[1].lower()
     puName = "oracleerpfeeder_" + tableName
     feeder_undeploy(puName)

@@ -8,13 +8,11 @@ import sqlite3
 from colorama import Fore
 from datetime import date, timedelta
 
-from requests.auth import HTTPBasicAuth
-
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValueByConfigObj
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_validation import getSpaceServerStatus
-from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost, getOracleErpQueryStatusFromSqlLite
+from utils.odsx_db2feeder_utilities import getOracleErpQueryStatusFromSqlLite
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -94,7 +92,7 @@ def listDeployed(managerHost):
         cnx = sqlite3.connect(db_file)
 
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -127,7 +125,7 @@ def listDeployed(managerHost):
             for data in jsonArray:
                 hostId = ''
                 response2 = requests.get(
-                    "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances",auth = HTTPBasicAuth(username, password))
+                    "http://" + str(managerHost) + ":8090/v2/pus/" + str(data["name"]) + "/instances")
                 jsonArray2 = json.loads(response2.text)
                 queryStatus = str(getOracleErpQueryStatusFromSqlLite(str(data["name"]))).replace('"', '')
                 for data2 in jsonArray2:
@@ -219,16 +217,11 @@ def listDeployed(managerHost):
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_oracle-feeder-erp_list")
-    verboseHandle.printConsoleWarning("Menu -> DataEngine -> Oracle-Feeder-ERP -> List")
-    username = ""
-    password = ""
-
+    verboseHandle.printConsoleWarning("Menu -> DataEngine -> OracleERP-Feeder -> List")
     try:
         managerNodes = config_get_manager_node()
         logger.info("managerNodes: main"+str(managerNodes))
         if(len(str(managerNodes))>0):
-            username = str(getUsernameByHost())
-            password = str(getPasswordByHost())
             managerHost = getManagerHost(managerNodes)
             listDeployed(managerHost)
     except Exception as e:
