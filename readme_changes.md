@@ -432,3 +432,5 @@
 139. Code fixed for Gilboa and Notifier Data engine (Manager host issue fixed)
 ### TAU v5.4-tau-release tag
 140. Code naming changes from erpOracleFeeder.db to oracleerpFeeder.db and files names also
+### TAU v5.5-tau-release tag
+141. Change the value in app.config of app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/oracleerpFeeder.db
