@@ -1,4 +1,29 @@
 echo "Installation begin for mq-connector!!!"
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigasharepath=$(read_property "app.gigashare.path")
+gigadatapath=$(read_property "app.gigadata.path")
+gigalogpath=$(read_property "app.gigalog.path")
+gigaworkPath=$(read_property "app.gigawork.path")
+
 tar -xvf install.tar
 targetDir=$1
 hostConfig=$2 #10.0.0.66,10.0.0.147,10.0.0.134
@@ -15,7 +40,7 @@ mqPort=${11}
 rootDir='/dbagigasoft'
 #targetDir='/dbagigasoft/Adabas'
 echo "targetDir:"$targetDir
-logDir='/dbagigalogs/Adabas'
+logDir=$gigalogpath'/Adabas'
 start_publisher_file='run-publisher.sh'
 stop_publisher_file='stop-publisher.sh'
 service_file='odsxadabas.service'

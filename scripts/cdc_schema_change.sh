@@ -1,4 +1,29 @@
 #!/bin/bash
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigasharepath=$(read_property "app.gigashare.path")
+gigadatapath=$(read_property "app.gigadata.path")
+gigalogpath=$(read_property "app.gigalog.path")
+gigaworkPath=$(read_property "app.gigawork.path")
+
 ### ENV variables ###
 objectType=$1
 MANAGER=$2
@@ -15,7 +40,7 @@ spaceName=$9
 iidr_kafka_gs_properties_path=${10}
 iidrSubscriptionMangerPort=${11}
 ########################
-/dbagiga/utils/di_watchdog_rest_ctl stop
+$gigapath/utils/di_watchdog_rest_ctl stop
 
 get_pipeline_id_by_object_type() {
   local objectType=$1  # The objectType passed as an argument
@@ -155,7 +180,7 @@ proc send_each_char {str} {
       send -- "\r"  ; # Simulate pressing Enter
   }
 
-  cd /dbagiga/gs-odsx
+  cd '$gigapath'/gs-odsx
   spawn ./odsx.py object objectmanagement registration list
   expect -re ".*Select object to show more details.*"
   sleep .1
@@ -201,4 +226,4 @@ sleep 10
 # Validate PL status
 echo "$plName pipeline [$plId] status:" $(get_pipeline_status_by_plid $plId)
 
-/dbagiga/utils/di_watchdog_rest_ctl start
+$gigapath/utils/di_watchdog_rest_ctl start

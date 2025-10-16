@@ -19,6 +19,7 @@ from utils.ods_validation import getTelnetStatus
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_list import isInstalledIIDRAccessServer, isInstalledIIDROracleAgent, isInstalledIIDRKafkaAgent, \
     isInstalledIIDRSubscriptionManager
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -236,7 +237,8 @@ def isFLinkInstalled(host,nodeType):
         return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isDIMInstalled"+str(host))
     isInstalled = "Yes"
-    commandToExecute='ls /dbagiga/di-flink/latest-flink/bin/start-cluster.sh'
+    dbaGigaPath=readValuefromAppConfig("app.giga.path")
+    commandToExecute='ls '+ dbaGigaPath +'/di-flink/latest-flink/bin/start-cluster.sh'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')

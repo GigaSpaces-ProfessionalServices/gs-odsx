@@ -1,4 +1,29 @@
 #!/bin/bash
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigasharepath=$(read_property "app.gigashare.path")
+gigadatapath=$(read_property "app.gigadata.path")
+gigalogpath=$(read_property "app.gigalog.path")
+gigaworkPath=$(read_property "app.gigawork.path")
+
 print_style () {
     if [ "$2" == "debug" ] ; then
         COLOR="96m";
@@ -53,39 +78,39 @@ function installFlink() {
   installation_path_flink=$sourceInstallerDirectory/data-integration/di-flink
   installation_file_flink=$(find $installation_path_flink -name "flink*.tgz" -printf "%f\n")
   info "InstallationFile:"$installation_file_flink"\n"
-  mkdir -p /dbagiga/di-flink
-  mkdir -p /dbagigalogs/di-flink
+  mkdir -p $gigapath/di-flink
+  mkdir -p $gigalogpath/di-flink
   #mkdir -p /home/gsods/di-flink
-  info "Copying file from "$installation_path_flink/$installation_file_flink +" to /dbagiga/di-flink \n"
-  cp $installation_path_flink/$installation_file_flink /dbagiga/di-flink
+  info "Copying file from "$installation_path_flink/$installation_file_flink +" to "$gigapath"/di-flink \n"
+  cp $installation_path_flink/$installation_file_flink $gigapath/di-flink
   info "\nExtracting zip file...\n"
-  tar -xzf /dbagiga/di-flink/$installation_file_flink --directory /dbagiga/di-flink/
-  chown -R gsods:gsods /dbagiga/di-flink/
-  extracted_folder_flink=$(ls -I "*.tgz" /dbagiga/di-flink/)
-  cd /dbagiga/di-flink/
-  ln -s /dbagiga/di-flink/ /home/gsods/di-flink
-  ln -s /dbagiga/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
+  tar -xzf $gigapath/di-flink/$installation_file_flink --directory $gigapath/di-flink/
+  chown -R gsods:gsods $gigapath/di-flink/
+  extracted_folder_flink=$(ls -I "*.tgz" $gigapath/di-flink/)
+  cd $gigapath/di-flink/
+  ln -s $gigapath/di-flink/ /home/gsods/di-flink
+  ln -s $gigapath/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
   mkdir -p /home/gsods/di-flink/latest-flink/data/savepoints
   mkdir -p /home/gsods/di-flink/latest-flink/data/checkpoints
 
-  mv /dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml /dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml_orig
+  mv $gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml $gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml_orig
 
-  echo "">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "jobmanager.rpc.address: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "jobmanager.rpc.port: 6123">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "jobmanager.bind-host: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "jobmanager.memory.process.size: 4000m">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "taskmanager.bind-host: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "taskmanager.host: localhost">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "taskmanager.memory.process.size: 4000m">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "taskmanager.numberOfTaskSlots: 10">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "parallelism.default: 1">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "jobmanager.execution.failover-strategy: region">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "jobmanager.memory.jvm-metaspace.size: 1500m">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "state.savepoints.dir: file:///home/gsods/di-flink/latest-flink/data/savepoints">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  echo "state.checkpoints.dir: file:///home/gsods/di-flink/latest-flink/data/checkpoints">>/dbagiga/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
-  #sed -i -e 's|/home/gsods|/dbagiga|g' /home/gsods/di-flink/latest-flink/conf/di-flink-jobmanager.service
-  #sed -i -e 's|/home/gsods|/dbagiga|g' /home/gsods/di-flink/latest-flink/conf/di-flink-taskmanager.service
+  echo "">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.rpc.address: localhost">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.rpc.port: 6123">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.bind-host: localhost">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.memory.process.size: 4000m">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.bind-host: localhost">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.host: localhost">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.memory.process.size: 4000m">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "taskmanager.numberOfTaskSlots: 10">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "parallelism.default: 1">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.execution.failover-strategy: region">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "jobmanager.memory.jvm-metaspace.size: 1500m">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "state.savepoints.dir: file:///home/gsods/di-flink/latest-flink/data/savepoints">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  echo "state.checkpoints.dir: file:///home/gsods/di-flink/latest-flink/data/checkpoints">>$gigapath/di-flink/$extracted_folder_flink/conf/flink-conf.yaml
+  #sed -i -e 's|/home/gsods|'$gigapath'|g' /home/gsods/di-flink/latest-flink/conf/di-flink-jobmanager.service
+  #sed -i -e 's|/home/gsods|'$gigapath'|g' /home/gsods/di-flink/latest-flink/conf/di-flink-taskmanager.service
   chmod +x /home/gsods/di-flink/latest-flink/bin/*
   cp $installation_path_flink/di-flink-jobmanager.service /etc/systemd/system/
   cp $installation_path_flink/*.jar /home/gsods/di-flink/latest-flink/lib/
@@ -97,7 +122,7 @@ function installFlink() {
   sudo systemctl restart di-flink-taskmanager.service
   sudo systemctl restart di-flink-jobmanager.service
 
-  rm -f /dbagiga/di-flink/di-flink
+  rm -f $gigapath/di-flink/di-flink
   info "\n Installation Flink completed."
 }
 
@@ -106,21 +131,21 @@ function installDIMatadata {
   installation_path_mdm=$sourceInstallerDirectory/data-integration/di-mdm
   installation_file_mdm=$(find $installation_path_mdm -name "di-mdm*.gz" -printf "%f\n")
   info "InstallationFile:"$installation_file_mdm"\n"
-  mkdir -p /dbagiga/di-mdm
-  mkdir -p /dbagigalogs/di-mdm
+  mkdir -p $gigapath/di-mdm
+  mkdir -p $gigapathlogs/di-mdm
   #mkdir -p /home/gsods/di-mdm
-  cp $installation_path_mdm/$installation_file_mdm /dbagiga/di-mdm
+  cp $installation_path_mdm/$installation_file_mdm $gigapath/di-mdm
   info "\nExtracting zip file...\n"
-  tar -xzf /dbagiga/di-mdm/$installation_file_mdm --directory /dbagiga/di-mdm/
-  chown -R gsods:gsods /dbagiga/di-mdm/
-  extracted_folder_mdm=$(ls -I "*.gz" /dbagiga/di-mdm/)
-  cd /dbagiga/di-mdm/
+  tar -xzf $gigapath/di-mdm/$installation_file_mdm --directory $gigapath/di-mdm/
+  chown -R gsods:gsods $gigapath/di-mdm/
+  extracted_folder_mdm=$(ls -I "*.gz" $gigapath/di-mdm/)
+  cd $gigapath/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
-  ln -s /dbagiga/di-mdm/ /home/gsods/di-mdm
-  ln -s /dbagiga/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
-  #echo "">>/dbagiga/di-mdm.properties
-  echo "spring.profiles.active=zookeeper">/dbagiga/di-mdm.properties
-  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm.properties
+  ln -s $gigapath/di-mdm/ /home/gsods/di-mdm
+  ln -s $gigapath/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
+  #echo "">>$gigapath/di-mdm.properties
+  echo "spring.profiles.active=zookeeper">$gigapath/di-mdm.properties
+  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>$gigapath/di-mdm.properties
   #  if [ "$kafkaBrokerCount" == 1 ]; then
   #  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/home/gsods/di-mdm/latest-di-mdm/config/di-mdm-application.properties
   #else
@@ -129,8 +154,8 @@ function installDIMatadata {
 
   cd /home/gsods/di-mdm/latest-di-mdm/utils
   chown -R gsods:gsods /home/gsods/di-mdm/
-  sudo ./install_new_version.sh /dbagiga/di-mdm.properties
-  rm -f /dbagiga/di-mdm/di-mdm
+  sudo ./install_new_version.sh $gigapath/di-mdm.properties
+  rm -f $gigapath/di-mdm/di-mdm
 }
 
 function installDIManager {
@@ -138,39 +163,39 @@ function installDIManager {
   installation_path_manager=$sourceInstallerDirectory/data-integration/di-manager
   installation_file_manager=$(find $installation_path_manager -name "di-manager*.gz" -printf "%f\n")
   info "InstallationFile:"$installation_file_manager"\n"
-  mkdir -p /dbagiga/di-manager
-  mkdir -p /dbagigalogs/di-manager
+  mkdir -p $gigapath/di-manager
+  mkdir -p $gigalogpath/di-manager
   #mkdir -p /home/gsods/di-manager
-  info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-manager \n"
-  cp $installation_path_manager/$installation_file_manager /dbagiga/di-manager
+  info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-manager \n"
+  cp $installation_path_manager/$installation_file_manager $gigapath/di-manager
   info "\nExtracting zip file...\n"
-  tar -xzf /dbagiga/di-manager/$installation_file_manager --directory /dbagiga/di-manager/
-  chown -R gsods:gsods /dbagiga/di-manager/
-  extracted_folder_manager=$(ls -I "*.gz" /dbagiga/di-manager/)
-  cd /dbagiga/di-manager/
+  tar -xzf $gigapath/di-manager/$installation_file_manager --directory $gigapath/di-manager/
+  chown -R gsods:gsods $gigapath/di-manager/
+  extracted_folder_manager=$(ls -I "*.gz" $gigapath/di-manager/)
+  cd $gigapath/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
-  ln -s /dbagiga/di-manager/ /home/gsods/di-manager
-  ln -s /dbagiga/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
+  ln -s $gigapath/di-manager/ /home/gsods/di-manager
+  ln -s $gigapath/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
 
-  #echo "">/dbagiga/di-manager.properties
-  echo "springdoc.api-docs.path=/api-docs">/dbagiga/di-manager.properties
-  echo "springdoc.swagger-ui.path=/swagger-ui">>/dbagiga/di-manager.properties
-  echo "springdoc.swagger-ui.operationsSorter=method">>/dbagiga/di-manager.properties
-  sed -i '/^mdm.server.url/d' /dbagiga/di-manager.properties
-  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager.properties
-  sed -i '/^mdm.server.fallback-url/d' /dbagiga/di-manager.properties
+  #echo "">$gigapath/di-manager.properties
+  echo "springdoc.api-docs.path=/api-docs">$gigapath/di-manager.properties
+  echo "springdoc.swagger-ui.path=/swagger-ui">>$gigapath/di-manager.properties
+  echo "springdoc.swagger-ui.operationsSorter=method">>$gigapath/di-manager.properties
+  sed -i '/^mdm.server.url/d' $gigapath/di-manager.properties
+  echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>$gigapath/di-manager.properties
+  sed -i '/^mdm.server.fallback-url/d' $gigapath/di-manager.properties
   if [ "$kafkaBrokerCount" == 1 ]; then
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager.properties
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>$gigapath/di-manager.properties
   else
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-manager.properties
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigapath/di-manager.properties
   fi
-  echo "server.port=6080">>/dbagiga/di-manager.properties
-  echo "mdm.client.timeouts.connection.ms=10000">>/dbagiga/di-manager.properties
-  echo "mdm.client.timeouts.read.ms=60000">>/dbagiga/di-manager.properties
+  echo "server.port=6080">>$gigapath/di-manager.properties
+  echo "mdm.client.timeouts.connection.ms=10000">>$gigapath/di-manager.properties
+  echo "mdm.client.timeouts.read.ms=60000">>$gigapath/di-manager.properties
   cd /home/gsods/di-manager/latest-di-manager/utils/
   chown -R gsods:gsods /home/gsods/di-manager/
-  sudo ./install_new_version.sh /dbagiga/di-manager.properties
-  rm -f /dbagiga/di-manager/di-manager
+  sudo ./install_new_version.sh $gigapath/di-manager.properties
+  rm -f $gigapath/di-manager/di-manager
   info "\n Installation DI-Manager completed.\n"
 }
 
@@ -180,33 +205,33 @@ function installDIProcessor {
     installation_path_manager=$sourceInstallerDirectory/data-integration/di-processor
     installation_file_manager=$(find $installation_path_manager -name "di-processor*.tgz" -printf "%f\n")
     info "InstallationFile:"$installation_file_manager"\n"
-    mkdir -p /dbagiga/di-processor
-    mkdir -p /dbagigalogs/di-processor
-    info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-processor \n"
-    cp $installation_path_manager/$installation_file_manager /dbagiga/di-processor
+    mkdir -p $gigapath/di-processor
+    mkdir -p $gigalogpath/di-processor
+    info "Copying file from "$installation_path_manager/$installation_file_manager +" to $gigapath/di-processor \n"
+    cp $installation_path_manager/$installation_file_manager $gigapath/di-processor
     info "\nExtracting zip file...\n"
-    tar -xzf /dbagiga/di-processor/$installation_file_manager --directory /dbagiga/di-processor/
-    chown gsods:gsods /dbagigalogs/di-processor
-    extracted_folder_manager=$(ls -I "*.tgz" /dbagiga/di-processor/)
-    cd /dbagiga/di-processor/
+    tar -xzf $gigapath/di-processor/$installation_file_manager --directory $gigapath/di-processor/
+    chown gsods:gsods $gigalogpath/di-processor
+    extracted_folder_manager=$(ls -I "*.tgz" $gigapath/di-processor/)
+    cd $gigapath/di-processor/
     info "Creating symlink for :"$extracted_folder_manager
-    ln -s /dbagiga/di-processor/ /home/gsods/di-processor
-    ln -s /dbagiga/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
+    ln -s $gigapath/di-processor/ /home/gsods/di-processor
+    ln -s $gigapath/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
 
-    echo "mdm.server.url=http://$kafkaBrokerHost1:6081">/dbagiga/di-processor.properties
+    echo "mdm.server.url=http://$kafkaBrokerHost1:6081">$gigapath/di-processor.properties
     if [ "$kafkaBrokerCount" == 1 ]; then
-      echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-processor.properties
+      echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>$gigapath/di-processor.properties
     else
-      echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-processor.properties
+      echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigapath/di-processor.properties
     fi
     #cd /home/gsods/di-mdm/latest-di-mdm/utils/
     #chmod +x *.sh
-    #./deploy.sh $installation_path_manager/$installation_file_manager /dbagiga/di-processor.properties
+    #./deploy.sh $installation_path_manager/$installation_file_manager $gigapath/di-processor.properties
 
     cd /home/gsods/di-processor/latest-di-processor/utils/
     chown -R gsods:gsods /home/gsods/di-processor/
-    sudo ./install_new_version.sh /dbagiga/di-processor.properties
-    rm -f /dbagiga/di-processor/di-processor
+    sudo ./install_new_version.sh $gigapath/di-processor.properties
+    rm -f $gigapath/di-processor/di-processor
 }
 
 function installDISubscription {
@@ -214,68 +239,68 @@ function installDISubscription {
     installation_path_manager=$sourceInstallerDirectory/data-integration/di-subscription-manager
     installation_file_manager=$(find $installation_path_manager -name "di-subscription-manager*.tgz" -printf "%f\n")
     info "InstallationFile:"$installation_file_manager"\n"
-    mkdir -p /dbagiga/di-subscription-manager
-    mkdir -p /dbagigalogs/di-subscription-manager
-    chown gsods:gsods /dbagigalogs/di-subscription-manager
-    info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-subscription-manager \n"
-    cp $installation_path_manager/$installation_file_manager /dbagiga/di-subscription-manager
+    mkdir -p $gigapath/di-subscription-manager
+    mkdir -p $gigalogpath/di-subscription-manager
+    chown gsods:gsods $gigalogpath/di-subscription-manager
+    info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-subscription-manager \n"
+    cp $installation_path_manager/$installation_file_manager $gigapath/di-subscription-manager
     info "\nExtracting zip file...\n"
-    tar -xzf /dbagiga/di-subscription-manager/$installation_file_manager --directory /dbagiga/di-subscription-manager/
-    extracted_folder_manager=$(ls -I "*.gz" /dbagiga/di-subscription-manager/)
-    cd /dbagiga/di-subscription-manager/
+    tar -xzf $gigapath/di-subscription-manager/$installation_file_manager --directory $gigapath/di-subscription-manager/
+    extracted_folder_manager=$(ls -I "*.gz" $gigapath/di-subscription-manager/)
+    cd $gigapath/di-subscription-manager/
     info "Creating symlink for :"$extracted_folder_manager
     ln -s $extracted_folder_manager /home/gsods/di-subscription-manager
-    ln -s /dbagiga/di-subscription-manager/$extracted_folder_manager /home/gsods/di-subscription-manager/latest-di-subscription-manager
+    ln -s $gigapath/di-subscription-manager/$extracted_folder_manager /home/gsods/di-subscription-manager/latest-di-subscription-manager
 
-    echo "##iidr.as##" > /dbagiga/di-subscription-manager.properties
-    echo "iidr-as.hostname=$iidrHost" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-as.port=10101" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-as.username=$iidrUsername" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-as.password=$iidrPassword" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-as.source-datastore.mirror_auto_restart_interval_seconds=15" >> /dbagiga/di-subscription-manager.properties
-    echo "" >> /dbagiga/di-subscription-manager.properties
-    echo "datastore.save-credentials-in-mdm=false" >> /dbagiga/di-subscription-manager.properties
-    echo "" >> /dbagiga/di-subscription-manager.properties
-    echo "###kafka properties" >> /dbagiga/di-subscription-manager.properties
-    echo "kafka.host=gstest-di1.tau.ac.il" >> /dbagiga/di-subscription-manager.properties
-    echo "kafka.port=9092" >> /dbagiga/di-subscription-manager.properties
-    echo "kafka.topic.prefix=" >> /dbagiga/di-subscription-manager.properties
-    echo "" >> /dbagiga/di-subscription-manager.properties
-    echo "###iidr kafka properties" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.host=gstest-iidr1.tau.ac.il" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.port=11701" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.username=tsuser" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.password=<password>" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.properties.manager.client.timeouts.connection.ms=10000" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.properties.manager.client.timeouts.read.ms=60000" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.properties.manager.server.url=http://$iidrHost:6085" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.user-exit.properties.file.use-api=false" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.user-exit.properties.file.read-path=/giga/iidr/kafka/instance/KAFKA/conf" >> /dbagiga/di-subscription-manager.properties
-    echo "iidr-kafka.user-exit.properties.file.write-path=/giga/iidr/kafka/instance/KAFKA/conf" >> /dbagiga/di-subscription-manager.properties
-    echo "" >> /dbagiga/di-subscription-manager.properties
-    echo "##mdm##" >> /dbagiga/di-subscription-manager.properties
-    echo "mdm.client.timeouts.connection.ms=10000" >> /dbagiga/di-subscription-manager.properties
-    echo "mdm.client.timeouts.read.ms=60000" >> /dbagiga/di-subscription-manager.properties
-    echo "mdm.url=/api/v1" >> /dbagiga/di-subscription-manager.properties
-    echo "mdm.server.url=http://$kafkaBrokerHost1:6081" >> /dbagiga/di-subscription-manager.properties
-    echo "" >> /dbagiga/di-subscription-manager.properties
-    echo "##subscription manager" >> /dbagiga/di-subscription-manager.properties
-    echo "subscription-manager.server.url=http://:gstest-iidr1.tau.ac.il:6082" >> /dbagiga/di-subscription-manager.properties
-    echo "subscription-manager.feature.supports-transaction=true" >> /dbagiga/di-subscription-manager.properties
-    echo "#mdm-waiting-timeout is in seconds" >> /dbagiga/di-subscription-manager.properties
-    echo "subscription-manager.mdm-availability-waiting-timeout-seconds=300" >> /dbagiga/di-subscription-manager.properties
-    echo "server.port=6082" >> /dbagiga/di-subscription-manager.properties
+    echo "##iidr.as##" > $gigapath/di-subscription-manager.properties
+    echo "iidr-as.hostname=$iidrHost" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-as.port=10101" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-as.username=$iidrUsername" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-as.password=$iidrPassword" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-as.source-datastore.mirror_auto_restart_interval_seconds=15" >> $gigapath/di-subscription-manager.properties
+    echo "" >> $gigapath/di-subscription-manager.properties
+    echo "datastore.save-credentials-in-mdm=false" >> $gigapath/di-subscription-manager.properties
+    echo "" >> $gigapath/di-subscription-manager.properties
+    echo "###kafka properties" >> $gigapath/di-subscription-manager.properties
+    echo "kafka.host=gstest-di1.tau.ac.il" >> $gigapath/di-subscription-manager.properties
+    echo "kafka.port=9092" >> $gigapath/di-subscription-manager.properties
+    echo "kafka.topic.prefix=" >> $gigapath/di-subscription-manager.properties
+    echo "" >> $gigapath/di-subscription-manager.properties
+    echo "###iidr kafka properties" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.host=gstest-iidr1.tau.ac.il" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.port=11701" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.username=tsuser" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.password=<password>" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.properties.manager.client.timeouts.connection.ms=10000" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.properties.manager.client.timeouts.read.ms=60000" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.properties.manager.server.url=http://$iidrHost:6085" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.use-api=false" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.read-path=/giga/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.write-path=/giga/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
+    echo "" >> $gigapath/di-subscription-manager.properties
+    echo "##mdm##" >> $gigapath/di-subscription-manager.properties
+    echo "mdm.client.timeouts.connection.ms=10000" >> $gigapath/di-subscription-manager.properties
+    echo "mdm.client.timeouts.read.ms=60000" >> $gigapath/di-subscription-manager.properties
+    echo "mdm.url=/api/v1" >> $gigapath/di-subscription-manager.properties
+    echo "mdm.server.url=http://$kafkaBrokerHost1:6081" >> $gigapath/di-subscription-manager.properties
+    echo "" >> $gigapath/di-subscription-manager.properties
+    echo "##subscription manager" >> $gigapath/di-subscription-manager.properties
+    echo "subscription-manager.server.url=http://:gstest-iidr1.tau.ac.il:6082" >> $gigapath/di-subscription-manager.properties
+    echo "subscription-manager.feature.supports-transaction=true" >> $gigapath/di-subscription-manager.properties
+    echo "#mdm-waiting-timeout is in seconds" >> $gigapath/di-subscription-manager.properties
+    echo "subscription-manager.mdm-availability-waiting-timeout-seconds=300" >> $gigapath/di-subscription-manager.properties
+    echo "server.port=6082" >> $gigapath/di-subscription-manager.properties
 
-    echo "##swagger-ui##" >> /dbagiga/di-subscription-manager.properties
-    echo "springdoc.api-docs.path=/api-docs" >> /dbagiga/di-subscription-manager.properties
-    echo "springdoc.swagger-ui.operationsSorter=method" >> /dbagiga/di-subscription-manager.properties
-    echo "springdoc.swagger-ui.path=/swagger-ui" >> /dbagiga/di-subscription-manager.properties
-    echo "springdoc.swagger-ui.request-timeout=10000 # Timeout value in milliseconds" >> /dbagiga/di-subscription-manager.properties
-    echo "" >> /dbagiga/di-subscription-manager.properties
-    echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> /dbagiga/di-subscription-manager.properties
-    sed -i -e 's|logs/di-subscription-manager.log|/dbagigalogs/di-iidr/di-subscription-manager.log|g' /etc/systemd/system/di-subscription-manager-iidr.service
+    echo "##swagger-ui##" >> $gigapath/di-subscription-manager.properties
+    echo "springdoc.api-docs.path=/api-docs" >> $gigapath/di-subscription-manager.properties
+    echo "springdoc.swagger-ui.operationsSorter=method" >> $gigapath/di-subscription-manager.properties
+    echo "springdoc.swagger-ui.path=/swagger-ui" >> $gigapath/di-subscription-manager.properties
+    echo "springdoc.swagger-ui.request-timeout=10000 # Timeout value in milliseconds" >> $gigapath/di-subscription-manager.properties
+    echo "" >> $gigapath/di-subscription-manager.properties
+    echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> $gigapath/di-subscription-manager.properties
+    sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' /etc/systemd/system/di-subscription-manager-iidr.service
     cd /home/gsods/di-subscription-manager/latest-di-subscription-manager/utils
-    sudo ./install_new_version.sh /dbagiga/di-subscription-manager.properties
+    sudo ./install_new_version.sh $gigapath/di-subscription-manager.properties
     systemctl daemon-reload
     systemctl enable di-subscription-manager
     systemctl restart di-subscription-manager
@@ -371,7 +396,7 @@ if [[ $id != 4 ]]; then
     sed -i '/export KAFKA_LOGS_PATH/d' setenv.sh
     echo "extracted_folder: "$extracted_folder
     kafka_home_path="export KAFKAPATH="$baseFolderLocation$extracted_folder
-    ln -s $baseFolderLocation$extracted_folder /dbagiga/kafka_latest
+    ln -s $baseFolderLocation$extracted_folder $gigapath/kafka_latest
     echo "$kafka_home_path">>setenv.sh
     echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
     echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
@@ -392,7 +417,7 @@ fi
     replace=""
     extracted_folder=${var//'.tar.gz'/$replace}
     zk_home_path="export ZOOKEEPERPATH="$baseFolderLocation$extracted_folder
-    ln -s $baseFolderLocation$extracted_folder /dbagiga/zookeeper_latest
+    ln -s $baseFolderLocation$extracted_folder $gigapath/zookeeper_latest
     echo "$zk_home_path">>setenv.sh
     echo "export ZOOKEEPER_DATA_PATH="$dataFolderZK >> setenv.sh
     echo "export ZOOKEEPER_LOGS_PATH="$logsFolderZK >> setenv.sh

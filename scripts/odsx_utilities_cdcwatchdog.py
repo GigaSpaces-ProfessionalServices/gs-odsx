@@ -72,8 +72,9 @@ def configureLicenseManagerAndSpace():
     verboseHandle.printConsoleInfo("5. *.chcclp target files : "+targetPathScripts)
     #licenseConfig='"\\"{}\\""'.format(licenseConfig)
     confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
+    dbaGigaLogPath=readValuefromAppConfig("app.gigalog.path")
     if confirm=='y' or confirm=='':
-        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p /dbagigalogs/iidr;chown -R gsods.gsods /dbagigalogs/iidr;cp "+sourcePath+"*.service "+targetPathService
+        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p " + dbaGigaLogPath + "/iidr;chown -R gsods.gsods " + dbaGigaLogPath + "/iidr;cp "+sourcePath+"*.service "+targetPathService
         logger.info("commandToExecute:"+commandToExecute)
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
         verboseHandle.printConsoleInfo("Files *.service copied for for host:"+watchdogHost)

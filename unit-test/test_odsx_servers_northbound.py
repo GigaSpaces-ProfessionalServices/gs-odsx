@@ -13,9 +13,11 @@ from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput,ex
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from scripts.odsx_servers_northbound_install import install_packages_to_nb_servers
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m'  # GREEN
@@ -62,9 +64,9 @@ def update_app_config_file(linePatternToReplace, value, lines1):
     return lines
 
 def upload_packages_to_nb_servers(hostip,nb_user,confirmServerInstall,confirmAgentInstall,confirmManagementInstall):
-    remotePath = "/dbagiga"
+    remotePath = dbaGigaPath
     remotePath = remotePath + "/nb-infra"
-    cmd = 'mkdir -p '+remotePath+'; chmod 777 /dbagiga'
+    cmd = 'mkdir -p '+remotePath+'; chmod 777 '+dbaGigaPath
     logger.info("cmd :"+str(cmd))
     with Spinner():
         output = executeRemoteCommandAndGetOutput(hostip, nb_user, cmd)
@@ -81,7 +83,7 @@ def upload_packages_to_nb_servers(hostip,nb_user,confirmServerInstall,confirmAge
         scp_upload(hostip, nb_user, 'install/install.tar', '')
 
     commandToExecute="scripts/servers_northbound_preinstall.sh"
-    additionalParam='/dbagiga'
+    additionalParam=dbaGigaPath
     print(additionalParam)
     logger.info("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
     with Spinner():
@@ -243,7 +245,7 @@ if __name__ == '__main__':
     user="root"
     nb_server = "10.0.0.110"
     consul_replica_number = '3'
-    remotePath = "/dbagiga"
+    remotePath = dbaGigaPath
 
     nb_domain='example.gigaspaces.com'
     ssl_certificate = 'server.crt'

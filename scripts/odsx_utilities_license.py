@@ -9,9 +9,11 @@ from utils.ods_app_config import getYamlFilePathInsideFolder
 from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m' #GREEN
@@ -63,7 +65,7 @@ def configureLicenseManagerAndSpace():
     managerHosts = getManagerHostFromEnv()
     spaceHosts = getSpaceHostFromEnv()
     sourceGSLicense = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense"))
-    targetGSLicense = "/dbagiga/gigaspaces-smart-ods/"
+    targetGSLicense = dbaGigaPath + "/gigaspaces-smart-ods/"
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("License source file :"+str(sourceGSLicense))
     verboseHandle.printConsoleInfo("License target : "+str(targetGSLicense))

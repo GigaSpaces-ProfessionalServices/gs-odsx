@@ -1,4 +1,30 @@
 echo "Removing Server - Manager"
+
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigasharepath=$(read_property "app.gigashare.path")
+gigadatapath=$(read_property "app.gigadata.path")
+gigalogpath=$(read_property "app.gigalog.path")
+gigaworkPath=$(read_property "app.gigawork.path")
+
 removeJava=$1
 #echo "removeJava :"$removeJava
 removeUnzip=$2
@@ -26,10 +52,10 @@ source setenv.sh
 systemctl stop gsa.service
 sleep 5
 rm -rf $GS_HOME
-rm -rf setenv.sh gs install install.tar /dbagiga/giga* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
-find /dbagigalogs/ -mindepth 1 ! -regex '^/dbagigalogs/consul\|/dbagigalogs/nginx\(/.*\)?' -delete
-cd /dbagiga
-rm -rf gigaspaces-smart-ods /dbagiga/gs_config /dbagiga/gs_jars
+rm -rf setenv.sh gs install install.tar $gigapath/giga* $gigaworkPath/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+find $gigalogpath/ -mindepth 1 ! -regex '^'$gigalogpath'/consul\|'$gigalogpath'/nginx\(/.*\)?' -delete
+cd $gigapath
+rm -rf gigaspaces-smart-ods $gigapath/gs_config $gigapath/gs_jars
 echo "Remove symlink done!"
 systemctl daemon-reload
 sed -i '/hard nofile/d' /etc/security/limits.conf

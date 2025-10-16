@@ -53,7 +53,8 @@ def handleException(e):
 def getVersion(ip):
     logger.info("getVersion () "+str(ip))
     output=''
-    cmdToExecute = "cd /dbagiga/"+getNBFolderName()+"/;./install_nb_infra.sh -v;"
+    dbaGigaPath=readValuefromAppConfig("app.giga.path")
+cmdToExecute = "cd "+ dbaGigaPath+"/"+getNBFolderName()+"/;./install_nb_infra.sh -v;"
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(ip, 'root', cmdToExecute)
     logger.info(cmdToExecute+" :"+str(output))

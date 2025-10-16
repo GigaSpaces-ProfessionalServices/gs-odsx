@@ -1,4 +1,29 @@
 echo "Installation starting..."
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigasharepath=$(read_property "app.gigashare.path")
+gigadatapath=$(read_property "app.gigadata.path")
+gigalogpath=$(read_property "app.gigalog.path")
+gigaworkPath=$(read_property "app.gigawork.path")
+
 #source gs_installation.properties
 osDetected=$(cat /etc/os-release|grep "NAME=" | head -n 1 | cut -d "=" -f2 | sed -e 's/^"//' -e 's/"$//')
 echo "os: "$osDetected
@@ -225,7 +250,7 @@ function installAirGapGS {
    home_dir=$(pwd)
    echo "homedir: "$home_dir
    installation_path=$sourceInstallerDirectory/gs
-   #installation_file=$(find /dbagigashare/current/gs/*.zip -maxdepth 1)
+   #installation_file=$(find $gigasharepath/current/gs/*.zip -maxdepth 1)
    installation_file=$(ls -1 $sourceInstallerDirectory/gs/*.zip)
    installation_file=$(basename $installation_file)
    echo $installation_path"/"$installation_file
@@ -326,7 +351,7 @@ function installAirGapGS {
    # echo "File $targetConfigDir/metrics.xml not exist so copying"
    # cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
    #fi
-   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
+   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template $gigapath"/gs_config/metrics.xml"
 
    limitContent="$applicativeUser hard nofile "$nofileLimitFile
    limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
@@ -341,12 +366,12 @@ function installAirGapGS {
 
    cd $targetDir
    ln -s $extracted_folder gigaspaces-smart-ods
-   sed -i -e 's|../config/security/security-config.xml|//dbagiga/gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
+   sed -i -e 's|../config/security/security-config.xml|/'$gigapath'/gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
    #sed -i -e 's|../config/security/security-config.xml|/./../../gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
-   cp gigaspaces-smart-ods/config/security/security.properties /dbagiga/gs_config/
+   cp gigaspaces-smart-ods/config/security/security.properties $gigapath"/gs_config/"
    echo "Installation & configuration Gigaspace  -Done!"
    if [ "$gs_version_17" == "true" ]; then
-      echo "gs_version_17,337 -> "$gs_version_17>>/dbagigashare/current/gs/16.4/16_4.txt
+      echo "gs_version_17,337 -> "$gs_version_17>>$gigasharepath"/current/gs/16.4/16_4.txt"
       installation_file_16_4=$(ls -1 ${sourceInstallerDirectory%/}/gs/16.4/*.zip)
       unzip -qq $installation_file_16_4 -d  $targetDir
 
@@ -358,8 +383,8 @@ function installAirGapGS {
 
       #license="export GS_LICENSE='Product=InsightEdge;Version=15.8;Type=ENTERPRISE;Customer=GigaSpaces_Technologies_-_Internal_rajiv_shah_DEV;Expiration=2021-Dec-31;Hash=gSZQ6OSP83VRn0PRQZNH'"
       #license="export GS_LICENSE='\"$gsLicenseConfig\"'"
-      GS_HOME_16_4=$(find /dbagiga/ -type d -iname "*16.4*" -exec basename {} \;)
-      echo "GS_HOME_16_4,347 -> "$GS_HOME_16_4>/dbagigashare/current/gs/16.4/16_4.txt
+      GS_HOME_16_4=$(find $gigapath"/" -type d -iname "*16.4*" -exec basename {} \;)
+      echo "GS_HOME_16_4,347 -> "$GS_HOME_16_4>$gigasharepath"/current/gs/16.4/16_4.txt"
       var="$GS_HOME_16_4"
       replace=""
       extracted_folder=${var//'.zip'/$replace}
@@ -375,7 +400,7 @@ function installAirGapGS {
       fi
       echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
 
-      echo  "$gsLicenseFile_16_4 $targetDir/$extracted_folder/" > /dbagigashare/current/gs/16.4/16_4.txt
+      echo  "$gsLicenseFile_16_4 $targetDir/$extracted_folder/" > $gigasharepath"/current/gs/16.4/16_4.txt"
       cp $gsLicenseFile_16_4 $targetDir/$extracted_folder/gs-license.txt
 
       hostCfg="export GS_MANAGER_SERVERS="$gs_clusterhosts
@@ -405,7 +430,7 @@ function installAirGapGS {
         sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
         cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
       fi
-      cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
+      cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template $gigapath"/gs_config/metrics.xml"
 
       limitContent="$applicativeUser hard nofile "$nofileLimitFile
       limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
@@ -423,11 +448,11 @@ function installAirGapGS {
 
       cd
       home_dir=$(pwd)
-      GS_HOME_16_4=$(find /dbagiga/ -type d -iname "*16.4*")
+      GS_HOME_16_4=$(find $gigapath"/" -type d -iname "*16.4*")
       sed -i '/export GS_HOME_16_4/d' setenv.sh
       echo "">>setenv.sh
       echo "export GS_HOME_16_4=$GS_HOME_16_4">>setenv.sh
-      echo "GS_HOME_16_4,454 -> "$GS_HOME_16_4>>/dbagigashare/current/gs/16.4/16_4.txt
+      echo "GS_HOME_16_4,454 -> "$GS_HOME_16_4>>$gigasharepath"/current/gs/16.4/16_4.txt"
 
    fi
 }
@@ -450,9 +475,9 @@ function installTelegraf {
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
-  find /dbagigalogs -maxdepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
-  #chgrp -R gsods /dbagigalogs/ /dbagigawork/ /dbagiga/*
+  chown -R $applicativeUser:$applicativeUser $gigaworkPath"/" $gigapath"/*" #$gigalogpath/   Removed $gigalogpath as mentioned by Josh on 4th April
+  find $gigalogpath -maxdepth 1 ! -regex '^'$gigalogpath'/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
+  #chgrp -R gsods $gigalogpath/ $gigaworkPath/ $gigapath/*
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"
@@ -514,7 +539,7 @@ function gsCreateGSServeice {
       chmod 777 -R $GS_HOME/tools/gs-webui/*
   fi
 
-  chmod -R +x /dbagiga
+  chmod -R +x $gigapath
 
   systemctl daemon-reload
   systemctl enable $gsa_service_file
@@ -536,7 +561,7 @@ function gsCreateGSServeice {
 
 function copyLogFile {
     echo "xap_logging file copied from source to target"
-    cd /dbagiga/gs_config/
+    cd $gigapath"/gs_config/"
     sudo cp $logSourcePath $logTargetPath
 }
 #if the airGap true then it will install from user/install dir

@@ -22,11 +22,13 @@ from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload,scp_upload_specific_extension
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
 from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
+from utils.ods_app_config import readValuefromAppConfig
 
 #from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m' #GREEN
@@ -595,7 +597,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
                 #scp_upload(host,user,ldapSecurityConfigInput,ldapSecurityConfigTargetInput)
                 #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/xap-security.jar "+springTargetJarInput)
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+ dbaGigaPath +"/* ")
                 #logger.info(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                 configureMetricsXML(host)
             serverHost=''

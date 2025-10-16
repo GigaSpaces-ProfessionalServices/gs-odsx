@@ -1,5 +1,23 @@
 #!/bin/bash
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
 #set -x
 
 # prints colored text
@@ -52,21 +70,21 @@ springTargetJarInput=$7
 info "stopping gs...\n"
 systemctl stop gsa
 sleep 30
-cd /dbagiga
+cd $gigapath
 oldGSPath=$(readlink -f gigaspaces-smart-ods)
 info "Current GS "$oldGSPath"\n"
 rm -rf $oldGSPath
 rm -f gigaspaces-smart-ods
-mv /dbagiga/gigaspaces-smart-ods-old /dbagiga/gigaspaces-smart-ods
-rm -f /dbagiga/gs_jars/*
+mv $gigapath"/gigaspaces-smart-ods-old" $gigapath"/gigaspaces-smart-ods"
+rm -f $gigapath"/gs_jars/*"
 info "Copying required jars...\n"
 #echo ""$cefLoggingJarInput $cefLoggingJarInputTarget
 cp $cefLoggingJarInput $cefLoggingJarInputTarget
 #echo ""$springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
 cp $springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
-#echo ""/dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
-cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
-chown -R $applicativeUser:$applicativeUser /dbagiga/*
+#echo ""$gigapath/gigaspaces-smart-ods/lib/optional/security/* $gigapath/gs_jars
+cp $gigapath"/gigaspaces-smart-ods/lib/optional/security/*" $gigapath"/gs_jars"
+chown -R $applicativeUser:$applicativeUser $gigapath"/*"
 sleep 10
 info "starting gs...\n"
 systemctl start gsa

@@ -18,10 +18,11 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
-
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m'  # GREEN
@@ -233,7 +234,7 @@ if __name__ == '__main__':
             #    managerUpgrade = managerDict.get(int(hostConfiguration))
             #/dbagiga/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
             sourcePath= sourceInstallerDirectory+"/gs/upgrade"
-            destPath="/dbagiga"
+            destPath=dbaGigaPath
             verboseHandle.printConsoleWarning("------------------Summary-----------------")
             verboseHandle.printConsoleWarning("Enter source directory for new GS build : "+sourcePath)
             verboseHandle.printConsoleWarning("Enter destination directory to install new GS build : "+str(destPath))

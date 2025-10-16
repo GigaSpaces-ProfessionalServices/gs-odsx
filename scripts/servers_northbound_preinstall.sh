@@ -1,5 +1,25 @@
 echo "Starting pre Installation configuration."
 echo "Extracting install.tar to "$targetDir
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+
 tar -xvf install.tar
 targetDir=$1
 echo "TargetDir"$targetDir
@@ -20,7 +40,7 @@ nb_foldername=$(tar -ztvf $installation_path/$installation_file | head -1 | awk 
 echo $installation_path"/"$installation_file
 
 echo "Extracting .tar.gz file from "$installation_path
-tar -xzf $installation_path/*.tar.gz -C /dbagiga
+tar -xzf $installation_path/*.tar.gz -C $gigapath
 
 echo "Moving file from $installation_path/nb.conf To $targetDir/$nb_foldername/"
 mv $installation_path/nb.conf $targetDir/$nb_foldername/

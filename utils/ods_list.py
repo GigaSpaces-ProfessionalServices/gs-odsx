@@ -10,9 +10,12 @@ from utils.ods_validation import getTelnetStatus
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutput, \
     executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m'  # GREEN
@@ -158,7 +161,7 @@ def getInfluxdbServerDetails(influxdbServers):
 
 def validateMetricsXmlInfluxUrl(ip):
     logger.info("validateMetricsXmlInfluxUrl()")
-    cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/datasources/datasource/property[@name=\"url\"]/@value)' /dbagiga/gs_config/metrics.xml"
+    cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/datasources/datasource/property[@name=\"url\"]/@value)' "+dbaGigaPath+"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
     #output3 = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
     output3 = executeRemoteCommandAndGetOutputValuePython36(ip, 'root', cmdToExecute)
@@ -183,7 +186,7 @@ def getManagerHostFromEnv():
 
 def validateMetricsXmlInflux(ip):
     logger.info("validateMetricsXml()")
-    cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/reporters/reporter/property/@value)' /dbagiga/gs_config/metrics.xml"
+    cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/reporters/reporter/property/@value)' "+ dbaGigaPath +"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
     output1 = executeRemoteCommandAndGetOutputValuePython36(ip,"root",cmdToExecute)
     output1=str(output1).replace('\n','')
@@ -195,7 +198,7 @@ def validateMetricsXmlInflux(ip):
 
 def validateMetricsXmlGrafana(ip):
     logger.info("validateMetricsXmlGrafana()")
-    cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/@url)' /dbagiga/gs_config/metrics.xml"
+    cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/@url)' "+ dbaGigaPath +"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
     output2 = executeRemoteCommandAndGetOutputValuePython36(ip,"root",cmdToExecute)
     output2=str(output2).replace('\n','')
@@ -252,7 +255,7 @@ def getPlainOutput(input):
 def configureMetricsXML(host):
     logger.info("configureMetricsXML()")
     try:
-        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" /dbagiga/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" /dbagiga/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" /dbagiga/gs_config/metrics.xml'
+        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" '+ dbaGigaPath +'/gs_config/metrics.xml'
         logger.info(cmd)
         user = 'root'
         with Spinner():

@@ -14,7 +14,8 @@ configProperties = {}
 def setConfigProperties():
     #file1 = open('config/app.config', 'r')
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
-    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    # logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    # print("sourceInstallerDirectory " + sourceInstallerDirectory+'/app.config')
     file1 = open(sourceInstallerDirectory+'/app.config', 'r')
     Lines = file1.readlines()
     for line in Lines:
@@ -22,13 +23,37 @@ def setConfigProperties():
             continue
         line = line.replace("\n", "")
         configProperties.update({line.split("=")[0]: line.split("=")[1]})
+    global dbaGigaPath
+    dbaGigaPath=str(configProperties.get("app.giga.path"))
+    global dbaGigaSharePath
+    dbaGigaSharePath=str(configProperties.get("app.gigashare.path"))
+    global dbaGigaLogPath
+    dbaGigaLogPath=str(configProperties.get("app.gigalog.path"))
+    global dbaGigaWorkPath
+    dbaGigaWorkPath=str(configProperties.get("app.gigawork.path"))
+    global dbaGigaDataPath
+    dbaGigaDataPath=str(configProperties.get("app.gigadata.path"))
+    global dbaGigainfluxdataPath
+    dbaGigainfluxdataPath=str(configProperties.get("app.gigainfluxdata.path"))
 
 
 def readValuefromAppConfig(key, verbose=False):
-    verboseHandle.setVerboseFlag(verbose)
-    logger.debug("reading " + key + " from ")
     setConfigProperties()
-    return configProperties.get(key)
+    # verboseHandle.setVerboseFlag(True)
+    # print("key -> " + key + ", configProperties.get(key) " + str(configProperties.get(key)))
+    # dbaGigaPath=str(configProperties.get("app.giga.path"))
+    # dbaGigaSharePath=str(configProperties.get("app.gigashare.path"))
+    # dbaGigaLogPath=str(configProperties.get("app.gigalog.path"))
+    # dbaGigaWorkPath=str(configProperties.get("app.gigawork.path"))
+    # dbaGigaDataPath=str(configProperties.get("app.gigadata.path"))
+    # dbaGigainfluxdataPath=str(configProperties.get("app.gigainfluxdata.path"))
+    readValue = str(configProperties.get(key))
+    # logger.info("readValue -> " + readValue)
+    if readValue.count('/') != 1:
+        readValue = readValue.replace("/dbagiga/",dbaGigaPath + "/").replace("/dbagigashare/",dbaGigaSharePath + "/").replace("/dbagigalogs/",dbaGigaLogPath + "/").replace("/dbagigawork/",dbaGigaWorkPath + "/").replace("/dbagigadata/",dbaGigaDataPath + "/").replace("/dbagigainfluxdata/",dbaGigainfluxdataPath)
+    readValue = readValue.replace("/dbagiga",dbaGigaPath).replace("/dbagigashare",dbaGigaSharePath).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagigawork",dbaGigaWorkPath).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigainfluxdata",dbaGigainfluxdataPath)
+    # logger.info("readValue -> " + readValue)
+    return readValue
 
 def writeToFile(key,value,verbose=False):
     verboseHandle.setVerboseFlag(verbose)
@@ -92,11 +117,23 @@ def read_value_in_property_file_generic_section(key,file,section):
     return userinfo[key]
 
 def readValueByConfigObj(key,file='config/app.config'):
+    setConfigProperties()
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
-    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
     file=sourceInstallerDirectory+'/app.config'
     config = ConfigObj(file)
-    return  config.get(key)
+    # dbaGigaPath=str(configProperties.get("app.giga.path"))
+    # dbaGigaSharePath=str(configProperties.get("app.gigashare.path"))
+    # dbaGigaLogPath=str(configProperties.get("app.gigalog.path"))
+    # dbaGigaWorkPath=str(configProperties.get("app.gigawork.path"))
+    # dbaGigaDataPath=str(configProperties.get("app.gigadata.path"))
+    # dbaGigainfluxdataPath=str(configProperties.get("app.gigainfluxdata.path"))
+    # logger.info("key -> " + key + ", config.get(key) " + config.get(key))
+    # print("key -> " + key + ", config.get(key) " + config.get(key))
+    readValue = str(config.get(key))
+    if readValue.count('/') != 1:
+        readValue = readValue.replace("/dbagiga/",dbaGigaPath + "/").replace("/dbagigashare/",dbaGigaSharePath + "/").replace("/dbagigalogs/",dbaGigaLogPath + "/").replace("/dbagigawork/",dbaGigaWorkPath + "/").replace("/dbagigadata/",dbaGigaDataPath + "/").replace("/dbagigainfluxdata/",dbaGigainfluxdataPath)
+    readValue = readValue.replace("/dbagiga",dbaGigaPath).replace("/dbagigashare",dbaGigaSharePath).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagigawork",dbaGigaWorkPath).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigainfluxdata",dbaGigainfluxdataPath)
+    return readValue
 
 def readValueFromYaml(key):
     key = pathlib.Path(key).suffix[1:]

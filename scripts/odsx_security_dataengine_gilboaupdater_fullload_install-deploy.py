@@ -281,7 +281,8 @@ def proceedToCreateGSC(zoneGSC,newGSCCount):
     idx = newGSCCount % len(spaceNodes)
     host = spaceNodes[idx]
     SpaceHighestAvailableHost = getHighestAvailableMemoryManagerHost(spaceNodes)
-    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(SpaceHighestAvailableHost)+" | grep -v JAVA_HOME"
+    dbaGigaPath=readValuefromAppConfig("app.giga.path")
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config="+ dbaGigaPath +"/gs_config/SQLJDBCDriver.conf "+str(SpaceHighestAvailableHost)+" | grep -v JAVA_HOME"
     verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(SpaceHighestAvailableHost))
     logger.info(commandToExecute)
     with Spinner():

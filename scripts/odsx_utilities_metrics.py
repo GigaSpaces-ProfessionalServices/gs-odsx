@@ -4,9 +4,11 @@ import os
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m' #GREEN
@@ -76,7 +78,7 @@ def getManagerHostFromEnv():
 def configureMetricsXML(host):
     logger.info("configureMetricsXML()")
     try:
-        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" /dbagiga/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" /dbagiga/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" /dbagiga/gs_config/metrics.xml'
+        cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" '+ dbaGigaPath +'/gs_config/metrics.xml'
         logger.info(cmd)
         user = 'root'
         with Spinner():
@@ -88,7 +90,7 @@ def configureLicenseManagerAndSpace():
     managerHosts = getManagerHostFromEnv()
     spaceHosts = getSpaceHostFromEnv()
     sourceGSmetrics = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsxml"))
-    targetGSmetrics = "/dbagiga/gs_config/metrics.xml"
+    targetGSmetrics = dbaGigaPath +"/gs_config/metrics.xml"
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("metrics.xml.template source file :"+str(sourceGSmetrics))
     verboseHandle.printConsoleInfo("metrics.xml target : "+str(targetGSmetrics))
@@ -100,7 +102,7 @@ def configureLicenseManagerAndSpace():
     #licenseConfig='"\\"{}\\""'.format(licenseConfig)
     confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
     if confirm=='y' or confirm=='':
-        #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  /dbagiga/gigaspaces-smart-ods/bin/setenv-overrides.sh"
+        #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  '+dbaGigaPath+'/gigaspaces-smart-ods/bin/setenv-overrides.sh"
 
         commandToExecute = "cp "+sourceGSmetrics+" "+targetGSmetrics
         logger.info("commandToExecute:"+commandToExecute)

@@ -15,6 +15,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommand
 from utils.ods_validation import getSpaceServerStatus
 from utils.ods_validation import isValidHost, getTelnetStatus
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -404,7 +405,8 @@ def getUsageOfRoot(ip):
 
 def getUsageOfWork(ip):
     logger.info("getUsageOfWork(ip) :"+str(ip))
-    commandToExecute = "df /dbagigawork/ | awk 'END{ print $(NF-1) }'"
+    dbaGigaWorkPath=readValuefromAppConfig("app.gigawork.path")
+    commandToExecute = "df "+ dbaGigaWorkPath +"/ | awk 'END{ print $(NF-1) }'"
     output = executeRemoteCommandAndGetOutput(ip, 'root', commandToExecute)
     logger.info("output :"+str(output))
     return str(output).replace('\n','')

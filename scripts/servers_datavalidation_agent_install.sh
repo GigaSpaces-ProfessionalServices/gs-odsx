@@ -1,4 +1,24 @@
 echo "Starting Data Validation Agent Installation."
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigasharepath=$(read_property "app.gigashare.path")
+
 #echo "Extracting install.tar to "$targetDir
 sourceInstallerDirectory=$1
 targetInstallDir=$2
@@ -40,7 +60,7 @@ cp $sourceDvServerJar $home_dir/install/data-validation/
 
 # start data validation service
 source setenv.sh
-cmd="java -Djava.security.auth.login.config=/dbagigashare/env_config/security/SQLJDBCDriver.conf -jar $home_dir/install/data-validation/$serverJarFileName --spring.config.location=$home_dir/install/data-validation/application.properties"
+cmd="java -Djava.security.auth.login.config=$gigasharepath/env_config/security/SQLJDBCDriver.conf -jar $home_dir/install/data-validation/$serverJarFileName --spring.config.location=$home_dir/install/data-validation/application.properties"
 echo "$cmd">>$start_data_validation_file
 # stop data validation service
 cmd="pkill -9 -f "$serverJarFileName

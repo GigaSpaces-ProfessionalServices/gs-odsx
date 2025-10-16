@@ -1,4 +1,29 @@
 echo "Installation starting..."
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigasharepath=$(read_property "app.gigashare.path")
+gigadatapath=$(read_property "app.gigadata.path")
+gigalogpath=$(read_property "app.gigalog.path")
+gigaworkPath=$(read_property "app.gigawork.path")
+
 #source gs_installation.properties
 osDetected=$(cat /etc/os-release|grep "NAME=" | head -n 1 | cut -d "=" -f2 | sed -e 's/^"//' -e 's/"$//')
 echo "os: "$osDetected
@@ -324,7 +349,7 @@ function installAirGapGS {
    # echo "File $targetConfigDir/metrics.xml not exist so copying"
    # cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
    #fi
-   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
+   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template $gigapath/gs_config/metrics.xml
 
    limitContent="$applicativeUser hard nofile "$nofileLimitFile
    limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
@@ -349,8 +374,8 @@ function loadEnv {
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
-  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/* #/dbagigalogs/   Removed /dbagigalogs as mentioned by Josh on 4th April
-  find /dbagigalogs -maxdepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
+  chown -R $applicativeUser:$applicativeUser $gigapath/* #$gigaworkPath/  #$gigalogpath/   Removed $gigalogpath as mentioned by Josh on 4th April
+  find $gigalogpath -maxdepth 1 ! -regex '^'$gigalogpath'/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"
@@ -397,8 +422,9 @@ function gsCreateGSServeice {
   chmod 777 -R $GS_HOME/logs/
   chmod 777 -R $GS_HOME/deploy/
   chmod 777 -R $GS_HOME/deploy/*
-  chmod 777 -R $GS_HOME/tools/gs-webui/*
-  chmod -R +x /dbagiga
+  echo
+#  chmod 777 -R $GS_HOME/tools/gs-webui/*
+  chmod -R +x $gigapath
 
   systemctl daemon-reload
   systemctl enable $gsa_service_file
@@ -418,7 +444,7 @@ function gsCreateGSServeice {
 }
 function copyLogFile {
     echo "xap_logging file copied from source to target"
-    cd /dbagiga/gs_config/
+    cd $gigapath/gs_config/
     sudo cp $logSourcePath $logTargetPath
 }
 #if the airGap true then it will install from user/install dir

@@ -229,11 +229,13 @@ if __name__ == '__main__':
         if (len(sys.argv) == 1 or sys.argv[1] == menuDrivenFlag):
             logger.info("Menudriven..")
             args.append(menuDrivenFlag)
+            dbaGigaPath=readValuefromAppConfig("app.giga.path")
+
             # if managerDict.get(int(hostConfiguration)) is not None:
             #    managerUpgrade = managerDict.get(int(hostConfiguration))
-            #/dbagiga/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
+            #dbaGigaPath+/gs_jars/CEFLogger-1.0-SNAPSHOT.jar
             sourcePath= sourceInstallerDirectory+"/gs/upgrade"
-            destPath="/dbagiga"
+            destPath=dbaGigaPath
             verboseHandle.printConsoleWarning("------------------Summary-----------------")
             verboseHandle.printConsoleWarning("Enter source directory for new GS build : "+sourcePath)
             verboseHandle.printConsoleWarning("Enter destination directory to install new GS build : "+str(destPath))

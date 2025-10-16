@@ -12,10 +12,12 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, connectExecuteSSHWit
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 nbConfig = {}
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 def handleException(e):
     logger.info("handleException()")
@@ -198,7 +200,7 @@ def cleanNbConfig():
 def proceedForPreInstallation(nbServers, param):
     logger.info("proceedForPreInstallation : "+param)
     nb_user='root'
-    remotePath='/dbagiga'
+    remotePath=dbaGigaPath
     cmd = 'sudo tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
@@ -206,7 +208,7 @@ def proceedForPreInstallation(nbServers, param):
 
     for hostip in nbServers.split(','):
         verboseHandle.printConsoleInfo(param+" Pre-installation started for host : "+hostip)
-        cmd = 'mkdir -p '+remotePath+'; chmod 777 /dbagiga'
+        cmd = 'mkdir -p '+remotePath+'; chmod 777 ' + dbaGigaPath
         logger.info("cmd :"+str(cmd))
         with Spinner():
             output = executeRemoteCommandAndGetOutput(hostip, nb_user, cmd)
@@ -221,10 +223,10 @@ def proceedForPreInstallation(nbServers, param):
         if param.casefold()=='applicative':
             commandToExecute="scripts/servers_northbound_applicative_preinstall.sh"
         if param.casefold()=='agent':
-            remotePath='/dbagiga'
+            remotePath=dbaGigaPath
             commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
         if param.casefold()=='management':
-            remotePath='/dbagiga'
+            remotePath=dbaGigaPath
             commandToExecute="scripts/servers_northbound_management_preinstall.sh"
             nbConfig = sourceInstallerDirectory+"/nb/management/nb.conf.template"
         logger.info("commandToExecute :"+commandToExecute)
@@ -243,7 +245,7 @@ def proceedForPreInstallation(nbServers, param):
 def proceedForApplicativeInstallation():
     logger.info("proceedForApplicativeInstallation()")
     nbApplicativeServers = getNBApplicativeHostFromEnv()
-    remotePath='/dbagiga/'+getNBFolderName()
+    remotePath= dbaGigaPath + '/'+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbApplicativeServers,'APPLICATIVE')
 
@@ -272,7 +274,7 @@ def proceedForApplicativeInstallation():
 def proceedForAgentInstallation():
     logger.info("proceedForAgentInstallation()")
     nbAgentServers = getNBAgentHostFromEnv()
-    remotePath='/dbagiga/'+getNBFolderName()
+    remotePath= dbaGigaPath+'/'+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbAgentServers,'AGENT')
     for hostip in nbAgentServers.split(','):
@@ -292,7 +294,7 @@ def proceedForAgentInstallation():
 def proceedForManagementInstallation():
     logger.info("proceedForManagementInstallation()")
     nbManagementServers = getNBManagementHostFromEnv()
-    remotePath='/dbagiga/'+getNBFolderName()
+    remotePath= dbaGigaPath+'/'+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation(nbManagementServers,'MANAGEMENT')
     for hostip in nbManagementServers.split(','):

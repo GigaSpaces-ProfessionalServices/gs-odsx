@@ -168,10 +168,11 @@ if __name__ == '__main__':
             # if managerDict.get(int(hostConfiguration)) is not None:
             #    managerUpgrade = managerDict.get(int(hostConfiguration))
             sourcePath = str(userInputWrapper(Fore.YELLOW + "Enter source directory for new GS build : " + Fore.RESET))
+            dbaGigaPath=readValuefromAppConfig("app.giga.path")
             destPath = str(userInputWrapper(
-                Fore.YELLOW + "Enter destination directory to install new GS build [/dbagiga] : " + Fore.RESET))
+                Fore.YELLOW + "Enter destination directory to install new GS build ["+ dbaGigaPath +"] : " + Fore.RESET))
             if len(str(destPath)) == 0:
-                destPath = "/dbagiga"
+                destPath = dbaGigaPath
             if os.path.isdir(sourcePath):
                 dir_list = os.listdir(sourcePath)
                 if (len(dir_list) > 1):

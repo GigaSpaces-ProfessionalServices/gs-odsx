@@ -58,7 +58,8 @@ def build_sqlite_query(types):
     return query.rstrip(' + (')
 
 def get_sqlite_object_count(manager, the_host, space_name, instance_id,isSecure=False,username=None,password=None):
-    sqlite_cmd = f"sqlite3 /dbagigadata/tiered-storage/bllspace/sqlite_db_{space_name}_container{instance_id}:{space_name}"
+    dbaGigaDataPath=readValuefromAppConfig("app.gigadata.path")
+    sqlite_cmd = f"sqlite3 {dbaGigaDataPath}/tiered-storage/bllspace/sqlite_db_{space_name}_container{instance_id}:{space_name}"
     
     select_cmd = f"'{build_sqlite_query(list_types(manager, space_name,isSecure,username,password))}'"
     remote_cmd = f'"{sqlite_cmd} {select_cmd}"'

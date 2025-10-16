@@ -19,9 +19,11 @@ from utils.ods_ssh import connectExecuteSSH, connectExecuteSSHWithLoginProxy, ex
     executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m' #GREEN
@@ -63,7 +65,7 @@ def getManagerHostFromEnv():
 def proceedForPreInstallation(param,hostip):
     logger.info("proceedForPreInstallation : "+param)
     nb_user='root'
-    remotePath='/dbagiga'
+    remotePath=dbaGigaPath
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     sourceInstallerDirectoryTar = str(os.getenv("ODSXARTIFACTS"))
     cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
@@ -71,7 +73,7 @@ def proceedForPreInstallation(param,hostip):
         status = os.system(cmd)
         logger.info("Creating tar file status : "+str(status))
 
-    cmd = 'mkdir -p '+remotePath+'; chmod 777 /dbagiga'
+    cmd = 'mkdir -p '+remotePath+'; chmod 777 '+dbaGigaPath
     logger.info("cmd :"+str(cmd))
     with Spinner():
         output = executeRemoteCommandAndGetOutput(hostip, nb_user, cmd)
@@ -83,7 +85,7 @@ def proceedForPreInstallation(param,hostip):
         scp_upload(hostip, nb_user, 'install/install.tar', '')
 
     if param.casefold()=='agent':
-        remotePath='/dbagiga'
+        remotePath=dbaGigaPath
         commandToExecute="scripts/servers_northbound_agent_preinstall.sh"
     logger.info("commandToExecute :"+commandToExecute)
     nbConfig = str(os.getenv("ENV_CONFIG")) +"/nb/applicative/nb.conf.template"
@@ -102,7 +104,7 @@ def proceedForPreInstallation(param,hostip):
 
 def proceedForNBInstallation(host):
     logger.info("proceedForNBInstallation()")
-    remotePath='/dbagiga/'+getNBFolderName()
+    remotePath=dbaGigaPath+'/'+getNBFolderName()
     nb_user='root'
     proceedForPreInstallation('AGENT',host)
     with Spinner():

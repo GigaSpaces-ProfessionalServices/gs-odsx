@@ -140,11 +140,12 @@ def getConsolidatedStatus(node,role):
 
 def isInstalledAndGetVersionManagerSpace(host):
     logger.info("isInstalledAndGetVersion")
-    #commandToExecute="ls -la /dbagiga | grep \"\->\" | awk \'{print $11}\'"
-    commandToExecute='cd /dbagiga;cd -P gigaspaces-smart-ods;echo ""$(basename $(pwd))'
+    dbaGigaPath=readValuefromAppConfig("app.giga.path")
+    #commandToExecute="ls -la "+ dbaGigaPath +" | grep \"\->\" | awk \'{print $11}\'"
+    commandToExecute='cd '+dbaGigaPath+';cd -P gigaspaces-smart-ods;echo ""$(basename $(pwd))'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
-    outputShFile=str(outputShFile).replace('\n','').replace('/dbagiga/','')
+    outputShFile=str(outputShFile).replace('\n','').replace(dbaGigaPath+ '/','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 

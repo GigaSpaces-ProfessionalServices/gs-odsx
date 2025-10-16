@@ -22,7 +22,7 @@ from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
-
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m'  # GREEN
@@ -158,12 +158,12 @@ if __name__ == '__main__':
             if managerDict.get(int(hostConfiguration)) is not None:
                 managerUpgrade = managerDict.get(int(hostConfiguration))
                 sourcePath= sourceInstallerDirectory+"/gs/upgrade"
-                destPath="/dbagiga"
+                destPath=dbaGigaPath
                 verboseHandle.printConsoleWarning("------------------Summary-----------------")
                 verboseHandle.printConsoleWarning("Enter source directory for new GS build : "+sourcePath)
                 verboseHandle.printConsoleWarning("Enter destination directory to install new GS build : "+str(destPath))
                 if len(str(destPath)) == 0:
-                    destPath = "/dbagiga"
+                    destPath = dbaGigaPath
                 if os.path.isdir(sourcePath):
                     dir_list = os.listdir(sourcePath)
                     if (len(dir_list) > 1):

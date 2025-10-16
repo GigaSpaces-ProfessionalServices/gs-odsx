@@ -17,9 +17,11 @@ from utils.ods_cluster_config import config_add_space_node, config_get_cluster_a
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m' #GREEN
@@ -119,10 +121,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         targetDirectory=''
         gsOptionExtFromConfig = str(readValueByConfigObj("app.space.security.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+dbaGigaPath+Fore.YELLOW+"]: "+Fore.RESET))
         targetDirectory=str(additionalParam)
         if(len(additionalParam)==0):
-            targetDirectory='/dbagiga'
+            targetDirectory=dbaGigaPath
         logger.info("targetDirecory :"+str(targetDirectory))
         gsOptionExt = str(userInputWrapper(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
@@ -202,9 +204,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(len(str(zoneGSC))==0):
             zoneGSC = 'bll'
 
-        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy jars from [/dbagiga] : "+Fore.RESET))
+        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy jars from ["+ dbaGigaPath +"] : "+Fore.RESET))
         if(len(str(sourceDirectoryForJar))==0):
-            sourceDirectoryForJar='/dbagiga'
+            sourceDirectoryForJar=dbaGigaPath
 
         getInputParamForSecurityCredantials()
 

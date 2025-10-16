@@ -14,6 +14,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -445,10 +446,10 @@ def proceedToDeployPUInputParam(managerHost):
     if (len(str(resourceName)) == 0):
         resourceName = 'cdc_tables-dih-consumer-fullsync.war'
     logger.info("nameOfPU :" + str(resourceName))
-
-    resourcePath = str(userInputWrapper(Fore.YELLOW + "Enter path of PU to deploy [/dbagiga] :" + Fore.RESET))
+    dbaGigaPath=readValuefromAppConfig("app.giga.path")
+    resourcePath = str(userInputWrapper(Fore.YELLOW + "Enter path of PU to deploy [" + dbaGigaPath + "] :" + Fore.RESET))
     if (len(str(resourcePath)) == 0):
-        resourcePath = '/dbagiga'
+        resourcePath = dbaGigaPath
     logger.info("nameOfPU :" + str(resourcePath))
     processingUnitName = str(userInputWrapper(Fore.YELLOW + "Enter Resource Name [consumer-online] : " + Fore.RESET))
     while (len(str(processingUnitName)) == 0):

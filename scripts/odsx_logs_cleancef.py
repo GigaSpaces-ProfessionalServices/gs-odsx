@@ -3,7 +3,7 @@
 import os
 
 from colorama import Fore
-
+from utils.ods_app_config import readValuefromAppConfig
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import getYamlFilePathInsideFolder
@@ -65,9 +65,10 @@ def proceedForNodeConfiguration(flag,nodes,targetDir):
 def proceedForInputParam(configXapLogLocation):
     #configXapLogLocation = str(readValuefromAppConfig("app.manager.cefXapLogging.target.file"))
     #verboseHandle.printConsoleInfo("xap_logging.properties location ["+configXapLogLocation+"]")
-    configXapLogLocation = str(userInputWrapper(Fore.YELLOW+"Target directory of CEF logs [/dbagigalogs/CEF/] : "+Fore.RESET))
+    dbaGigaLogPath=readValuefromAppConfig("app.gigalog.path")
+    configXapLogLocation = str(userInputWrapper(Fore.YELLOW+f"Target directory of CEF logs [{dbaGigaLogPath}/CEF/] : "+Fore.RESET))
     if(len(str(configXapLogLocation))==0):
-        configXapLogLocation='/dbagigalogs/CEF/'
+        configXapLogLocation= dbaGigaLogPath+ '/CEF/'
 
     confirmManagerInstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to clean CEF logs for manager servers ? (y/n) [y]: "+Fore.RESET))
     if(len(str(confirmManagerInstall))==0):

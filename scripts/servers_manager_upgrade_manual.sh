@@ -1,5 +1,30 @@
 #!/bin/bash
 
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
+gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigasharepath=$(read_property "app.gigashare.path")
+gigadatapath=$(read_property "app.gigadata.path")
+gigalogpath=$(read_property "app.gigalog.path")
+gigaworkPath=$(read_property "app.gigawork.path")
+
 #set -x
 
 # prints colored text
@@ -64,16 +89,16 @@ currentGSPath=$(pwd)
 #echo "currentGSPath "$currentGSPath
 currentGSName=$(basename $currentGSPath)
 info "currentGSName "$currentGSName
-# mkdir -p /dbagiga/rollback/$currentGSName
-# cp -r $currentGSPath/ /dbagiga/rollback/
+# mkdir -p $gigapath/rollback/$currentGSName
+# cp -r $currentGSPath/ $gigapath/rollback/
 cd ..
 parentPathGS=$(pwd)
 #echo "parentPathGS: "$parentPathGS
 if [ -d "gigaspaces-smart-ods-old" ]; then
-  cd -P /dbagiga/gigaspaces-smart-ods-old
+  cd -P $gigapath/gigaspaces-smart-ods-old
   previousGSPath=$(pwd)
   previousGSName=$(basename $previousGSPath)
-  cd /dbagiga
+  cd $gigapath
   info "previousGSPath "$previousGSName
   rm -f gigaspaces-smart-ods-old
   rm -rf $previousGSName
@@ -103,12 +128,12 @@ cp $currentGSPath/gs-license.txt .
 info "copying required jars...\n"
 cp $cefLoggingJarInput $cefLoggingJarInputTarget
 cd
-rm -f /dbagiga/gs_jars/*
+rm -f $gigapath/gs_jars/*
 #echo ""$springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
 cp $springLdapCoreJarInput $springLdapJarInput $vaultSupportJarInput $javaPasswordJarInput $springTargetJarInput
-#echo ""/dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
-cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* /dbagiga/gs_jars
-chown -R $applicativeUser:$applicativeUser /dbagiga/*
+#echo ""$gigapath/gigaspaces-smart-ods/lib/optional/security/* $gigapath/gs_jars
+cp $gigapath/gigaspaces-smart-ods/lib/optional/security/* $gigapath/gs_jars
+chown -R $applicativeUser:$applicativeUser $gigapath/*
 sleep 10
 info "starting gs...\n"
 systemctl start gsa

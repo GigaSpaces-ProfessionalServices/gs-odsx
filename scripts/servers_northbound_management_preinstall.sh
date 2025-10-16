@@ -1,5 +1,24 @@
 echo "Starting pre Installation configuration."
 echo "Extracting install.tar to "$targetDir
+ENV_CONFIG_PATH=$ENV_CONFIG
+# Check if the environment variable is set
+if [ -z "$ENV_CONFIG_PATH" ]; then
+  echo "Error: $ENV_CONFIG_PATH is not set. Please set it before running this script."
+  exit 1
+else
+  echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
+fi
+ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+
+read_property() {
+  local prop_name="$1"
+  local prop_value
+
+  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
+  echo "$prop_value"
+}
+
+gigapath=$(read_property "app.giga.path")
 tar -xvf install.tar
 targetDir=$1
 sourceInstallerDirectory=$2
@@ -22,7 +41,7 @@ nb_foldername=$(tar -ztvf $installation_path_tar/$installation_file | head -1 | 
 echo $installation_path_tar"/"$installation_file
 
 echo "Extracting .tar.gz file from "$installation_path_tar
-tar -xzf $installation_path_tar/*.tar.gz -C /dbagiga
+tar -xzf $installation_path_tar/*.tar.gz -C $gigapath
 
 dbagigashareManagementPath=$sourceInstallerDirectory'/nb/management'
 

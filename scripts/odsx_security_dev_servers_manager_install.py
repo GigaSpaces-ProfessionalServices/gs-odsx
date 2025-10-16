@@ -18,9 +18,11 @@ from utils.ods_cluster_config import config_add_manager_node, config_get_cluster
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
+dbaGigaPath=readValuefromAppConfig("app.giga.path")
 
 class bcolors:
     OK = '\033[92m' #GREEN
@@ -232,9 +234,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsOptionExtFromConfig = str(readValueByConfigObj("app.manager.security.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
         #gsOptionExtFromConfig = '"{}"'.format(gsOptionExtFromConfig)
-        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+"/dbagiga"+Fore.YELLOW+"]: "+Fore.RESET))
+        additionalParam = str(userInputWrapper(Fore.YELLOW+"Enter target directory to install GS ["+Fore.GREEN+dbaGigaPath+Fore.YELLOW+"]: "+Fore.RESET))
         if(len(additionalParam)==0):
-            targetDir='/dbagiga'
+            targetDir=dbaGigaPath
         else:
             targetDir=additionalParam
         if(gsOptionExtFromConfig.__contains__('<DI servers>')):
@@ -255,7 +257,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gsOptionExt = str(userInputWrapper(Fore.YELLOW+'Enter GS_OPTIONS_EXT  ['+Fore.GREEN+''+str(gsOptionExtFromConfig)+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsOptionExt))==0):
-            #gsOptionExt='\"-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.matrics.config=/dbagiga/gs_config/metrics.xml\"'
+            #gsOptionExt='\"-Dcom.gs.work="+ dbaGigaWorkPath +" -Dcom.gigaspaces.matrics.config="+dbaGigaPath +"/gs_config/metrics.xml\"'
             gsOptionExt=gsOptionExtFromConfig
         else:
             set_value_in_property_file('app.manager.gsOptionExt',gsOptionExt)
@@ -277,7 +279,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #gsLogsConfigFileFromConfig = '"{}"'.format(gsLogsConfigFileFromConfig)
         gsLogsConfigFile = str(userInputWrapper(Fore.YELLOW+'Enter GS_LOGS_CONFIG_FILE  ['+Fore.GREEN+''+gsLogsConfigFileFromConfig+Fore.YELLOW+']: '+Fore.RESET))
         if(len(str(gsLogsConfigFile))==0):
-            #gsLogsConfigFile="/dbagiga/gs_config/xap_logging.properties"
+            #gsLogsConfigFile= dbaGigaPath +"/gs_config/xap_logging.properties"
             gsLogsConfigFile=gsLogsConfigFileFromConfig
         else:
             set_value_in_property_file('app.manager.gsLogsConfigFile',gsLogsConfigFile)
@@ -313,9 +315,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(len(str(wantToInstallUnzip))==0):
             wantToInstallUnzip='n'
 
-        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy files [/dbagiga] : "+Fore.RESET))
+        sourceDirectoryForJar = str(userInputWrapper(Fore.YELLOW+"Enter source directory to copy files ["+ dbaGigaPath +"] : "+Fore.RESET))
         if(len(str(sourceDirectoryForJar))==0):
-            sourceDirectoryForJar='/dbagiga'
+            sourceDirectoryForJar=dbaGigaPath
 
         usernameDevConfig = str(readValueByConfigObj("app.manager.dev.security.username")).replace('[','').replace(']','').replace('"','')
         usernameDev = str(userInputWrapper(Fore.YELLOW+"Enter username for Dev env ["+usernameDevConfig+"] : "+Fore.RESET))
@@ -414,7 +416,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
 
             if(len(additionalParam)==0):
-                additionalParam= 'true'+' '+'/dbagiga'+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
+                additionalParam= 'true'+' '+ dbaGigaPath +' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             else:
                 additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
             #print('additional param :'+additionalParam)
