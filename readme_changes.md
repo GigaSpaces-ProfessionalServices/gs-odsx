@@ -434,3 +434,27 @@
 140. Code naming changes from erpOracleFeeder.db to oracleerpFeeder.db and files names also
 ### TAU v5.5-tau-release tag
 141. Change the value in app.config of app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/oracleerpFeeder.db
+### TAU v5.6-tau-release tag
+142. Add oracleerp section in app.yaml
+     mysql:
+       config: null
+       jars:
+         mysqlJarFile: MysqlFeeder-1.9-SNAPSHOT.jar
+       scripts: null
+143. In app.config add all the MySqlFeeder properties 
+     app.dataengine.mysql-feeder.mysql.server=XXX
+     app.dataengine.mysql-feeder.mysql.username=XXX
+     app.dataengine.mysql-feeder.mysql.password=XXX
+     app.dataengine.mysql-feeder.mysql.databasename=XXX
+     app.dataengine.mysql-feeder.gscpercluster=1
+     app.dataengine.mysql-feeder.gsc.memory=256m
+     app.dataengine.mysql-feeder.gsc.create=y
+     app.dataengine.mysql-feeder.sqlite.dbfile=/dbagigawork/sqlite/mysqlFeeder.db
+     app.dataengine.mysql-feeder.space.name=dih-tau-space
+     app.dataengine.mysql-feeder.writeBatchSize=10000
+     app.dataengine.mysql-feeder.sleepAfterWriteInMillis=500
+     app.dataengine.mysql-feeder.rest.port=3306
+     app.dataengine.mysql-feeder.hard.limit=100m
+143. Create mysql folder structure under /dbagigashare/current/ with same folders as /dbagigashare/current/oracle
+144. Compile the mysql jar from this repo https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/MysqlFeeder copy MysqlFeeder-1.9-SNAPSHOT.jar and paste it under /dbagigashare/current/mysql/jars/ folder
+145. Put your custom feeder script (sample example - https://github.com/GigaSpaces-ProfessionalServices/TAU/blob/master/apps/MysqlFeeder/load_Persons.sh) under /dbagigashare/current/mysql/scripts/ folder
