@@ -435,7 +435,7 @@
 ### TAU v5.5-tau-release tag
 141. Change the value in app.config of app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/oracleerpFeeder.db
 ### TAU v5.6-tau-release tag
-142. Add oracleerp section in app.yaml
+142. Add mysql section in app.yaml under mssql feeder configuration
      mysql:
        config: null
        jars:
