@@ -319,7 +319,7 @@ def proceedToStartMysqlFeederWithName(puName):
     print(puName)
     shFileName = fileNamePuNameDict.get(str(puName))
     hostAndPort = str(sqlLiteGetHostAndPortByFileName(puName)).split(',')
-    print("hostAndPort"+str(hostAndPort))
+    # print("hostAndPort"+str(hostAndPort))
     host = str(hostAndPort[0])
     port = str(hostAndPort[1])
     shFileName = str(hostAndPort[2])

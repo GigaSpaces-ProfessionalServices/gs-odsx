@@ -458,3 +458,5 @@
 143. Create mysql folder structure under /dbagigashare/current/ with same folders as /dbagigashare/current/oracle
 144. Compile the mysql jar from this repo https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/MysqlFeeder copy MysqlFeeder-1.9-SNAPSHOT.jar and paste it under /dbagigashare/current/mysql/jars/ folder
 145. Put your custom feeder script (sample example - https://github.com/GigaSpaces-ProfessionalServices/TAU/blob/master/apps/MysqlFeeder/load_Persons.sh) under /dbagigashare/current/mysql/scripts/ folder
+### TAU v5.6-tau-release tag
+146. Minor bug fixes for Mysql feeder
