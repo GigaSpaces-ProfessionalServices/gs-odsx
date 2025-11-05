@@ -22,6 +22,7 @@ from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPortNotExistInGilboaFeeder, getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
+from scripts.odsx_security_servers_space_list import getStatusOfSpaceHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -130,7 +131,7 @@ def getHighestAvailableMemoryManagerHost(spaceNodes):
         logger.info("getManagerHost() : spaceNodes :"+str(spaceNodes))
         SpaceActiveHostList = []
         for node in spaceNodes:
-            status = getSpaceServerStatus(os.getenv(node.ip))
+            status = getStatusOfSpaceHost(os.getenv(node.ip))
             if(status=="ON"):
                 SpaceActiveHostList.append(os.getenv(node.ip))
 
