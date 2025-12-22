@@ -107,6 +107,17 @@ def getoracleFeederList():
         puName = str(file).replace('load_','').replace('.sh','').casefold()
         oracleFeederList.append('oraclefeeder_'+puName)
 
+def getmysqlFeederList():
+    global mysqlFeederList
+    mysqlFeederList=[]
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    os.getcwd()
+    sourceMYSQLFeederShFilePath = str(sourceInstallerDirectory + ".mysql.scripts.").replace('.', '/')
+    os.chdir(sourceMYSQLFeederShFilePath)
+    for file in glob.glob("load_*.sh"):
+        puName = str(file).replace('load_','').replace('.sh','').casefold()
+        mysqlFeederList.append('mysqlfeeder_'+puName)        
+
 def getAllFeeders():
     logger.info("getAllFeeders() : start")
 
@@ -141,6 +152,7 @@ def getAllFeeders():
         getmssqlFeederList()
         getgilboaFeederList()
         getoracleFeederList()
+        getmysqlFeederList()
         if (len(jsonArray) == 0):
             sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
             os.chdir(sourceDB2FeederShFilePathConfig)
@@ -195,6 +207,23 @@ def getAllFeeders():
                 counter = counter + 1
                 dataTable.append(dataArray1)
 
+            os.getcwd()
+
+            sourceMYSQLFeederShFilePath = str(sourceInstallerDirectory + ".mysql.scripts.").replace('.', '/')
+            os.chdir(sourceMYSQLFeederShFilePath)
+            for file in glob.glob("load_*.sh"):
+                os.chdir(sourceMYSQLFeederShFilePath)
+                puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+                puName = 'mysqlfeeder_'+puName
+                mysqlFeederList.remove(puName)
+                dataArray1 = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                              Fore.GREEN + puName + Fore.RESET,
+                              Fore.GREEN + str("-") + Fore.RESET,
+                              Fore.GREEN + str("-") + Fore.RESET,
+                              Fore.GREEN + "Undeployed" + Fore.RESET,
+                              ]
+                counter = counter + 1
+                dataTable.append(dataArray1)
             os.getcwd()
 
         for data in jsonArray:
@@ -253,8 +282,23 @@ def getAllFeeders():
                 counter=counter+1
                 dataTable.append(dataArray)
 
+            if(str(data["name"]).__contains__('mysql')):
+                if(mysqlFeederList.__contains__(str(data["name"]))):
+                    mysqlFeederList.remove(str(data["name"]))
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+str(hostId)+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
+                
+
         logger.info("getAllFeeders() : end")
         mssqlFlag = False
+        mysqlFlag = False
         gilboaFlag = False
         db2Flag = False
         adabsFlag = False
@@ -271,6 +315,19 @@ def getAllFeeders():
                     counter=counter+1
                     dataTable.append(dataArray)
 
+        if (len(mysqlFeederList) != 0 and len(jsonArray) != 0):
+            for puName in mysqlFeederList:
+                if(str(puName).__contains__('mysql')):
+                    dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                                 Fore.GREEN+str(puName)+Fore.RESET,
+                                 Fore.GREEN+str("-")+Fore.RESET,
+                                 Fore.GREEN+str("-")+Fore.RESET,
+                                 # Fore.GREEN+str("-")+Fore.RESET,
+                                 Fore.GREEN+str("Undeployed")+Fore.RESET,
+                                 ]
+                    counter=counter+1
+                    dataTable.append(dataArray)
+                    
         if (len(gilboaFeederList) != 0 and len(jsonArray) != 0):
             for puName in gilboaFeederList:
                 if(str(puName).__contains__('gilboa')):
@@ -299,6 +356,8 @@ def getAllFeeders():
         # for i in jsonArray:
         if not(str(jsonArray).__contains__("mssql")):
                 mssqlFlag = True
+        if not(str(jsonArray).__contains__("mysql")):
+            mysqlFlag = True    
         if not(str(jsonArray).__contains__("gilboa")):
             gilboaFlag = True
         # for i in jsonArray:
@@ -340,6 +399,7 @@ def getAllFeeders():
         #         counter = counter + 1
         #         dataTable.append(dataArray1)
         mssqlFeederList.clear()
+        mysqlFeederList.clear()
         gilboaFeederList.clear()
         oracleFeederList.clear()
         return dataTable

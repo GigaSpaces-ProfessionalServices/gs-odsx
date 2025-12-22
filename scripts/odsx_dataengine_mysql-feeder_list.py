@@ -133,8 +133,8 @@ def listDeployed(managerHost):
                 for data2 in jsonArray2:
                     hostId = data2["hostId"]
                 if (len(str(hostId)) == 0):
-                    # hostId = "N/A"
-                    hostId = gethostbyaddr(hostId).__getitem__(2)[0]
+                    hostId = "N/A"
+                    #hostId = gethostbyaddr(hostId).__getitem__(2)[0]
                 if (str(data["name"]).__contains__("mysqlfeeder")):
                     os.getcwd()
                     os.chdir(sourceMysqlFeederShFilePath)
