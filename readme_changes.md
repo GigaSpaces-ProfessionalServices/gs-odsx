@@ -462,3 +462,5 @@
 146. Minor bug fixes for Mysql feeder
 ### TAU v5.6.2-tau-release tag
 147. Minor bug fixes for Gilboa Updater feeder
+### TAU v5.6.3-tau-release tag
+148. Fixed mysqlfeeder_mdl_tau_activities_to_dih is missing when doing "list all" feeders  and also fixed auto_mysqlfeederlist doesn't work on dev
