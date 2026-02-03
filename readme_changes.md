@@ -464,3 +464,43 @@
 147. Minor bug fixes for Gilboa Updater feeder
 ### TAU v5.6.3-tau-release tag
 148. Fixed mysqlfeeder_mdl_tau_activities_to_dih is missing when doing "list all" feeders  and also fixed auto_mysqlfeederlist doesn't work on dev
+### TAU v5.6.4-tau-release tag
+149. Add below properties in app.config
+     app.manager.security.16spring.jar.target=/dbagiga/gs_jars/16_webui_gs_jars/
+     app.manager.security.16config.target=/dbagiga/gs_config/16_webui_gs_config/
+     app.manager.security.16lib.optional.securitypath=/dbagiga/*16.*/
+     app.manager.securityfolder=lib/optional/security/
+     app.manager.security.16gsWebuiOptionExt="-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.system.registryRetries=30 -Dcom.gigaspaces.lib.opt.security=/dbagiga/gs_jars/16_webui_gs_jars -Dcom.gs.security.properties-file=/dbagiga/gs_config/16_webui_gs_config/security.properties -Dcom.gigaspaces.metrics.config=/dbagiga/gs_config/gs_config/metrics.xml -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=/dbagigalogs -Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 -Dcom.gs.manager.leader-election.zookeeper.connection-timeout=10000 -Dspace-config.leader-election.zookeeper.session-timeout=60000 -Dspace-config.leader-election.zookeeper.connection-timeout=10000 -Dcom.gs.transport_protocol.lrmi.max-threads=1024 -Dcom.gs.transport_protocol.lrmi.threshold-check-interval=500 -Dgs.gc.collectionTimeThresholdWarning=300 -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=50 -Xlog:gc*:file=/dbagigalogs/gc_%p.log:time,level -XX:+DisableExplicitGC -Dcom.gs.expose.internal.api=true -Dcom.gs.ops-ui.dev-mode=true -Dcom.gs.ui.metrics.db.retention.retain-duration=PT1M -Dcom.gs.ui.metrics.db.retention.delay-duration=PT30S -Dcom.gs.ui.metrics.db.retention.batch-size=70000 -Dcom.gs.replication.replicaProgressTimeout=400000 -Dcom.gs.manager.rest.ssl.enabled=false -Dcom.gs.security.enabled=true -Dcom.gigaspaces.security.audit.enabled=true -Dcom.gigaspaces.security.audit.level=ALL -Dcom.gigaspaces.security.audit.AuditHandler.filename-pattern=/dbagigalogs/gigaspaces-security-audit-{service}-{host}-{pid}.log -Dcom.gs.web-ui.idle-session-timeout=3600 -Dcom.gs.expose.internal.api=true -Djavax.net.ssl.trustStore=/giga/gs_config/gs_config/ldap-client.jks -Djavax.net.ssl.trustStorePassword=$VAULT_MANAGER_PASS"
+150. Add below properties in app.yaml under current:
+     security:
+     jars:
+     all: "*"
+     17_gs_jars:
+     all: "*"
+     springldapcore: spring-ldap-core.jar
+     springsecurityldap: spring-security-ldap.jar 
+151. Add below properties in app.yaml under env_config:
+     security:
+     17_gs_config:
+     - "*.xml"
+     - "*.jks"
+     - "*.properties"
+     16_webui_gs_config:
+     - "*.xml"
+     - "*.jks"
+     - "*.properties"
+152. In /dbagigashare/current/security/17_gs_jars/ make sure following jar exist if not copy from GS_HOME_17/lib/optional/security :
+     spring-ldap-core.jar
+     spring-security-config-6.4.9.jar
+     spring-security-core-6.4.9.jar
+     spring-security-crypto-6.4.9.jar
+     spring-security-ldap.jar
+     spring-security-web-6.4.9.jar
+     xap-security.jar
+     xap-token-service-client.jar 
+153. In /dbagigashare/env_config/security/16_webui_gs_config/ make sure following configurations file exists if not copy from /dbagigashare/env_config/security:
+     ldap-security-config.xml
+     security.properties  (in file edit path should be spring-security-config-location=//dbagiga/gs_config/16_webui_gs_config/ldap-security-config.xml)
+154. In /dbagigashare/env_config/security/17_gs_config/ make sure following configurations file exists :
+     Copy ldap-security-config.xml from GS_HOME_17/config/security and update it accordingly to TAU LDAP setup
+     Copy security.properties file from /dbagigashare/env_config/security

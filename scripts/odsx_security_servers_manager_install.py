@@ -9,7 +9,7 @@ from scripts.odsx_security_servers_space_install import configureMetricsXML
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
-    getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
+    getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1, getYamlFilePathInsideFolderList2
 from colorama import Fore
 
 from utils.ods_cleanup import signal_handler
@@ -331,11 +331,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
         gsLicenseFile_16_4=""
+        gs_16_webui_OptionExtFromConfig=""
         if gs_version_17=='true':
             licenseConfig_16_4 = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense_16_4"))
             gsLicenseFile_16_4 = licenseConfig_16_4
             gsLicenseFile_16_4='"\\"{}\\""'.format(gsLicenseFile_16_4)
             verboseHandle.printConsoleInfo("gsLicenseFile_16_4 -> " + gsLicenseFile_16_4)
+            gs_16_webui_OptionExtFromConfig = str(readValueByConfigObj("app.manager.security.16gsWebuiOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+            gs_16_webui_OptionExtFromConfig='"\\"{}\\""'.format(gs_16_webui_OptionExtFromConfig)
 
         applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
         #print("Applicative User: "+str(applicativeUser))
@@ -457,6 +460,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"18. "+
               Fore.GREEN+"GS_LICENSE_16_4 : "+Fore.RESET,
               Fore.GREEN+str(gsLicenseFile_16_4)+Fore.RESET)
+        print(Fore.GREEN+"19. "+
+              Fore.GREEN+"GS_16_Webui_OPTIONS_EXT : "+Fore.RESET,
+              Fore.GREEN+str(gs_16_webui_OptionExtFromConfig)+Fore.RESET)
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
@@ -485,7 +491,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,None,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4)
+                    executor.submit(installSecureManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,None,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4,gs_16_webui_OptionExtFromConfig)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
@@ -493,7 +499,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     except Exception as e:
         handleException(e)
 
-def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4):
+def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4,gs_16_webui_OptionExtFromConfig):
     gsNicAddress = host_nic_dict_obj[host]
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
@@ -527,7 +533,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
 
         gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
         if gs_version_17=='true':
-            additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress+' '+gs_version_17+' '+gsLicenseFile_16_4
+            additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress+' '+gs_version_17+' '+gsLicenseFile_16_4 + ' ' + gs_16_webui_OptionExtFromConfig
         else:
             additionalParam= additionalParam + ' ' + passProperty + ' ' + vaultJar + ' ' + managerWorkTarget + ' ' + useVault + ' ' + selinuxEnabled+' '+gsNicAddress+' '+gs_version_17
         verboseHandle.printConsoleInfo(additionalParam)
@@ -542,18 +548,57 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
         # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
-        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)
+
+        if gs_version_17=='true':
+            springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.17_gs_jars.springldapcore")).replace('[','').replace(']','')
+            springSecurityLdapJarInput = str(getYamlFilePathInsideFolder(".security.17_gs_jars.springsecurityldap")).replace('[','').replace(']','')
+
+            Liboptionalsecuritypath16 = readValuefromAppConfig("app.manager.security.16lib.optional.securitypath")
+            Liboptionalsecuritypath16Folder = executeRemoteCommandAndGetOutputValuePython36(host, user, "ls -d "+Liboptionalsecuritypath16)
+
+            appmanagersecurityfolder = readValuefromAppConfig("app.manager.securityfolder")
+
+            Liboptionalsecuritypath16Folder = Liboptionalsecuritypath16Folder.strip() + appmanagersecurityfolder
+
+
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+springLdapCoreJarInput+" "+ Liboptionalsecuritypath16Folder + str(os.path.basename(springLdapCoreJarInput)))
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+springSecurityLdapJarInput+" "+ Liboptionalsecuritypath16Folder + str(os.path.basename(springSecurityLdapJarInput)))
+
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + readValuefromAppConfig("app.manager.security.16spring.jar.target"))
+            source17Jar = str(getYamlFilePathInsideFolder(".security.17_gs_jars.all")).replace('"','').replace('[','').replace(']','') #springLdapCoreJarInput+' '+springLdapJarInput + ' ' + springconfigJarInput + ' ' + springcoreJarInput+ ' ' + springcryptoJarInput + ' ' + springwebJarInput+ ' ' + xapsecurityJarInput
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+readValuefromAppConfig("app.manager.security.16spring.jar.target"))
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+source17Jar+" "+springTargetJarInput)
+        else:
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)
         #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
         managerWorkSrc = str(readValueByConfigObj("app.vault.db.location"))
         managerWorkSrc = managerWorkSrc + "/vault.db"
         executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + managerWorkTarget)
         managerWorkTarget = managerWorkTarget + "vault.db"
         scp_upload(host, "root", managerWorkSrc, managerWorkTarget)
-        securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
-        for securityFile in securityFiles:
-            securityFile = str(securityFile).replace('"',"")
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+securityFile+" "+readValuefromAppConfig("app.manager.security.config.target"))
-        #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
+
+
+        if gs_version_17=='true':
+            securityFiles_17 = getYamlFilePathInsideFolderList2("..security..17_gs_config")
+            for _securityFiles_17 in securityFiles_17:
+                _securityFiles_17 = str(_securityFiles_17).replace('"',"")
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+_securityFiles_17+" "+readValuefromAppConfig("app.manager.security.config.target"))
+
+            securityFiles = getYamlFilePathInsideFolderList2("..security..16_webui_gs_config")
+
+            for securityFile_16 in securityFiles:
+                securityFile_16 = str(securityFile_16).replace('"',"")
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + readValuefromAppConfig("app.manager.security.16config.target"))
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+securityFile_16+" "+readValuefromAppConfig("app.manager.security.16config.target"))
+
+        else:
+            securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
+            for securityFile in securityFiles:
+                securityFile = str(securityFile).replace('"',"")
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+securityFile+" "+readValuefromAppConfig("app.manager.security.config.target"))
+
+
+    #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
         #logger.info("cp "+str(getYamlFilePathInsideConfigFolder("..security.ldappropertysourcefile"))+" "+readValuefromAppConfig("app.manager.security.config.target"))
         #   logger.info("cp "+ldapSecurityConfigInput+" "+ldapSecurityConfigTargetInput)
         #print("cp /dbagiga/gigaspaces-smart-ods/lib/optional/security/* "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
