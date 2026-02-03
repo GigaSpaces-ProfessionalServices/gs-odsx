@@ -17,11 +17,11 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShComma
     executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
     executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts, \
-    isInstalledAndGetVersion, config_get_manager_node
+    isInstalledAndGetVersion, config_get_manager_node, config_get_space_list_with_status
 from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload,scp_upload_specific_extension
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
 
 #from scripts.odsx_servers_manager_install import getManagerHostFromEnv
 
@@ -276,6 +276,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
         db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
         db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
+        infraJarPath = ".gs.jars.infra.infrajar"
+        infraJarInput = str(readValueFromYaml(infraJarPath)).replace('[','').replace(']','')
+        infraJarInput = getYamlJarFilePath(".gs.jars.infra",infraJarInput)
+        infraJarTargetInput = str(readValuefromAppConfig("app.space.infra.jar.target")).replace('[','').replace(']','')
 
        # springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.jars.springldapcore")).replace('[','').replace(']','')
        # springconfigJarInput = str(getYamlFilePathInsideFolder(".security.jars.springconfig")).replace('[','').replace(']','')
@@ -303,6 +307,68 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
+
+        verboseHandle.printConsoleWarning("-------------------HI1-----------------------------------------")
+        verboseHandle.printConsoleWarning(str(spaceHostConfig))
+
+        # summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+        # while(len(str(summaryConfirm))==0):
+        #     summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
+        spaceHostConfig = []
+        spaceStart = ''
+        user='root'
+        logger.info("user :"+str(user))
+        streamDict = config_get_space_list_with_status(user)
+        serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
+        logger.info("serverStartType:"+str(serverStartType))
+        isMenuDriven=''
+        cliArguments=''
+        if(serverStartType=='1'):
+            optionMainMenu = str(userInputWithEscWrapper("Enter your host number to install: "))
+            if (optionMainMenu.isdigit() == False):
+                verboseHandle.printConsoleWarning("Invalid Input")
+                return
+            logger.info("Enter your host number to start:"+str(optionMainMenu))
+            if(optionMainMenu != '99'):
+                if len(streamDict) >= int(optionMainMenu):
+                    spaceStart = streamDict.get(int(optionMainMenu))
+                    for host in host_nic_dict_obj:
+                        if ((os.getenv(spaceStart.ip)) == str(host)):
+                            spaceHostConfig.append(str(host))
+                            verboseHandle.printConsoleWarning(str(host))
+                            # executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,None,selinuxEnabled,infraJarInput,infraJarTargetInput)
+                else:
+                    verboseHandle.printConsoleWarning("Invalid Input")
+                    return
+            elif (optionMainMenu == '99'):
+                logger.info("99 - Exist start")
+                return
+                # sys.exit()
+            else:
+                verboseHandle.printConsoleWarning("Invalid Input")
+                return
+        elif(serverStartType =='99'):
+            logger.info("99 - Exist start")
+            return
+        else:
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            while(len(str(confirm))==0):
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to install all servers ? [yes (y)] / [no (n)] : "+Fore.RESET))
+            logger.info("confirm :"+str(confirm))
+            if(confirm=='yes' or confirm=='y'):
+                hostListLength=len(host_nic_dict_obj)+1
+                with ThreadPoolExecutor(hostListLength) as executor:
+                    for host in host_nic_dict_obj:
+                        spaceHostConfig.append(str(host))
+                        verboseHandle.printConsoleWarning(str(host))
+                        # executor.submit(installSpaceServer,host,additionalParam,host_nic_dict_obj,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,startSpaceGsc,None,selinuxEnabled,infraJarInput,infraJarTargetInput)
+            elif(confirm=='no' or confirm == 'n'):
+                return
+            else:
+                verboseHandle.printConsoleWarning("Invalid Input")
+                return
+
+
         #To Display Summary ::
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -329,7 +395,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+nofileLimitFile.replace('"','')+Fore.RESET)
         print(Fore.GREEN+"8. "+
               Fore.GREEN+"Space hosts = "+Fore.RESET,
-              Fore.GREEN+spaceHostConfig.replace('"','')+Fore.RESET)
+              Fore.GREEN+",".join(map(str, spaceHostConfig))+Fore.RESET)
         print(Fore.GREEN+"9. "+
               Fore.GREEN+"Do you want to install Java ? "+Fore.RESET,
               Fore.GREEN+wantToInstallJava+Fore.RESET)
@@ -393,39 +459,48 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         print(Fore.GREEN+"23. "+
               Fore.GREEN+"MsSQL Feeder files target : "+Fore.RESET,
               Fore.GREEN+str(msSqlFeederFileTarget).replace('"','')+Fore.RESET)
+        # print(Fore.GREEN+"24. "+
+        #       Fore.GREEN+"Space server installation : "+Fore.RESET,
+        #       Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
         print(Fore.GREEN+"24. "+
-              Fore.GREEN+"Space server installation : "+Fore.RESET,
-              Fore.GREEN+str(spaceHostConfig).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"25. "+
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"26. "+
+        print(Fore.GREEN+"25. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"27. "+
+        print(Fore.GREEN+"26. "+
               Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
               Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"28. "+
+        print(Fore.GREEN+"27. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
+        print(Fore.GREEN+"28. "+
+              Fore.GREEN+"infra-1.1-SNAPSHOT-jar-with-dependencies.jar source : "+Fore.RESET,
+              Fore.GREEN+str(infraJarInput).replace('"','')+Fore.RESET)
+        print(Fore.GREEN+"29. "+
+              Fore.GREEN+"Infra jar target : "+Fore.RESET,
+              Fore.GREEN+str(infraJarTargetInput).replace('"','')+Fore.RESET)
 
-        verboseHandle.printConsoleWarning("------------------------------------------------------------")
+
+        verboseHandle.printConsoleWarning("---------------------HI---------------------------------------")
         summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         while(len(str(summaryConfirm))==0):
             summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
-            hostListLength=len(host_nic_dict_obj)+1
+            hostListLength = len(host_nic_dict_obj)+1
+            verboseHandle.printConsoleInfo(str(hostListLength))
             with ThreadPoolExecutor(hostListLength) as executor:
                 for host in host_nic_dict_obj:
-                    executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled)
+                    if (host in spaceHostConfig):
+                        executor.submit(installSpaceServer,host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,None,None,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled,infraJarInput,infraJarTargetInput)
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
             return
     except Exception as e:
-        handleException(e)
+            handleException(e)
 
-def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled):
+def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput,cefLoggingJarInputTarget,db2jccJarInput,db2FeederJarTargetInput,db2jccJarLicenseInput,msSqlFeederFileTarget,sourceJar,springTargetJarInput,ldapSecurityConfigInput,ldapSecurityConfigTargetInput,applicativeUser,startSpaceGsc,newZkJarTarget,selinuxEnabled,infraJarInput,infraJarTargetInput):
     try:
         installStatus='No'
         install = isInstalledAndGetVersion(host)
@@ -494,6 +569,8 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 #Upload CEF logging jar
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
                 #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
+
+                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+infraJarInput+" "+infraJarTargetInput)
 
                # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+db2jccJarInput+" "+db2FeederJarTargetInput)
                 #scp_upload(host,user,db2jccJarInput,db2FeederJarTargetInput)

@@ -83,7 +83,7 @@ def listAllFeeders():
         if profile == 'security':
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         else:
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
 
@@ -188,7 +188,7 @@ def getAllFeeders():
         if profile == 'security':
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         else:
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         #verboseHandle.printConsoleWarning("Resources on cluster:")

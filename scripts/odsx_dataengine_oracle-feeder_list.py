@@ -92,7 +92,7 @@ def listDeployed(managerHost):
         cnx = sqlite3.connect(db_file)
 
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -112,7 +112,7 @@ def listDeployed(managerHost):
         sourceOracleFeederShFilePath = str(sourceInstallerDirectory + ".oracle.scripts.").replace('.', '/')
         flag = False
         for i in jsonArray:
-            if (str(i['name']).__contains__("oracle")):
+            if (str(i['name']).__contains__("oraclefeeder")):
                 flag = True
 
         logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
@@ -132,7 +132,7 @@ def listDeployed(managerHost):
                     hostId = data2["hostId"]
                 if (len(str(hostId)) == 0):
                     hostId = "N/A"
-                if (str(data["name"]).__contains__('oracle')):
+                if (str(data["name"]).__contains__('oraclefeeder')):
                     os.getcwd()
                     os.chdir(sourceOracleFeederShFilePath)
                     for file in glob.glob("load_*.sh"):

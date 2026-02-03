@@ -161,7 +161,7 @@ def listDeployed(managerHost):
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         sourceOracleFeederShFilePath = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
         for i in jsonArray:
-            if(str(i['name']).__contains__("oracle")):
+            if(str(i['name']).__contains__("oraclefeeder")):
                 flag = True
         if(len(jsonArray) == 0 or flag == False):
 
@@ -212,7 +212,7 @@ def listDeployed(managerHost):
                     hostId = data2["hostId"]
                 if (len(str(hostId)) == 0):
                     hostId = "N/A"
-                if (str(data["name"]).__contains__('oracle')):
+                if (str(data["name"]).__contains__('oraclefeeder')):
                     os.getcwd()
                     os.chdir(sourceOracleFeederShFilePath)
                     for file in glob.glob("load_*.sh"):

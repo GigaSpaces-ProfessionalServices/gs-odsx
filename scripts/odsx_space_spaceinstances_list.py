@@ -223,7 +223,7 @@ def listDeployed(managerHost,spaceName):
 def listOfSpacename(managerHost):
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/spaces/")
+        response = requests.get("http://"+str(managerHost)+":8090/v2/spaces")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Instance of space:")

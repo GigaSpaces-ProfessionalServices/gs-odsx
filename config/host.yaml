@@ -11,8 +11,16 @@ servers :
     host2 : 10.0.0.2
     host3 : 10.0.0.3
     host4 : 10.0.0.4
+  dataIntegrationSubscriptionManager :
+    host1 : 10.0.1.137
   iidrdataIntegration :
     host1 : 10.0.0.5
+  iidrAccessServer :
+    host1 : 10.0.1.137
+  iidrKafkaAgent :
+    host1 : 10.0.1.137
+  iidrOracleAgent :
+    host1 : 10.0.1.137
   grafana :
     host1 : 10.0.0.137
   influxdb :

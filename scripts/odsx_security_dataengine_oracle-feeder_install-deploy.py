@@ -254,11 +254,13 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 
 def proceedToCreateGSC(zoneGSC,newGSCCount):
     logger.info("proceedToCreateGSC()")
-    idx = newGSCCount % len(spaceNodes)
-    host = spaceNodes[idx]
+    isMemoryAvailableHost = isMemoryAvailableHostIp(managerNodes,spaceNodes)
 
-    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
-    verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(os.getenv(host.ip)))
+    # idx = newGSCCount % len(spaceNodes)
+    # host = spaceNodes[idx]
+
+    commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option=-Djava.security.krb5.conf=/etc/krb5.conf --vm-option=-Djava.security.auth.login.config=/dbagiga/gs_config/SQLJDBCDriver.conf "+str(isMemoryAvailableHost)+" | grep -v JAVA_HOME"
+    verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(isMemoryAvailableHost))
     logger.info(commandToExecute)
     with Spinner():
         output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
@@ -443,6 +445,62 @@ def newInstallOracleFeeder():
         if exitsFeeder not in activefeeder:
             newInstall.append(exitsFeeder)
 
+def getHardLimitMemoryInBytes():
+    hardLimit = str(readValueByConfigObj("app.dataengine.oracle-feeder.hard.limit"))
+    if hardLimit[-1] == "m":
+        # Convert MB to bytes (1 MB = 1024 * 1024 bytes)
+        mbHardLimit = int(hardLimit[:-1]) * 1024 * 1024
+        logger.info("mbHardLimit - > " + str(mbHardLimit))
+        return mbHardLimit
+    elif hardLimit[-1] == "g":
+        #Convert GB to bytes (1 GB = 1024 * 1024 * 1024 bytes)
+        gbHardLimit = int(hardLimit[:-1]) * 1024 * 1024 * 1024
+        logger.info("gbHardLimit - > " + str(gbHardLimit))
+        return gbHardLimit
+    else:
+        logger.info("Oracle-feeder Hard Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        verboseHandle.printConsoleInfo("Oracle-feeder Hard Limit value is "+ hardLimit + " Enter Hard Limit value like 100m or 1g")
+        exit(0)
+
+def format_bytes(byte_value):
+    gb = int(byte_value) / (1024 ** 3)
+    if gb >= 1:
+        return f"{gb:.2f} GB"
+    else:
+        mb = int(byte_value) / (1024 ** 2)
+        return f"{mb:.2f} MB"
+
+def isMemoryAvailableHostIp(managerNodes,spaceNodes):
+    try:
+        AvailableHostMemory = {}
+
+        for node in spaceNodes:
+            managerHost = getManagerHost(managerNodes)
+            logger.info("URL : http://"+str(managerHost)+":8090/v2/hosts/"+str(os.getenv(node.name))+"/statistics/os")
+            response = requests.get("http://"+managerHost+":8090/v2/hosts/"+os.getenv(node.name)+"/statistics/os", headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
+            logger.info(response.status_code)
+            logger.info(response.content)
+            jsonArray = json.loads(response.text)
+            global freePhysicalMemorySizeInBytes
+            freePhysicalMemorySizeInBytes = jsonArray['actualFreePhysicalMemorySizeInBytes']
+            logger.info("freePhysicalMemorySizeInBytes :"+str(freePhysicalMemorySizeInBytes))
+            AvailableHostMemory[os.getenv(node.name)] = freePhysicalMemorySizeInBytes
+
+        MemoryAvailableMemoryHostIp = max(AvailableHostMemory, key=AvailableHostMemory.get)
+        logger.info(f"The key with the highest value is '{MemoryAvailableMemoryHostIp}' with a value of {AvailableHostMemory[MemoryAvailableMemoryHostIp]}")
+
+        hardLimit = getHardLimitMemoryInBytes()
+
+        if (AvailableHostMemory[MemoryAvailableMemoryHostIp] > int(hardLimit)):
+            logger.info("Memory available")
+            return MemoryAvailableMemoryHostIp
+        else:
+            logger.info("No sufficient memory available: Required Memory:"+str(format_bytes(hardLimit))+" Available Memory:"+str(format_bytes(freePhysicalMemorySizeInBytes)) +" on host:"+MemoryAvailableMemoryHostIp)
+            verboseHandle.printConsoleInfo("No sufficient memory available: Required Memory:"+str(format_bytes(hardLimit))+" Available Memory:"+str(format_bytes(freePhysicalMemorySizeInBytes))+" on host:"+MemoryAvailableMemoryHostIp)
+            exit(0)
+    except Exception as e:
+        handleException(e)
+
 def proceedToDeployPU(feederName):
     global restPort
     try:
@@ -537,6 +595,7 @@ def displaySummaryOfInputParam():
         #verboseHandle.printConsoleInfo("Enter -Dpipeline.config.location target : "+dPipelineLocationTarget)
     verboseHandle.printConsoleInfo("Enter oracle.server : "+str(oracleServer))
     verboseHandle.printConsoleInfo("Enter feeder.writeBatchSize : "+str(feederWriteBatchSize))
+    verboseHandle.printConsoleInfo("Enter oracle-feeder.hard.limit: " + str(readValueByConfigObj("app.dataengine.oracle-feeder.hard.limit")))
     verboseHandle.printConsoleInfo("Enter feeder.sleepAfterWriteInMillis :"+str(feederSleepAfterWrite))
     verboseHandle.printConsoleInfo("Enter sqlite3 db file :"+str(db_file))
     verboseHandle.printConsoleInfo("Enter source file path of oracle-feeder .jar file including file name : "+str(sourceOracleJarFilePath))

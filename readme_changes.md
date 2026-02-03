@@ -328,33 +328,168 @@
      add app.manager.gs_version_17=true in app.config file
      add gslicense_16_4: gs-license_16_4.txt under current.gs.config.licence in app.yaml file
 ### TAU v4.82-tau-release tag
-105. In manager install minor changes done for start_gsa.sh script
+105. In manager install minor changes done for start_gsa.sh script (Install 16.4 WEBUI If GS version 17 installed)
 ### TAU v4.83-tau-release tag
-106. Add below properties in app.config
+106. Merged code from TAU-ODSX-17 branch to TAU-ODSX
+### TAU v4.84-tau-release tag
+107. Created new branch with 2 features - install/remove individual space server, Solved bug Menu -> Servers -> List-All removed space server from cluster.config
+### TAU v4.85-tau-release tag
+108. Merged code from TAU-ODSX-Space-Server-Individual-Install branch to TAU-ODSX
+### TAU v4.86-tau-release tag
+109. Created new Branch for TAU-ODSX-Install-Feeder 
+110. Add app.dataengine.oracle-feeder.hard.limit=100m in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+### TAU v4.87-tau-release tag
+111. Added steps for Non-secured Environment (Now Oracle feeder will get installed in highest available memory)
+### TAU v4.88-tau-release tag
+112. Merged code from TAU-ODSX-Install-Feeder to TAU-ODSX
+### TAU v4.89-tau-release tag
+113. Added install/remove individual space server for Non-Secured Environment
+### TAU v4.90-tau-release tag
+114. Created new branch for TAU-ODSX-Oracle-Feeder-ERP added Oracle ERP Feeder code changes and add below properties in app.config
+     app.dataengine.oracle-feeder-erp.oracle.server=XXX
+     app.dataengine.oracle-feeder-erp.oracle.username=XXX
+     app.dataengine.oracle-feeder-erp.oracle.password=XXX
+     app.dataengine.oracle-feeder-erp.oracle.databasename=XXX
+     app.dataengine.oracle-feeder-erp.gscpercluster=1
+     app.dataengine.oracle-feeder-erp.gsc.memory=256m
+     app.dataengine.oracle-feeder-erp.gsc.create=y
+     app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/oracleerpFeeder.db
+     app.dataengine.oracle-feeder-erp.space.name=dih-tau-space
+     app.dataengine.oracle-feeder-erp.writeBatchSize=10000
+     app.dataengine.oracle-feeder-erp.sleepAfterWriteInMillis=500
+     app.dataengine.oracle-feeder-erp.rest.port=8600
+     app.dataengine.oracle-feeder-erp.hard.limit=4g
+### TAU v4.91-tau-release tag
+115. Added steps for differentiate Oracle Feeder and Oracle ERP Feeder
+116. Add oracleerp section in app.yaml
+     oracleerp:
+       config: null
+       jars:
+         oracleErpJarFile: OracleFeeder-1.0-SNAPSHOT.jar
+       scripts: null
+117. Create oracleerp folder under /dbagigashare/current/ with same folders as oracle
+### TAU v4.92-tau-release tag
+118. Minor bug fixes for Oracle feeder
+### TAU v4.93-tau-release tag
+119. For Service creator add infra-1.1-SNAPSHOT-jar-with-dependencies.jar to /dbagigashare/current/gs/jars/infra for Space server installation
+120. Add app.space.infra.jar.target=/dbagiga/gigaspaces-smart-ods/lib/optional/pu-common in app.config
+121. Add below property under gs.config.jars section
+     infra:
+       infrajar: infra-1.1-SNAPSHOT-jar-with-dependencies.jar
+122. Feeder list - If reverse DNS fails then go ahead only with IP in display list.
+### TAU v4.94-tau-release tag
+123. For Data Engine Gilboa Updater Full Load and Gilboa Updater Update updated installation hard limit
+124. Add app.dataengine.gilboa-feeder.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+125. For Data Engine Notifier updated installation hard limit 
+126. Add app.dataengine.notifier.hard.limit=2g in app.config file (hard.limit value can be 100m (mb) or 1g (gb) Now Oracle feeder will get installed in highest available memory)
+127. Updated DI List and Server List All visibility for added DI Subscription Manager, IIDR Access Server, IIDR Kafka Agent, IIDR Oracle Agent
+128. In Host.yaml file, the following lines have been added after dataIntegration section
+     dataIntegrationSubscriptionManager :
+       host1 : 10.0.1.137
+     iidrAccessServer :
+       host1 : 10.0.1.137
+     iidrKafkaAgent :
+       host1 : 10.0.1.137
+     iidrOracleAgent :
+       host1 : 10.0.1.137
+129. In cluster.config the following has been added after dataIntegration section
+    "dataIntegrationSubscriptionManager": {
+        "nodes": [
+        ]
+    }
+    "iidrAccessServer": {
+        "nodes": [
+        ]
+    }
+    "iidrKafkaAgent": {
+        "nodes": [
+        ]
+    }
+    "iidrOracleAgent": {
+        "nodes": [
+        ]
+    }
+130. Add below properties in app.config
+     app.iidr.Access.Server.Port=10101
+     app.iidr.Kafka.Agent.Port=11701
+     app.iidr.Oracle.DB.Agent.Port=11001
+     app.di.kafka.Port=9092
+     app.dataengine.mssql-feeder.hard.limit=2g
+### TAU v4.95-tau-release tag
+131. Updated Readme and naming convention from app.dataengine.gilboa-feeder.required.available.memory to app.dataengine.gilboa-feeder.hard.limit
+### TAU v4.96-tau-release tag
+132. Code fixed for Gilboa and Notifier. If the available RAM of all space servers is less than the defined hard.limit of a feeder type then the feeder will not be deployed
+### TAU v4.97-tau-release tag
+133. Logger changed Not enough RAM to GigaBytes instead of Bytes for Oracle and Oracle ERP feeder 
+### TAU v5.0-tau-release tag
+135. Merged code from TAU-ODSX-Oracle-Feeder-ERP to TAU-ODSX
+### TAU v5.1-tau-release tag
+136. Removed link to DIH 16.4 folder that appears inside DIH 17 folder
+137. Removed "/" from the end of the swagger rest API call e.g. from /v2/pus/ to /v2/pus
+### TAU v5.2-tau-release tag
+138. Code fixed for Oracle ERP table name changes
+### TAU v5.3-tau-release tag
+139. Code fixed for Gilboa and Notifier Data engine (Manager host issue fixed)
+### TAU v5.4-tau-release tag
+140. Code naming changes from erpOracleFeeder.db to oracleerpFeeder.db and files names also
+### TAU v5.5-tau-release tag
+141. Change the value in app.config of app.dataengine.oracle-feeder-erp.sqlite.dbfile=/dbagigawork/sqlite/oracleerpFeeder.db
+### TAU v5.6-tau-release tag
+142. Add mysql section in app.yaml under mssql feeder configuration
+     mysql:
+       config: null
+       jars:
+         mysqlJarFile: MysqlFeeder-1.9-SNAPSHOT.jar
+       scripts: null
+143. In app.config add all the MySqlFeeder properties 
+     app.dataengine.mysql-feeder.mysql.server=XXX
+     app.dataengine.mysql-feeder.mysql.username=XXX
+     app.dataengine.mysql-feeder.mysql.password=XXX
+     app.dataengine.mysql-feeder.mysql.databasename=XXX
+     app.dataengine.mysql-feeder.gscpercluster=1
+     app.dataengine.mysql-feeder.gsc.memory=256m
+     app.dataengine.mysql-feeder.gsc.create=y
+     app.dataengine.mysql-feeder.sqlite.dbfile=/dbagigawork/sqlite/mysqlFeeder.db
+     app.dataengine.mysql-feeder.space.name=dih-tau-space
+     app.dataengine.mysql-feeder.writeBatchSize=10000
+     app.dataengine.mysql-feeder.sleepAfterWriteInMillis=500
+     app.dataengine.mysql-feeder.rest.port=3306
+     app.dataengine.mysql-feeder.hard.limit=100m
+143. Create mysql folder structure under /dbagigashare/current/ with same folders as /dbagigashare/current/oracle
+144. Compile the mysql jar from this repo https://github.com/GigaSpaces-ProfessionalServices/TAU/tree/master/apps/MysqlFeeder copy MysqlFeeder-1.9-SNAPSHOT.jar and paste it under /dbagigashare/current/mysql/jars/ folder
+145. Put your custom feeder script (sample example - https://github.com/GigaSpaces-ProfessionalServices/TAU/blob/master/apps/MysqlFeeder/load_Persons.sh) under /dbagigashare/current/mysql/scripts/ folder
+### TAU v5.6.1-tau-release tag
+146. Minor bug fixes for Mysql feeder
+### TAU v5.6.2-tau-release tag
+147. Minor bug fixes for Gilboa Updater feeder
+### TAU v5.6.3-tau-release tag
+148. Fixed mysqlfeeder_mdl_tau_activities_to_dih is missing when doing "list all" feeders  and also fixed auto_mysqlfeederlist doesn't work on dev
+### TAU v5.6.4-tau-release tag
+149. Add below properties in app.config
      app.manager.security.16spring.jar.target=/dbagiga/gs_jars/16_webui_gs_jars/
      app.manager.security.16config.target=/dbagiga/gs_config/16_webui_gs_config/
      app.manager.security.16lib.optional.securitypath=/dbagiga/*16.*/
      app.manager.securityfolder=lib/optional/security/
      app.manager.security.16gsWebuiOptionExt="-Dcom.gs.work=/dbagigawork -Dcom.gigaspaces.system.registryRetries=30 -Dcom.gigaspaces.lib.opt.security=/dbagiga/gs_jars/16_webui_gs_jars -Dcom.gs.security.properties-file=/dbagiga/gs_config/16_webui_gs_config/security.properties -Dcom.gigaspaces.metrics.config=/dbagiga/gs_config/gs_config/metrics.xml -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=/dbagigalogs -Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 -Dcom.gs.manager.leader-election.zookeeper.connection-timeout=10000 -Dspace-config.leader-election.zookeeper.session-timeout=60000 -Dspace-config.leader-election.zookeeper.connection-timeout=10000 -Dcom.gs.transport_protocol.lrmi.max-threads=1024 -Dcom.gs.transport_protocol.lrmi.threshold-check-interval=500 -Dgs.gc.collectionTimeThresholdWarning=300 -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=50 -Xlog:gc*:file=/dbagigalogs/gc_%p.log:time,level -XX:+DisableExplicitGC -Dcom.gs.expose.internal.api=true -Dcom.gs.ops-ui.dev-mode=true -Dcom.gs.ui.metrics.db.retention.retain-duration=PT1M -Dcom.gs.ui.metrics.db.retention.delay-duration=PT30S -Dcom.gs.ui.metrics.db.retention.batch-size=70000 -Dcom.gs.replication.replicaProgressTimeout=400000 -Dcom.gs.manager.rest.ssl.enabled=false -Dcom.gs.security.enabled=true -Dcom.gigaspaces.security.audit.enabled=true -Dcom.gigaspaces.security.audit.level=ALL -Dcom.gigaspaces.security.audit.AuditHandler.filename-pattern=/dbagigalogs/gigaspaces-security-audit-{service}-{host}-{pid}.log -Dcom.gs.web-ui.idle-session-timeout=3600 -Dcom.gs.expose.internal.api=true -Djavax.net.ssl.trustStore=/giga/gs_config/gs_config/ldap-client.jks -Djavax.net.ssl.trustStorePassword=$VAULT_MANAGER_PASS"
-107. Add below properties in app.yaml under current:
+150. Add below properties in app.yaml under current:
      security:
-       jars:
-         all: "*"
-         17_gs_jars:
-           all: "*"
-           springldapcore: spring-ldap-core.jar
-           springsecurityldap: spring-security-ldap.jar
-108. Add below properties in app.yaml under env_config:
+     jars:
+     all: "*"
+     17_gs_jars:
+     all: "*"
+     springldapcore: spring-ldap-core.jar
+     springsecurityldap: spring-security-ldap.jar 
+151. Add below properties in app.yaml under env_config:
      security:
-       17_gs_config:
-         - "*.xml"
-         - "*.jks"
-         - "*.properties"
-       16_webui_gs_config:
-         - "*.xml"
-         - "*.jks"
-         - "*.properties"
-109. In /dbagigashare/current/security/17_gs_jars/ make sure following jar exist if not copy from GS_HOME_17/lib/optional/security :
+     17_gs_config:
+     - "*.xml"
+     - "*.jks"
+     - "*.properties"
+     16_webui_gs_config:
+     - "*.xml"
+     - "*.jks"
+     - "*.properties"
+152. In /dbagigashare/current/security/17_gs_jars/ make sure following jar exist if not copy from GS_HOME_17/lib/optional/security :
      spring-ldap-core.jar
      spring-security-config-6.4.9.jar
      spring-security-core-6.4.9.jar
@@ -362,10 +497,10 @@
      spring-security-ldap.jar
      spring-security-web-6.4.9.jar
      xap-security.jar
-     xap-token-service-client.jar
-110. In /dbagigashare/env_config/security/16_webui_gs_config/ make sure following configurations file exists if not copy from /dbagigashare/env_config/security:
+     xap-token-service-client.jar 
+153. In /dbagigashare/env_config/security/16_webui_gs_config/ make sure following configurations file exists if not copy from /dbagigashare/env_config/security:
      ldap-security-config.xml
      security.properties  (in file edit path should be spring-security-config-location=//dbagiga/gs_config/16_webui_gs_config/ldap-security-config.xml)
-111. In /dbagigashare/env_config/security/17_gs_config/ make sure following configurations file exists :
+154. In /dbagigashare/env_config/security/17_gs_config/ make sure following configurations file exists :
      Copy ldap-security-config.xml from GS_HOME_17/config/security and update it accordingly to TAU LDAP setup
      Copy security.properties file from /dbagigashare/env_config/security

@@ -78,7 +78,7 @@ def listDeployed_old(managerHost):
         if profile == 'security':
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         else:
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")
@@ -122,7 +122,7 @@ def listDeployed_old(managerHost):
         if profile == 'security':
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         else:
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray2 = json.loads(response.text)
         for data in jsonArray:
@@ -151,7 +151,7 @@ def listDeployed_old(managerHost):
         if profile=='security':
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
         else:
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/")
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         for data in jsonArray:
