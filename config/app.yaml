@@ -99,6 +99,10 @@ current:
   security:
     jars:
       all: "*"
+    17_gs_jars:
+      all: "*"
+      springldapcore: spring-ldap-core.jar
+      springsecurityldap: spring-security-ldap.jar
   telegraf:
     config:
       pivot:
@@ -113,6 +117,14 @@ current:
 env_config:
   security:
     conf:
+      - "*.xml"
+      - "*.jks"
+      - "*.properties"
+    17_gs_config:
+      - "*.xml"
+      - "*.jks"
+      - "*.properties"
+    16_webui_gs_config:
       - "*.xml"
       - "*.jks"
       - "*.properties"

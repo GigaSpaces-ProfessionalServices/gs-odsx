@@ -146,6 +146,16 @@ def getYamlFilePathInsideFolderList1(configPath):
         fileListWithPath.append(sourceInstallerDirectory+path+'/'+fileName)
     return fileListWithPath
 
+def getYamlFilePathInsideFolderList2(configPath):
+    sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
+    logger.info("sourceInstallerDirectory:"+sourceInstallerDirectory)
+    fileNames= readValueFromYaml(configPath)
+    path = str(configPath).replace('.','/')
+    fileListWithPath=[]
+    for fileName in fileNames:
+        fileListWithPath.append(sourceInstallerDirectory+path+'/'+fileName)
+    return fileListWithPath
+
 
 def getYamlFilePathInsideConfigFolder(configPath):
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))

@@ -386,7 +386,8 @@ function installAirGapGS {
 
       echo $gsManagerOptions>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
 
-      echo $gsOptionExt>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+      gs_16_webui_OptionExt="export GS_OPTIONS_EXT="\"$gs_16_webui_OptionExtFromConfig\"
+      echo $gs_16_webui_OptionExt>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
 
       if [ ! "$gsNicAddress" == "" ]; then
         gsNicAddr="export GS_NIC_ADDRESS="$gsNicAddress
@@ -566,6 +567,7 @@ gs_version_17=${21}
 
 if [ "$gs_version_17" == 'true' ]; then
   gsLicenseFile_16_4=${22}
+  gs_16_webui_OptionExtFromConfig=${23}
 fi
 
 
