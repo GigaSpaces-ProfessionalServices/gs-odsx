@@ -489,7 +489,8 @@
      - "*.xml"
      - "*.jks"
      - "*.properties"
-152. In /dbagigashare/current/security/17_gs_jars/ make sure following jar exist if not copy from GS_HOME_17/lib/optional/security :
+152. In /dbagigashare/current/security/17_gs_jars/ make sure following jar exist if not copy from GS_HOME_17/lib/optional/security and Do change chmod 755 to all of these files:
+     SecuredLDAP-1.0-SNAPSHOT.jar
      spring-ldap-core.jar
      spring-security-config-6.4.9.jar
      spring-security-core-6.4.9.jar
@@ -497,10 +498,20 @@
      spring-security-ldap.jar
      spring-security-web-6.4.9.jar
      xap-security.jar
-     xap-token-service-client.jar 
+     xap-token-service-client.jar
 153. In /dbagigashare/env_config/security/16_webui_gs_config/ make sure following configurations file exists if not copy from /dbagigashare/env_config/security:
      ldap-security-config.xml
      security.properties  (in file edit path should be spring-security-config-location=//dbagiga/gs_config/16_webui_gs_config/ldap-security-config.xml)
 154. In /dbagigashare/env_config/security/17_gs_config/ make sure following configurations file exists :
-     Copy ldap-security-config.xml from GS_HOME_17/config/security and update it accordingly to TAU LDAP setup
+     Copy ldap-security-config.xml from /dbagigashare/env_config/security and update it accordingly to TAU LDAP setup (<bean id="populator" class="com.gigaspaces.security.ldap.XAPLdapAuthoritiesPopulator">)
      Copy security.properties file from /dbagigashare/env_config/security
+### TAU v5.6.5-tau-release tag
+155. Add below properties in app.yaml under current:
+     security:
+     17_gs_jars:
+     all: "*"
+     securedldap: SecuredLDAP-1.0-SNAPSHOT.jar
+156. In /dbagigashare/env_config/security/16_webui_gs_config/ make sure following configurations file exists
+     Copy ldap-client.jks from /dbagigashare/env_config/security
+157. In /dbagigashare/env_config/security/17_gs_config/ make sure following configurations file exists :
+     Copy ldap-client.jks from /dbagigashare/env_config/security

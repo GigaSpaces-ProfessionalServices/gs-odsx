@@ -113,6 +113,7 @@ current:
       all: "*"
     17_gs_jars:
       all: "*"
+      securedldap: SecuredLDAP-1.0-SNAPSHOT.jar
       springldapcore: spring-ldap-core.jar
       springsecurityldap: spring-security-ldap.jar
   telegraf:

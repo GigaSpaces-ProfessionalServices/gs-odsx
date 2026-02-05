@@ -550,6 +550,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
 
         if gs_version_17=='true':
+            SecuredLDAPJarInput = str(getYamlFilePathInsideFolder(".security.17_gs_jars.securedldap")).replace('[','').replace(']','')
             springLdapCoreJarInput = str(getYamlFilePathInsideFolder(".security.17_gs_jars.springldapcore")).replace('[','').replace(']','')
             springSecurityLdapJarInput = str(getYamlFilePathInsideFolder(".security.17_gs_jars.springsecurityldap")).replace('[','').replace(']','')
 
@@ -561,6 +562,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
             Liboptionalsecuritypath16Folder = Liboptionalsecuritypath16Folder.strip() + appmanagersecurityfolder
 
 
+            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+SecuredLDAPJarInput+" "+ Liboptionalsecuritypath16Folder + str(os.path.basename(SecuredLDAPJarInput)))
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+springLdapCoreJarInput+" "+ Liboptionalsecuritypath16Folder + str(os.path.basename(springLdapCoreJarInput)))
             executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+springSecurityLdapJarInput+" "+ Liboptionalsecuritypath16Folder + str(os.path.basename(springSecurityLdapJarInput)))
 
