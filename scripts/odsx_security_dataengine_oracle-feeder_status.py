@@ -143,7 +143,7 @@ def listDeployed(managerHost):
         cnx = sqlite3.connect(db_file)
 
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+        response = requests.get("http://"+str(managerHost)+":8090/v2/pus",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Resources on cluster:")

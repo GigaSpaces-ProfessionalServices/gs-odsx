@@ -76,7 +76,7 @@ def listDeployed_old(managerHost):
         response=""
         logger.info("managerHost :"+str(managerHost))
         if profile == 'security':
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus",auth = HTTPBasicAuth(username, password))
         else:
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
@@ -120,7 +120,7 @@ def listDeployed_old(managerHost):
         # For Kafka - Consumer
         logger.info("managerHost :"+str(managerHost))
         if profile == 'security':
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus",auth = HTTPBasicAuth(username, password))
         else:
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
@@ -149,7 +149,7 @@ def listDeployed_old(managerHost):
                 dataTable.append(dataArray)
         # For MS-SQL-Feeder
         if profile=='security':
-            response = requests.get("http://"+str(managerHost)+":8090/v2/pus/",auth = HTTPBasicAuth(username, password))
+            response = requests.get("http://"+str(managerHost)+":8090/v2/pus",auth = HTTPBasicAuth(username, password))
         else:
             response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
