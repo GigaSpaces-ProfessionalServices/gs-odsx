@@ -515,3 +515,6 @@
      Copy ldap-client.jks from /dbagigashare/env_config/security
 157. In /dbagigashare/env_config/security/17_gs_config/ make sure following configurations file exists :
      Copy ldap-client.jks from /dbagigashare/env_config/security
+### TAU v5.6.6-tau-release tag
+158. Space servers Webui changes LDAP changes
+159. Removed "/" from the end of the swagger rest API call for Secured env e.g. from /v2/pus/ to /v2/pus 
