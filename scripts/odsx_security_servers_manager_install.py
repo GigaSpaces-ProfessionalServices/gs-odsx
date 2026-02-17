@@ -508,7 +508,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         scp_upload(host, user, 'install/install.tar', '')
         ##scp_upload(host, user, 'install/gs.service', '')
     verboseHandle.printConsoleInfo(output)
-    cmd = 'tar -xvf install.tar'
+    cmd = 'cd /root && tar -xvf /root/install.tar'  # Explicit paths
     verboseHandle.printConsoleInfo("Extracting..")
     with Spinner():
         output = executeRemoteCommandAndGetOutput(host, user, cmd)

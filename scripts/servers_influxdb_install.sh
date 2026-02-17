@@ -9,6 +9,7 @@ installation_path=$sourceInstallerDirectory/influx
 echo "InstallationPath="$installation_path
 installation_file=$(find $installation_path -name "*.rpm" -printf "%f\n")
 echo "InstallationFile:"$installation_file
+chown -R influxdb.influxdb /*gigainfl*
 yum install -y $installation_path/$installation_file
 
 sed -i "s|/var/lib/influxdb/|$dir/influxdb/|g" /etc/influxdb/influxdb.conf

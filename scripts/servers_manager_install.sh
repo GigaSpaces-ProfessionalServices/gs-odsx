@@ -464,8 +464,25 @@ function gsCreateGSServeice {
   fi
 
   #cmd="sudo $GS_HOME/bin/gs.sh host kill-agent --all > /$logDir/console_out.log 2>&1 &"  #24-Aug
+  echo "#!/bin/bash">>$stop_gsa_file
+  echo "# Kill the old 16.4.1 WebUI process holding port 8099">>$stop_gsa_file
+  KilltheoldWebui="fuser -k 8099/tcp 2>/dev/null || true"
+  echo "$KilltheoldWebui">>$stop_gsa_file
+  echo "# Kill the GSA agents">>$stop_gsa_file
   cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
   echo "$cmd">>$stop_gsa_file
+
+  echo "TIMEOUT=30">>$stop_gsa_file
+  echo "ELAPSED=0">>$stop_gsa_file
+  echo "while fuser 8099/tcp >/dev/null 2>&1 && [ $ELAPSED -lt $TIMEOUT ]; do">>$stop_gsa_file
+  echo "sleep 1">>$stop_gsa_file
+  echo "ELAPSED=$((ELAPSED + 1))">>$stop_gsa_file
+  echo "done">>$stop_gsa_file
+  echo "if fuser 8099/tcp >/dev/null 2>&1; then">>$stop_gsa_file
+  echo "# Force kill if still held">>$stop_gsa_file
+  echo "fuser -k -9 8099/tcp 2>/dev/null || true">>$stop_gsa_file
+  echo "fi">>$stop_gsa_file
+
   #cmd="$GS_HOME/bin/gs.sh container kill --zones bll;sleep 20;"
   cmd="ps -ef | grep GSC | grep java | awk '{print $2}' | xargs kill -9"
   echo "$cmd">>$stop_gsc_file

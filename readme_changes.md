@@ -516,5 +516,10 @@
 157. In /dbagigashare/env_config/security/17_gs_config/ make sure following configurations file exists :
      Copy ldap-client.jks from /dbagigashare/env_config/security
 ### TAU v5.6.6-tau-release tag
-158. Space servers Webui changes LDAP changes
+158. Space servers Webui changes LDAP changes added security jars and config files
 159. Removed "/" from the end of the swagger rest API call for Secured env e.g. from /v2/pus/ to /v2/pus 
+### TAU v5.6.7-tau-release tag
+160. Installation failed when I added "cd /giga" to managers' .bashrc because full path not specified in odsx code for "tar -xvf install.tar"
+161. Chmod 3 errors for gs-webui 
+162. ODSX needs to do chown -R influxdb.influxdb /*gigainfl* before installing influxdb 
+163. Added more robust kill of WEBUI so it won't still run and interfere by holding port 8099 when reinstalling
