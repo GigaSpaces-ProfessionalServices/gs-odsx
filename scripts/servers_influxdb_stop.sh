@@ -1,2 +1,2 @@
-systemctl stop influxdb.service
+sudo systemctl stop influxdb.service
 sleep 2

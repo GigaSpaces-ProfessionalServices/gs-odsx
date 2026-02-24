@@ -10,6 +10,7 @@ from utils.ods_cluster_config import config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -68,9 +69,10 @@ def installUserAndTargetDirectory():
         '''
         user="root"
         logger.info(" user: "+str(user))
-        targetDirectory = str(userInputWrapper(Fore.YELLOW+"Enter data directory Influxdb server [/dbagigainflaxdata]:"+Fore.RESET))
+        dbaGigainfluxdataPath=readValuefromAppConfig("app.gigainfluxdata.path")
+        targetDirectory = str(userInputWrapper(Fore.YELLOW+"Enter data directory Influxdb server ["+dbaGigainfluxdataPath+"]:"+Fore.RESET))
         if(len(targetDirectory)==0):
-            targetDirectory='/dbagigainflaxdata'
+            targetDirectory=dbaGigainfluxdataPath
         logger.info("targetDirectory : "+str(targetDirectory))
 
     except Exception as e:

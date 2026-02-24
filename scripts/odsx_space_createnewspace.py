@@ -8,7 +8,7 @@ from scripts.spinner import Spinner
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeLocalCommandAndGetOutput
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -513,6 +513,7 @@ def createNewSpaceREST(managerHostConfig):
                     logger.info("Skipping space property configure.")
 
                 displaySummaryOfInputParameter()
+                rebalance()
                 createConfirm = str(userInputWrapper("Are you sure want to proceed ? (y/n) [y] :"))
                 if(len(str(createConfirm))==0):
                     createConfirm='y'
@@ -649,6 +650,11 @@ def getManagerHost(managerNodes):
 #         logger.error("Exception in odsx_space_createnewspace "+str(e))
 #         verboseHandle.printConsoleError("Exception in odsx_space_createnewspace "+str(e))
 #         handleException(e)
+
+def rebalance():
+    print("rebalancing "+str(resourceName)+" ...")
+    executeLocalCommandAndGetOutput("./scripts/gs-partition-rebalancer.sh -s "+str(resourceName)+" --execute --yes")
+
 if __name__ == '__main__':
     logger.info("Menu -> Space -> Create new space")
     #loggerTiered.info("Deploy")
@@ -678,11 +684,13 @@ if __name__ == '__main__':
                     confirmCreateGSC='y'
                     if(isMemoryAvailable):
                         createNewSpaceREST(managerHost)
+                        rebalance()
                     else:
                         logger.info("No memeory available double check.")
                         verboseHandle.printConsoleInfo("No memeory available double check.")
                 if(confirmCreateGSC=='n'):
                     createNewSpaceREST(managerHost)
+                    rebalance()
             else:
                 logger.info("Please check manager server status.")
                 verboseHandle.printConsoleInfo("Please check manager server status.")

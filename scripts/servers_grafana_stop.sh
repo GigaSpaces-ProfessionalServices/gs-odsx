@@ -1,2 +1,2 @@
-systemctl stop grafana-server.service
+sudo systemctl stop grafana-server.service
 sleep 2

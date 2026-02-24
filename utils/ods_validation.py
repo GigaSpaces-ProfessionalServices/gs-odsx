@@ -29,7 +29,7 @@ def validateClusterCsvHost(hostips):
     return True
 
 
-PORT = '8099'
+PORT = '8090'
 def port_check(HOST,PORT):
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.settimeout(1)

@@ -197,9 +197,9 @@ function installAirGapGS {
    cd
    cd /
    dir=$targetDir
-   workDir="dbagigawork"
-   logDir="dbagigalogs"
-   dataDir="dbagigadata"
+   workDir=$gigaworkPath
+   logDir=$gigalogpath
+   dataDir=$gigadatapath
    cd
    #sudo -s
    targetConfigDir="$targetDir/gs_config/"

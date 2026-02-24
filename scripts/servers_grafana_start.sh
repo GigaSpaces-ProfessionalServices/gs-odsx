@@ -1,3 +1,3 @@
-systemctl enable grafana-server.service
+sudo systemctl enable grafana-server.service
 sleep 5
-systemctl start grafana-server.service
+sudo systemctl start grafana-server.service

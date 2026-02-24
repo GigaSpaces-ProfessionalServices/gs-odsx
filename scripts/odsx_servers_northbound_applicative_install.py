@@ -215,6 +215,7 @@ def proceedForPreInstallation(nbServers, param):
         additionalParam=remotePath+' '+sourceInstallerDirectory + ' ' + sourceInstallerDirectoryTar + ' ' +sslCert +' '+sslKey+ ' '+sslCaCert
 
         logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
+        logger.info("*********** Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(hostip)+" User:"+str(nb_user))
 
         with Spinner():
             outputShFile= executeRemoteShCommandAndGetOutput(hostip, nb_user, additionalParam, commandToExecute)

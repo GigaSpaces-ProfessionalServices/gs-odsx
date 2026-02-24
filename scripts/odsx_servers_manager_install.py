@@ -19,6 +19,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShComma
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
+from utils.odsx_dih_package import parse_package_file,get_artifact_url,download_artifact
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -328,12 +329,6 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         gsLicenseFile='"\\"{}\\""'.format(gsLicenseFile)
 
         gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
-        gsLicenseFile_16_4=""
-        if gs_version_17=='true':
-            licenseConfig_16_4 = str(getYamlFilePathInsideFolder(".gs.config.license.gslicense_16_4"))
-            gsLicenseFile_16_4 = licenseConfig_16_4
-            gsLicenseFile_16_4='"\\"{}\\""'.format(gsLicenseFile_16_4)
-            verboseHandle.printConsoleInfo("gsLicenseFile_16_4 -> " + gsLicenseFile_16_4)
 
         applicativeUser = read_value_in_property_file_generic_section('User','install/gs/gsa.service','Service')
         #print("Applicative User: "+str(applicativeUser))
@@ -371,13 +366,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 break
 
         #cefLoggingJarInput = str(getYamlFilePathInsideFolder(".security.jars.cef.cefjar")).replace('[','').replace(']','')
-        cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
+        #cefLoggingJarInputTarget = str(readValuefromAppConfig("app.manager.cefLogging.jar.target")).replace('[','').replace(']','')
 
         #To Display Summary ::
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
       #  newZkJarTarget = str(readValuefromAppConfig("app.xap.newzk.jar.target")).replace('[','').replace(']','')
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
+        pkg = parse_package_file("config/dih-package.json")
+        xap_download_url = get_artifact_url(pkg, "xap")
 
         verboseHandle.printConsoleWarning("------------------------------------------------------------")
         verboseHandle.printConsoleWarning("***Summary***")
@@ -409,27 +406,20 @@ def execute_ssh_server_manager_install(hostsConfig,user):
               Fore.GREEN+"Do you want to install Unzip ? "+Fore.RESET,
               Fore.GREEN+wantToInstallUnzip+Fore.RESET)
         print(Fore.GREEN+"10. "+
-              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar source : "+Fore.RESET,
-              Fore.GREEN+str(cefLoggingJarInput).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"11. "+
-              Fore.GREEN+"CEFLogger-1.0-SNAPSHOT.jar target : "+Fore.RESET,
-              Fore.GREEN+str(cefLoggingJarInputTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"12. "+
               Fore.GREEN+"Log source file path : "+Fore.RESET,
               Fore.GREEN+str(logSourcePath).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"13. "+
+        print(Fore.GREEN+"11. "+
               Fore.GREEN+"Log target file path : "+Fore.RESET,
               Fore.GREEN+str(logTargetPath).replace('"','')+Fore.RESET)
        # print(Fore.GREEN+"14. "+
        #       Fore.GREEN+"New ZK Jar target : "+Fore.RESET,
        #       Fore.GREEN+str(newZkJarTarget).replace('"','')+Fore.RESET)
-        print(Fore.GREEN+"15. "+
+        print(Fore.GREEN+"12. "+
               Fore.GREEN+"Is SELinux Enabled : "+Fore.RESET,
               Fore.GREEN+str(selinuxEnabled)+Fore.RESET)
-        if gs_version_17=='true':
-            print(Fore.GREEN+"16. "+
-                  Fore.GREEN+"GS_LICENSE_16_4 : "+Fore.RESET,
-                  Fore.GREEN+str(gsLicenseFile_16_4)+Fore.RESET)
+        print(Fore.GREEN+"13. "+
+              Fore.GREEN+"XAP/DIH Download path : "+Fore.RESET,
+              Fore.GREEN+str(xap_download_url)+Fore.RESET)
 
         additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
 
@@ -442,9 +432,15 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
-
-            #if(len(additionalParam)==0):
             sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+            verboseHandle.printConsoleInfo("downloading XAP/DIH")
+            gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
+            if not xap_download_url:
+                raise RuntimeError("Artifact xap not found")
+
+            downloaded_path = download_artifact(xap_download_url, gs_dest_path)
+            print("downloaded_path: "+downloaded_path)
+            #if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+sourceInstallerDirectory
             #else:
             #    additionalParam='true'+' '+additionalParam+' '+hostsConfig+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip
@@ -460,7 +456,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             hostManagerLength=len(hostManager)+1
             with ThreadPoolExecutor(hostManagerLength) as executor:
                 for host in hostManager:
-                    executor.submit(installManagerServer,host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,None,selinuxEnabled,gsLicenseFile_16_4)
+                    executor.submit(installManagerServer,host,additionalParam,output,None,selinuxEnabled)
 
         elif(summaryConfirm == 'n' or summaryConfirm =='no'):
             logger.info("menudriven")
@@ -469,17 +465,14 @@ def execute_ssh_server_manager_install(hostsConfig,user):
     except Exception as e:
         handleException(e)
 
-def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggingJarInputTarget,newZkJarTarget,selinuxEnabled,gsLicenseFile_16_4):
+def installManagerServer(host,additionalParam,output,newZkJarTarget,selinuxEnabled):
     gsNicAddress = host_nic_dict_obj[host]
     logger.info("NIC address:"+gsNicAddress+" for host "+host)
     if(len(str(gsNicAddress))==0):
         gsNicAddress='x'     # put dummy param to maintain position of arguments
 
     gs_version_17 = str(readValuefromAppConfig("app.manager.gs_version_17")).lower()
-    if gs_version_17=='true':
-        additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress+' '+gs_version_17+' '+gsLicenseFile_16_4
-    else:
-        additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress+' '+gs_version_17
+    additionalParam=additionalParam+' '+selinuxEnabled+' '+gsNicAddress+' '+gs_version_17
 
     #print(additionalParam)
     with Spinner():
@@ -513,8 +506,8 @@ def installManagerServer(host,additionalParam,output,cefLoggingJarInput,cefLoggi
         #for newZkJar in newZkJars:
         #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
 
-        verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
-        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+        #verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
+        #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
         configureMetricsXML(host)
     serverHost=''
     try:
@@ -565,6 +558,19 @@ def validateRPMS():
             return False
     return True
 
+def downloadDihGSPackage():
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
+    #gs_dest_path = '/tmp/'
+    pkg = parse_package_file("config/dih-package.json")
+
+    url = get_artifact_url(pkg, "xap")
+    if not url:
+        raise RuntimeError("Artifact xap not found")
+
+    downloaded_path = download_artifact(url, gs_dest_path)
+    print("downloaded_path: "+downloaded_path)
+
 if __name__ == '__main__':
     logger.info("odsx_servers_manager_install")
     verboseHandle.printConsoleWarning('Menu -> Servers -> Manager -> Install')
@@ -574,6 +580,7 @@ if __name__ == '__main__':
     #print('Flag : ',sys.argv[0])
     args.append(sys.argv[0])
     try:
+        #downloadDihGSPackage()
         isValidRPMs = validateRPMS()
         if(isValidRPMs):
             args.append(menuDrivenFlag)

@@ -13,6 +13,7 @@ from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
 from utils.ods_scp import scp_upload
 import logging
+import glob
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -139,6 +140,48 @@ def get_gs_host_details(managerNodes):
         return gs_servers_host_dictionary_obj
     except Exception as e:
         handleException(e)
+
+
+def get_jar_files_local(path):
+    if not os.path.exists(path):
+        print(f"Invalid path: {path}")
+        return []
+
+    jar_files = glob.glob(os.path.join(path, "**", "*.jar"), recursive=True)
+    return jar_files
+
+
+def display_space_names(spaceList):
+    logger.info("config_get_space_list_with_status()")
+    verboseHandle.printConsoleWarning("Please choose an option from below :")
+    global spaceListDict
+    spaceListDict = {}
+    counter = 0
+    headers = [Fore.YELLOW+"SrNo."+Fore.RESET,
+               Fore.YELLOW+"Space Name"+Fore.RESET
+               ]
+    data=[]
+    for _spaceName in spaceList:
+        _spaceName = str(_spaceName)
+        counter = counter + 1
+        spaceListDict.update({counter: _spaceName})
+        dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                   Fore.GREEN+str(os.path.basename(_spaceName))+Fore.RESET,]
+        data.append(dataArray)
+    printTabular(None,headers,data)
+    verboseHandle.printConsoleInfo(
+        str(99) + ". ESC" " (Escape from menu.)")
+    spaceListNo = str(userInputWrapper("Please select space from given list :"+Fore.RESET))
+    if (spaceListNo.isdigit() == False):
+        verboseHandle.printConsoleWarning("Invalid Input")
+        return 0
+    if (int(spaceListNo) ==99):
+        return 0
+    if spaceListDict.get(int(spaceListNo)) == None:
+        return 0
+    else:
+        return spaceListDict[int(spaceListNo)]
+
 
 def displaySpaceHostWithNumber(managerNodes, spaceNodes):
     try:
@@ -528,8 +571,8 @@ def proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC):
     logger.info("proceedForTieredStorageDeployment()")
     try:
         print("\n")
+        # pathOfSourcePUValue =  str(getYamlFilePathInsideFolder(".gs.jars.space.spacejar"))
         global pathOfSourcePU
-        pathOfSourcePUValue =  str(getYamlFilePathInsideFolder(".gs.jars.space.spacejar"))
         pathOfSourcePU = str(userInputWrapper(Fore.YELLOW+"Name of resource will be deploy ["+str(pathOfSourcePUValue)+"] : "+Fore.RESET))
         while(len(str(pathOfSourcePU))==0):
             pathOfSourcePU = pathOfSourcePUValue
@@ -652,40 +695,45 @@ if __name__ == '__main__':
     #loggerTiered.info("Deploy")
     verboseHandle.printConsoleWarning("Menu -> Space -> Create space with jar")
     try:
-        managerNodes = config_get_manager_node()
-        logger.info("managerNodes: main"+str(managerNodes))
-        global isMemoryAvailable
-        isMemoryAvailable = False
-        if(len(str(managerNodes))>0):
-            spaceNodes = config_get_space_hosts()
-            logger.info("spaceNodes: main"+str(spaceNodes))
-            managerHost = getManagerHost(managerNodes)
-            logger.info("managerHost : main"+str(managerHost))
-            if(len(str(managerHost))>0):
-                managerHostConfig = managerHost
-                logger.info("managerHostConfig : "+str(managerHost))
-                listSpacesOnServer(managerNodes)
-                space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
-                global confirmCreateGSC
-                confirmCreateGSC = str(userInputWrapper("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
-                logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
-                logger.info("confirmCreateGSC : "+str(confirmCreateGSC))
-                if(confirmCreateGSC=='y' or len(str(confirmCreateGSC)) == 0):
-                    isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHostConfig)
-                    confirmCreateGSC='y'
-                    if(isMemoryAvailable):
+        global pathOfSourcePUValue
+        get_spacejar_list = get_jar_files_local(readValuefromAppConfig("app.spacejar.folderpath"))
+        pathOfSourcePUValue = display_space_names(get_spacejar_list)
+        if (".jar" in str(pathOfSourcePUValue)) or (int(pathOfSourcePUValue) != 0):
+            verboseHandle.printConsoleWarning(str(pathOfSourcePUValue))
+            managerNodes = config_get_manager_node()
+            logger.info("managerNodes: main"+str(managerNodes))
+            global isMemoryAvailable
+            isMemoryAvailable = False
+            if(len(str(managerNodes))>0):
+                spaceNodes = config_get_space_hosts()
+                logger.info("spaceNodes: main"+str(spaceNodes))
+                managerHost = getManagerHost(managerNodes)
+                logger.info("managerHost : main"+str(managerHost))
+                if(len(str(managerHost))>0):
+                    managerHostConfig = managerHost
+                    logger.info("managerHostConfig : "+str(managerHost))
+                    listSpacesOnServer(managerNodes)
+                    space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
+                    global confirmCreateGSC
+                    confirmCreateGSC = str(userInputWrapper("Do you want to create GSC ? (y/n) [y] :"+Fore.RESET))
+                    logger.info("isMemoryAvailable : "+str(isMemoryAvailable))
+                    logger.info("confirmCreateGSC : "+str(confirmCreateGSC))
+                    if(confirmCreateGSC=='y' or len(str(confirmCreateGSC)) == 0):
+                        isMemoryAvailable = createGSCInputParam(managerNodes,spaceNodes,managerHostConfig)
+                        confirmCreateGSC='y'
+                        if(isMemoryAvailable):
+                            proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
+                        else:
+                            logger.info("No memeory available double check.")
+                            verboseHandle.printConsoleInfo("No memeory available double check.")
+                    if(confirmCreateGSC=='n'):
                         proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
-                    else:
-                        logger.info("No memeory available double check.")
-                        verboseHandle.printConsoleInfo("No memeory available double check.")
-                if(confirmCreateGSC=='n'):
-                    proceedForTieredStorageDeployment(managerHostConfig,confirmCreateGSC)
+                else:
+                    logger.info("Please check manager server status.")
+                    verboseHandle.printConsoleInfo("Please check manager server status.")
             else:
-                logger.info("Please check manager server status.")
-                verboseHandle.printConsoleInfo("Please check manager server status.")
-        else:
-            logger.info("No Manager configuration found please check.")
-            verboseHandle.printConsoleInfo("No Manager configuration found please check.")
+                logger.info("No Manager configuration found please check.")
+                verboseHandle.printConsoleInfo("No Manager configuration found please check.")
 
     except Exception as e:
         logger.error("Exception in odsx_space_createspace_jar.py "+str(e))

@@ -129,41 +129,44 @@ def checkActiveStatus(server,host_nic_dict_obj,user):
         logger.info(" Host :"+str(os.getenv(server.ip))+" is not reachable")
 
 def printListOfSpace(server,data,host_gsc_dict_obj):
-    host = os.getenv(server.ip)
-    logger.info("server.ip : "+str(server.ip))
-    installStatus='No'
-    install = isInstalledAndGetVersion(os.getenv(str(server.ip)))
-    logger.info("install : "+str(install))
-    if(len(str(install))>8):
-        installStatus='Yes'
-    if (port_check_config(host,22)):
-        status = getStatusOfSpaceHost(str(host))
-        logger.info("status : "+str(status))
-        logger.info("Host:"+str(host))
-        #adding split to get just hostname and not fully qualified name
-        isAwsEnv = readValuefromAppConfig("app.isaws.env")
-        gsc=''
-        if isAwsEnv == 'True':
-            gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+    try:
+        host = os.getenv(server.ip)
+        logger.info("server.ip : "+str(server.ip))
+        installStatus='No'
+        install = isInstalledAndGetVersion(os.getenv(str(server.ip)))
+        logger.info("install : "+str(install))
+        if(len(str(install))>8):
+            installStatus='Yes'
+        if (port_check_config(host,22)):
+            status = getStatusOfSpaceHost(str(host))
+            logger.info("status : "+str(status))
+            logger.info("Host:"+str(host))
+            #adding split to get just hostname and not fully qualified name
+            isAwsEnv = readValuefromAppConfig("app.isaws.env")
+            gsc=''
+            if isAwsEnv == 'True':
+                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
+            else:
+                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
+            #gsc = host_gsc_dict_obj.get(str(host))
+            logger.info("GSC : "+str(gsc))
         else:
-            gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
-        #gsc = host_gsc_dict_obj.get(str(host))
-        logger.info("GSC : "+str(gsc))
-    else:
-        status="NOT REACHABLE"
-        gsc = host_gsc_dict_obj.get(str(host))
-        logger.info(" Host :"+str(server.ip)+" is not reachable")
-    #version = getVersion(server.ip)
-    influx = validateMetricsXmlInflux(host)
-    grafana = validateMetricsXmlGrafana(host)
-    dataArray=[Fore.GREEN+host+Fore.RESET,
-               Fore.GREEN+str(gsc)+Fore.RESET,
-               Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
-               Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
-               Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET]
-               # Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
-               # Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
-    data.append(dataArray)
+            status="NOT REACHABLE"
+            gsc = host_gsc_dict_obj.get(str(host))
+            logger.info(" Host :"+str(server.ip)+" is not reachable")
+        #version = getVersion(server.ip)
+        influx = validateMetricsXmlInflux(host)
+        grafana = validateMetricsXmlGrafana(host)
+        dataArray=[Fore.GREEN+host+Fore.RESET,
+                   Fore.GREEN+str(gsc)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
+                   Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET]
+                   # Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
+                   # Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
+        data.append(dataArray)
+    except Exception as e:
+        logger.error("Error :"+str(e))
 
 
 def listSpaceServer():

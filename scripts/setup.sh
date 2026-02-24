@@ -22,6 +22,7 @@ gigashare=$(read_property "app.gigashare.path")
 gigawork=$(read_property "app.gigawork.path")
 gigalog=$(read_property "app.gigalog.path")
 gigapath=$(read_property "app.giga.path")
+gigadatapath=$(read_property "app.gigadata.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
 
 # Determine OS platform
@@ -54,20 +55,24 @@ if [[ $DISTRO == *"Ubuntu"* ]]; then
     sudo apt install daemon python3 -y
     sudo apt -y install wget
     sudo apt -y install unzip
-    sudo apt install openjdk-8-jdk-headless
+    sudo apt install -y openjdk-17-jdk
 elif [[ $DISTRO == *"Red Hat"* && $DISTRO == *"7"* ]]; then
     sudo yum update -y
-    sudo yum install -y python36 python36-pip
+    sudo yum install -y nfs-utils
+    sudo yum install -y python3.9
+    sudo yum install -y python3-pip
     sudo yum -y install wget
     sudo yum -y install unzip
-    sudo yum -y install java-1.8.0-openjdk
+    sudo yum -y install java-17-openjdk-devel -y
     sudo yum install -y nc
 else
     sudo yum update -y
-    sudo yum install -y python3
+    sudo yum install -y nfs-utils
+    sudo yum install -y python3.9
+    sudo yum install -y python3-pip
     sudo yum -y install wget
     sudo yum -y install unzip
-    sudo yum -y install java-1.8.0-openjdk
+    sudo yum -y install java-17-openjdk-devel -y
 fi
 
 #Remove the earlier entries from files to avoid duplicate entries
@@ -111,7 +116,25 @@ cd
 mkdir -p $gigawork/sqlite
 cd $gigawork/sqlite
 mkdir $gigalog/
+mkdir $gigashare
+mkdir $gigawork
+mkdir $gigapath
+mkdir $gigadatapath
+mkdir $gigainfluxpath
 touch $gigalog/odsx.log
+
+sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0ec717f72429b6399.efs.us-east-2.amazonaws.com:/ /testgigashare/
+df -h
+
+useradd gsods
+chown gsods:gsods /dbagiga
+chown gsods:gsods /dbagigadata
+chown gsods:gsods /dbagigalogs
+chown gsods:gsods /dbagigawork
+chown gsods:gsods /dbagigashare
+chown gsods:gsods /dbagigainfluxdata
+chown -R gsods:gsods /dbagigashare/*
+chown -R gsods:gsods /dbagiga/*
 
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigapath/gs-odsx/config/logging.conf
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/scripts/start_gsc.sh

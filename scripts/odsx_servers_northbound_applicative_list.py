@@ -10,6 +10,8 @@ from utils.ods_cluster_config import config_get_nb_list
 from colorama import Fore
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -54,7 +56,9 @@ def getVersion(ip):
     logger.info("getVersion () "+str(ip))
     output=''
     dbaGigaPath=readValuefromAppConfig("app.giga.path")
-cmdToExecute = "cd "+ dbaGigaPath+"/"+getNBFolderName()+"/;./install_nb_infra.sh -v;"
+    logger.info("dbaGigaPath -> " + str(dbaGigaPath))
+    logger.info("dbaGigaPath -> " + str(getNBFolderName()))
+    cmdToExecute = "cd "+ dbaGigaPath+"/"+getNBFolderName()+"/;./install_nb_infra.sh -v;"
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(ip, 'root', cmdToExecute)
     logger.info(cmdToExecute+" :"+str(output))

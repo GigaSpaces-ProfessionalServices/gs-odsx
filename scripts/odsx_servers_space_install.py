@@ -509,7 +509,7 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
             #for newZkJar in newZkJars:
             #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
             verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
-            executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+            # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
             #UPLOAD DB2FEEDER JAR
             #if(confirmDb2FeederJar=='y'):
             #print("source :"+db2jccJarInput)

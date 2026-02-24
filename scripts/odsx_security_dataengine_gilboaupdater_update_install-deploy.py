@@ -19,6 +19,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
+from scripts.odsx_security_servers_space_list import getStatusOfSpaceHost
 from utils.odsx_db2feeder_utilities import getPortNotExistInGilboaFeeder, getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -129,7 +130,7 @@ def getHighestAvailableMemoryManagerHost(managerNodes):
         logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
         ManagerActiveHostList = []
         for node in managerNodes:
-            status = getSpaceServerStatus(os.getenv(node.ip))
+            status = getStatusOfSpaceHost(str(node.ip))
             if(status=="ON"):
                 ManagerActiveHostList.append(os.getenv(node.ip))
 

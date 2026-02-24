@@ -85,8 +85,11 @@ def getManagementHostList():
 def getAgentHostList():
     logger.info("getAgentHostList()")
     nodeList = config_get_nb_list()
+    logger.info("nodeList->" + str(nodeList))
     nodes=""
     for node in nodeList:
+        logger.info("node.ip->" + str(node.ip) +" = "+str(os.getenv(node.ip)))
+        logger.info("node->" + str(node))
         if(str(node.role).casefold().__contains__('agent')):
             if(len(nodes)==0):
                 nodes = os.getenv(node.ip)
