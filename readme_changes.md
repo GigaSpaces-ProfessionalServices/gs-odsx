@@ -435,3 +435,4 @@
 
 - Make sure before creating each server below env variable is set properly in .bashrc
   export ENV_CONFIG=/gigashare/env_config   (appropriate base folder path where app.config is located)
+- For rebalancing space, script assumes that pivot has /giga/GS_HOME/bin/gs.sh
