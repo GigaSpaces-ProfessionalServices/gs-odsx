@@ -4,16 +4,48 @@
   "artifacts": [
     {
       "id": "xap",
-      "url": "https://gs-releases-us-east-1.s3.amazonaws.com/smart-cache/17.1.5/master/92/gigaspaces-smart-cache-enterprise-17.1.5.zip"
+      "url": "https://gs-releases-us-east-1.s3.amazonaws.com/smart-cache/17.1.5/master/92/gigaspaces-smart-cache-enterprise-17.1.5.zip",
+      "action": "download"
+    },
+    {
+      "id": "kafka",
+      "url": "https://archive.apache.org/dist/kafka/4.0.0/kafka_2.13-4.0.0.tgz",
+      "action": "download"
+    },
+    {
+      "id": "zookeeper",
+      "url": "https://archive.apache.org/dist/zookeeper/zookeeper-3.8.1/apache-zookeeper-3.8.1-bin.tar.gz",
+      "action": "download"
+    },
+    {
+      "id": "di-mdm",
+      "url": "s3://giga-di/di-releases/17.1.5/di-mdm-3.6.2-264.tar.gz",
+      "action": "download"
+    },
+    {
+      "id": "di-processor",
+      "url": "s3://giga-di/di-releases/17.1.5/di-processor-5.6.1.tgz",
+      "action": "download"
+    },
+    {
+      "id": "di-transformations",
+      "url": "s3://giga-di/di-releases/17.1.5/di-transformations-2.2.1.tgz",
+      "action": "download"
     },
     {
       "id": "di-flink",
-      "url": "https://repo.example.com/linux/v2.1.0/service.tar.gz",
-      "action" : "run"
+      "url": "s3://giga-di/di-releases/17.1.5/flink-install/flink-2.2.0-bin-scala_2.12.tgz",
+      "action": "download"
+    },
+    {
+      "id": "di-manager",
+      "url": "s3://giga-di/di-releases/17.1.5/di-manager-4.6.7-381.tar.gz",
+      "action": "download"
     },
     {
       "id": "di-subscription-manager",
-      "url": "https://repo.example.com/linux/v2.1.0/service.tar.gz"
+      "url": "s3://giga-di/di-releases/17.1.5/di-subscription-manager-2.3.20.tgz",
+      "action": "download"
     }
   ]
 }

@@ -1,6 +1,8 @@
 [Unit]
-Description="Kafka Service"
-Requires=odsxzookeeper.service
+Description=Kafka Service (KRaft)
+
+Wants=network-online.target
+After=network-online.target
 
 [Service]
 Type=simple
@@ -8,6 +10,8 @@ User=gsods
 Group=gsods
 ExecStart=/bin/bash /usr/local/bin/start_kafka.sh
 ExecStop=/bin/bash /usr/local/bin/stop_kafka.sh
+Restart=on-failure
+RestartSec=5
 
 [Install]
 WantedBy=multi-user.target

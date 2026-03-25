@@ -428,3 +428,10 @@
 137. Removed "/" from the end of the swagger rest API call e.g. from /v2/pus/ to /v2/pus
 ### TAU v5.2-tau-release tag
 138. Code fixed for Oracle ERP table name changes
+
+### Unreleased Tag changes
+- Update gs-odsx/config/dih-package.json file with package, url accordingly.
+- If you are using s3 links in dih-package.json then add proper credentials of aws in ~/.aws/
+
+- Make sure before creating each server below env variable is set properly in .bashrc
+  export ENV_CONFIG=/gigashare/env_config   (appropriate base folder path where app.config is located)

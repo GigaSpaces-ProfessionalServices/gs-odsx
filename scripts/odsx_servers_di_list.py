@@ -377,6 +377,15 @@ def listDIServers():
     zkInstallStatus2 = 'NO'
     zkInstallStatus3 = 'NO'
 
+    IIDRSubscriptionMangerInstallStatus=""
+    IIDRAccessServerInstallStatus=""
+    IIDRKafkaAgentInstallStatus=""
+    IIDROracleAgentInstallStatus=""
+    IIDRSubscriptionMangerStatus=""
+    IIDRAccessServerStatus=""
+    IIDRKafkaAgentStatus=""
+    IIDROracleDBAgentStatus=""
+
     for node in dIServers:
         host_dict_obj.add(str(counter),str(os.getenv(node.ip)))
         output = getConsolidatedStatus(node)

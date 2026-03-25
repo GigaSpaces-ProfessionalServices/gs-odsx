@@ -12,15 +12,27 @@ from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFo
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_manager_node, \
     config_get_dataIntegrationiidr_nodes
-from utils.ods_manager import getManagerInfo
+from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
+from utils.odsx_dih_package import parse_package_file, process_artifact_by_id
+
+# Maps artifact id -> subfolder under $ODSXARTIFACTS where the file should be downloaded
+_ARTIFACT_DEST = {
+    "kafka":                    "kafka",
+    "zookeeper":                "zk",
+    "di-flink":                 "data-integration/di-flink",
+    "di-mdm":                   "data-integration/di-mdm",
+    "di-manager":               "data-integration/di-manager",
+    "di-processor":             "data-integration/di-processor",
+    "di-transformations":       "data-integration/di-transformations",
+    "di-subscription-manager": "data-integration/di-subscription-manager",
+}
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 clusterHosts = []
-
 
 class bcolors:
     OK = '\033[92m'  # GREEN
@@ -103,6 +115,8 @@ def installCluster():
     global iidrHost
     global iidrUser
     global iidrPass
+    global spaceLookupGroups
+    global spaceLookupLocators
 
     kafkaBrokerHost1 = str(os.getenv("di1"))
     logger.info("kafkaBrokerHost1 : " + str(kafkaBrokerHost1))
@@ -165,30 +179,12 @@ def installCluster():
     srNo=srNo+1
     print(Fore.GREEN + str(srNo)+". Want to install Java : "+wantJava+"" + Fore.RESET)
     logger.info(" wantJava: " + str(wantJava))
-    srNo=srNo+1
-    sourcePath= sourceInstallerDirectory+"/kafka/"
-    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.tgz')]
-    verboseHandle.printConsoleInfo(str(srNo)+". kafka installer : "+str(packageName))
-    srNo=srNo+1
-    sourcePath= sourceInstallerDirectory+"/zk/"
-    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.gz')]
-    verboseHandle.printConsoleInfo(str(srNo)+". Zookeeper installer : "+str(packageName))
-    srNo=srNo+1
-    sourcePath= sourceInstallerDirectory+"/telegraf/"
-    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.rpm')]
-    verboseHandle.printConsoleInfo(str(srNo)+". Telegraf installer : "+str(packageName))
-    srNo=srNo+1
-    sourcePath= sourceInstallerDirectory+"/data-integration/di-manager/"
-    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.gz')]
-    verboseHandle.printConsoleInfo(str(srNo)+". DI-Manager (DIM) installer : "+str(packageName))
-    srNo=srNo+1
-    sourcePath= sourceInstallerDirectory+"/data-integration/di-mdm/"
-    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.gz')]
-    verboseHandle.printConsoleInfo(str(srNo)+". DI-Metadata Manager (MDM) installer : "+str(packageName))
-    srNo=srNo+1
-    sourcePath= sourceInstallerDirectory+"/data-integration/di-flink/"
-    packageName = [f for f in os.listdir(sourcePath) if f.endswith('.tgz')]
-    verboseHandle.printConsoleInfo(str(srNo)+". DI-Flink installer >>: "+str(packageName))
+    pkg = parse_package_file("config/dih-package.json")
+    for artifact in pkg.artifacts:
+        if artifact.id == "xap":
+            continue
+        srNo = srNo + 1
+        verboseHandle.printConsoleInfo(str(srNo) + ". " + artifact.id + " (" + artifact.action + ") : " + artifact.url)
     srNo=srNo+1
     flinkTaskManagerMemoryProcessSize = str(readValuefromAppConfig("app.di.flink.taskmanager.memory.process.size"))
     verboseHandle.printConsoleInfo(str(srNo)+". DI-Flink taskmanager.memory.process.size : "+str(flinkTaskManagerMemoryProcessSize))
@@ -199,6 +195,10 @@ def installCluster():
     dimMdmFlinkInstallon1bFlag = str(readValuefromAppConfig("app.di.flink.dim.mdm.install1b.confirm"))
     verboseHandle.printConsoleInfo(str(srNo)+". Install Flink/DIM/MDM on kafka broker 1b : "+ str(dimMdmFlinkInstallon1bFlag))
     srNo=srNo+1
+    #sourcePath= sourceInstallerDirectory+"/telegraf/"
+    #packageName = [f for f in os.listdir(sourcePath) if f.endswith('.rpm')]
+    #verboseHandle.printConsoleInfo(str(srNo)+". Telegraf installer : "+str(packageName))
+    #srNo=srNo+1
 
     zkClientPort = str(readValuefromAppConfig("app.di.base.zk.clientPort"))
     zkDataDir = str(readValuefromAppConfig("app.di.base.zk.data"))
@@ -217,6 +217,12 @@ def installCluster():
 
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
+    managerHost = getManagerHost()
+    managerInfo = getManagerInfo()
+    spaceLookupGroups = str(managerInfo['lookupGroups'])
+    spaceLookupLocators = str(managerHost) + ":4174"
+    print("spaceLookupGroups : "+str(spaceLookupGroups))
+    print("spaceLookupLocators : "+str(spaceLookupLocators))
     nodeiidrList = config_get_dataIntegrationiidr_nodes()
     for nodes in nodeiidrList:
         iidrHost=os.getenv(nodes.ip)
@@ -226,6 +232,7 @@ def installCluster():
     if (len(str(confirmInstall)) == 0):
         confirmInstall = 'y'
     if (confirmInstall == 'y'):
+       # _downloadDIArtifacts(pkg) #commenting temporarily
         counter = 1
         diserver1=""
         di_all_servers=""
@@ -262,11 +269,27 @@ def installCluster():
             commandToExecute = "scripts/servers_di_post_install.sh "+additionalParam
             os.system(commandToExecute)
 
+def _downloadDIArtifacts(pkg):
+    logger.info("_downloadDIArtifacts()")
+    for artifact in pkg.artifacts:
+        if artifact.id == "xap" or artifact.action != "download":
+            continue
+        dest_subpath = _ARTIFACT_DEST.get(artifact.id)
+        if not dest_subpath:
+            logger.warning("No destination mapping for artifact '" + artifact.id + "', skipping download")
+            continue
+        dest_dir = os.path.join(sourceInstallerDirectory, dest_subpath)
+        verboseHandle.printConsoleInfo("Downloading " + artifact.id + " to " + dest_dir + " ...")
+        with Spinner():
+            process_artifact_by_id(pkg, artifact.id, dest_dir)
+        verboseHandle.printConsoleInfo("Downloaded " + artifact.id)
+
+
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :" + str(host))
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
     userCMD = os.getlogin()
-    if userCMD == 'ec2-user':
+    if userCMD == 'ec2-user' or userCMD=='rocky' or userCMD=='ubuntu':
         cmd = 'sudo cp install/zookeeper/odsxzookeeper.service install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/zk/"
         cmd2= 'sudo cp install/kafka/odsxkafka.service '+sourceInstallerDirectory+"/kafka/"
     else:
@@ -280,6 +303,7 @@ def buildTarFileToLocalMachine(host):
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : " + str(status))
+        print("Creating tar file status : " + str(status))
 
 
 def buildUploadInstallTarToServer(host):
@@ -303,10 +327,10 @@ def executeCommandForInstall(host, type, count,nodeListSize):
         #    additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag + ' ' +zkClientPort+ ' ' + zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' '+ iidrHost + ' '+ iidrUser + ' '+ iidrPass
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag + ' ' +zkClientPort+ ' ' + zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' '+ iidrHost + ' '+ iidrUser + ' '+ iidrPass + ' ' + spaceLookupGroups + ' ' + spaceLookupLocators
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' +zkClientPort+ ' ' +zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' ' + iidrHost+ ' '+ iidrUser + ' '+ iidrPass
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' +zkClientPort+ ' ' +zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' ' + iidrHost+ ' '+ iidrUser + ' '+ iidrPass + ' ' + spaceLookupGroups + ' ' + spaceLookupLocators
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)
@@ -350,9 +374,9 @@ def validateRPM():
     logger.info("ZookeeperZip found :" + str(zkZip))
     cmd = 'find '+sourceInstallerDirectory+'/kafka/ -name *.jar -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     jolokiaJar = executeLocalCommandAndGetOutput(cmd)
-    cmd = 'find '+sourceInstallerDirectory+'/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-    telegrafRpm = executeLocalCommandAndGetOutput(cmd)
-    logger.info("telegrafRpm found :" + str(telegrafRpm))
+    #cmd = 'find '+sourceInstallerDirectory+'/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
+    #telegrafRpm = executeLocalCommandAndGetOutput(cmd)
+    #logger.info("telegrafRpm found :" + str(telegrafRpm))
 
     di_installer_dict = obj_type_dictionary()
     di_installer_dict.add('Java', javaRpm)
@@ -360,7 +384,7 @@ def validateRPM():
     di_installer_dict.add('zkZip', zkZip)
     di_installer_dict.add('jolokiaJar', jolokiaJar)
     #di_installer_dict.add('CR8-LocalSetupZip', localSetupZip)
-    di_installer_dict.add('Telegraf', telegrafRpm)
+    #di_installer_dict.add('Telegraf', telegrafRpm)
 
     for name, installer in di_installer_dict.items():
         if (len(str(installer)) == 0):

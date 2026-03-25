@@ -19,7 +19,7 @@ from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShComma
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
-from utils.odsx_dih_package import parse_package_file,get_artifact_url,download_artifact
+from utils.odsx_dih_package import parse_package_file,get_artifact_url,download_artifact, process_artifact_by_id
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -433,13 +433,13 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
             sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-            verboseHandle.printConsoleInfo("downloading XAP/DIH")
+            verboseHandle.printConsoleInfo("Downloading XAP/DIH ...")
             gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
             if not xap_download_url:
                 raise RuntimeError("Artifact xap not found")
 
             downloaded_path = download_artifact(xap_download_url, gs_dest_path)
-            print("downloaded_path: "+downloaded_path)
+            print("Downloaded at path: "+downloaded_path)
             #if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+sourceInstallerDirectory
             #else:
@@ -561,15 +561,10 @@ def validateRPMS():
 def downloadDihGSPackage():
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
-    #gs_dest_path = '/tmp/'
     pkg = parse_package_file("config/dih-package.json")
+    downloaded_path = process_artifact_by_id(pkg, "xap", gs_dest_path)
+    print("downloaded_path: " + downloaded_path)
 
-    url = get_artifact_url(pkg, "xap")
-    if not url:
-        raise RuntimeError("Artifact xap not found")
-
-    downloaded_path = download_artifact(url, gs_dest_path)
-    print("downloaded_path: "+downloaded_path)
 
 if __name__ == '__main__':
     logger.info("odsx_servers_manager_install")

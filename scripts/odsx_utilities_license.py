@@ -76,15 +76,18 @@ def configureLicenseManagerAndSpace():
     if confirm=='y' or confirm=='':
         #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  /dbagiga/gigaspaces-smart-ods/bin/setenv-overrides.sh"
 
-        commandToExecute = "cp "+sourceGSLicense+" "+targetGSLicense
+        commandToExecute = "sudo cp "+sourceGSLicense+" "+targetGSLicense
+        commandToFixOwner = "sudo chown gsods:gsods "+targetGSLicense
         logger.info("commandToExecute:"+commandToExecute)
 
         for host in managerHosts.split(','):
             outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+            outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToFixOwner)
             verboseHandle.printConsoleInfo("License configured for host:"+host)
 
         for host in spaceHosts.split(','):
             outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+            outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToFixOwner)
             verboseHandle.printConsoleInfo("License configured for host:"+host)
 
 if __name__ == '__main__':

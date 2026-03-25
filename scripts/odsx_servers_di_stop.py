@@ -54,7 +54,6 @@ def getDIServerHostList():
     nodeList = config_get_dataIntegration_nodes()
     nodes=""
     for node in nodeList:
-        #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
             nodes = os.getenv(node.ip)
         else:
@@ -64,54 +63,53 @@ def getDIServerHostList():
 
 def stopZookeeperServiceByHost(host):
     logger.info("stopZookeeperServiceByHost()")
-    cmd = "systemctl stop odsxzookeeper.service; sleep 5;"
-    logger.info("Getting status.. :"+str(cmd))
+    cmd = "sudo systemctl stop odsxzookeeper.service"
+    logger.info("Stopping odsxzookeeper on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
             verboseHandle.printConsoleInfo("Service zookeeper stopped successfully on node "+str(host))
         else:
-            verboseHandle.printConsoleError("Service zookeeper failed to stop.")
-    pass
+            verboseHandle.printConsoleError("Service zookeeper failed to stop on "+str(host))
 
 def stopKafkaServiceByHost(host):
     logger.info("stopKafkaServiceByHost()")
-    cmd = "systemctl stop odsxkafka.service; sleep 5;"
-    logger.info("Getting status.. :"+str(cmd))
+    cmd = "sudo systemctl stop odsxkafka.service"
+    logger.info("Stopping odsxkafka on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
             verboseHandle.printConsoleInfo("Service kafka stopped successfully on node "+str(host))
         else:
-            verboseHandle.printConsoleError("Service kafka failed to stop.")
-    pass
+            verboseHandle.printConsoleError("Service kafka failed to stop on "+str(host))
 
 
 def stopTelegrafServiceByHost(host):
     logger.info("stopTelegrafServiceByHost()")
-    cmd = "systemctl stop telegraf"
-    logger.info("Getting status.. telegraf :"+str(cmd))
+    cmd = "sudo systemctl stop telegraf"
+    logger.info("Stopping telegraf on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
             verboseHandle.printConsoleInfo("Service telegraf stopped successfully on "+str(host))
         else:
-            verboseHandle.printConsoleError("Service telegraf failed to stop"+str(host))
+            verboseHandle.printConsoleError("Service telegraf failed to stop on "+str(host))
 
 def stopDIMServices(host):
-    logger.info("stopTelegrafServiceByHost()")
-    cmd = "systemctl stop di-manager;sleep 3;systemctl stop di-mdm;sleep 3;systemctl stop di-flink-taskmanager.service;systemctl stop di-flink-jobmanager.service"
-    logger.info("Getting status.. di :"+str(cmd))
+    logger.info("stopDIMServices()")
+    # Stop order: di-transformations first, then di-manager, then di-mdm, then flink
+    cmd = "sudo systemctl stop di-transformations.service;sleep 3;sudo systemctl stop di-manager.service;sleep 3;sudo systemctl stop di-mdm.service;sleep 3;sudo systemctl stop di-flink-taskmanager.service;sudo systemctl stop di-flink-jobmanager.service"
+    logger.info("Stopping DIM services on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
-            verboseHandle.printConsoleInfo("Services di-manager/di-mdm/di-flink stopped successfully on "+str(host))
+            verboseHandle.printConsoleInfo("Services di-transformations/di-manager/di-mdm/di-flink stopped successfully on "+str(host))
         else:
-            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink failed to stop or service not installed on "+str(host))
+            verboseHandle.printConsoleError("Services di-transformations/di-manager/di-mdm/di-flink failed to stop or not installed on "+str(host))
 
 def stopKafkaService(args):
     logger.info("stopKafkaService()")
@@ -123,23 +121,28 @@ def stopKafkaService(args):
                 choice='y'
             if choice =='y':
                 host_type_dict_obj = getDIhostTypeDict()
-                nodeType = host_type_dict_obj.get(str(host_dict_obj.get(hostNumber)))
-                if nodeType != "kafka Broker 1b" and nodeListSize==4:
-                    stopZookeeperServiceByHost(str(host_dict_obj.get(hostNumber)))
-                elif nodeListSize<4:
-                    stopZookeeperServiceByHost(str(host_dict_obj.get(hostNumber)))
+                host = str(host_dict_obj.get(hostNumber))
+                nodeType = host_type_dict_obj.get(host)
+                # Stop order: DIM services first, then Kafka, then ZooKeeper
+                if nodeType == "kafka Broker 1a" or nodeListSize < 4:
+                    stopDIMServices(host)
                 if nodeType != "Zookeeper Witness":
-                    stopKafkaServiceByHost(str(host_dict_obj.get(hostNumber)))
+                    stopKafkaServiceByHost(host)
+                if nodeType != "kafka Broker 1b" and nodeListSize==4:
+                    stopZookeeperServiceByHost(host)
                 elif nodeListSize<4:
-                    stopKafkaService(str(host_dict_obj.get(hostNumber)))
-                stopTelegrafServiceByHost(str(host_dict_obj.get(hostNumber)))
-                stopDIMServices(str(host_dict_obj.get(hostNumber)))
+                    stopZookeeperServiceByHost(host)
+                #stopTelegrafServiceByHost(host)
             else:
                 exit(0)
         if choiceOption == "":
             choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop kafka service on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
             if choice.casefold() == 'n':
                 exit(0)
+            # Stop order: DIM first (only on node 1 / kafka Broker 1a), then Kafka, then ZooKeeper
+            for node in config_get_dataIntegration_nodes():
+                if node.type == "kafka Broker 1a" or nodeListSize < 4:
+                    stopDIMServices(os.getenv(node.ip))
             for node in config_get_dataIntegration_nodes():
                 if node.type != "Zookeeper Witness" and nodeListSize==4:
                     stopKafkaServiceByHost(os.getenv(node.ip))
@@ -150,9 +153,8 @@ def stopKafkaService(args):
                     stopZookeeperServiceByHost(os.getenv(node.ip))
                 elif nodeListSize<4:
                     stopZookeeperServiceByHost(os.getenv(node.ip))
-            for node in config_get_dataIntegration_nodes():
-                stopTelegrafServiceByHost(os.getenv(node.ip))
-                stopDIMServices(os.getenv(node.ip))
+            #for node in config_get_dataIntegration_nodes():
+                #stopTelegrafServiceByHost(os.getenv(node.ip))
 
     except Exception as e:
         handleException(e)
@@ -172,4 +174,3 @@ if __name__ == '__main__':
     if choiceOption == "99":
         exit(0)
     stopKafkaService(args)
-

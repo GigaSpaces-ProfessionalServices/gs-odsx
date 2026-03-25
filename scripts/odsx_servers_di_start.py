@@ -8,6 +8,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
+from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
@@ -61,7 +62,6 @@ def getDIServerHostList():
     nodeList = config_get_dataIntegration_nodes()
     nodes=""
     for node in nodeList:
-        #if(str(node.role).casefold() == 'server'):
         if(len(nodes)==0):
             nodes = os.getenv(node.ip)
         else:
@@ -72,30 +72,41 @@ def getDIhostTypeDict():
     global host_type_dict_obj
     host_type_dict_obj = obj_type_dictionary()
     nodeList = config_get_dataIntegration_nodes()
-    nodes=""
     for node in nodeList:
-        #if(str(node.role).casefold() == 'server'):
-        host_type_dict_obj.add(os.getenv(node.ip),node.type)
-
+        host_type_dict_obj.add(os.getenv(node.ip), node.type)
     return host_type_dict_obj
 
 def startZookeeperServiceByHost(host):
-        cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxzookeeper.service"
-        logger.info("Getting status.. odsxzookeeper:"+str(cmd))
-        user = 'root'
-        with Spinner():
-            output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
-            if (output == 0):
-                verboseHandle.printConsoleInfo("Service zookeeper started successfully on "+str(host))
-            else:
-                verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(host))
+    logger.info("startZookeeperServiceByHost()")
+    cmd = "sudo systemctl start odsxzookeeper.service"
+    logger.info("Starting odsxzookeeper on "+str(host)+": "+str(cmd))
+    user = 'root'
+    with Spinner():
+        output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
+        if (output == 0):
+            verboseHandle.printConsoleInfo("Service zookeeper started successfully on "+str(host))
+        else:
+            verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(host))
 
 
 def startKafkaServiceByHost(host):
     logger.info("startKafkaServiceByHost()")
-    cmd = "rm -rf /var/log/kafka/*;sleep 5; systemctl start odsxkafka.service;systemctl start di-flink-taskmanager.service;systemctl start di-flink-jobmanager.service"
-    logger.info("Getting status.. odsxkafka :"+str(cmd))
     user = 'root'
+    # KRaft: format storage if not already done (meta.properties absent = not formatted)
+    gigapath = str(readValuefromAppConfig("app.giga.path")).rstrip('/')
+    gigasharepath = str(readValuefromAppConfig("app.gigashare.path")).rstrip('/')
+    kafka_data = str(readValuefromAppConfig("app.di.base.kafka.data")).rstrip('/')
+    kafka_bin = gigapath + "/kafka_latest/bin/kafka-storage.sh"
+    kafka_cfg = gigapath + "/kafka_latest/config/server.properties"
+    cluster_id_file = gigasharepath + "/current/kafka-cluster-id"
+    format_cmd = ("[ -f " + kafka_data + "/meta.properties ] || " +
+                  kafka_bin + " format -t $(cat " + cluster_id_file + ") -c " + kafka_cfg)
+    print("Format command: "+str(format_cmd))
+    logger.info("Ensuring KRaft storage is formatted on "+str(host))
+    with Spinner():
+        executeRemoteCommandAndGetOutputPython36(host, user, format_cmd)
+    cmd = "sudo systemctl start odsxkafka.service"
+    logger.info("Starting odsxkafka on "+str(host)+": "+str(cmd))
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
@@ -106,8 +117,8 @@ def startKafkaServiceByHost(host):
 
 def startTelegrafServiceByHost(host):
     logger.info("startTelegrafServiceByHost()")
-    cmd = "systemctl start telegraf"
-    logger.info("Getting status.. telegraf :"+str(cmd))
+    cmd = "sudo systemctl start telegraf"
+    logger.info("Starting telegraf on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
@@ -118,21 +129,21 @@ def startTelegrafServiceByHost(host):
 
 
 def startDIMServices(host):
-    logger.info("startTelegrafServiceByHost()")
-    cmd = "systemctl start di-manager;sleep 3;systemctl start di-mdm;sleep 3;"
-    logger.info("Getting status.. telegraf :"+str(cmd))
+    logger.info("startDIMServices()")
+    # Start order: flink first, then di-mdm (needs ZK), then di-manager (needs di-mdm), then di-transformations (needs di-mdm + di-manager)
+    cmd = "sudo systemctl start di-flink-jobmanager.service;sudo systemctl start di-flink-taskmanager.service;sleep 3;sudo systemctl start di-mdm.service;sleep 5;sudo systemctl start di-manager.service;sleep 3;sudo systemctl start di-transformations.service"
+    logger.info("Starting DIM services on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
-            verboseHandle.printConsoleInfo("Services di-manager/di-mdm/di-flink started successfully on "+str(host))
+            verboseHandle.printConsoleInfo("Services di-flink/di-mdm/di-manager/di-transformations started successfully on "+str(host))
         else:
-            verboseHandle.printConsoleError("Service di-manager/di-mdm/di-flink telegraf failed to start on "+str(host))
+            verboseHandle.printConsoleError("Services di-flink/di-mdm/di-manager/di-transformations failed to start on "+str(host))
 
 
 def startKafkaService(args):
     try:
-
         if choiceOption == '1':
             hostNumber = str(userInputWrapper(Fore.YELLOW+"Enter host number to start kafka service : "+Fore.RESET))
             choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start kafka service on "+str(host_dict_obj.get(hostNumber))+" ? (y/n) [y]: "+Fore.RESET))
@@ -140,17 +151,17 @@ def startKafkaService(args):
                 choice='y'
             if choice =='y':
                 getDIhostTypeDict()
-                nodeType = host_type_dict_obj.get(str(host_dict_obj.get(hostNumber)))
+                host = str(host_dict_obj.get(hostNumber))
+                nodeType = host_type_dict_obj.get(host)
                 if nodeType != "kafka Broker 1b" and nodeListSize==4:
-                    startZookeeperServiceByHost(str(host_dict_obj.get(hostNumber)))
+                    startZookeeperServiceByHost(host)
                 elif nodeListSize<4:
-                    startZookeeperServiceByHost(str(host_dict_obj.get(hostNumber)))
+                    startZookeeperServiceByHost(host)
                 if nodeType != "Zookeeper Witness":
-                    startKafkaServiceByHost(str(host_dict_obj.get(hostNumber)))
-                elif nodeListSize<4:
-                    startKafkaService(str(host_dict_obj.get(hostNumber)))
-                startTelegrafServiceByHost(str(host_dict_obj.get(hostNumber)))
-                startDIMServices(str(host_dict_obj.get(hostNumber)))
+                    startKafkaServiceByHost(host)
+                #startTelegrafServiceByHost(host)
+                if nodeType == "kafka Broker 1a" or nodeListSize < 4:
+                    startDIMServices(host)
             else:
                 exit(0)
 
@@ -158,20 +169,21 @@ def startKafkaService(args):
             choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to start kafka service on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
             if choice.casefold() == 'n':
                 exit(0)
-            #print(nodeListSize)
+            # Start ZooKeeper on all nodes first
             for node in config_get_dataIntegration_nodes():
                 if node.type != "kafka Broker 1b" and nodeListSize==4:
                     startZookeeperServiceByHost(os.getenv(node.ip))
                 elif nodeListSize<4:
                     startZookeeperServiceByHost(os.getenv(node.ip))
+            # Then start Kafka on broker nodes
             for node in config_get_dataIntegration_nodes():
                 if node.type != "Zookeeper Witness":
                     startKafkaServiceByHost(os.getenv(node.ip))
-                elif nodeListSize<4:
-                    startKafkaService(os.getenv(node.ip))
+            # Then start Telegraf and DIM services (DIM only on node 1 / kafka Broker 1a)
             for node in config_get_dataIntegration_nodes():
-                startTelegrafServiceByHost(os.getenv(node.ip))
-                startDIMServices(os.getenv(node.ip))
+                #startTelegrafServiceByHost(os.getenv(node.ip))
+                if node.type == "kafka Broker 1a" or nodeListSize < 4:
+                    startDIMServices(os.getenv(node.ip))
     except Exception as e:
         handleException(e)
 

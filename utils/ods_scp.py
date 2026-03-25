@@ -42,7 +42,7 @@ def scp_upload(host, user, sourceFileWithPath, destPath):
         if (isConnectUsingPem=='True'):
             ssh = ''.join(['scp', ' -i ', pemFileName, ' -r ', sourceFileWithPath, ' ', user, '@', host, ':'])
         else:
-            ssh = ''.join(['scp',' -r ', sourceFileWithPath, ' ', host, ':'])
+            ssh = ''.join(['scp',' -r ', sourceFileWithPath, ' ', user, '@', host, ':'])
         # scp -i ps-share.pem /home/tapan/uninstall_1.sh ubuntu@18.222.185.155:
         cmd = ssh + destPath  # + type  ' < ' + cmd #+ '>> mylog.txt 2>&1'
         print(cmd)
