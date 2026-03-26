@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
+import glob
 import os, subprocess, sys, argparse, platform,socket
+from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
@@ -433,13 +435,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
             sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-            verboseHandle.printConsoleInfo("Downloading XAP/DIH ...")
             gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
             if not xap_download_url:
                 raise RuntimeError("Artifact xap not found")
 
-            downloaded_path = download_artifact(xap_download_url, gs_dest_path)
-            print("Downloaded at path: "+downloaded_path)
+            existing_files = glob.glob(os.path.join(gs_dest_path, 'gigaspaces-smart-cache*.zip'))
+            if existing_files:
+                downloaded_path = existing_files[0]
+                verboseHandle.printConsoleInfo("XAP/DIH file already exists at " + downloaded_path + ", skipping download.")
+            else:
+                verboseHandle.printConsoleInfo("Downloading XAP/DIH ...")
+                downloaded_path = download_artifact(xap_download_url, gs_dest_path)
+                print("Downloaded at path: "+downloaded_path)
             #if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+sourceInstallerDirectory
             #else:
@@ -562,7 +569,12 @@ def downloadDihGSPackage():
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
     pkg = parse_package_file("config/dih-package.json")
-    downloaded_path = process_artifact_by_id(pkg, "xap", gs_dest_path)
+    existing_files = glob.glob(os.path.join(gs_dest_path, 'gigaspaces-smart-cache*.zip'))
+    if existing_files:
+        verboseHandle.printConsoleInfo("XAP/DIH file already exists at " + existing_files[0] + ", skipping download.")
+        downloaded_path = existing_files[0]
+    else:
+        downloaded_path = process_artifact_by_id(pkg, "xap", gs_dest_path)
     print("downloaded_path: " + downloaded_path)
 
 

@@ -6,9 +6,6 @@ import subprocess
 import urllib.request
 from urllib.parse import urlparse
 
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError
-
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 
 
@@ -93,6 +90,9 @@ def _check_aws_credentials() -> None:
 
 
 def _download_from_s3(url: str, dest_dir: str) -> str:
+    import boto3
+    from botocore.exceptions import BotoCoreError, ClientError
+
     _check_aws_credentials()
 
     parsed = urlparse(url)

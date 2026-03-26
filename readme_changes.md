@@ -436,3 +436,6 @@
 - Make sure before creating each server below env variable is set properly in .bashrc
   export ENV_CONFIG=/gigashare/env_config   (appropriate base folder path where app.config is located)
 - For rebalancing space, script assumes that pivot has /giga/GS_HOME/bin/gs.sh
+
+139. Lazy import of boto3 in utils/odsx_dih_package.py. boto3 is now imported only inside `_download_from_s3()` instead of at module level, so scripts that transitively import odsx_dih_package.py (e.g. manager stop, manager remove) no longer fail with `ModuleNotFoundError: No module named 'boto3'` when boto3 is not installed.
+140. Skip XAP download if file already exists. During manager install, the XAP/DIH zip (e.g. gigaspaces-smart-cache-enterprise-17.2.0-ga.zip) is no longer re-downloaded if it already exists at $ODSXARTIFACTS/gs/. A message is printed indicating the existing file is being reused. Affected file: scripts/odsx_servers_manager_install.py.
