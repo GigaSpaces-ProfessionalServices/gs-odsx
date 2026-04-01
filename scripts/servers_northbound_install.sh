@@ -29,7 +29,7 @@ cd $1
 logDir=$gigalogpath"/nginx"
 if [ ! -d "/$logDir" ]; then
    mkdir -p /$logDir
-   chmod 777 /$logDir
+   chmod 755 /$logDir
 fi
 pwd
 ./install_nb_infra.sh $2

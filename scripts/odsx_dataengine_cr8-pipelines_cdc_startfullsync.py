@@ -15,6 +15,7 @@ cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -98,7 +99,7 @@ def startStream(args):
     if selectedOption != 99:
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)
-            user = 'root'
+            user = get_ssh_user()
             scriptUser = 'dbsh'
             cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl start " + configName + "'"
             with Spinner():

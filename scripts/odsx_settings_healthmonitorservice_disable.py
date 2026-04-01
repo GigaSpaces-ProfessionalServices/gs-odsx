@@ -24,8 +24,8 @@ def stopHealthmonitorService(args):
     if choice.casefold() == 'no':
         exit(0)
     with Spinner():
-        executeLocalCommandAndGetOutput("sudo systemctl stop --quiet odsxhealthcheck.service")
-    status = os.system('systemctl is-active --quiet odsxhealthcheck.service')
+        executeLocalCommandAndGetOutput("systemctl --user stop --quiet odsxhealthcheck.service")
+    status = os.system('systemctl --user is-active --quiet odsxhealthcheck.service')
     if (status == 0):
         verboseHandle.printConsoleError("Service failed to stop")
     else:

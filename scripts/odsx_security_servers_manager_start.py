@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
 from scripts.odsx_servers_manager_list import listFileFromDirectory
@@ -71,7 +72,7 @@ if __name__ == '__main__':
     args.append(sys.argv[0])
     cliArguments=''
     isMenuDriven=''
-    user='root'
+    user = get_ssh_user()
     try:
         managerDict = config_get_manager_listWithStatus()
         hostsConfig=''

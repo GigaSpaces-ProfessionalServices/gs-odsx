@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -24,9 +28,9 @@ echo $recoverLoggingConfigFile
 sed -i 's/gsods/'$applicativeUser'/g' /tmp/odsxkafka.service
 
 
-sudo mv -f /tmp/odsxkafka.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable odsxkafka.service
-sudo systemctl start odsxkafka.service
+mv -f /tmp/odsxkafka.service $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable odsxkafka.service
+systemctl --user start odsxkafka.service
 
 echo "DI Kafka service setup - Completed!."

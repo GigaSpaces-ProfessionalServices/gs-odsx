@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers
 from scripts.spinner import Spinner
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -78,7 +79,7 @@ if __name__ == '__main__':
         cliArguments=''
         isMenuDriven=''
         managerRemove=''
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
         serverRestartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to restart individual service. \nPress [Enter] to restart all. \nPress [99] for exit.: "+Fore.RESET))

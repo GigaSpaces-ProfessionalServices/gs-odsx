@@ -15,7 +15,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -215,14 +215,14 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 def proceedToCreateGSC():
     logger.info("proceedToCreateGSC()")
     #for host in managerNodes:
-    #    scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
+    #    scp_upload(str(host.ip),get_ssh_user(),dPipelineLocationSource,dPipelineLocationTarget)
     for host in spaceNodes:
-        scp_upload(str(os.getenv(host.ip)),'root',dPipelineLocationSource,dPipelineLocationTarget)
+        scp_upload(str(os.getenv(host.ip)),get_ssh_user(),dPipelineLocationSource,dPipelineLocationTarget)
         commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(os.getenv(host.ip))+" | grep -v JAVA_HOME"
         #print(commandToExecute)
         logger.info(commandToExecute)
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+            output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), commandToExecute)
             print(output)
             logger.info("Output:"+str(output))
 
@@ -438,7 +438,7 @@ def getUsernameByHost(managerHost):
     logger.info("getUsernameByHost()")
     cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
+    output = executeRemoteCommandAndGetOutput(managerHost,get_ssh_user(),cmdToExecute)
     output=str(output).replace('\n','')
     logger.info("Username : "+output)
     return output
@@ -447,7 +447,7 @@ def getPasswordByHost(managerHost):
     logger.info("getPasswordByHost()")
     cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
+    output = executeRemoteCommandAndGetOutput(managerHost,get_ssh_user(),cmdToExecute)
     output=str(output).replace('\n','')
     logger.info("Password : "+output)
     return  output

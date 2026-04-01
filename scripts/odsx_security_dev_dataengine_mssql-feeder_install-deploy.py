@@ -17,7 +17,7 @@ from utils.ods_app_config import readValueByConfigObj
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
 from utils.odsx_keypress import userInputWrapper
@@ -232,7 +232,7 @@ def proceedToCreateGSC(zoneGSC):
         verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(host.ip))
         logger.info(commandToExecute)
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+            output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), commandToExecute)
             print(output)
             logger.info("Output:"+str(output))
 

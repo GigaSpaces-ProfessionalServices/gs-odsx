@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 
 
 # prints colored text
@@ -43,11 +47,11 @@ printNoColor() {
 }
 
 info " Stopping service"
-systemctl stop telegraf.service
+systemctl --user stop telegraf.service
 sleep 2
-systemctl daemon-reload
+systemctl --user daemon-reload
 sleep 5
 printf "\n"
 info " Starting service"
-systemctl start telegraf.service
+systemctl --user start telegraf.service
 printf "\n"

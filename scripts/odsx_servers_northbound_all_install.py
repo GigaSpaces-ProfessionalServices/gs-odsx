@@ -9,6 +9,7 @@ from utils.ods_cluster_config import config_get_nb_list, config_get_grafana_list
     config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, connectExecuteSSHWithLoginProxy
+from utils.ods_ssh import get_ssh_user
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
@@ -199,9 +200,12 @@ def cleanNbConfig():
 
 def proceedForPreInstallation(nbServers, param):
     logger.info("proceedForPreInstallation : "+param)
-    nb_user='root'
+    nb_user = get_ssh_user()
     remotePath=dbaGigaPath
-    cmd = 'sudo tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
+    # Remove stale tar to ensure fresh build from current install/ contents
+    if os.path.exists('install/install.tar'):
+        os.remove('install/install.tar')
+    cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : "+str(status))
@@ -246,7 +250,7 @@ def proceedForApplicativeInstallation():
     logger.info("proceedForApplicativeInstallation()")
     nbApplicativeServers = getNBApplicativeHostFromEnv()
     remotePath= dbaGigaPath + '/'+getNBFolderName()
-    nb_user='root'
+    nb_user = get_ssh_user()
     proceedForPreInstallation(nbApplicativeServers,'APPLICATIVE')
 
     for hostip in nbApplicativeServers.split(","):
@@ -275,7 +279,7 @@ def proceedForAgentInstallation():
     logger.info("proceedForAgentInstallation()")
     nbAgentServers = getNBAgentHostFromEnv()
     remotePath= dbaGigaPath+'/'+getNBFolderName()
-    nb_user='root'
+    nb_user = get_ssh_user()
     proceedForPreInstallation(nbAgentServers,'AGENT')
     for hostip in nbAgentServers.split(','):
         hostip = str(hostip).replace('"', '')
@@ -295,7 +299,7 @@ def proceedForManagementInstallation():
     logger.info("proceedForManagementInstallation()")
     nbManagementServers = getNBManagementHostFromEnv()
     remotePath= dbaGigaPath+'/'+getNBFolderName()
-    nb_user='root'
+    nb_user = get_ssh_user()
     proceedForPreInstallation(nbManagementServers,'MANAGEMENT')
     for hostip in nbManagementServers.split(','):
         print(hostip)

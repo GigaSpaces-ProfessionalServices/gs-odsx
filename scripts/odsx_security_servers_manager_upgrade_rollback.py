@@ -15,6 +15,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -126,11 +127,11 @@ def handleException(e):
 def proceedForRollback(host):
     logger.info("proceedForRollback")
     dbaGigaPath=readValuefromAppConfig("app.giga.path")
-    cmdList = ["systemctl stop gsa","cd "+ dbaGigaPath +";rm -f gigaspaces-smart-ods;mv "+ dbaGigaPath +"/gigaspaces-smart-ods-old "+ dbaGigaPath +"/gigaspaces-smart-ods","systemctl start gsa"]
+    cmdList = ["systemctl --user stop gsa","cd "+ dbaGigaPath +";rm -f gigaspaces-smart-ods;mv "+ dbaGigaPath +"/gigaspaces-smart-ods-old "+ dbaGigaPath +"/gigaspaces-smart-ods","systemctl --user start gsa"]
     for cmd in cmdList:
         #print("Executing "+str(cmd)+" : "+str(host))
         logger.info("Getting status.. odsxgs :"+str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
             if (output == 0):

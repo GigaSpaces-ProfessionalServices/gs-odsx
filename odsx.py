@@ -194,6 +194,11 @@ def findArgumentInFile(currentArg,initialFileName):
         ""
 
 def main(**args):
+    # Do not allow running as root — ODSX should run as gsods
+    if os.geteuid() == 0:
+        print("ERROR: ODSX must be run as the gsods user, not root. Please switch to gsods and retry.")
+        sys.exit(1)
+
     # Discover hosts to be install for stateless cluster config
     discoverHostConfig()
     #check if command line arguments passed to check execution of CLI or Menu driven

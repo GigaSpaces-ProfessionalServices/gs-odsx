@@ -9,7 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 
@@ -129,7 +129,7 @@ def getUsernameByHost(managerHost):
     logger.info("getUsernameByHost()")
     cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o PassProps.UserName'
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
+    output = executeRemoteCommandAndGetOutput(managerHost,get_ssh_user(),cmdToExecute)
     output=str(output).replace('\n','')
     logger.info("Username : "+output)
     return output
@@ -138,7 +138,7 @@ def getPasswordByHost(managerHost):
     logger.info("getPasswordByHost()")
     cmdToExecute = '/opt/CARKaim/sdk/clipasswordsdk GetPassword -p AppDescs.AppID='+appId+' -p Query="Safe='+safeId+';Folder=;Object='+objectId+';" -o Password'
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(managerHost,"root",cmdToExecute)
+    output = executeRemoteCommandAndGetOutput(managerHost,get_ssh_user(),cmdToExecute)
     output=str(output).replace('\n','')
     logger.info("Password : "+output)
     return  output

@@ -7,6 +7,7 @@ from concurrent.futures import ThreadPoolExecutor
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list
 from colorama import Fore
 from utils.ods_app_config import readValuefromAppConfig
@@ -82,13 +83,13 @@ if __name__ == '__main__':
         cliArguments=''
         isMenuDriven=''
         managerRemove=''
-        # changed : 25-Aug hence systemctl always with root no need to ask
+        # changed : 25-Aug hence systemctl --user always with root no need to ask
         #userConfig = readValuefromAppConfig("app.server.user")
         #logger.info("userConfig :"+str(userConfig))
         #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
         #if(len(str(user))==0):
         #    user=userConfig
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = config_get_space_list_with_status(user)
         serverStartType = str(userInputWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all. \nPress [99] for exit.: "+Fore.RESET))

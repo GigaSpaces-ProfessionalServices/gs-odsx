@@ -16,7 +16,7 @@ from utils.ods_cluster_config import config_get_manager_node, config_get_nb_list
 from colorama import Fore
 from utils.ods_validation import getSpaceServerStatus
 from scripts.spinner import Spinner
-from utils.ods_ssh import executeRemoteCommandAndGetOutput 
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 import requests, json
 from requests.auth import HTTPBasicAuth
 
@@ -405,7 +405,7 @@ def validateTierStorageFreeSpace(managerHost,tierSpace,isSecure=False,username=N
         tierStorageLocation = f"{dbaGigaDataPath}/tiered-storage"
         #print("tierStorageLocation==="+str(tierStorageLocation))
         checkFileSizeCmd = "df -ha "+tierStorageLocation
-        fileSizeOutput = executeRemoteCommandAndGetOutput(host, 'root', checkFileSizeCmd)
+        fileSizeOutput = executeRemoteCommandAndGetOutput(host, get_ssh_user(), checkFileSizeCmd)
         device, size, used, available, percent, mountpoint = \
         fileSizeOutput.split("\n")[1].split()
         strPercent = str(percent)

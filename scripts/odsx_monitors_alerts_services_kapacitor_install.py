@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.ods_scp import scp_upload
 from utils.ods_cluster_config import config_get_grafana_node
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
@@ -60,7 +61,7 @@ def installUserAndTargetDirectory():
         global hostList
         global port
         port = "9092"
-        user="root"
+        user = get_ssh_user()
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
         hostList = os.getenv("pivot1")
         packageName=""

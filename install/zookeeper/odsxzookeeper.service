@@ -4,11 +4,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=gsods
-Group=gsods
-ExecStart=/bin/bash /usr/local/bin/start_zookeeper.sh
-ExecStop=/bin/bash /usr/local/bin/stop_zookeeper.sh
+ExecStart=/bin/bash /giga/bin/start_zookeeper.sh
+ExecStop=/bin/bash /giga/bin/stop_zookeeper.sh
 RemainAfterExit=yes
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

@@ -8,6 +8,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_nb_list
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -45,8 +46,8 @@ class host_dictionary(dict):
         self[key] = value
 
 def getStatusOfTelegraf(node):
-    user="root"
-    cmd = "systemctl status telegraf"
+    user = get_ssh_user()
+    cmd = "sudo systemctl status telegraf"
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(node, user, cmd)
         logger.info("output1 : "+str(output))
@@ -59,7 +60,7 @@ def isInstalledATelegraf(node):
     isInstalled = "Yes"
     commandToExecute='ls /usr/lib/systemd/system/telegraf.service'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(node, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(node, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
@@ -94,8 +95,8 @@ def listAllTelegrafServers():
     spaceServers = config_get_space_hosts()
     host_dict_obj = host_dictionary()
     for server in spaceServers:
-        cmd = 'systemctl is-active gs.service'
-        user='root'
+        cmd = 'systemctl --user is-active gs.service'
+        user = get_ssh_user()
         output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
         logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
         host_dict_obj.add(os.getenv(server.ip),str(output))

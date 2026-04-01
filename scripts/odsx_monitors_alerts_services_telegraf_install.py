@@ -16,7 +16,7 @@ from utils.ods_cluster_config import config_get_space_node, config_get_manager_n
     config_get_nb_list, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, connectExecuteSSHWithLoginProxy, executeRemoteCommandAndGetOutput, \
-    executeRemoteShCommandAndGetOutput
+    executeRemoteShCommandAndGetOutput, get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 from utils.ods_app_config import readValuefromAppConfig
@@ -64,10 +64,13 @@ def getManagerHostFromEnv():
 
 def proceedForPreInstallation(param,hostip):
     logger.info("proceedForPreInstallation : "+param)
-    nb_user='root'
+    nb_user = get_ssh_user()
     remotePath=dbaGigaPath
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     sourceInstallerDirectoryTar = str(os.getenv("ODSXARTIFACTS"))
+    # Remove stale tar to ensure fresh build from current install/ contents
+    if os.path.exists('install/install.tar'):
+        os.remove('install/install.tar')
     cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
@@ -105,7 +108,7 @@ def proceedForPreInstallation(param,hostip):
 def proceedForNBInstallation(host):
     logger.info("proceedForNBInstallation()")
     remotePath=dbaGigaPath+'/'+getNBFolderName()
-    nb_user='root'
+    nb_user = get_ssh_user()
     proceedForPreInstallation('AGENT',host)
     with Spinner():
         logger.info("connectExecuteSSHWithLoginProxy Agent: hostip "+str(host)+" user:"+str(nb_user)+" remotePath:"+str(remotePath))
@@ -354,7 +357,7 @@ if __name__ == '__main__':
         cliArguments=''
         isMenuDriven=''
         managerRemove=''
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
         serverInstallType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))

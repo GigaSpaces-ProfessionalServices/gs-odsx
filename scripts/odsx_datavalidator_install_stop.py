@@ -7,6 +7,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_list import listDVAgents
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from scripts.spinner import Spinner
 from scripts.odsx_datavalidator_install_list import listDVServers,isServiceInstalled
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
@@ -72,9 +73,9 @@ def stopDataValidationService(args):
                 hostToStart = hostToStart[0]
                 # start individual
                 if len(str(isServiceInstalled(hostToStart, hostType)))>0:
-                    cmd = "systemctl stop odsxdatavalidation"+hostType+".service"
+                    cmd = "systemctl --user stop odsxdatavalidation"+hostType+".service"
                     logger.info("Getting status.. odsxdatavalidation"+hostType+":"+str(cmd))
-                    user = 'root'
+                    user = get_ssh_user()
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
                         if (output == 0):
@@ -93,9 +94,9 @@ def stopDataValidationService(args):
             logger.info("confirm :"+str(confirm))
             if(confirm=='yes' or confirm=='y'): # Start all
                 for node in config_get_dataValidation_nodes():
-                    cmd = "systemctl stop odsxdatavalidation"+str(node.type)+".service"
+                    cmd = "systemctl --user stop odsxdatavalidation"+str(node.type)+".service"
                     logger.info("Getting status.. odsxdatavalidation"+str(node.type)+":"+str(cmd))
-                    user = 'root'
+                    user = get_ssh_user()
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                         if (output == 0):

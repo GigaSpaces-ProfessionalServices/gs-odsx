@@ -136,6 +136,40 @@ chown gsods:gsods /dbagigainfluxdata
 chown -R gsods:gsods /dbagigashare/*
 chown -R gsods:gsods /dbagiga/*
 
+# --- Non-root prerequisites ---
+
+# Enable user-level systemd for gsods (persists after logout)
+loginctl enable-linger gsods
+
+# Create user-level systemd directory
+gsods_home=$(eval echo ~gsods)
+mkdir -p "$gsods_home/.config/systemd/user/"
+chown -R gsods:gsods "$gsods_home/.config/"
+
+# Create /giga/bin for start/stop scripts (replaces /usr/local/bin)
+mkdir -p $gigapath/bin
+chown gsods:gsods $gigapath/bin
+
+# Set file descriptor limits for gsods
+applicativeUser="gsods"
+nofileLimitFile=$(read_property "app.user.nofile.limit")
+if [ -z "$nofileLimitFile" ]; then
+    nofileLimitFile=50000
+fi
+sed -i '/hard nofile/d' /etc/security/limits.conf
+sed -i '/soft nofile/d' /etc/security/limits.conf
+echo "" >> /etc/security/limits.conf
+echo "$applicativeUser hard nofile $nofileLimitFile" >> /etc/security/limits.conf
+echo "$applicativeUser soft nofile $nofileLimitFile" >> /etc/security/limits.conf
+
+# Sudoers entries for third-party monitoring services (Grafana, InfluxDB, Telegraf)
+cat > /etc/sudoers.d/odsx-monitoring << 'SUDOERS'
+gsods ALL=(ALL) NOPASSWD: /bin/systemctl start grafana-server.service, /bin/systemctl stop grafana-server.service, /bin/systemctl restart grafana-server.service, /bin/systemctl status grafana-server.service, /bin/systemctl enable grafana-server.service
+gsods ALL=(ALL) NOPASSWD: /bin/systemctl start influxdb.service, /bin/systemctl stop influxdb.service, /bin/systemctl restart influxdb.service, /bin/systemctl status influxdb.service, /bin/systemctl enable influxdb.service
+gsods ALL=(ALL) NOPASSWD: /bin/systemctl start telegraf.service, /bin/systemctl stop telegraf.service, /bin/systemctl restart telegraf.service, /bin/systemctl status telegraf.service, /bin/systemctl enable telegraf.service
+SUDOERS
+chmod 0440 /etc/sudoers.d/odsx-monitoring
+
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigapath/gs-odsx/config/logging.conf
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/scripts/start_gsc.sh
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/log/xap_logging.properties

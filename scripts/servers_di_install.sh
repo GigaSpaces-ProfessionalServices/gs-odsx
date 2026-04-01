@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -107,8 +111,8 @@ function installFlink() {
 #  sed -i -e 's|FLINK_HOME=/home/gsods/di-flink/latest-flink|FLINK_HOME=$flinkHome|g' $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service
 #  sed -i -e 's|FLINK_LOG_DIR=/home/gsods/di-flink/latest-flink/log|FLINK_LOG_DIR=$flinkLogDir|g' $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service
 
-  cp $gigapath/di-flink/latest-flink/conf/di-flink-jobmanager.service /etc/systemd/system/
-  cp $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service /etc/systemd/system/
+  cp $gigapath/di-flink/latest-flink/conf/di-flink-jobmanager.service $HOME/.config/systemd/user/
+  cp $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service $HOME/.config/systemd/user/
 
   info "\n Installation Flink completed."
 }
@@ -140,10 +144,10 @@ function installDIMatadata {
 
   cd
   info "\nCopying service file\n"
-  cp $gigapath/di-mdm/latest-di-mdm/config/di-mdm.service /etc/systemd/system/
-  systemctl daemon-reload
-  systemctl enable di-mdm
-  #systemctl start di-mdm
+  cp $gigapath/di-mdm/latest-di-mdm/config/di-mdm.service $HOME/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable di-mdm
+  #systemctl --user start di-mdm
   info "\n Installation DI-MDM completed."
 }
 
@@ -174,10 +178,10 @@ function installDIManager {
   echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigapath/di-manager/latest-di-manager/config/di-manager-application.properties
   cd
   info "\nCopying service file\n"
-  cp $gigapath/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/
-  systemctl daemon-reload
-  systemctl enable di-manager
-  #systemctl start di-manager
+  cp $gigapath/di-manager/latest-di-manager/config/di-manager.service $HOME/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable di-manager
+  #systemctl --user start di-manager
   info "\n Installation DI-Manager completed.\n"
 }
 
@@ -250,13 +254,13 @@ function installDISubscription {
     echo "springdoc.swagger-ui.request-timeout=10000 # Timeout value in milliseconds" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> $gigapath/di-subscription-manager.properties
-    sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' /etc/systemd/system/di-subscription-manager-iidr.service
+    sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' $HOME/.config/systemd/user/di-subscription-manager-iidr.service
     cd /home/gsods/di-subscription-manager/latest-di-subscription-manager/utils
     sudo ./install_new_version.sh $gigapath/di-subscription-manager.properties
-    systemctl daemon-reload
-    systemctl enable di-subscription-manager
-    systemctl restart di-subscription-manager
-    #systemctl start di-manager
+    systemctl --user daemon-reload
+    systemctl --user enable di-subscription-manager
+    systemctl --user restart di-subscription-manager
+    #systemctl --user start di-manager
     info "\n Installation DI-Manager completed.\n"
 }
 
@@ -467,9 +471,9 @@ if [[ $id != 2 ]]; then
 
   mv $home_dir_sh/st*_zookeeper.sh /tmp
   mv $home_dir_sh/install/zookeeper/$zookeeper_service_file /tmp
-  mv /tmp/st*_zookeeper.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_zookeeper.sh
-  mv /tmp/$zookeeper_service_file /etc/systemd/system/
+  mv /tmp/st*_zookeeper.sh /giga/bin/
+  chmod +x /giga/bin/st*_zookeeper.sh
+  mv /tmp/$zookeeper_service_file $HOME/.config/systemd/user/
 fi
 
 if [[ $id != 4 ]]; then
@@ -490,9 +494,9 @@ if [[ $id != 4 ]]; then
   fi
   mv $home_dir_sh/st*_kafka.sh /tmp
   mv $home_dir_sh/install/kafka/$kafka_service_file /tmp
-  mv /tmp/st*_kafka.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_kafka.sh
-  mv /tmp/$kafka_service_file /etc/systemd/system/
+  mv /tmp/st*_kafka.sh /giga/bin/
+  chmod +x /giga/bin/st*_kafka.sh
+  mv /tmp/$kafka_service_file $HOME/.config/systemd/user/
 fi
 
 if [[ $installtelegrafFlag == "y" ]]; then
@@ -515,15 +519,15 @@ chown gsods:gsods -R $logsFolderKafka
 chown gsods:gsods -R $dataFolderKafka
 chown gsods:gsods -R $dataFolderZK
 
-chmod 777 -R $baseFolderLocation
-chmod 777 -R $logsFolderKafka
-chmod 777 -R $dataFolderKafka
-chmod 777 -R $dataFolderZK
+chmod 755 -R $baseFolderLocation
+chmod 755 -R $logsFolderKafka
+chmod 755 -R $dataFolderKafka
+chmod 755 -R $dataFolderZK
 
 #sudo service mongod stop
-#sudo yum erase $(rpm -qa | grep mongodb-enterprise)
-#sudo rm -r /var/log/mongodb
-#sudo rm -r /var/lib/mongo
+#yum erase $(rpm -qa | grep mongodb-enterprise)
+#rm -r /var/log/mongodb
+#rm -r /var/lib/mongo
 
-systemctl daemon-reload
+systemctl --user daemon-reload
 

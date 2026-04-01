@@ -21,6 +21,7 @@ from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_print_tabular_data import printTabularGrid, printTabularGridWrap
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -493,14 +494,14 @@ def inputParams():
 
 def copyFile(hostips, srcPath, destPath, dryrun=False):
     logger.info("copyFile :"+str(hostips)+" : "+str(srcPath)+" : "+str(destPath))
-    username = "root"
+    username = get_ssh_user()
     '''
     if not dryrun:
         username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
-            username = "root"
+            username = get_ssh_user()
     else:
-        username = "root"
+        username = get_ssh_user()
     '''
     for hostip in hostips:
         if scp_upload(hostip, username, srcPath, destPath):

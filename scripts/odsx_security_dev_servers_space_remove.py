@@ -11,6 +11,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list, \
     config_remove_space_nodeByIP
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -66,7 +67,7 @@ def execute_scriptBuilder(host):
     additionalParam = removeJava+' '+removeUnzip
     logger.info("additionalParam : "+str(additionalParam))
     with Spinner():
-        #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)
+        #outputShFile= executeRemoteShCommandAndGetOutput(host, get_ssh_user(), additionalParam, commandToExecute)
         outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
         print(outputShFile)
         logger.info("Output : scripts/security_space_remove.sh :"+str(outputShFile))
@@ -98,12 +99,12 @@ if __name__ == '__main__':
         choice=''
         cliArguments=''
         isMenuDriven=''
-        # changed : 25-Aug hence systemctl always with root no need to ask
+        # changed : 25-Aug hence systemctl --user always with root no need to ask
         #user = str(userInputWrapper("Enter your user [root]: "))
         #if(len(str(user))==0):
-        #    user="root"
+        #    user = get_ssh_user()
         #logger.info("user :"+str(user))
-        user='root'
+        user = get_ssh_user()
         global removeJava
         global removeUnzip
         streamDict = config_get_space_list_with_status(user)

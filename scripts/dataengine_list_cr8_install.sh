@@ -1,6 +1,10 @@
 #!/bin/bash
 #CentOS 7.2 Installation Script
 #source ./consoleLog.sh
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 
 # prints colored text
 print_style () {
@@ -159,9 +163,9 @@ sleep 10
 cr8_service_file="odsxcr8.service"
 
 mv $home_dir/install/$cr8_service_file /tmp
-sudo mv -f /tmp/$cr8_service_file /etc/systemd/system/
+mv -f /tmp/$cr8_service_file $HOME/.config/systemd/user/
 
 sed -i '/java_env/d' ~/.bashrc
-systemctl disable mongodb32
-systemctl stop mongodb32
-systemctl daemon-reload
+systemctl --user disable mongodb32
+systemctl --user stop mongodb32
+systemctl --user daemon-reload

@@ -12,6 +12,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_iidrAccessServer_node, \
     config_get_iidrKafkaAgent_node, config_get_iidrOracleAgent_node, config_get_dataIntegrationSubscriptionManager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import isValidHost, port_check
 from utils.odsx_print_tabular_data import printTabular, printTabularGrid, printTabularGridWrap, printTabularStream
 from utils.ods_cluster_config import config_get_dataIntegrationiidr_nodes
@@ -70,15 +71,15 @@ def myCheckArg(args=None):
 
 def getKafkaStatus(node):
     logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
-    cmdList = ["systemctl status odsxkafka"]
+    cmdList = ["systemctl --user status odsxkafka"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         logger.info("Getting status.. :"+str(cmd))
-        user = 'root'
-        if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
+        user = get_ssh_user()
+        if node.type == "Zookeeper Witness" and cmd == "systemctl --user status odsxkafka":
             output=0
             return Fore.GREEN+"NA"+Fore.RESET
-        if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
+        if node.type == "kafka Broker 1b" and cmd == "systemctl --user status odsxzookeeper":
             output=0
             return Fore.GREEN+"NA"+Fore.RESET
         with Spinner():
@@ -92,15 +93,15 @@ def getKafkaStatus(node):
 
 def getZookeeperStatus(node):
     logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
-    cmdList = ["systemctl status odsxzookeeper"]
+    cmdList = ["systemctl --user status odsxzookeeper"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         logger.info("Getting status.. :"+str(cmd))
-        user = 'root'
-        if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
+        user = get_ssh_user()
+        if node.type == "Zookeeper Witness" and cmd == "systemctl --user status odsxkafka":
             output=0
             return Fore.GREEN+"NA"+Fore.RESET
-        if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
+        if node.type == "kafka Broker 1b" and cmd == "systemctl --user status odsxzookeeper":
             output=0
             return Fore.GREEN+"NA"+Fore.RESET
         with Spinner():
@@ -116,16 +117,16 @@ def getZookeeperStatus(node):
 def getConsolidatedStatus(node):
     output=''
     logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
+    cmdList = [ "sudo systemctl status odsxkafka" , "sudo systemctl status odsxzookeeper", "sudo systemctl status telegraf"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
-        if(str(node.type)=='kafka Broker 1b' and cmd=='systemctl status odsxzookeeper'):
+        if(str(node.type)=='kafka Broker 1b' and cmd=='systemctl --user status odsxzookeeper'):
             output=0
-        elif(str(node.type)=='Zookeeper Witness' and cmd=='systemctl status odsxkafka'):
+        elif(str(node.type)=='Zookeeper Witness' and cmd=='systemctl --user status odsxkafka'):
             output=0
         else:
             logger.info("Getting status.. :"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                 logger.info("output1 : "+str(output))
@@ -155,9 +156,9 @@ def isZkInstalledNot(host,role):
         return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isKafkaInstalledNot"+str(host)+" : "+str(role))
     isInstalled = "Yes"
-    commandToExecute='ls /etc/systemd/system/odsxzookeeper.service'
+    commandToExecute='ls ~/.config/systemd/user/odsxzookeeper.service'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
@@ -169,9 +170,9 @@ def isKafkaInstalledNot(host,role):
         return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isKafkaInstalledNot"+str(host)+" : "+str(role))
     isInstalled = "Yes"
-    commandToExecute='ls /etc/systemd/system/odsxkafka.service'
+    commandToExecute='ls ~/.config/systemd/user/odsxkafka.service'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
@@ -183,9 +184,9 @@ def isMDMInstalled(host,nodeType):
         return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isMDMInstalled"+str(host))
     isInstalled = "Yes"
-    commandToExecute='ls /etc/systemd/system/di-mdm.service'
+    commandToExecute='ls ~/.config/systemd/user/di-mdm.service'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
@@ -195,9 +196,9 @@ def isMDMInstalled(host,nodeType):
 def getMDMStatus(host,nodeType):
     if(str(nodeType)=='Zookeeper Witness'):
         return Fore.GREEN+"NA"+Fore.RESET
-    cmd = "systemctl status di-mdm.service"
+    cmd = "systemctl --user status di-mdm.service"
     with Spinner():
-        user='root'
+        user = get_ssh_user()
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         logger.info("output1 : "+str(output))
         if(output!=0):
@@ -210,9 +211,9 @@ def isDIMInstalled(host,nodeType):
         return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isDIMInstalled"+str(host))
     isInstalled = "Yes"
-    commandToExecute='ls /etc/systemd/system/di-manager.service'
+    commandToExecute='ls ~/.config/systemd/user/di-manager.service'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
@@ -222,9 +223,9 @@ def isDIMInstalled(host,nodeType):
 def getDIMStatus(host,nodeType):
     if(str(nodeType)=='Zookeeper Witness'):
         return Fore.GREEN+"NA"+Fore.RESET
-    cmd = "systemctl status di-manager.service"
+    cmd = "systemctl --user status di-manager.service"
     with Spinner():
-        user='root'
+        user = get_ssh_user()
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         logger.info("output1 : "+str(output))
         if(output!=0):
@@ -240,7 +241,7 @@ def isFLinkInstalled(host,nodeType):
     dbaGigaPath=readValuefromAppConfig("app.giga.path")
     commandToExecute='ls '+ dbaGigaPath +'/di-flink/latest-flink/bin/start-cluster.sh'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
@@ -257,17 +258,17 @@ def getFlinkStatus(host,nodeType):
             if(status==False):
                 logger.info(" Service :di-flink not started."+str(host))
                 return Fore.RED+"OFF"+Fore.RESET
-    cmd = "systemctl status di-flink-taskmanager.service"
+    cmd = "systemctl --user status di-flink-taskmanager.service"
     with Spinner():
-        user='root'
+        user = get_ssh_user()
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         logger.info("output1 : "+str(output))
         if(output!=0):
             logger.info(" Service :"+str(cmd)+" not started."+str(host))
             return Fore.RED+"OFF"+Fore.RESET
-    cmd = "systemctl status di-flink-jobmanager.service"
+    cmd = "systemctl --user status di-flink-jobmanager.service"
     with Spinner():
-        user='root'
+        user = get_ssh_user()
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         logger.info("output1 : "+str(output))
         if(output!=0):
@@ -281,17 +282,17 @@ def isInstalledNot(host,role):
     logger.info("isInstalledNot"+str(host)+" : "+str(role))
     isInstalled = "Yes"
     if role != "kafka Broker 1b":
-        commandToExecute='ls /etc/systemd/system/odsxzookeeper.service'
+        commandToExecute='ls ~/.config/systemd/user/odsxzookeeper.service'
         logger.info("commandToExecute :"+str(commandToExecute))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
         outputShFile=str(outputShFile).replace('\n','')
         logger.info("outputShFile :"+str(outputShFile))
         if len(str(outputShFile))==0:
             return Fore.GREEN+"NA"+Fore.RESET
     if role != "Zookeeper Witness":
-        commandToExecute='ls /etc/systemd/system/odsxkafka.service'
+        commandToExecute='ls ~/.config/systemd/user/odsxkafka.service'
         logger.info("commandToExecute :"+str(commandToExecute))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
         outputShFile=str(outputShFile).replace('\n','')
         logger.info("outputShFile :"+str(outputShFile))
         if len(str(outputShFile))==0:
@@ -299,7 +300,7 @@ def isInstalledNot(host,role):
 
     commandToExecute='ls /usr/lib/systemd/system/telegraf.service'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     if len(str(outputShFile))==0:
@@ -308,8 +309,8 @@ def isInstalledNot(host,role):
     return isInstalled
 
 def getSingleZkStatus(node):
-    user="root"
-    cmd = "systemctl status odsxzookeeper"
+    user = get_ssh_user()
+    cmd = "systemctl --user status odsxzookeeper"
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
         logger.info("output1 : "+str(output))
@@ -318,8 +319,8 @@ def getSingleZkStatus(node):
         return output
 
 def getSingleKafkaStatus(node):
-    user="root"
-    cmd = "systemctl status odsxkafka"
+    user = get_ssh_user()
+    cmd = "systemctl --user status odsxkafka"
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
         logger.info("output1 : "+str(output))
@@ -330,10 +331,10 @@ def getSingleKafkaStatus(node):
 def getSingleConsolidatedStatus(node):
     output=''
     logger.info("getSingleConsolidatedStatus() : "+str(os.getenv(node.ip)))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
+    cmdList = [ "sudo systemctl status odsxkafka" , "sudo systemctl status odsxzookeeper", "sudo systemctl status telegraf"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))

@@ -10,6 +10,7 @@ from utils.ods_cluster_config import config_get_nb_list
 from colorama import Fore
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 
 
@@ -58,12 +59,12 @@ def getVersion(ip):
     dbaGigaPath=readValuefromAppConfig("app.giga.path")
     cmdToExecute = "cd "+ dbaGigaPath+"/"+getNBFolderName()+"/;./install_nb_infra.sh -v;"
     with Spinner():
-        output = executeRemoteCommandAndGetOutputPython36(ip, 'root', cmdToExecute)
+        output = executeRemoteCommandAndGetOutputPython36(ip, get_ssh_user(), cmdToExecute)
     logger.info(cmdToExecute+" :"+str(output))
     if(output==0):
         logger.info("cmdToExecute : "+str(cmdToExecute))
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
+            output = executeRemoteCommandAndGetOutput(ip,get_ssh_user(),cmdToExecute)
         output=str(output).replace('\n','')
         logger.info("output : "+str(output))
     else:
@@ -72,9 +73,9 @@ def getVersion(ip):
 
 def isInstalledAndGetVersion(host):
     logger.info("isInstalledAndGetVersion")
-    commandToExecute='ls /etc/systemd/system/northbound.target'
+    commandToExecute='ls ~/.config/systemd/user/northbound.target'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -97,9 +98,9 @@ def listNB():
         host = str(os.getenv(stream.ip))
         cmd=''
         if(str(stream.role).__contains__('management')):
-            cmd = 'systemctl status northbound.target'
+            cmd = 'systemctl --user status northbound.target'
             logger.info("Getting status.. :"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
             logger.info(cmd+" :"+str(output))

@@ -1,3 +1,7 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 echo "Removing Server - Manager"
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -48,17 +52,17 @@ fi
 #rm -r install/*.zip
 #Removing symlink
 source setenv.sh
-systemctl stop gsa.service
+systemctl --user stop gsa.service
 sleep 5
 rm -rf $GS_HOME
-rm -rf setenv.sh gs install install.tar $gigapath"/giga*" $gigaworkPath"/*" /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+rm -rf setenv.sh gs install install.tar $gigapath"/giga*" $gigaworkPath"/*" /giga/bin/start_gs*.sh /giga/bin/stop_gs*.sh $HOME/.config/systemd/user/gs*.service
 find $gigalogpath/ -mindepth 1 ! -regex '^'$gigalogpath'/consul\|'$gigalogpath'/nginx\(/.*\)?' -delete
 cd $gigapath
 rm -f gigaspaces-smart-ods
 echo "Remove symlink done!"
-systemctl daemon-reload
-sed -i '/hard nofile/d' /etc/security/limits.conf
-sed -i '/soft nofile/d' /etc/security/limits.conf
+systemctl --user daemon-reload
+# sed -i '/hard nofile/d' /etc/security/limits.conf
+# sed -i '/soft nofile/d' /etc/security/limits.conf
 
 echo "GS Remove -Done!"
 

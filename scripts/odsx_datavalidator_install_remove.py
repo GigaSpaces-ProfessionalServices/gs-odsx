@@ -12,6 +12,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes, config_remove_dataValidation_byNameIP
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -63,7 +64,7 @@ def removeInputUserAndHost():
         global host
         user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to Data validation server [root]:"+Fore.RESET))
         if(len(str(user))==0):
-            user="root"
+            user = get_ssh_user()
         logger.info(" user: "+str(user))
 
     except Exception as e:

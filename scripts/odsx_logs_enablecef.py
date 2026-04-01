@@ -9,7 +9,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -59,11 +59,11 @@ def proceedForNodeConfiguration(flag,nodes,sourceFile,targetFile):
 
         logger.info("Additinal Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(host) )
         with Spinner():
-            outputShFile = connectExecuteSSH(host, 'root', commandToExecute, additionalParam)
+            outputShFile = connectExecuteSSH(host, get_ssh_user(), commandToExecute, additionalParam)
             #print(outputShFile)
             logger.info("outputShFile logs enable CEF : " + str(outputShFile))
-            scp_upload(host,'root',sourceCefLogInput,targetCefLogInput)
-            #scp_upload(host,'root',cefLoggingJarInput,cefLoggingJarInputTarget)
+            scp_upload(host,get_ssh_user(),sourceCefLogInput,targetCefLogInput)
+            #scp_upload(host,get_ssh_user(),cefLoggingJarInput,cefLoggingJarInputTarget)
 
 def proceedForInputParam(configXapLogLocation):
     logger.info("proceedForInputParam() ")

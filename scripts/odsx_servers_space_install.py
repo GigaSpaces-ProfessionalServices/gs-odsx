@@ -14,7 +14,7 @@ from colorama import Fore
 from utils.ods_list import getManagerHostFromEnv, configureMetricsXML
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
-    executeRemoteCommandAndGetOutputValuePython36
+    executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion, \
     config_get_space_list_with_status
 
@@ -299,7 +299,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         spaceHostConfig = []
         spaceStart = ''
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = config_get_space_list_with_status(user)
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
@@ -478,6 +478,9 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
         with Spinner():
             status = os.system(cmd)
         '''
+        # Remove stale tar to ensure fresh build from current install/ contents
+        if os.path.exists('install/install.tar'):
+            os.remove('install/install.tar')
         cmd = 'tar -cvf install/install.tar install'
         with Spinner():
             status = os.system(cmd)
@@ -561,7 +564,7 @@ if __name__ == '__main__':
             #user = readValuefromAppConfig("app.server.user")
             #user = str(userInputWrapper("Enter your user [root]: "))
             #if(len(str(user))==0):
-            user="root"
+            user = get_ssh_user()
             args.append('-u')
             args.append(user)
             hostsConfig = readValuefromAppConfig("app.manager.hosts")

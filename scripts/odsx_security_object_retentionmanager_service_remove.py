@@ -7,11 +7,12 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cleanup import signal_handler
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "retention-manager.service";
-user = "root"
+user = get_ssh_user()
 
 def removeService():
     logger.info("removeService() : start")

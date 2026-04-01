@@ -11,11 +11,12 @@ from scripts.spinner import Spinner
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_grafana_list, config_get_nb_list
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "catalogue-service.service";
-user = "root"
+user = get_ssh_user()
 def getGrafanaServerHostList():
     nodeList = config_get_grafana_list()
     nodes=""

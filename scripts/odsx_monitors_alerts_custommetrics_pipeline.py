@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -43,7 +44,7 @@ def handleException(e):
 def isInstalledAndGetVersionKapacitor(host):
     logger.info("isInstalledAndGetVersion")
     commandToExecute='ls /usr/lib/systemd/system/kapacitor*'
-    outputShFile = executeRemoteCommandAndGetOutputPython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecute)
     #print(outputShFile)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
@@ -53,8 +54,8 @@ def isInstalledAndGetVersionKapacitor(host):
 def getStatusOfKapacitor(host):
     logger.info("getStatusOfKapacitor()")
     with Spinner():
-        user="root"
-        cmd="systemctl status kapacitor"
+        user = get_ssh_user()
+        cmd="sudo systemctl status kapacitor"
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         logger.info("output1 : "+str(output))
         if(output!=0):

@@ -11,6 +11,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -78,9 +79,9 @@ def getDIhostTypeDict():
 
 def startZookeeperServiceByHost(host):
     logger.info("startZookeeperServiceByHost()")
-    cmd = "sudo systemctl start odsxzookeeper.service"
+    cmd = "systemctl --user start odsxzookeeper.service"
     logger.info("Starting odsxzookeeper on "+str(host)+": "+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
@@ -91,7 +92,7 @@ def startZookeeperServiceByHost(host):
 
 def startKafkaServiceByHost(host):
     logger.info("startKafkaServiceByHost()")
-    user = 'root'
+    user = get_ssh_user()
     # KRaft: format storage if not already done (meta.properties absent = not formatted)
     gigapath = str(readValuefromAppConfig("app.giga.path")).rstrip('/')
     gigasharepath = str(readValuefromAppConfig("app.gigashare.path")).rstrip('/')
@@ -105,7 +106,7 @@ def startKafkaServiceByHost(host):
     logger.info("Ensuring KRaft storage is formatted on "+str(host))
     with Spinner():
         executeRemoteCommandAndGetOutputPython36(host, user, format_cmd)
-    cmd = "sudo systemctl start odsxkafka.service"
+    cmd = "systemctl --user start odsxkafka.service"
     logger.info("Starting odsxkafka on "+str(host)+": "+str(cmd))
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
@@ -119,7 +120,7 @@ def startTelegrafServiceByHost(host):
     logger.info("startTelegrafServiceByHost()")
     cmd = "sudo systemctl start telegraf"
     logger.info("Starting telegraf on "+str(host)+": "+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
@@ -131,9 +132,9 @@ def startTelegrafServiceByHost(host):
 def startDIMServices(host):
     logger.info("startDIMServices()")
     # Start order: flink first, then di-mdm (needs ZK), then di-manager (needs di-mdm), then di-transformations (needs di-mdm + di-manager)
-    cmd = "sudo systemctl start di-flink-jobmanager.service;sudo systemctl start di-flink-taskmanager.service;sleep 3;sudo systemctl start di-mdm.service;sleep 5;sudo systemctl start di-manager.service;sleep 3;sudo systemctl start di-transformations.service"
+    cmd = "systemctl --user start di-flink-jobmanager.service;systemctl --user start di-flink-taskmanager.service;sleep 3;systemctl --user start di-mdm.service;sleep 5;systemctl --user start di-manager.service;sleep 3;systemctl --user start di-transformations.service"
     logger.info("Starting DIM services on "+str(host)+": "+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):

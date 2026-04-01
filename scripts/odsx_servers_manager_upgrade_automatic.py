@@ -15,6 +15,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -179,7 +180,7 @@ if __name__ == '__main__':
                     verboseHandle.printConsoleError("multiple packages exist in source path " + str(dir_list))
                 else:
                     packageName = dir_list[0]
-                    user = 'root'
+                    user = get_ssh_user()
                     scriptUser = 'dbsh'
                     # cmd = "free | grep Mem | awk '{print $4/$2 * 100.0}'"
 

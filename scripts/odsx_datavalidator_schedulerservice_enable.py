@@ -21,7 +21,7 @@ def myCheckArg(args=None):
 
 def checkServiceExists():
     logger.info("serviceExists()")
-    cmd = "systemctl list-unit-files "+serviceName+" | wc -l"
+    cmd = "systemctl --user list-unit-files "+serviceName+" | wc -l"
     verboseHandle.printConsoleError(cmd)
     output = os.system(cmd)
     logger.info("serviceExists() : output =>"+str(output))
@@ -48,17 +48,17 @@ def startDataValidationSchedulerService(args):
     if choice.casefold() == 'no':
         exit(0)
 
-    os.system('sudo systemctl daemon-reload')
+    os.system('systemctl --user daemon-reload')
 
-    status = os.system('systemctl is-active --quiet '+serviceName)
+    status = os.system('systemctl --user is-active --quiet '+serviceName)
 
     if(status==0):
         verboseHandle.printConsoleError("Service is already started!")
         exit(0)
 
     with Spinner():
-        executeLocalCommandAndGetOutput("sudo systemctl start --quiet "+serviceName)
-    status = os.system('systemctl is-active --quiet '+serviceName)
+        executeLocalCommandAndGetOutput("systemctl --user start --quiet "+serviceName)
+    status = os.system('systemctl --user is-active --quiet '+serviceName)
     if (status == 0):
         verboseHandle.printConsoleInfo("Service is started successfully!!")
     else:

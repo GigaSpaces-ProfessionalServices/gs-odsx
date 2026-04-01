@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -80,7 +84,7 @@ vaultSupportJarInput=$9
 javaPasswordJarInput=${10}
 springTargetJarInput=${11}
 info "stopping gs...\n"
-systemctl stop gsa
+systemctl --user stop gsa
 sleep 30
 #echo "path:"$(pwd)
 source setenv.sh
@@ -136,5 +140,5 @@ cp $gigapath/gigaspaces-smart-ods/lib/optional/security/* $gigapath/gs_jars
 chown -R $applicativeUser:$applicativeUser $gigapath/*
 sleep 10
 info "starting gs...\n"
-systemctl start gsa
+systemctl --user start gsa
 sleep 30

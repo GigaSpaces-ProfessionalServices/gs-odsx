@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -79,26 +83,25 @@ function installDISubscription {
     installation_path_manager=$sourceInstallerDirectory/data-integration/di-subscription-manager
     installation_file_manager=$(find $installation_path_manager -name "di-subscription-manager*.tgz" -printf "%f\n")
     info "InstallationFile:"$installation_file_manager"\n"
-    sudo mkdir -p $gigapath/di-subscription-manager
-    sudo mkdir -p $gigalogpath/di-iidr
+    mkdir -p $gigapath/di-subscription-manager
+    mkdir -p $gigalogpath/di-iidr
     info "Copying file from "$installation_path_manager/$installation_file_manager" to "$gigapath"/di-subscription-manager \n"
-    sudo cp $installation_path_manager/$installation_file_manager $gigapath/di-subscription-manager
+    cp $installation_path_manager/$installation_file_manager $gigapath/di-subscription-manager
     info "\nExtracting zip file...\n"
-    sudo tar -xzf $gigapath/di-subscription-manager/$installation_file_manager --directory $gigapath/di-subscription-manager/
-    sudo chown -R gsods:gsods $gigapath/di-subscription-manager
+    tar -xzf $gigapath/di-subscription-manager/$installation_file_manager --directory $gigapath/di-subscription-manager/
     extracted_folder_manager=$(ls -I "*.tgz" $gigapath/di-subscription-manager/)
     info "Creating symlink for :"$extracted_folder_manager
 
     # Create symlink in gsods home (install_new_version.sh expects /home/gsods/di-subscription-manager to exist)
-    sudo ln -snf $gigapath/di-subscription-manager /home/gsods/di-subscription-manager
+    ln -snf $gigapath/di-subscription-manager /home/gsods/di-subscription-manager
 
-    # Patch service file log path in config template BEFORE install_new_version.sh deploys it to /etc/systemd/system/
-    sudo sed -i 's|logs/di-subscription-manager-iidr.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' \
+    # Patch service file log path in config template BEFORE install_new_version.sh deploys it to $HOME/.config/systemd/user/
+    sed -i 's|logs/di-subscription-manager-iidr.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' \
         $gigapath/di-subscription-manager/$extracted_folder_manager/config/di-subscription-manager-iidr.service
 
     # Write properties file from scratch matching QA server config
-    sudo mkdir -p $(dirname $gigapath/di-subscription-manager.properties)
-    sudo tee $gigapath/di-subscription-manager.properties > /dev/null << PROPEOF
+    mkdir -p $(dirname $gigapath/di-subscription-manager.properties)
+    tee $gigapath/di-subscription-manager.properties > /dev/null << PROPEOF
 ##iidr.as##
 iidr-as.hostname=${iidrHost}
 iidr-as.port=10101
@@ -147,12 +150,11 @@ springdoc.swagger-ui.request-timeout=10000 # Timeout value in milliseconds
 logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
 PROPEOF
 
-    # install_new_version.sh: copies properties to config/, deploys service file to /etc/systemd/system/,
+    # install_new_version.sh: copies properties to config/, deploys service file to $HOME/.config/systemd/user/,
     # runs daemon-reload, enable, and starts the service
     cd $gigapath/di-subscription-manager/$extracted_folder_manager/utils/
     sudo ./install_new_version.sh $gigapath/di-subscription-manager.properties
-    sudo chown -R gsods:gsods /home/gsods/di-subscription-manager/
-    sudo systemctl daemon-reload
+    systemctl --user daemon-reload
     info "\n Installation DI-Subscription-Manager completed.\n"
 }
 
@@ -172,7 +174,7 @@ if [ "$wantInstallJava" == "y" ]; then
     installAirGapJava
 fi
 
-[ ! -f install.tar ] && sudo cp /root/install.tar . 2>/dev/null || true
+[ ! -f install.tar ] && cp /root/install.tar . 2>/dev/null || true
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 | egrep "\S+\s+version")

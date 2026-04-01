@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -42,9 +43,9 @@ def handleException(e):
 
 def startKapacitorServiceByHost(host):
     logger.info("startKapacitorServiceByHost()")
-    cmd = "systemctl start kapacitor.service;sleep 5; "
+    cmd = "sudo systemctl start kapacitor.service;sleep 5; "
     logger.info("Getting status.. kapacitor :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):

@@ -9,6 +9,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -246,7 +247,7 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container create --zone "+str(zoneGSC)+" --count "+str(numberOfGSC)+" --memory "+str(memoryGSC)+" "+str(host)+""
                     logger.info("cmd : "+str(cmd))
                     with Spinner():
-                        output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
+                        output = executeRemoteCommandAndGetOutput(host, get_ssh_user(), cmd)
                     logger.info("Extracting .tar file :"+str(output))
                     verboseHandle.printConsoleInfo(str(output))
 
@@ -737,14 +738,14 @@ def copyFilesFromODSXToSpaceServer():
 
 def copyFile(hostips, srcPath, destPath, dryrun=False):
     logger.info("copyFile :"+str(hostips)+" : "+str(srcPath)+" : "+str(destPath))
-    username = "root"
+    username = get_ssh_user()
     '''
     if not dryrun:
         username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
-            username = "root"
+            username = get_ssh_user()
     else:
-        username = "root"
+        username = get_ssh_user()
     '''
     for hostip in hostips:
         if scp_upload(hostip, username, srcPath, destPath):

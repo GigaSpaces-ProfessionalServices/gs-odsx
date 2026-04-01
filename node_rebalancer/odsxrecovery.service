@@ -4,12 +4,10 @@ After=network.target
 
 [Service]
 Type=simple
-User=gsods
-Group=gsods
 SuccessExitStatus=143
 ExecStart=/usr/bin/java -cp $nodeRebalancerJar -Djava.util.logging.config.file=$recoverLoggingConfigFile com.gigaspaces.odsx.noderebalancer.Launcher -locators $managerServers -configurationFileName $clusterConfigFile
 ExecStop=/bin/kill -15 $MAINPID
 RemainAfterExit=yes
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

@@ -45,7 +45,7 @@ printNoColor() {
 sourceInstallerDirectory=$1
 hostType=$2
 #echo "sourceInstallerDirectory: "$sourceInstallerDirectory
-cp $sourceInstallerDirectory/telegraf/scripts/space/telegraf_wal-size.sh /usr/local/bin/
+cp $sourceInstallerDirectory/telegraf/scripts/space/telegraf_wal-size.sh /giga/bin/
 sleep 5
 #cat "" >> /etc/telegraf/telegraf.conf
 

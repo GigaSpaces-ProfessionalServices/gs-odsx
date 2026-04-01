@@ -6,7 +6,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder, readValueFromYaml
 from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes, \
     config_get_dataIntegrationiidr_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper, userInputWithEscWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
@@ -125,7 +125,7 @@ def killManagersWebUI():
     commandToExecute = "ps -ef | grep 'services=WEBUI' | grep java | awk '{print $2}' | xargs kill"
     for node in managerNodes:
         managerHost=str(os.getenv(str(node.ip)))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, get_ssh_user(), commandToExecute)
         verboseHandle.printConsoleInfo("Restarted web-ui for host:"+str(os.getenv(str(node.ip))))
 
 def restartSpacedeck():
@@ -134,13 +134,13 @@ def restartSpacedeck():
     commandToExecute = '[ "$(docker ps | grep spacedeck-spacedeck-1)" ] && docker stop spacedeck-spacedeck-1 && docker start spacedeck-spacedeck-1'
     for node in managerNodes:
         managerHost=str(os.getenv(str(node.ip)))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, get_ssh_user(), commandToExecute)
         #verboseHandle.printConsoleInfo("Restarted for host:"+str(os.getenv(str(node.ip))))
 
     diNodes = config_get_dataIntegration_nodes()
     for node in diNodes:
         diHost=str(os.getenv(str(node.ip)))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(diHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(diHost, get_ssh_user(), commandToExecute)
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Schema change')

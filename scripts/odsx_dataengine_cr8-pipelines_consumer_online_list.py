@@ -12,6 +12,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes, config_get_manager_node, \
     config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
 
@@ -96,7 +97,7 @@ def display_stream_list(args):
         #    stream["configurationName"]))
         # fullSyncData = json.loads(response.text)
 
-        user = 'root'
+        user = get_ssh_user()
         scriptUser = 'dbsh'
         fullSyncCmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl status " + str(
             stream["configurationName"]) + "'"

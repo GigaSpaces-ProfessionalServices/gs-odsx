@@ -32,8 +32,8 @@ def myCheckArg(args=None):
 def getRecoveryPolicyDetails(policy):
     dataArray = []
     # for policy in policyConfigurations.policies:
-    #status = executeLocalCommandAndGetOutput("sudo systemctl is-active --quiet odsxrecovery.service")
-    status = os.system('systemctl is-active --quiet odsxrecovery.service')
+    #status = executeLocalCommandAndGetOutput("systemctl --user is-active --quiet odsxrecovery.service")
+    status = os.system('systemctl --user is-active --quiet odsxrecovery.service')
     #print(status)  # will return 0 for active else inactive.
     # status = 'Not Active'
     if (status == 0):

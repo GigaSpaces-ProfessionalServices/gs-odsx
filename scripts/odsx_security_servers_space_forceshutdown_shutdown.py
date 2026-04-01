@@ -13,10 +13,11 @@ from utils.odsx_keypress import userInputWrapper
 from utils.odsx_space_shutdown_reload_utilities import displayPus, getManagerHost, getProcessingUnitList, \
     getServiceListFromConsul, printSuccessSummary, shutdownSpaceServers, undeployFeeders, undeployMicroservices, \
     validateBeforeShutdown, validateTierSpace
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
-user='root'
+user = get_ssh_user()
 class bcolors:
     OK = '\033[92m'  # GREEN
     WARNING = '\033[93m'  # YELLOW

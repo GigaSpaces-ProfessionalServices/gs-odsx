@@ -14,6 +14,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes, \
     config_get_manager_node, config_get_space_hosts
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import host_dictionary_obj
 from utils.odsx_print_tabular_data import printTabular
@@ -75,9 +76,9 @@ def startDataValidationService(args):
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataValidation_nodes():
-            cmd = "systemctl start odsxdatavalidation.service"
+            cmd = "systemctl --user start odsxdatavalidation.service"
             logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                 if (output == 0):
@@ -197,7 +198,7 @@ if __name__ == '__main__':
         cliArguments = ''
         isMenuDriven = ''
         managerRemove = ''
-        user = 'root'
+        user = get_ssh_user()
         logger.info("user :" + str(user))
 
         managerNodes = config_get_manager_node()

@@ -11,6 +11,7 @@ from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFo
 from utils.ods_cluster_config import config_get_grafana_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -61,7 +62,7 @@ def installUserAndTargetDirectory():
         global gsConfigYaml
         global gsConfigYamlTarget
         global gsConfigSpaceboardTarget
-        user="root"
+        user = get_ssh_user()
         hostList = getGrafanaHostFromEnv()
         gsConfigYaml = str(getYamlFilePathInsideFolder(".grafana.gsconfig"))
         gsConfigYamlTarget = str(readValuefromAppConfig("app.grafana.gsconfigyaml.target"))
@@ -88,6 +89,9 @@ def installUserAndTargetDirectory():
 def buildUploadInstallTarToServer():
     logger.info("buildUploadInstallTarToServer(): start")
     try:
+        # Remove stale tar to ensure fresh build from current install/ contents
+        if os.path.exists('install/install.tar'):
+            os.remove('install/install.tar')
         cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
         with Spinner():
             status = os.system(cmd)

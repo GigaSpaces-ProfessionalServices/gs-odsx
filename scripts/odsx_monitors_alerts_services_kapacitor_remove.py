@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_kapacitor_list import listKapacitor
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -43,9 +44,9 @@ def handleException(e):
 
 def removeKapacitorServiceByHost(host):
     logger.info("removeKapacitorServiceByHost()")
-    cmd = "systemctl stop kapacitor;sleep 5;yum -y remove kapacitor;sleep 5;systemctl daemon-reload; "
+    cmd = "sudo systemctl stop kapacitor;sleep 5;yum -y remove kapacitor;sleep 5;sudo systemctl daemon-reload; "
     logger.info("Getting status.. kapacitor :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):

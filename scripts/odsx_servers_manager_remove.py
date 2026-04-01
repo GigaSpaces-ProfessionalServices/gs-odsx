@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput,connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
 from utils.ods_cluster_config import config_get_manager_listWithStatus,config_remove_manager_nodeByIP
@@ -66,7 +67,7 @@ def execute_scriptBuilder(host):
 
     additionalParam = removeJava+' '+removeUnzip
     logger.info("additionalParam : "+str(additionalParam))
-        #outputShFile= executeRemoteShCommandAndGetOutput(host, 'root', additionalParam, commandToExecute)
+        #outputShFile= executeRemoteShCommandAndGetOutput(host, get_ssh_user(), additionalParam, commandToExecute)
     outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
     print(outputShFile)
     logger.info("Output : scripts/servers_manager_remove.sh :"+str(outputShFile))
@@ -127,7 +128,7 @@ if __name__ == '__main__':
                 #userConfig = readValuefromAppConfig("app.server.user")
                 #user = str(userInputWrapper("Enter your user [root]: "))
                 #if(len(str(user))==0):
-                user="root"
+                user = get_ssh_user()
                 logger.info("app.server.user: "+str(user))
                 #if(len(str(user))==0):
                 #    user="ec2-user"
@@ -161,7 +162,7 @@ if __name__ == '__main__':
                 #userConfig = readValuefromAppConfig("app.server.user")
                 #user = str(userInputWrapper("Enter your user [root]: "))
                 #if(len(str(user))==0):
-                user='root'
+                user = get_ssh_user()
                 logger.info("app.server.user: "+str(user))
                 #if(len(str(user))==0):
                 #    user="ec2-user"

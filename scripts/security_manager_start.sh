@@ -1,3 +1,7 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 echo "Starting InsightEdge.."
 source setenv.sh
 #echo $GS_HOME
@@ -11,9 +15,9 @@ cd $GS_HOME
 #pwd
 #sudo -s
 #nohup ./bin/gs.sh host run-agent --auto > /tmp/agent-console.log 2>&1 &
-systemctl daemon-reload
+systemctl --user daemon-reload
 sleep 2
-systemctl start gsa.service
+systemctl --user start gsa.service
 
 sleep 30
 echo "InsightEdge started."

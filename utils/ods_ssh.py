@@ -9,6 +9,10 @@ from scripts.logManager import LogManager
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 
+def get_ssh_user():
+    user = readValuefromAppConfig("app.server.user")
+    return user if user else 'gsods'
+
 def connectExecuteSSH(host, user, shellScript, params):
     if (isValidHost(host)):
         isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
@@ -16,7 +20,7 @@ def connectExecuteSSH(host, user, shellScript, params):
         if (isConnectUsingPem=='True'):
             ssh = ''.join(['ssh', ' -i ', pemFileName, ' ', user, '@', host, ' '])
         else:
-            ssh = ''.join(['ssh', ' ', host, ' '])
+            ssh = ''.join(['ssh', ' ', user, '@', host, ' '])
         if (len(params) > 0):
             cmd = ssh + 'bash' + ' -s ' + params + ' < ' + shellScript  # + '>> myl
         else:
@@ -32,7 +36,7 @@ def connectExecuteSSHWithLoginProxy(host, user, shellScript, params):
         if (isConnectUsingPem=='True'):
             ssh = ''.join(['ssh', ' -i ', pemFileName, ' ', user, '@', host, ' '])
         else:
-            ssh = ''.join(['ssh', ' ', host, ' '])
+            ssh = ''.join(['ssh', ' ', user, '@', host, ' '])
         if (len(params) > 0):
             cmd = ssh + 'bash' + ' -l -s ' + params + ' < ' + shellScript  # + '>> myl
         else:
@@ -50,7 +54,7 @@ def executeRemoteCommandAndGetOutput(host, user, commandToExecute):
     if(isConnectUsingPem=='True'):
         cmd = "ssh -i " + pemFileName + " " + user + "@" + host + " " + commandToExecute
     else:
-        cmd = "ssh" +" " + host + " " + commandToExecute
+        cmd = "ssh" +" " + user + "@" + host + " " + commandToExecute
     logger.info("cmd :"+str(cmd))
     cmdArray = cmd.split(" ")
     logger.info("cmdArray:"+str(cmdArray))
@@ -67,7 +71,7 @@ def executeRemoteCommandAndGetOutputPython36(host, user, commandToExecute):
     if(isConnectUsingPem=='True'):
         cmd = "ssh -i " + pemFileName + " " + user + "@" + host + " " + commandToExecute
     else:
-        cmd = "ssh" +" " + host + " " + commandToExecute
+        cmd = "ssh" +" " + user + "@" + host + " " + commandToExecute
     logger.info("cmd :"+str(cmd))
     cmdArray = cmd.split(" ")
     logger.info("cmdArray:"+str(cmdArray))
@@ -87,7 +91,7 @@ def executeRemoteCommandAndGetOutputValuePython36(host, user, commandToExecute):
     if(isConnectUsingPem=='True'):
         cmd = "ssh -i " + pemFileName + " " + user + "@" + host + " " + commandToExecute
     else:
-        cmd = "ssh" +" " + host + " " + commandToExecute
+        cmd = "ssh" +" " + user + "@" + host + " " + commandToExecute
     logger.info("cmd :"+str(cmd))
     cmdArray = cmd.split(" ")
     logger.info("cmdArray:"+str(cmdArray))
@@ -111,7 +115,7 @@ def executeRemoteShCommandAndGetOutput(host, user, additionalparam, commandToExe
     if(isConnectUsingPem=='True'):
         cmd = "ssh -i " + pemFileName + ' ' + user + "@" + host + ' ' + 'bash' + ' -s ' + additionalparam + " < " + commandToExecute
     else:
-        cmd = "ssh " + host + ' ' + 'bash' + ' -s ' + additionalparam + " < " + commandToExecute
+        cmd = "ssh " + user + "@" + host + ' ' + 'bash' + ' -s ' + additionalparam + " < " + commandToExecute
     logger.info("cmd:"+str(cmd))
     output = subprocess.check_output(cmd, shell=True)
     logger.info("output:"+str(output))

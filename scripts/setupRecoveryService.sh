@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -37,9 +41,9 @@ sed -i 's,$recoverLoggingConfigFile,'$recoverLoggingConfigFile',g' /tmp/odsxreco
 sed -i 's,$nodeRebalancerJar,'$nodeRebalancerJar',g' /tmp/odsxrecovery.service
 sed -i 's,$clusterConfigFile,'$clusterConfigFile',g' /tmp/odsxrecovery.service
 
-sudo mv -f /tmp/odsxrecovery.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable odsxrecovery.service
-sudo systemctl start odsxrecovery.service
+mv -f /tmp/odsxrecovery.service $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable odsxrecovery.service
+systemctl --user start odsxrecovery.service
 
 echo "Recovery service setup - Completed!."

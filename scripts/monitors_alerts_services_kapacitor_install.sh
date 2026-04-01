@@ -1,6 +1,10 @@
 #!/bin/bash
 #set -x
 # prints colored text
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 print_style () {
     if [ "$2" == "debug" ] ; then
         COLOR="96m";
@@ -115,7 +119,7 @@ sed -i '/export KAPACITOR_URL/d' ~/.bash_profile
 echo "kapacitor_url:"$kapacitor_url
 echo "$kapacitor_url" >> ~/.bash_profile
 source ~/.bash_profile
-systemctl daemon-reload
+systemctl --user daemon-reload
 sleep 2
 #For debug
 #sed -i -e 's|#   endpoint = "example"|  endpoint = "debug"|g' /etc/kapacitor/kapacitor.conf

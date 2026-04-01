@@ -16,6 +16,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
@@ -83,7 +84,7 @@ def installSingle():
 
         #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect Data Validation Agent servers [root]:"+Fore.RESET))
         #if(len(str(user))==0):
-        user="root"
+        user = get_ssh_user()
         logger.info(" user: "+str(user))
 
         dbPath= str(readValuefromAppConfig("app.dv.server.db")) #userInputWrapper(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
@@ -153,6 +154,9 @@ def installSingle():
 
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :"+str(host))
+    # Remove stale tar to ensure fresh build from current install/ contents
+    if os.path.exists('install/install.tar'):
+        os.remove('install/install.tar')
     cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)

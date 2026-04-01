@@ -7,7 +7,7 @@ import requests,json
 from os import  path
 from utils.ods_app_config import readValuefromAppConfig
 from requests.auth import HTTPBasicAuth
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 
 defualt_port = '8090'
 
@@ -68,10 +68,11 @@ def get_sqlite_object_count(manager, the_host, space_name, instance_id,isSecure=
 
     pemFileName = readValuefromAppConfig("cluster.pemFile")
     isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
+    ssh_user = get_ssh_user()
     if(isConnectUsingPem=='True'):
-        sh_cmd = "ssh -i " + pemFileName + " root@" + the_host + " " + remote_cmd
+        sh_cmd = "ssh -i " + pemFileName + " " + ssh_user + "@" + the_host + " " + remote_cmd
     else:
-        sh_cmd = "ssh" +" " + the_host + " " + remote_cmd
+        sh_cmd = "ssh " + ssh_user + "@" + the_host + " " + remote_cmd
     the_response = str(subprocess.run([sh_cmd], shell=True, stdout=subprocess.PIPE).stdout)
     #print("the_response-------------->"+the_response)
     return int(the_response.strip("\\n'").strip("b'"))

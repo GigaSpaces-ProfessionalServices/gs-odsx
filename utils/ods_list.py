@@ -9,7 +9,7 @@ from utils.ods_cluster_config import config_get_grafana_list, config_get_influxd
 from utils.ods_validation import getTelnetStatus
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput
+    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, get_ssh_user
 from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -68,12 +68,12 @@ def isInstalledAndGetVersionGrafana(host):
     logger.info("isInstalledAndGetVersion")
     commandToExecute='ls /usr/lib/systemd/system/grafana*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     if len(str(outputShFile)) ==0:
-        commandToExecute='ls /etc/systemd/system/grafana*'
+        commandToExecute='ls ~/.config/systemd/user/grafana*'
         logger.info("commandToExecute :"+str(commandToExecute))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
         outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -98,9 +98,9 @@ def getGrafanaServerDetails(grafanaServers):
 
 def isInstalledAndGetVersionInflux(host):
     logger.info("isInstalledAndGetVersion")
-    commandToExecute='ls /etc/systemd/system/influx*'
+    commandToExecute='ls ~/.config/systemd/user/influx*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -109,7 +109,7 @@ def isInstalledIIDRAccessServer(host):
     logger.info("isInstalledIIDRAccessServer")
     commandToExecute='ls /data/gs_software/iidr/as*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -118,7 +118,7 @@ def isInstalledIIDRKafkaAgent(host):
     logger.info("isInstalledIIDRKafkaAgent")
     commandToExecute='ls /data/gs_software/iidr/kafka*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -127,7 +127,7 @@ def isInstalledIIDROracleAgent(host):
     logger.info("isInstalledIIDROracleAgent")
     commandToExecute='ls /data/gs_software/iidr/oracle*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -136,7 +136,7 @@ def isInstalledIIDRSubscriptionManager(host):
     logger.info("isInstalledIIDRSubscriptionManager")
     commandToExecute='ls /home/gsods/di-subscription-manager/latest-di-subscription-manager*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -163,8 +163,8 @@ def validateMetricsXmlInfluxUrl(ip):
     logger.info("validateMetricsXmlInfluxUrl()")
     cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/datasources/datasource/property[@name=\"url\"]/@value)' "+dbaGigaPath+"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    #output3 = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
-    output3 = executeRemoteCommandAndGetOutputValuePython36(ip, 'root', cmdToExecute)
+    #output3 = executeRemoteCommandAndGetOutput(ip,get_ssh_user(),cmdToExecute)
+    output3 = executeRemoteCommandAndGetOutputValuePython36(ip, get_ssh_user(), cmdToExecute)
     output3=str(output3).replace('\n','')
     logger.info("output3"+str(output3))
     influxUrl="http://"+str(getInfluxdbServers())+":8086"
@@ -188,7 +188,7 @@ def validateMetricsXmlInflux(ip):
     logger.info("validateMetricsXml()")
     cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/reporters/reporter/property/@value)' "+ dbaGigaPath +"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output1 = executeRemoteCommandAndGetOutputValuePython36(ip,"root",cmdToExecute)
+    output1 = executeRemoteCommandAndGetOutputValuePython36(ip,get_ssh_user(),cmdToExecute)
     output1=str(output1).replace('\n','')
     logger.info("output1"+str(output1))
     if str(output1)==str(getInfluxdbServers()):
@@ -200,7 +200,7 @@ def validateMetricsXmlGrafana(ip):
     logger.info("validateMetricsXmlGrafana()")
     cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/@url)' "+ dbaGigaPath +"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output2 = executeRemoteCommandAndGetOutputValuePython36(ip,"root",cmdToExecute)
+    output2 = executeRemoteCommandAndGetOutputValuePython36(ip,get_ssh_user(),cmdToExecute)
     output2=str(output2).replace('\n','')
     grafanaUrl = "http://"+str(getGrafanaServers())+":3000"
     logger.info("output2"+str(output2))
@@ -257,7 +257,7 @@ def configureMetricsXML(host):
     try:
         cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" '+ dbaGigaPath +'/gs_config/metrics.xml'
         logger.info(cmd)
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
     except Exception as e:

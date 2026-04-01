@@ -12,6 +12,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes, \
     config_get_dataEngine_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -97,7 +98,7 @@ def installSingle():
         logger.info("Enter host to install cr8: " + str(host))
         #user = str(userInputWrapper(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
         #if (len(str(user)) == 0):
-        user = "root"
+        user = get_ssh_user()
         logger.info(" user: " + str(user))
 
         confirmInstall = str(userInputWrapper(Fore.YELLOW + "Are you sure want to install DE servers (y/n) [y]: " + Fore.RESET))
@@ -133,7 +134,7 @@ def installCluster():
     logger.info("witnessHost :" + str(witnessHost))
     #user = str(userInputWrapper(Fore.YELLOW + "Enter user to connect DE servers [root]:" + Fore.RESET))
     #if (len(str(user)) == 0):
-    user = "root"
+    user = get_ssh_user()
     logger.info(" user: " + str(user))
 
     clusterHosts.append(masterHost)
@@ -163,6 +164,9 @@ def installCluster():
 
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :" + str(host))
+    # Remove stale tar to ensure fresh build from current install/ contents
+    if os.path.exists('install/install.tar'):
+        os.remove('install/install.tar')
     cmd = 'tar -cvf install/install.tar install'  # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
@@ -185,7 +189,7 @@ def executeCommandForInstall(host, type, count):
     try:
         commandToExecute = "scripts/dataengine_list_cr8_install_pre.sh"
         additionalParam = str(type)
-        output = executeRemoteShCommandAndGetOutput(host, 'root', '', commandToExecute)
+        output = executeRemoteShCommandAndGetOutput(host, get_ssh_user(), '', commandToExecute)
         output = output.decode("utf-8").replace("IS_CR8_INSTALL= ", "").replace("\n", "")
         print(output)
         installCr8 = True

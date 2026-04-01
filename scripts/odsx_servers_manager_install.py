@@ -17,7 +17,7 @@ from utils.ods_list import configureMetricsXML
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
     executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
-    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
+    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
@@ -455,6 +455,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
             logger.info('additional param :'+additionalParam)
             output=""
+            # Remove stale tar to ensure fresh build from current install/ contents
+            if os.path.exists('install/install.tar'):
+                os.remove('install/install.tar')
             logger.info("Building .tar file : tar -cvf install/install.tar install")
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
@@ -596,9 +599,9 @@ if __name__ == '__main__':
             #args.append(host)
             #user = readValuefromAppConfig("app.server.user")
             #user = str(userInputWrapper("Enter your user [root]: "))
-            user='root'
+            user = get_ssh_user()
             if(len(str(user))==0):
-                user="root"
+                user = get_ssh_user()
             args.append('-u')
             args.append(user)
             hostsConfig = readValuefromAppConfig("app.manager.hosts")

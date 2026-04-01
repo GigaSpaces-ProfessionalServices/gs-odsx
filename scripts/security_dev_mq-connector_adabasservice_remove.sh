@@ -1,5 +1,9 @@
 #!/bin/bash
 #source /home/dbsh/setenv.sh
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -26,8 +30,8 @@ gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
 
 
-systemctl stop odsxadabas.service
-systemctl disable odsxadabas.service
-systemctl daemon-reload
+systemctl --user stop odsxadabas.service
+systemctl --user disable odsxadabas.service
+systemctl --user daemon-reload
 
-rm -rf install install.tar dbagigashare /home/dbsh/install /home/dbsh/install.tar /home/dbsh/setenv.sh /usr/local/bin/st*_adabasFeeder.sh /etc/systemd/system/odsxadabas.service $gigapath/Adabas/* $gigalogpath/Adabas/*
+rm -rf install install.tar dbagigashare /home/dbsh/install /home/dbsh/install.tar /home/dbsh/setenv.sh /giga/bin/st*_adabasFeeder.sh $HOME/.config/systemd/user/odsxadabas.service $gigapath/Adabas/* $gigalogpath/Adabas/*

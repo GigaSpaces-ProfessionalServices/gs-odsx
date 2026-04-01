@@ -10,7 +10,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, \
-    executeRemoteCommandAndGetOutputValuePython36
+    executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_validation import getDataValidationServerStatus
 from utils.odsx_print_tabular_data import printTabular
 
@@ -69,9 +69,9 @@ def myCheckArg(args=None):
 
 def getConsolidatedStatus(ip, type):
     output = ''
-    cmdList = ["systemctl status odsxdatavalidation"+type]
+    cmdList = ["systemctl --user status odsxdatavalidation"+type]
     for cmd in cmdList:
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(ip, user, cmd)
             if (output != 0):
@@ -80,8 +80,8 @@ def getConsolidatedStatus(ip, type):
     return output
 
 def isServiceInstalled(host, type):
-    commandToExecute='ls /etc/systemd/system/odsxdatavalidation'+type+'*'
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    commandToExecute='ls ~/.config/systemd/user/odsxdatavalidation'+type+'*'
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     return str(outputShFile)
 

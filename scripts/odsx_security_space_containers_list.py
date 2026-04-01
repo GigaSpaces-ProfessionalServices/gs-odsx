@@ -11,7 +11,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getUsernameByHost, getPasswordByHost
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
@@ -158,7 +158,7 @@ def getContainersbyHost():
     commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" container list "+str(hostName)
     logger.info(commandToExecute)
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), commandToExecute)
         logger.info("Output:" + str(output))
         print(output)
 

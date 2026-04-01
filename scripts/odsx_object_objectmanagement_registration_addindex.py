@@ -11,6 +11,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getDataValidationServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
@@ -72,11 +73,11 @@ def myCheckArg(args=None):
 def getConsolidatedStatus(node):
     output = ''
     logger.info("getConsolidatedStatus() : " + str(node.ip))
-    cmdList = ["systemctl status odsxdatavalidation"]
+    cmdList = ["systemctl --user status odsxdatavalidation"]
     for cmd in cmdList:
         logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
         logger.info("Getting status.. :" + str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
             logger.info("output1 : " + str(output))

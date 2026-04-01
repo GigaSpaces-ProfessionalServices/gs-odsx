@@ -3,7 +3,6 @@ Description="CR8 Service"
 
 [Service]
 Type=forking
-User=dbsh
 ExecStart=/home/dbsh/cr8/latest_cr8/utils/CR8_ctl.sh start
 ExecStop=/home/dbsh/cr8/latest_cr8/utils/CR8_ctl.sh stop
 PIDFile=/home/dbsh/cr8/latest_cr8/logs/CR8.pid
@@ -11,4 +10,4 @@ Restart=on-failure
 SuccessExitStatus=SIGKILL
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

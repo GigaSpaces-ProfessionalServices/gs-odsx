@@ -13,11 +13,12 @@ from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_manager import getManagerInfo
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getManagerHost
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "object-management.service"
-user = "root"
+user = get_ssh_user()
 app_config_space_key = 'app.tieredstorage.pu.spacename'
 
 
@@ -87,10 +88,10 @@ def setupService():
     logger.info("Command "+commandToExecute)
     try:
         with Spinner():
-            os.system("cp utils/odsx_vault_cred_details.sh /usr/local/bin/")
+            os.system("cp utils/odsx_vault_cred_details.sh /giga/bin/")
             os.system(commandToExecute)
 
-            os.system('sudo systemctl daemon-reload')
+            os.system('systemctl --user daemon-reload')
 
 
 

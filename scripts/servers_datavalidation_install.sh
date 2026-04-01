@@ -1,3 +1,7 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 echo "Starting Data Validation Server Installation."
 #echo "Extracting install.tar to "$targetDir
 sourceInstallerDirectory=$1
@@ -50,16 +54,16 @@ mv $home_dir_sh/st*_data_validation_server.sh /tmp
 
 mv $home_dir_sh/install/$data_validation_service_file /tmp
 
-mv /tmp/st*_data_validation_server.sh /usr/local/bin/
+mv /tmp/st*_data_validation_server.sh /giga/bin/
 
-chmod +x /usr/local/bin/st*_data_validation_server.sh
+chmod +x /giga/bin/st*_data_validation_server.sh
 
-mv /tmp/$data_validation_service_file /etc/systemd/system/
+mv /tmp/$data_validation_service_file $HOME/.config/systemd/user/
 
-restorecon /etc/systemd/system/$data_validation_service_file
+restorecon $HOME/.config/systemd/user/$data_validation_service_file
 
-sudo systemctl daemon-reload
-sudo systemctl enable $data_validation_service_file
+systemctl --user daemon-reload
+systemctl --user enable $data_validation_service_file
 
 
 

@@ -5,12 +5,10 @@ Requires=gsa.service
 
 [Service]
 Type=simple
-User=gsods
-Group=gsods
-ExecStart=/bin/bash /usr/local/bin/start_gsc.sh
-ExecStop=/bin/bash /usr/local/bin/stop_gsc.sh
+ExecStart=/bin/bash /giga/bin/start_gsc.sh
+ExecStop=/bin/bash /giga/bin/stop_gsc.sh
 #RemainAfterExit=yes
 Restart=on-failure
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

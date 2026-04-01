@@ -11,6 +11,7 @@ from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.ods_scp import scp_upload
 import logging
 import glob
@@ -372,7 +373,7 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     logger.info("cmd : "+str(cmd))
                     print(str(cmd))
                     with Spinner():
-                        output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
+                        output = executeRemoteCommandAndGetOutput(host, get_ssh_user(), cmd)
                     logger.info("Extracting .tar file :"+str(output))
                     verboseHandle.printConsoleInfo(str(output))
 
@@ -529,14 +530,14 @@ def displaySummaryOfInputParam(confirmCreateGSC):
 
 def copyFile(hostips, srcPath, destPath, dryrun=False):
     logger.info("copyFile :"+str(hostips)+" : "+str(srcPath)+" : "+str(destPath))
-    username = "root"
+    username = get_ssh_user()
     '''
     if not dryrun:
         username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
-            username = "root"
+            username = get_ssh_user()
     else:
-        username = "root"
+        username = get_ssh_user()
     '''
     for hostip in hostips:
         if scp_upload(hostip, username, srcPath, destPath):

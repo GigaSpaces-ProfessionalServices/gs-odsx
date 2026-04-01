@@ -1,3 +1,7 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 echo "Starting space servers.."
 source setenv.sh
 #echo "GSC="$2
@@ -14,8 +18,8 @@ cd $GS_HOME
 #pwd
 #sudo -s
 #nohup ./bin/gs.sh host run-agent --auto > /tmp/agent-console.log 2>&1 &
-systemctl daemon-reload
-systemctl start gsa.service
+systemctl --user daemon-reload
+systemctl --user start gsa.service
 sleep 30
 echo "Space servers started."
 #source setenv.sh

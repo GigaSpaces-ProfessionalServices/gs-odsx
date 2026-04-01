@@ -16,7 +16,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import getYamlFilePathInsideFolder, readValuefromAppConfig, \
     readValueByConfigObj, readValueFromYaml
 from utils.ods_cluster_config import config_get_manager_node, config_get_dataIntegration_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPortNotExistInOracleErpFeeder
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
@@ -175,7 +175,7 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     targetJarFile=sourceOracleFeederShFilePath+fileName+"_"+puName+'.jar'
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
-        cmd = "sudo cp "+sourceOracleJarFilePath+' '+sourceOracleFeederShFilePath+fileName+"_"+puName+'.jar'
+        cmd = "cp "+sourceOracleJarFilePath+' '+sourceOracleFeederShFilePath+fileName+"_"+puName+'.jar'
     else:
         cmd = "cp "+sourceOracleJarFilePath+' '+sourceOracleFeederShFilePath+fileName+"_"+puName+'.jar'
     logger.info("cmd : "+str(cmd))
@@ -328,7 +328,7 @@ def proceedToDeployPU(feederName):
                         createOracleEntryInSqlLite(puName,file,restPort)
                         userCMD = os.getlogin()
                         if userCMD == 'ec2-user':
-                            cmd = "sudo rm -f "+sourceOracleFeederShFilePath+resource
+                            cmd = "rm -f "+sourceOracleFeederShFilePath+resource
                         else:
                             cmd = "rm -f "+sourceOracleFeederShFilePath+resource
                         logger.info("cmd : "+str(cmd))
@@ -559,7 +559,7 @@ def killManagersWebUI():
     commandToExecute = "ps -ef | grep 'services=WEBUI' | grep java | awk '{print $2}' | xargs kill"
     for node in managerNodes:
         managerHost=str(os.getenv(str(node.ip)))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(managerHost, get_ssh_user(), commandToExecute)
         verboseHandle.printConsoleInfo("Restarted web-ui for host:"+str(os.getenv(str(node.ip))))
 
 def getDIServerHost():

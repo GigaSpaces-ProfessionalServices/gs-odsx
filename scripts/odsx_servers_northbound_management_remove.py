@@ -6,7 +6,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_nb_list
-from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
@@ -47,7 +47,7 @@ def getNBFolderName():
     tar_files = [file for file in files if file.endswith('.tar.gz')]
     for tar_file in tar_files:
         cmdToExecute = "tar -ztvf "+str(os.getenv("ODSXARTIFACTS")) +"/nb/"+tar_file+" | head -1 | awk '{print $NF}' | cut -d/ -f1"
-        output = executeRemoteCommandAndGetOutput(getPivotHost(),"root",cmdToExecute)
+        output = executeRemoteCommandAndGetOutput(getPivotHost(),get_ssh_user(),cmdToExecute)
         return output.replace("\n","")
 
 def getNBAgentHostList():
@@ -94,7 +94,7 @@ def removeAgent(nodes):
         verboseHandle.printConsoleInfo("Removing Agent :"+str(node))
         logger.info("Current host :"+str(node))
         verboseHandle.printConsoleInfo("NB Agent going to remove :"+str(node))
-        connectExecuteSSH(str(node), "root", "scripts/servers_northbound_remove.sh", remotePath+"/"+getNBFolderName() + " --uninstall")
+        connectExecuteSSH(str(node), get_ssh_user(), "scripts/servers_northbound_remove.sh", remotePath+"/"+getNBFolderName() + " --uninstall")
         #config_remove_nb_streamByNameIP(str(node),str(node))
         logger.info("Host removed.:"+str(node))
         print("Host removed.:"+str(node))
@@ -107,7 +107,7 @@ def removeManagement(managementNodes):
         verboseHandle.printConsoleInfo("Removing management server :"+str(node))
         logger.info("Current host :"+str(node))
         verboseHandle.printConsoleInfo("NB management server going to remove :"+str(node))
-        connectExecuteSSH(str(node), "root", "scripts/servers_northbound_remove.sh", remotePath+"/"+getNBFolderName() + " --uninstall")
+        connectExecuteSSH(str(node), get_ssh_user(), "scripts/servers_northbound_remove.sh", remotePath+"/"+getNBFolderName() + " --uninstall")
         #config_remove_nb_streamByNameIP(str(node),str(node))
         logger.info("Host removed.:"+str(node))
         print("Uninstallation NB on host:"+str(node))
@@ -174,7 +174,7 @@ if __name__ == '__main__':
             for hostip in nodeList:
                 verboseHandle.printConsoleInfo("Removing NB applicative server :"+str(hostip))
                 logger.info("Current NB applicative host :"+str(hostip))
-                connectExecuteSSH(str(hostip), "root", "scripts/servers_northbound_remove.sh", remotePath+"/"+getNBFolderName() + " --uninstall")
+                connectExecuteSSH(str(hostip), get_ssh_user(), "scripts/servers_northbound_remove.sh", remotePath+"/"+getNBFolderName() + " --uninstall")
                 config_remove_nb_streamByNameIP(str(hostip),str(hostip))
                 logger.info("Host removed.:"+str(hostip))
                 print("Host removed.:"+str(hostip))

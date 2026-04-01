@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -71,11 +75,11 @@ sed -i 's,$scheduler_config,'$scheduler_config',g' /tmp/$service_name
 sed -i 's,$scheduler_interval,'$scheduler_interval',g' /tmp/$service_name
 sed -i 's,$lookup_group,'$lookup_group',g' /tmp/$service_name
 
-sudo mv -f /tmp/$service_name /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable $service_name
-sudo systemctl start $service_name
+mv -f /tmp/$service_name $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable $service_name
+systemctl --user start $service_name
 sudo sleep 10s
-sudo systemctl restart $service_name 
+systemctl --user restart $service_name 
 
 #echo "Retention Manager service setup - Completed!."

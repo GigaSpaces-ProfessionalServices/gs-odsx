@@ -11,7 +11,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -243,7 +243,7 @@ def proceedForAllUndeploy(managerHost):
 def removeGSCByZoneName(zoneToDeleteGSC):
     cmd = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container kill --zones "+str(zoneToDeleteGSC)
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
+        output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), cmd)
         print(output)
 def proceedToUndeployPU(managerHost):
     logger.info("proceedToUndeployPU()")
@@ -352,7 +352,7 @@ def removeGSC(managerHost,spaceNumberTobeRemove,flag):
         logger.info("cmd : "+str(cmd))
         verboseHandle.printConsoleInfo("Killing container of zone : "+str(zoneToDeleteGSC))
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
+            output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), cmd)
             print(output)
 
 def proceedForPersistUndeploy():

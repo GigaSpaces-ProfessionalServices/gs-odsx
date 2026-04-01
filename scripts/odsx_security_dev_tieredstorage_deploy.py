@@ -14,6 +14,7 @@ from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_f
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -327,7 +328,7 @@ def createGSC(memoryGSC,zoneGSC,numberOfGSC,managerHostConfig,individualHostConf
                     logger.info("cmd : "+str(cmd))
                     #print(str(cmd))
                     with Spinner():
-                        output = executeRemoteCommandAndGetOutput(host, 'root', cmd)
+                        output = executeRemoteCommandAndGetOutput(host, get_ssh_user(), cmd)
                     logger.info("Extracting .tar file :"+str(output))
                     verboseHandle.printConsoleInfo(str(output))
 
@@ -502,14 +503,14 @@ def displaySummaryOfInputParam(confirmCreateGSC):
 
 def copyFile(hostips, srcPath, destPath, dryrun=False):
     logger.info("copyFile :"+str(hostips)+" : "+str(srcPath)+" : "+str(destPath))
-    user = "root"
+    user = get_ssh_user()
     '''
     if not dryrun:
         username = userInputWrapper("Enter username for host [root] : ")
         if username == "":
-            username = "root"
+            username = get_ssh_user()
     else:
-        username = "root"
+        username = get_ssh_user()
     '''
     for hostip in hostips:
         if scp_upload(hostip, user, srcPath, destPath):

@@ -1,3 +1,7 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 echo "Installation begin for mq-connector!!!"
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -57,9 +61,9 @@ fi
 if [ ! -d "$logDir" ]; then
      mkdir -p $logDir
 fi
-chmod 777 $rootDir
-chmod 777 $targetDir
-chmod 777 $logDir
+chmod 755 $rootDir
+chmod 755 $targetDir
+chmod 755 $logDir
 echo "Dir created.."
 cmd="/dbagigasoft/Adabas/run-publisher.sh -name adabasPublisher"
 echo "$cmd">>$start_adabas_feeder_file
@@ -78,7 +82,7 @@ mv $home_dir_sh/$keystoreFile $targetDir/$keystoreFile
 chown gsods:gsods $targetDir/*.sh
 chown gsods:gsods $targetDir/config/*.*
 chmod +x $targetDir/*.sh
-chmod 777 $targetDir/config/*.*
+chmod 755 $targetDir/config/*.*
 
 mqHostname=$6
 mqChannel=$7
@@ -108,12 +112,12 @@ mv $home_dir_sh/$stop_adabas_feeder_file /tmp
 mv $home_dir_sh/install/$service_file /tmp
 #echo "Files moved to /tmp"
 
-mv /tmp/st*_adabasFeeder.sh /usr/local/bin/
+mv /tmp/st*_adabasFeeder.sh /giga/bin/
 
-chmod +x /usr/local/bin/st*_adabasFeeder.sh
+chmod +x /giga/bin/st*_adabasFeeder.sh
 
-mv /tmp/$service_file /etc/systemd/system/
-systemctl daemon-reload
+mv /tmp/$service_file $HOME/.config/systemd/user/
+systemctl --user daemon-reload
 
 chown gsods:gsods $rootDir
 chown gsods:gsods $targetDir
@@ -121,4 +125,4 @@ chown gsods:gsods $targetDir/*
 chown gsods:gsods $logDir
 
 
-#rm -rf /dbagigasoft/Adabas/ /usr/local/bin/*_adabasFeeder.sh /etc/systemd/system/odsxadabas.service install install.tar /dbagigasoft setenv.sh
+#rm -rf /dbagigasoft/Adabas/ /giga/bin/*_adabasFeeder.sh $HOME/.config/systemd/user/odsxadabas.service install install.tar /dbagigasoft setenv.sh

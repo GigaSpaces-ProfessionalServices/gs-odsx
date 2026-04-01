@@ -7,7 +7,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_servers_space_install import getSpaceHostFromEnv
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -78,11 +78,11 @@ def configureLicenseManagerAndSpace():
         logger.info("commandToExecute:"+commandToExecute)
 
         for host in managerHosts.split(','):
-            outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+            outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
             verboseHandle.printConsoleInfo("xap_logging.properties configured for host:"+host)
 
         for host in spaceHosts.split(','):
-            outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+            outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
             verboseHandle.printConsoleInfo("xap_logging.properties configured for host:"+host)
 
 if __name__ == '__main__':

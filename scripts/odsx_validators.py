@@ -12,6 +12,7 @@ from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts, config_get_nb_list, \
     config_get_grafana_list, config_get_influxdb_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.ods_validation import isValidHost, getTelnetStatus
 from utils.odsx_print_tabular_data import printTabular
@@ -236,10 +237,10 @@ def getRESTResponsive(managerNodes, dataTable):
 def getElapseTime(ip):
     logger.info("getElapseTime(ip) : "+str(ip))
     commandToExecute = "pidof java"
-    output = executeRemoteCommandAndGetOutput(ip, 'root', commandToExecute)
+    output = executeRemoteCommandAndGetOutput(ip, get_ssh_user(), commandToExecute)
     pidStrArray = str(output).split(' ')
     commandToExecute = "ps -p "+pidStrArray[0]+" -o etime"
-    output = executeRemoteCommandAndGetOutput(ip, 'root', commandToExecute)
+    output = executeRemoteCommandAndGetOutput(ip, get_ssh_user(), commandToExecute)
     elapseTime = str(output).replace('    ','').replace('ELAPSED','').replace('   ','').replace('\n','')
     return elapseTime
 
@@ -273,11 +274,11 @@ def getUpTimeManagerStatus(managerNodes, dataTable):
 
 def getStatusOfNBHost(server):
     if(str(server.role).__contains__('agent')):
-        cmd = "systemctl status consul.service"
+        cmd = "systemctl --user status consul.service"
     if(str(server.role).__contains__('server') or str(server.role).__contains__('management')):
-        cmd = 'systemctl status northbound.target'
+        cmd = 'systemctl --user status northbound.target'
     logger.info("Getting status.. :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
     logger.info(cmd+" :"+str(output))
@@ -291,7 +292,7 @@ def getUpTimeForServiceByServiceName(node,serviceName):
     host=node.ip
     if(isValidHost(host)):
         logger.info("host :"+host)
-        commandToExecute = "systemctl status "+serviceName
+        commandToExecute = "systemctl --user status "+serviceName
         elaplsedTime = ''
         elaplsedTimehr=''
         elaplsedTimeMin=''
@@ -300,7 +301,7 @@ def getUpTimeForServiceByServiceName(node,serviceName):
             status = getStatusOfNBHost(node)
             logger.info("getStatusOfNBHost : status "+str(status))
             if(status=='ON'):
-                output = executeRemoteCommandAndGetOutput(host, 'root', commandToExecute)
+                output = executeRemoteCommandAndGetOutput(host, get_ssh_user(), commandToExecute)
                 outputStr = str(output)
                 startStrElapseTime = str(output).rfind('UTC;')+4
                 endStrElapseTime = str(output).rfind('ago')
@@ -399,7 +400,7 @@ def getUpTimeNorthboundStatus(northboundServer, dataTable):
 def getUsageOfRoot(ip):
     logger.info("getUsageOfRoot(ip) "+str(ip))
     commandToExecute = "df / | awk 'END{ print $(NF-1) }'"
-    output = executeRemoteCommandAndGetOutput(ip, 'root', commandToExecute)
+    output = executeRemoteCommandAndGetOutput(ip, get_ssh_user(), commandToExecute)
     logger.info("output :"+str(output))
     return str(output).replace('\n','')
 
@@ -407,7 +408,7 @@ def getUsageOfWork(ip):
     logger.info("getUsageOfWork(ip) :"+str(ip))
     dbaGigaWorkPath=readValuefromAppConfig("app.gigawork.path")
     commandToExecute = "df "+ dbaGigaWorkPath +"/ | awk 'END{ print $(NF-1) }'"
-    output = executeRemoteCommandAndGetOutput(ip, 'root', commandToExecute)
+    output = executeRemoteCommandAndGetOutput(ip, get_ssh_user(), commandToExecute)
     logger.info("output :"+str(output))
     return str(output).replace('\n','')
 
@@ -522,8 +523,8 @@ def getRAMUtilizationForManagerAndSpace(managerNodes, dataTable, spaceServers, g
 
 def getStatusOfFileBeat(server):
     logger.info("getStatusOfFileBeat() :"+str(server.ip))
-    cmd = "systemctl is-active filebeat.service"
-    user = 'root'
+    cmd = "systemctl --user is-active filebeat.service"
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(server.ip, user, cmd)
     logger.info(cmd+" :"+str(output))

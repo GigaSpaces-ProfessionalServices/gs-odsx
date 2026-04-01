@@ -10,6 +10,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -61,11 +62,11 @@ def myCheckArg(args=None):
 
 def getKafkaStatus(node):
     logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxzookeeper" , "systemctl status odsxkafka"]
+    cmdList = [ "systemctl --user status odsxzookeeper" , "systemctl --user status odsxkafka"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
         logger.info("Getting status.. :"+str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
             logger.info("output1 : "+str(output))
@@ -77,14 +78,14 @@ def getKafkaStatus(node):
 def getConsolidatedStatus(node):
     output=''
     logger.info("getConsolidatedStatus() : "+str(node.ip))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper"]
+    cmdList = [ "systemctl --user status odsxkafka" , "systemctl --user status odsxzookeeper"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(node.ip))
-        if(str(node.type)=='Witness' and cmd=='systemctl status odsxcr8'):
+        if(str(node.type)=='Witness' and cmd=='systemctl --user status odsxcr8'):
             output=0
         else:
             logger.info("Getting status.. :"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                 logger.info("output1 : "+str(output))
@@ -110,11 +111,11 @@ def roleOfCurrentNode(ip):
 
 def getAdabusServiceStatus(node):
     logger.info("getConsolidatedStatus() : " + str(node.ip))
-    cmdList = ["systemctl status odsxadabas"]
+    cmdList = ["systemctl --user status odsxadabas"]
     for cmd in cmdList:
         logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
         logger.info("Getting status.. :" + str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
             logger.info("output1 : " + str(output))

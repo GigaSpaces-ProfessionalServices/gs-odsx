@@ -1,3 +1,7 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 source setenv.sh
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -25,10 +29,10 @@ gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
 
 
-systemctl stop odsxdatavalidationagent.service
+systemctl --user stop odsxdatavalidationagent.service
 sleep 2
 
 #yum -y remove java*
 #yum -y remove jdk*
 
-rm -rf $gigapath/datavalidator/agent /usr/local/bin/st*_data_validation_agent.sh /etc/systemd/system/odsxdatavalidationagent.service
+rm -rf $gigapath/datavalidator/agent /giga/bin/st*_data_validation_agent.sh $HOME/.config/systemd/user/odsxdatavalidationagent.service

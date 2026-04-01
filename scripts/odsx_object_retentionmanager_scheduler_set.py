@@ -9,11 +9,12 @@ from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFo
 from utils.ods_cleanup import signal_handler
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_retentionmanager_utilities import isTimeFormat, setupOrReloadService, getManagerHost
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "retention-manager.service"
-user = "root"
+user = get_ssh_user()
 app_config_interval_key = 'app.retentionmanager.scheduler.interval'
 app_config_time_key = 'app.retentionmanager.scheduler.time'
 app_config_space_key = 'app.retentionmanager.space'

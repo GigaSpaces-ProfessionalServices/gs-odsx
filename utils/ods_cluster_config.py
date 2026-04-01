@@ -17,7 +17,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36,executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36,executeRemoteCommandAndGetOutput, get_ssh_user
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
@@ -535,7 +535,7 @@ def config_get_space_list_with_threading(server,host_nic_dict_obj):
     spaceHost = str(os.getenv(server.ip))
     cmd = 'ps -ef | grep GSA'
     # with Spinner():
-    output = executeRemoteCommandAndGetOutput(spaceHost, 'root', cmd)
+    output = executeRemoteCommandAndGetOutput(spaceHost, get_ssh_user(), cmd)
     #output = executeRemoteShCommandAndGetOutput(server.ip,user,cmd)
     if(str(output).__contains__('services=GSA')):
             logger.info("services=GSA")
@@ -596,7 +596,7 @@ def isInstalledAndGetVersion(host):
     #commandToExecute="ls -la "+ dbaGigaPath +" | grep \"\->\" | awk \'{print $11}\'"
     commandToExecute='cd '+ dbaGigaPath +';cd -P gigaspaces-smart-ods;echo ""$(basename $(pwd))'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','').replace(dbaGigaPath + '/','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -606,7 +606,7 @@ def isInstalledAndGetVersionOldGS(host):
     #commandToExecute="ls -la "+ dbaGigaPath +" | grep \"\->\" | awk \'{print $11}\'"
     commandToExecute='cd '+ dbaGigaPath +';cd -P gigaspaces-smart-ods-old;echo ""$(basename $(pwd))'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','').replace(dbaGigaPath +'/','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -1363,9 +1363,9 @@ def config_add_dataEngine_node(hostIp, hostName, engine, role, type, filePath='c
 
 def isInstalledAdabasService(host):
     logger.info("isInstalledAndGetVersion")
-    commandToExecute='ls /etc/systemd/system/odsxadabas.*'
+    commandToExecute='ls ~/.config/systemd/user/odsxadabas.*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     return str(outputShFile)
 

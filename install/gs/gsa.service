@@ -5,11 +5,9 @@ After=network.target
 
 [Service]
 Type=simple
-User=gsods
-Group=gsods
-ExecStart=/bin/bash /usr/local/bin/start_gsa.sh
-ExecStop=/bin/bash /usr/local/bin/stop_gsa.sh
+ExecStart=/bin/bash /giga/bin/start_gsa.sh
+ExecStop=/bin/bash /giga/bin/stop_gsa.sh
 Restart=always
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=default.target

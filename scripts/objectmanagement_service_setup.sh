@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -82,18 +86,18 @@ sed -i 's,$vaultJar,'$vaultJar',g' /tmp/$service_name
 sed -i 's,$vaultDbPath,'$dblocation',g' /tmp/$service_name
 sed -i 's,$passPropertyName,'$passProperty',g' /tmp/$service_name
 if [ "$useVault" != "false" ]; then
-    #echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /usr/local/bin/objectmanagement_service.sh
-    echo  "export VAULT_MANAGER_PASS=" > /usr/local/bin/objectmanagement_service.sh
+    #echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /giga/bin/objectmanagement_service.sh
+    echo  "export VAULT_MANAGER_PASS=" > /giga/bin/objectmanagement_service.sh
 else
-    echo  "export VAULT_MANAGER_PASS=$passProperty" > /usr/local/bin/objectmanagement_service.sh
+    echo  "export VAULT_MANAGER_PASS=$passProperty" > /giga/bin/objectmanagement_service.sh
 fi
-#echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /usr/local/bin/objectmanagement_service.sh
-echo  "/usr/bin/java -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=$log_location -jar $gigapath/$base_name --log.location=$log_location --space.name=$space_name --lookup.locator=$lookup_locator --lookup.group=$lookup_group --table.batch.file.path=$table_batch_file_path --ddl.properties.file.path=$ddl_properties_file_path --tier.criteria.file=$tier_criteria_file --adapter.property.file=$adapter_property_file --batch.index.file=$batch_index_file --polling.container.file=$polling_container_file --odsx.profile=$odsx_profile --gs.username=$gs_username --gs.password=\$VAULT_MANAGER_PASS" >> /usr/local/bin/objectmanagement_service.sh
-chmod +x /usr/local/bin/objectmanagement_service.sh
-sudo mv -f /tmp/$service_name /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable $service_name
-sudo systemctl start $service_name
+#echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$dblocation -jar $vaultJar --get $passProperty)" > /giga/bin/objectmanagement_service.sh
+echo  "/usr/bin/java -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=$log_location -jar $gigapath/$base_name --log.location=$log_location --space.name=$space_name --lookup.locator=$lookup_locator --lookup.group=$lookup_group --table.batch.file.path=$table_batch_file_path --ddl.properties.file.path=$ddl_properties_file_path --tier.criteria.file=$tier_criteria_file --adapter.property.file=$adapter_property_file --batch.index.file=$batch_index_file --polling.container.file=$polling_container_file --odsx.profile=$odsx_profile --gs.username=$gs_username --gs.password=\$VAULT_MANAGER_PASS" >> /giga/bin/objectmanagement_service.sh
+chmod +x /giga/bin/objectmanagement_service.sh
+mv -f /tmp/$service_name $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable $service_name
+systemctl --user start $service_name
 sudo sleep 10s
-sudo systemctl restart $service_name 
+systemctl --user restart $service_name 
 echo "Object Management service setup - Completed!."

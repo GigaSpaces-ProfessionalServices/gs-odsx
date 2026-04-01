@@ -8,6 +8,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import getGrafanaServerHostList
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -46,7 +47,7 @@ def reloadSpaceboardServiceByHost():
     logger.info("reloadSpaceboardServiceByHost()")
     cmd = "cp "
     logger.info("Getting status.. telegraf :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
     # filename = Path(abc)
     # filename = os.path.basename(additionalParam+'/gs_config.yaml')

@@ -11,6 +11,7 @@ from scripts.odsx_servers_di_start import getDIhostTypeDict
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -63,9 +64,9 @@ def getDIServerHostList():
 
 def stopZookeeperServiceByHost(host):
     logger.info("stopZookeeperServiceByHost()")
-    cmd = "sudo systemctl stop odsxzookeeper.service"
+    cmd = "systemctl --user stop odsxzookeeper.service"
     logger.info("Stopping odsxzookeeper on "+str(host)+": "+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
@@ -75,9 +76,9 @@ def stopZookeeperServiceByHost(host):
 
 def stopKafkaServiceByHost(host):
     logger.info("stopKafkaServiceByHost()")
-    cmd = "sudo systemctl stop odsxkafka.service"
+    cmd = "systemctl --user stop odsxkafka.service"
     logger.info("Stopping odsxkafka on "+str(host)+": "+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
@@ -90,7 +91,7 @@ def stopTelegrafServiceByHost(host):
     logger.info("stopTelegrafServiceByHost()")
     cmd = "sudo systemctl stop telegraf"
     logger.info("Stopping telegraf on "+str(host)+": "+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
@@ -101,9 +102,9 @@ def stopTelegrafServiceByHost(host):
 def stopDIMServices(host):
     logger.info("stopDIMServices()")
     # Stop order: di-transformations first, then di-manager, then di-mdm, then flink
-    cmd = "sudo systemctl stop di-transformations.service;sleep 3;sudo systemctl stop di-manager.service;sleep 3;sudo systemctl stop di-mdm.service;sleep 3;sudo systemctl stop di-flink-taskmanager.service;sudo systemctl stop di-flink-jobmanager.service"
+    cmd = "systemctl --user stop di-transformations.service;sleep 3;systemctl --user stop di-manager.service;sleep 3;systemctl --user stop di-mdm.service;sleep 3;systemctl --user stop di-flink-taskmanager.service;systemctl --user stop di-flink-jobmanager.service"
     logger.info("Stopping DIM services on "+str(host)+": "+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):

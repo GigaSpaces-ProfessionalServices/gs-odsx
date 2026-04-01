@@ -439,3 +439,12 @@
 
 139. Lazy import of boto3 in utils/odsx_dih_package.py. boto3 is now imported only inside `_download_from_s3()` instead of at module level, so scripts that transitively import odsx_dih_package.py (e.g. manager stop, manager remove) no longer fail with `ModuleNotFoundError: No module named 'boto3'` when boto3 is not installed.
 140. Skip XAP download if file already exists. During manager install, the XAP/DIH zip (e.g. gigaspaces-smart-cache-enterprise-17.2.0-ga.zip) is no longer re-downloaded if it already exists at $ODSXARTIFACTS/gs/. A message is printed indicating the existing file is being reused. Affected file: scripts/odsx_servers_manager_install.py.
+141. Non-root operation (gs-odsx-non-root). ODSX no longer requires root or sudo access for normal operations. Key changes:
+     - SSH connections use gsods user (via app.server.user config) instead of hardcoded root. Added get_ssh_user() helper to utils/ods_ssh.py.
+     - Systemd services converted to user-level: service files deploy to ~/.config/systemd/user/ instead of /etc/systemd/system/. All systemctl commands use --user flag.
+     - Start/stop scripts deploy to /giga/bin/ instead of /usr/local/bin/.
+     - Removed sudo from all mkdir/chmod/chown/cp/mv/ln/unzip operations on gsods-owned paths (/giga/*, /gigalogs/*, etc.).
+     - Third-party services (Grafana, InfluxDB, Telegraf) retain sudo via sudoers whitelist configured in setup.sh.
+     - setup.sh enhanced with one-time root prerequisites: loginctl enable-linger, user systemd dirs, /giga/bin, limits.conf, sudoers.
+     - odsx.py warns if run as root.
+     - Affected files: ~280 files across scripts/, utils/, install/, config/, systemServices/, node_rebalancer/.

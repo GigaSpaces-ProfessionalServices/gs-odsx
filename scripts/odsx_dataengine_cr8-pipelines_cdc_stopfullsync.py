@@ -10,6 +10,7 @@ from utils.odsx_keypress import userInputWithEscWrapper
 cdclist = importlib.import_module("odsx_dataengine_cr8-pipelines_cdc_list")
 from utils.ods_cluster_config import config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -51,7 +52,7 @@ def stopStream(args):
     if selectedOption != 99:
         if selectedOption in pipelineDict:
             configName = pipelineDict.get(selectedOption)
-            user = 'root'
+            user = get_ssh_user()
             scriptUser = 'dbsh'
             cmd = "sudo -u " + scriptUser + " -H sh -c '/home/dbsh/cr8/latest_cr8/utils/CR8Sync.ctl stop " + configName + "'"
             output = executeRemoteCommandAndGetOutput(os.getenv(deNodes[0].ip), user, cmd)

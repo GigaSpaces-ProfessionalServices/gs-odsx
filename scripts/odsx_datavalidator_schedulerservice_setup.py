@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_list import getDataValidationHost
 from utils.ods_app_config import readValuefromAppConfig, readValueByConfigObj
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_print_tabular_data import printTabular
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_keypress import userInputWrapper
@@ -16,7 +17,7 @@ verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 logger = verboseHandle.logger
 serviceName = "datavalidator-measurment.service"
-user = "root"
+user = get_ssh_user()
 
 class bcolors:
     OK = '\033[92m'  # GREEN

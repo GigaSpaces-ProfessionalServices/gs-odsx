@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -67,11 +68,11 @@ def getDEServerHostList():
 
 def getAdabusServiceStatus(node):
     logger.info("getConsolidatedStatus() : " + str(os.getenv(node.ip)))
-    cmdList = ["systemctl status odsxadabas"]
+    cmdList = ["systemctl --user status odsxadabas"]
     for cmd in cmdList:
         logger.info("cmd :" + str(cmd) + " host :" + str(os.getenv(node.ip)))
         logger.info("Getting status.. :" + str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : " + str(output))
@@ -124,9 +125,9 @@ def listDEServers():
     return host_dict_obj
 
 def executeService(host):
-    cmd = "systemctl stop odsxadabas.service"
+    cmd = "systemctl --user stop odsxadabas.service"
     logger.info("Getting status.. odsxadabas:" + str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):

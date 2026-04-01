@@ -15,7 +15,7 @@ from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, ge
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
     executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputValuePython36
+    executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts, \
     isInstalledAndGetVersion, config_get_manager_node, config_get_space_list_with_status
 from scripts.spinner import Spinner
@@ -318,7 +318,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         #     summaryConfirm = str(userInputWrapper(Fore.YELLOW+"Do you want to continue installation for above configuration ? [yes (y) / no (n)]: "+Fore.RESET))
         spaceHostConfig = []
         spaceStart = ''
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = config_get_space_list_with_status(user)
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
@@ -528,6 +528,9 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             with Spinner():
                 status = os.system(cmd)
             '''
+            # Remove stale tar to ensure fresh build from current install/ contents
+            if os.path.exists('install/install.tar'):
+                os.remove('install/install.tar')
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
                 status = os.system(cmd)
@@ -589,7 +592,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 spaceWorkSrc = spaceWorkSrc + "/vault.db"
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + spaceWorkTarget)
                 spaceWorkTarget = spaceWorkTarget + "vault.db"
-                scp_upload(host, "root", spaceWorkSrc, spaceWorkTarget)
+                scp_upload(host, get_ssh_user(), spaceWorkSrc, spaceWorkTarget)
                 securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
                 for securityFile in securityFiles:
                     securityFile = str(securityFile).replace('"',"")
@@ -638,7 +641,7 @@ if __name__ == '__main__':
             #user = readValuefromAppConfig("app.server.user")
             #user = str(userInputWrapper("Enter your user [root]: "))
             #if(len(str(user))==0):
-            user="root"
+            user = get_ssh_user()
             args.append('-u')
             args.append(user)
             hostsConfig = getManagerHostFromEnv()

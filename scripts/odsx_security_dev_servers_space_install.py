@@ -16,6 +16,7 @@ from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_f
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 from utils.ods_app_config import readValuefromAppConfig
 
@@ -370,6 +371,9 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 additionalParam=additionalParam+' '+gsNicAddress
                 logger.info("additionalParam - Installation :")
                 logger.info("Building .tar file : tar -cvf install/install.tar install")
+                # Remove stale tar to ensure fresh build from current install/ contents
+                if os.path.exists('install/install.tar'):
+                    os.remove('install/install.tar')
                 cmd = 'tar -cvf install/install.tar install'
                 with Spinner():
                     status = os.system(cmd)
@@ -449,7 +453,7 @@ if __name__ == '__main__':
             #user = readValuefromAppConfig("app.server.user")
             user = str(userInputWrapper("Enter your user [root]: "))
             if(len(str(user))==0):
-                user="root"
+                user = get_ssh_user()
             args.append('-u')
             args.append(user)
         hostsConfig = readValuefromAppConfig("app.manager.hosts")

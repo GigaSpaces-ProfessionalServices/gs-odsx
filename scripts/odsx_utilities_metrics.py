@@ -3,6 +3,7 @@ import os
 
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 from utils.ods_app_config import readValuefromAppConfig
 
@@ -80,7 +81,7 @@ def configureMetricsXML(host):
     try:
         cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" '+ dbaGigaPath +'/gs_config/metrics.xml'
         logger.info(cmd)
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
     except Exception as e:
@@ -108,12 +109,12 @@ def configureLicenseManagerAndSpace():
         logger.info("commandToExecute:"+commandToExecute)
 
         for host in managerHosts.split(','):
-            executeRemoteCommandAndGetOutputPython36(host, 'root', commandToExecute)
+            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecute)
             configureMetricsXML(host)
             verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
 
         for host in spaceHosts.split(','):
-            executeRemoteCommandAndGetOutputPython36(host, 'root', commandToExecute)
+            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecute)
             configureMetricsXML(host)
             verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
 

@@ -13,8 +13,8 @@ serviceName = 'retention-manager.service'
 
 def statusOfService():
     with Spinner():
-        executeLocalCommandAndGetOutput("sudo systemctl is-active --quiet "+serviceName)
-    status = os.system('systemctl is-active --quiet '+serviceName)
+        executeLocalCommandAndGetOutput("systemctl --user is-active --quiet "+serviceName)
+    status = os.system('systemctl --user is-active --quiet '+serviceName)
     if (status == 0):
         verboseHandle.printConsoleInfo("ACTIVE")
     else:

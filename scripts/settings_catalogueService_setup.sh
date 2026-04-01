@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -43,9 +47,9 @@ echo sed -i 's,$serviceJar,'$gigapath/$base_name',g' /tmp/$service_name
 sed -i 's,$consul_host,'$consul_host',g' /tmp/$service_name
 sed -i 's,$log_location,'$log_location',g' /tmp/$service_name
 
-sudo mv -f /tmp/$service_name /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable $service_name
-sudo systemctl start $service_name
+mv -f /tmp/$service_name $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable $service_name
+systemctl --user start $service_name
 
 echo "Catalogue service setup - Completed!."

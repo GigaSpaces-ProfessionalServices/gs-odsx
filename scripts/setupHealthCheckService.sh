@@ -1,4 +1,8 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -27,9 +31,9 @@ sed -i 's/gsods/'$applicativeUser'/g' /tmp/odsxhealthcheck.service
 sed -i 's,$healthCheckJar,'$healthCheckJar',g' /tmp/odsxhealthcheck.service
 sed -i 's,$healthCheckServiceFile,'$healthCheckServiceFile',g' /tmp/odsxhealthcheck.service
 
-sudo mv -f /tmp/odsxhealthcheck.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable odsxhealthcheck.service
-sudo systemctl start odsxhealthcheck.service
+mv -f /tmp/odsxhealthcheck.service $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable odsxhealthcheck.service
+systemctl --user start odsxhealthcheck.service
 
 echo "Health Monitor service setup - Completed!."

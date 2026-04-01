@@ -11,14 +11,14 @@ echo "InstallationFile:"$installation_file
 systemctl stop telegraf
 sleep 5
 if [ "$hostType" == "pivot" ]; then
-  cp $sourceInstallerDirectory/telegraf/scripts/pivot/*.sh /usr/local/bin/
-  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/space-status.gc-state.sh /usr/local/bin/
-  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/pipeline-state.sh /usr/local/bin/
-  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/test.sh /usr/local/bin/
-  sed -i -e 's|mgr1,mgr2,mgr3|'$managerHost'|g' /usr/local/bin/test.sh
+  cp $sourceInstallerDirectory/telegraf/scripts/pivot/*.sh /giga/bin/
+  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/space-status.gc-state.sh /giga/bin/
+  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/pipeline-state.sh /giga/bin/
+  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/test.sh /giga/bin/
+  sed -i -e 's|mgr1,mgr2,mgr3|'$managerHost'|g' /giga/bin/test.sh
 fi
-chmod +x /usr/local/bin/*.sh
-cp $sourceInstallerDirectory/telegraf/jars/readFromShob-1.0.0.jar /usr/local/bin/
+chmod +x /giga/bin/*.sh
+cp $sourceInstallerDirectory/telegraf/jars/readFromShob-1.0.0.jar /giga/bin/
 
 sleep 5
 

@@ -12,6 +12,7 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_listWithStatus
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -124,12 +125,12 @@ if __name__ == '__main__':
                     managerStart = managerDict.get(int(optionMenu))
                     args.append('--host')
                     args.append(str(managerStart.ip))
-                    # changed : 25-Aug hence systemctl always with root no need to ask
+                    # changed : 25-Aug hence systemctl --user always with root no need to ask
                     #userConfig = readValuefromAppConfig("app.server.user")
                     #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
                     #if(len(str(user))==0):
                     #    user=userConfig
-                    user='root'
+                    user = get_ssh_user()
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"
@@ -149,12 +150,12 @@ if __name__ == '__main__':
                 logger.info("confirm :"+str(confirm))
                 if(confirm=='yes' or confirm=='y'):
                     logger.info("Starting Cluster")
-                    # changed : 25-Aug hence systemctl always with root no need to ask
+                    # changed : 25-Aug hence systemctl --user always with root no need to ask
                     #userConfig = readValuefromAppConfig("app.server.user")
                     #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
                     #if(len(str(user))==0):
                     #    user=userConfig
-                    user='root'
+                    user = get_ssh_user()
                     logger.info("app.server.user: "+str(user))
                     #if(len(str(user))==0):
                     #    user="ec2-user"

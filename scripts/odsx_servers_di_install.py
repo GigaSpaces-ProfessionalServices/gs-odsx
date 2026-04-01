@@ -15,6 +15,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_ge
 from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_dih_package import parse_package_file, process_artifact_by_id
 
@@ -149,7 +150,7 @@ def installCluster():
 
         clusterHosts.append(os.getenv(node.ip))
 
-    user = "root"
+    user = get_ssh_user()
     logger.info(" user: " + str(user))
     baseFolderLocation = str(readValuefromAppConfig("app.di.base.kafka.zk"))
     srNo=srNo+1
@@ -299,6 +300,9 @@ def buildTarFileToLocalMachine(host):
         status = os.system(cmd)
         status = os.system(cmd2)
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
+    # Remove stale tar to ensure fresh build from current install/ contents
+    if os.path.exists('install/install.tar'):
+        os.remove('install/install.tar')
     cmd = 'tar -cvf install/install.tar install'#+sourceInstallerDirectory  # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)

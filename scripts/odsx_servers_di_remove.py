@@ -11,6 +11,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
     config_get_dataIntegrationiidr_nodes
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -62,7 +63,7 @@ def removeInputUserAndHost():
         global host
         #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
         #if(len(str(user))==0):
-        user="root"
+        user = get_ssh_user()
         logger.info(" user: "+str(user))
 
     except Exception as e:
