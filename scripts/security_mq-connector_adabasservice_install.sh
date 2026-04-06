@@ -68,7 +68,7 @@ chmod 755 $logDir
 echo "Dir created.."
 cmd=$targetDir"/run-publisher.sh -name adabasPublisher"
 echo "$cmd">>$start_adabas_feeder_file
-cmd=$gigapath"/Adabas/stop-publisher.sh"
+cmd="$targetDir/stop-publisher.sh"
 echo "$cmd">>$stop_adabas_feeder_file
 
 echo "File written!!"
@@ -112,6 +112,7 @@ sed -i -e 's|<influxhost>|'$influxhost'|g' $applicationYml
 mv $home_dir_sh/$start_adabas_feeder_file /tmp
 mv $home_dir_sh/$stop_adabas_feeder_file /tmp
 mv $home_dir_sh/install/mq-connector/$service_file /tmp
+sed -i "s|WorkingDirectory=/dbagigasoft/Adabas|WorkingDirectory=$targetDir|g" /tmp/$service_file
 #echo "Files moved to /tmp"
 
 mv /tmp/st*_adabasFeeder.sh /giga/bin/

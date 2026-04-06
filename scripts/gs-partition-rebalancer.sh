@@ -20,7 +20,7 @@
 #   - /gigashare/env_config/host.yaml - Contains server/host configuration (pivot, space servers, manager IPs)
 #   - /gigashare/env_config/app.config - Contains application config (service name)
 # 4. GigaSpaces installation:
-#   - /dbagiga/gigaspaces-smart-ods/bin/gs.sh - GigaSpaces CLI tool
+#   - <app.giga.path>/gigaspaces-smart-ods/bin/gs.sh - GigaSpaces CLI tool (path from app.config)
 #
 # Required External Tools:
 #
@@ -39,19 +39,32 @@
 
 set -euo pipefail
 
-# Configuration
-readonly GS_HOME="/dbagiga/gigaspaces-smart-ods"
-readonly CONFIG_DIR="/dbagigashare/env_config"
+if [ -z "${ENV_CONFIG:-}" ]; then
+  echo "Error: ENV_CONFIG is not set. Please set it before running this script."
+  exit 1
+fi
+
+# Configuration — paths driven by app.config, not hardcoded
+readonly CONFIG_DIR="${ENV_CONFIG}"
 readonly HOST_YAML="${CONFIG_DIR}/host.yaml"
 readonly APP_CONFIG="${CONFIG_DIR}/app.config"
 
+read_property() {
+  local prop_name="$1"
+  grep "^$prop_name=" "$APP_CONFIG" | awk -F'=' '{print $2}'
+}
+
+readonly GS_HOME="$(read_property app.giga.path)/gigaspaces-smart-ods"
+readonly GIGA_WORK="$(read_property app.gigawork.path)"
+readonly GIGA_SHARE="$(read_property app.gigashare.path)"
+
 # Get user/pass creds
-_USER=$(awk -F= '/app.manager.security.username=/ {print $2}' ${CONFIG_DIR}/app.config)
-if grep '^app.vault.use=true' ${CONFIG_DIR}/app.config > /dev/null ; then
-  _VAULT_PASS=$(awk -F= '/app.manager.security.password.vault=/ {print $2}' ${CONFIG_DIR}/app.config)
-  _PASS=$(java -Dapp.db.path=/dbagigawork/sqlite/ -jar /dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --get ${_VAULT_PASS})
+_USER=$(awk -F= '/app.manager.security.username=/ {print $2}' ${APP_CONFIG})
+if grep '^app.vault.use=true' ${APP_CONFIG} > /dev/null ; then
+  _VAULT_PASS=$(awk -F= '/app.manager.security.password.vault=/ {print $2}' ${APP_CONFIG})
+  _PASS=$(java -Dapp.db.path=${GIGA_WORK}/sqlite/ -jar ${GIGA_SHARE}/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --get ${_VAULT_PASS})
 else
-  _PASS=$(awk -F= '/app.manager.security.password=/ {print $2}' ${CONFIG_DIR}/app.config)
+  _PASS=$(awk -F= '/app.manager.security.password=/ {print $2}' ${APP_CONFIG})
 fi
 
 readonly GS_CLI="${GS_HOME}/bin/gs.sh --username=$_USER --password=$_PASS "

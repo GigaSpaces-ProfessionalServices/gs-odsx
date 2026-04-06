@@ -41,8 +41,8 @@ queueName=$9
 sslChipherSuite=${10}
 mqPort=${11}
 
-rootDir='/dbagigasoft'
-#targetDir='/dbagigasoft/Adabas'
+rootDir=$(dirname "$targetDir")
+#targetDir was passed as $1
 echo "targetDir:"$targetDir
 logDir=$gigalogpath'/Adabas'
 start_publisher_file='run-publisher.sh'
@@ -65,9 +65,9 @@ chmod 755 $rootDir
 chmod 755 $targetDir
 chmod 755 $logDir
 echo "Dir created.."
-cmd="/dbagigasoft/Adabas/run-publisher.sh -name adabasPublisher"
+cmd="$targetDir/run-publisher.sh -name adabasPublisher"
 echo "$cmd">>$start_adabas_feeder_file
-cmd="/dbagigasoft/Adabas/stop-publisher.sh"
+cmd="$targetDir/stop-publisher.sh"
 echo "$cmd">>$stop_adabas_feeder_file
 
 echo "File written!!"
@@ -110,6 +110,7 @@ sed -i -e 's|  port: 1414|  port: '$mqPort'|g' $applicationYml
 mv $home_dir_sh/$start_adabas_feeder_file /tmp
 mv $home_dir_sh/$stop_adabas_feeder_file /tmp
 mv $home_dir_sh/install/$service_file /tmp
+sed -i "s|WorkingDirectory=/dbagigasoft/Adabas|WorkingDirectory=$targetDir|g" /tmp/$service_file
 #echo "Files moved to /tmp"
 
 mv /tmp/st*_adabasFeeder.sh /giga/bin/
