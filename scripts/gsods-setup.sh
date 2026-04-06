@@ -27,14 +27,20 @@ fi
 
 [[ $# -eq 0 || $1 == "-h" ]] && usage
 [[ -z $1 ]] && { echo -e "\nMust provide a directory for gigashare as argument.\n" ; exit 1 ; }
-[[ ! -d $1 ]] & { echo -e "\nThe gigashare directory does not exist.\n" ; exit 1 ; }
+[[ ! -d $1 ]] && { echo -e "\nThe gigashare directory does not exist.\n" ; exit 1 ; }
+
 # Check if the environment variable is set
 ENV_CONFIG_PATH="$1/env_config"
 echo "ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
-[[ ! -d "$ENV_CONFIG_PATH ]] && { echo -e "\nThe gigashare/env_config does not exist.\n" ; exit 1 ; }
+[[ ! -d "$ENV_CONFIG_PATH" ]] && { echo -e "\nThe gigashare/env_config does not exist.\n" ; exit 1 ; }
 
 # set app.config var
 ENV_CONFIG_APP="$ENV_CONFIG_PATH/app.config"
+
+if [ ! -f "$ENV_CONFIG_APP" ]; then
+    echo "Error: $ENV_CONFIG_APP not found."
+    exit 1
+fi
 
 read_property() {
   local prop_name="$1"
@@ -44,20 +50,16 @@ read_property() {
   echo "$prop_value"
 }
 
-gigashare=$(read_property "app.gigashare.path")
-gigawork=$(read_property "app.gigawork.path")
-gigalog=$(read_property "app.gigalog.path")
 gigapath=$(read_property "app.giga.path")
-gigadatapath=$(read_property "app.gigadata.path")
-gigainfluxpath=$(read_property "app.gigainfluxdata.path")
+gigashare=$(read_property "app.gigashare.path")
 
-# Validate all required path keys are present in app.config
+# Validate required path keys are present in app.config
 missing_paths=0
-for key_var in "app.gigashare.path:$gigashare" "app.gigawork.path:$gigawork" "app.gigalog.path:$gigalog" "app.giga.path:$gigapath" "app.gigadata.path:$gigadatapath" "app.gigainfluxdata.path:$gigainfluxpath"; do
+for key_var in "app.giga.path:$gigapath" "app.gigashare.path:$gigashare"; do
   key="${key_var%%:*}"
   val="${key_var#*:}"
   if [ -z "$val" ]; then
-    echo "Error: '$key' is not set in $ENV_CONFIG_APP. All path keys are required."
+    echo "Error: '$key' is not set in $ENV_CONFIG_APP."
     missing_paths=1
   fi
 done
@@ -65,24 +67,39 @@ if [ "$missing_paths" -eq 1 ]; then
   exit 1
 fi
 
-## ~/.bashrc
+## ~/.bashrc — append each item only if not already present
 
-cat >> ~/.bashrc <<EOF
+if ! grep -q "source ~/.aliases" ~/.bashrc 2>/dev/null; then
+    echo '[ -f ~/.aliases ] && source ~/.aliases' >> ~/.bashrc
+fi
 
-# User specific aliases and functions
-[ -f ~/.aliases ] && source ~/.aliases
-alias odsx='cd /$app.giga.path/gs-odsx ; ./odsx.py'
+if ! grep -q "alias odsx=" ~/.bashrc 2>/dev/null; then
+    echo "alias odsx='cd $gigapath/gs-odsx ; ./odsx.py'" >> ~/.bashrc
+fi
 
-GS_HOME=/$app.giga.path/gigaspaces-smart-ods
-PATH=$PATH:$HOME/bin:/$app.giga.path/utils/auto_odsx:/$app.giga.path/utils:/opt/maven/bin
-export PATH GS_HOME
-export PYTHONPATH=/$app.giga.path/gs-odsx
-export ODSXARTIFACTS=/$app.gigashare.path/current/
-export ENV_CONFIG=/$app.gigashare.path/env_config/
+if ! grep -q "export GS_HOME=" ~/.bashrc 2>/dev/null; then
+    echo "export GS_HOME=$gigapath/gigaspaces-smart-ods" >> ~/.bashrc
+fi
 
-EOF
+if ! grep -q "$gigapath/utils/auto_odsx" ~/.bashrc 2>/dev/null; then
+    echo "export PATH=\$PATH:\$HOME/bin:$gigapath/utils/auto_odsx:$gigapath/utils:/opt/maven/bin" >> ~/.bashrc
+fi
+
+if ! grep -q "export PYTHONPATH=" ~/.bashrc 2>/dev/null; then
+    echo "export PYTHONPATH=$gigapath/gs-odsx" >> ~/.bashrc
+fi
+
+if ! grep -q "export ODSXARTIFACTS=" ~/.bashrc 2>/dev/null; then
+    echo "export ODSXARTIFACTS=$gigashare/current/" >> ~/.bashrc
+fi
+
+if ! grep -q "export ENV_CONFIG=" ~/.bashrc 2>/dev/null; then
+    echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> ~/.bashrc
+fi
 
 # generate bash tab-completion code for the Python CLI program odsx.py
-echo 'eval "$(register-python-argcomplete odsx.py)"' >> ~/.bashrc
+if ! grep -q "register-python-argcomplete" ~/.bashrc 2>/dev/null; then
+    echo 'eval "$(register-python-argcomplete odsx.py)"' >> ~/.bashrc
+fi
 
-pip3 install -r requirements.txt
+pip3 install -r $gigapath/gs-odsx/requirements.txt

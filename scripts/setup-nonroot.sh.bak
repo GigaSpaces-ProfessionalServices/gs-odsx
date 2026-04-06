@@ -1,15 +1,14 @@
 #!/bin/bash
-# setup-nonroot.sh - Run as root on the pivot machine.
-# Prepares the filesystem, gsods user on pivot, and all remote servers
-# for non-root ODSX operation. Reads config from gigashare/env_config/app.config
-# and server IPs from host.yaml.
+# setup_nonroot.sh - Run as root on the pivot machine.
+# Prepares gsods user on pivot and all remote servers for non-root ODSX operation.
+# Reads server IPs from host.yaml.
 
 function usage () {
   cat << EOF
 
   NAME
 
-    $(basename $0) – ODSX one-time root setup
+    $(basename $0) – Basic odsx setup
 
   USAGE:
 
@@ -25,26 +24,19 @@ exit
 
 set -e
 
-# Must run as root
-if [ "$(id -u)" -ne 0 ]; then
-    echo "Error: This script must be run as root."
-    exit 1
-fi
-
 [[ $# -eq 0 || $1 == "-h" ]] && usage
 [[ -z $1 ]] && { echo -e "\nMust provide a directory for gigashare as argument.\n" ; exit 1 ; }
-[[ ! -d $1 ]] && { echo -e "\nThe gigashare directory does not exist.\n" ; exit 1 ; }
+[[ ! -d $1 ]] & { echo -e "\nThe gigashare directory does not exist.\n" ; exit 1 ; }
 [[ ! -s $2 ]] && { echo -e "\nThe gigashare.tgz is empty or does not exist.\n" ; exit 1 ; }
-
-echo -e "Extracting gigashare..."
+echo -e "Extracting gigashare"
 tar xzf $2 -C $1
-
+# Check if the environment variable is set
 ENV_CONFIG_PATH="$1/env_config"
 echo "ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
-[[ ! -d "$ENV_CONFIG_PATH" ]] && { echo -e "\nThe gigashare/env_config does not exist.\n" ; exit 1 ; }
+[[ ! -d "$ENV_CONFIG_PATH ]] && { echo -e "\nThe gigashare/env_config does not exist.\n" ; exit 1 ; }
 
-APP_CONFIG="$ENV_CONFIG_PATH/app.config"
 HOST_YAML="$ENV_CONFIG_PATH/host.yaml"
+APP_CONFIG="$ENV_CONFIG_PATH/app.config"
 
 if [ ! -f "$APP_CONFIG" ]; then
     echo "Error: $APP_CONFIG not found."
@@ -56,70 +48,36 @@ if [ ! -f "$HOST_YAML" ]; then
     exit 1
 fi
 
+# Must run as root
+if [ "$(id -u)" -ne 0 ]; then
+    echo "Error: This script must be run as root."
+    exit 1
+fi
+
 read_property() {
     local prop_name="$1"
     grep "^$prop_name=" "$APP_CONFIG" | awk -F'=' '{print $2}'
 }
 
-# Read all required path variables from app.config
-GIGA_PATH=$(read_property "app.giga.path")
-GIGA_SHARE=$(read_property "app.gigashare.path")
-GIGA_WORK=$(read_property "app.gigawork.path")
-GIGA_LOG=$(read_property "app.gigalog.path")
-GIGA_DATA=$(read_property "app.gigadata.path")
-GIGA_INFLUX=$(read_property "app.gigainfluxdata.path")
-
-# Validate all required path keys are present in app.config
-missing_paths=0
-for key_var in "app.giga.path:$GIGA_PATH" "app.gigashare.path:$GIGA_SHARE" "app.gigawork.path:$GIGA_WORK" "app.gigalog.path:$GIGA_LOG" "app.gigadata.path:$GIGA_DATA" "app.gigainfluxdata.path:$GIGA_INFLUX"; do
-  key="${key_var%%:*}"
-  val="${key_var#*:}"
-  if [ -z "$val" ]; then
-    echo "Error: '$key' is not set in $APP_CONFIG. All path keys are required."
-    missing_paths=1
-  fi
-done
-if [ "$missing_paths" -eq 1 ]; then
-  exit 1
-fi
-
-NOFILE_LIMIT=$(read_property "app.user.nofile.limit")
-NOFILE_LIMIT=${NOFILE_LIMIT:-50000}
-
-# Read remote hosts from host.yaml
+# Extract all unique IPs from host.yaml
 ALL_HOSTS=$(grep -E '^\s+host[0-9]+\s*:' "$HOST_YAML" | awk '{print $NF}' | sort -u)
 PIVOT_IP=$(hostname -I | awk '{print $1}')
 
 echo "============================================"
 echo "  ODSX Non-Root Setup"
 echo "============================================"
-echo "Pivot IP:  $PIVOT_IP"
-echo "Giga dirs: $GIGA_PATH | $GIGA_SHARE | $GIGA_WORK | $GIGA_LOG | $GIGA_DATA | $GIGA_INFLUX"
+echo "Pivot IP: $PIVOT_IP"
 echo "Remote hosts:"
 for h in $ALL_HOSTS; do
     echo "  $h"
 done
 echo ""
 
-# Ensure gsods user exists on pivot
-if ! id "gsods" >/dev/null 2>&1; then
-    useradd -m gsods
-    echo "Created gsods user."
-fi
 GSODS_HOME=$(eval echo ~gsods)
-
-# --- Create giga directories and set ownership ---
-echo ">>> Creating giga directories..."
-mkdir -p $GIGA_LOG $GIGA_SHARE $GIGA_WORK $GIGA_PATH $GIGA_DATA $GIGA_INFLUX
-touch $GIGA_LOG/odsx.log
-
-mkdir -p $GIGA_WORK/sqlite
-cp $GIGA_SHARE/current/sqlite3/* $GIGA_WORK/sqlite/
-
-chown gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
-chown -R gsods:gsods $GIGA_SHARE/*
-chown -R gsods:gsods $GIGA_PATH
-echo "    Directories created and ownership set."
+GIGA_PATH=$(read_property "app.giga.path")
+GIGA_PATH=${GIGA_PATH:-/giga}
+NOFILE_LIMIT=$(read_property "app.user.nofile.limit")
+NOFILE_LIMIT=${NOFILE_LIMIT:-50000}
 
 # --- Step 1: Generate SSH key for gsods on pivot ---
 echo ">>> Step 1: Generating SSH key for gsods on pivot..."
@@ -156,19 +114,19 @@ mkdir -p "$GSODS_HOME/.config/systemd/user/"
 chown -R gsods:gsods "$GSODS_HOME/.config/"
 echo "    User systemd directory ready."
 
-# Create giga/bin for start/stop scripts
+# Create /giga/bin
 mkdir -p "$GIGA_PATH/bin"
 chown gsods:gsods "$GIGA_PATH/bin"
 echo "    $GIGA_PATH/bin ready."
 
-# Set nofile limits (gsods-specific pattern to avoid touching other users)
+# Set nofile limits
 sed -i '/gsods.*hard.*nofile/d' /etc/security/limits.conf
 sed -i '/gsods.*soft.*nofile/d' /etc/security/limits.conf
 echo "gsods hard nofile $NOFILE_LIMIT" >> /etc/security/limits.conf
 echo "gsods soft nofile $NOFILE_LIMIT" >> /etc/security/limits.conf
 echo "    nofile limits set to $NOFILE_LIMIT."
 
-# Sudoers for third-party monitoring services (Grafana, InfluxDB, Telegraf)
+# Sudoers for monitoring services
 cat > /etc/sudoers.d/odsx-monitoring << 'SUDOERS'
 gsods ALL=(ALL) NOPASSWD: /bin/systemctl start grafana-server.service, /bin/systemctl stop grafana-server.service, /bin/systemctl restart grafana-server.service, /bin/systemctl status grafana-server.service, /bin/systemctl enable grafana-server.service
 gsods ALL=(ALL) NOPASSWD: /bin/systemctl start influxdb.service, /bin/systemctl stop influxdb.service, /bin/systemctl restart influxdb.service, /bin/systemctl status influxdb.service, /bin/systemctl enable influxdb.service
@@ -177,7 +135,7 @@ SUDOERS
 chmod 0440 /etc/sudoers.d/odsx-monitoring
 echo "    Sudoers for monitoring services configured."
 
-# Set env vars in gsods .bashrc on pivot (idempotent)
+# Set ENV_CONFIG in gsods .bashrc on pivot
 if ! grep -q "export ENV_CONFIG=" "$GSODS_HOME/.bashrc" 2>/dev/null; then
     echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> "$GSODS_HOME/.bashrc"
     echo "    ENV_CONFIG added to gsods .bashrc."
@@ -187,7 +145,8 @@ if ! grep -q "export PYTHONPATH=" "$GSODS_HOME/.bashrc" 2>/dev/null; then
     echo "    PYTHONPATH added to gsods .bashrc."
 fi
 if ! grep -q "export ODSXARTIFACTS=" "$GSODS_HOME/.bashrc" 2>/dev/null; then
-    echo "export ODSXARTIFACTS=$GIGA_SHARE/current/" >> "$GSODS_HOME/.bashrc"
+    GIGASHARE=$(read_property "app.gigashare.path")
+    echo "export ODSXARTIFACTS=${GIGASHARE}/current/" >> "$GSODS_HOME/.bashrc"
     echo "    ODSXARTIFACTS added to gsods .bashrc."
 fi
 GSODS_UID=$(id -u gsods)
@@ -237,10 +196,8 @@ for HOST in $ALL_HOSTS; do
         mkdir -p "\$GSODS_HOME/.config/systemd/user/"
         chown -R gsods:gsods "\$GSODS_HOME/.config/"
 
-        # Create giga directories and set ownership
-        mkdir -p $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
-        mkdir -p $GIGA_PATH/bin
-        chown gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
+        # Create /giga/bin
+        mkdir -p "$GIGA_PATH/bin"
         chown gsods:gsods "$GIGA_PATH/bin" 2>/dev/null || true
 
         # Set nofile limits
@@ -249,14 +206,12 @@ for HOST in $ALL_HOSTS; do
         echo "gsods hard nofile $NOFILE_LIMIT" >> /etc/security/limits.conf
         echo "gsods soft nofile $NOFILE_LIMIT" >> /etc/security/limits.conf
 
-        # Set env vars in gsods .bashrc (idempotent)
+        # Set ENV_CONFIG in gsods .bashrc
         if ! grep -q "export ENV_CONFIG=" "\$GSODS_HOME/.bashrc" 2>/dev/null; then
             echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> "\$GSODS_HOME/.bashrc"
         fi
-        if ! grep -q "export PYTHONPATH=" "\$GSODS_HOME/.bashrc" 2>/dev/null; then
-            echo "export PYTHONPATH=$GIGA_PATH/gs-odsx" >> "\$GSODS_HOME/.bashrc"
-        fi
 
+        # Set XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS for systemctl --user over SSH
         GSODS_UID=\$(id -u gsods)
         if ! grep -q "XDG_RUNTIME_DIR" "\$GSODS_HOME/.bashrc" 2>/dev/null; then
             echo "export XDG_RUNTIME_DIR=/run/user/\$GSODS_UID" >> "\$GSODS_HOME/.bashrc"
