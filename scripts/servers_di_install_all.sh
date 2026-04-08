@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 echo "scripts/servers_di_install_all.sh"
 print_style () {
     if [ "$2" == "debug" ] ; then

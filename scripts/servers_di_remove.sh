@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 
 source setenv.sh 2>/dev/null || true
 

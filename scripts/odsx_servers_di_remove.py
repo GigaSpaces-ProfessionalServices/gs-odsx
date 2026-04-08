@@ -253,7 +253,7 @@ def executeCommandForUnInstall():
                     diHost = getDIServerHost()
                     if diHost:
                         export_path_pipeline = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
-                        export_path_datasource = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
+                        export_path_datasource = str(readValuefromAppConfig("app.dataengine.dihctl.datasourcefolderpath"))
                         if not export_path_pipeline.strip():
                             export_path_pipeline = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
                         if not export_path_datasource.strip():

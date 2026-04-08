@@ -288,7 +288,8 @@ def installCluster():
 def createDatasource():
     """Create datasource(s) via di-manager API after DI install.
     Loads exported datasources.json if available; each field falls back to app.config defaults
-    when the exported value is missing or blank."""
+    when the exported value is missing or blank. username and password always use app.config
+    values regardless of what is in the exported file."""
     logger.info("createDatasource()")
     try:
         # Always compute defaults so they can fill in any missing/blank exported fields
@@ -319,21 +320,27 @@ def createDatasource():
                 if exported_list:
                     verboseHandle.printConsoleInfo("Found exported datasource file: " + export_file)
 
+        # username and password always come from app.config regardless of exported file
+        credential_fields = {"username", "password"}
+
         # Build the list to create: exported entries with per-field fallback, or just the default
         if exported_list:
             datasources_to_create = []
             for ds in exported_list:
                 entry = {}
                 for field, default_val in defaults.items():
-                    exported_val = ds.get(field)
-                    # Use exported value only when it is set and non-empty string
-                    if exported_val is not None and str(exported_val).strip() != "":
-                        entry[field] = exported_val
-                    else:
+                    if field in credential_fields:
                         entry[field] = default_val
-                        verboseHandle.printConsoleInfo(
-                            "Field '" + field + "' missing/blank in export for datasource '" +
-                            str(ds.get("sorName", "?")) + "'; using default: " + str(default_val))
+                    else:
+                        exported_val = ds.get(field)
+                        # Use exported value only when it is set and non-empty string
+                        if exported_val is not None and str(exported_val).strip() != "":
+                            entry[field] = exported_val
+                        else:
+                            entry[field] = default_val
+                            verboseHandle.printConsoleInfo(
+                                "Field '" + field + "' missing/blank in export for datasource '" +
+                                str(ds.get("sorName", "?")) + "'; using default: " + str(default_val))
                 datasources_to_create.append(entry)
         else:
             verboseHandle.printConsoleInfo("No exported datasource file found; using default ORACLE config.")

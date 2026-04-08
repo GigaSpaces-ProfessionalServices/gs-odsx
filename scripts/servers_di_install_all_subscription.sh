@@ -1,5 +1,5 @@
 #!/bin/bash
-set -x
+# set -x
 print_style () {
     if [ "$2" == "debug" ] ; then
         COLOR="96m";
