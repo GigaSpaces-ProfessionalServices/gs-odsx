@@ -1,0 +1,266 @@
+import os
+import json
+import yaml
+import requests
+from colorama import Fore
+import subprocess, csv, io
+from scripts.logManager import LogManager
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.odsx_keypress import userInputWrapper
+from utils.odsx_print_tabular_data import printTabular
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.odsx_objectmanagement_utilities import getPivotHost
+
+verboseHandle = LogManager(os.path.basename(__file__))
+logger = verboseHandle.logger
+
+
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
+
+def getDIServerHost():
+    nodeList = config_get_dataIntegration_nodes()
+    for node in nodeList:
+        return os.getenv(node.ip)
+    return ""
+
+
+def removeColumn(diManagerHost):
+    nodeiidrList = config_get_dataIntegration_nodes()
+    for nodes in nodeiidrList:
+        iidrHost = os.getenv(nodes.ip)
+
+    verboseHandle.printConsoleInfo("ip -> " + str(iidrHost))
+    
+    rootpath = "/dbagiga/utils/dihctl/"
+    login_cmd = f"{rootpath}dihctl -e dev login --noauth http://{iidrHost}:7080"
+    verboseHandle.printConsoleInfo(f"Running: {login_cmd}")
+    logger.info(f"Running: {login_cmd}")
+    login_result = subprocess.run(login_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    if login_result.returncode != 0:
+        verboseHandle.printConsoleError(f"Login failed: {login_result.stderr}")
+        return
+
+    result = subprocess.run(
+        [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
+        stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+    )
+    reader = csv.DictReader(io.StringIO(result.stdout))
+    pipelines = list(reader)
+
+    headers = [
+        Fore.YELLOW + "Sr No."        + Fore.RESET,
+        Fore.YELLOW + "Pipeline Name" + Fore.RESET,
+        Fore.YELLOW + "SOR Name"      + Fore.RESET,
+        Fore.YELLOW + "Space Name"    + Fore.RESET,
+        Fore.YELLOW + "Status"        + Fore.RESET,
+        ]
+
+    dataTable = []
+    for idx, pipeline in enumerate(pipelines, start=1):
+        dataTable.append([
+            Fore.GREEN + str(idx)                      + Fore.RESET,
+            Fore.GREEN + pipeline.get("name", "")      + Fore.RESET,
+            Fore.GREEN + pipeline.get("sorName", "")   + Fore.RESET,
+            Fore.GREEN + pipeline.get("spaceName", "") + Fore.RESET,
+            Fore.GREEN + pipeline.get("status", "")    + Fore.RESET,
+            ])
+
+    printTabular(None, headers, dataTable)
+
+    if not dataTable:
+        verboseHandle.printConsoleWarning("No pipeline available.")
+        return
+
+    selection = userInputWrapper(f"Select pipeline number to export (1-{len(pipelines)}): ").strip()
+    if not selection.isdigit() or not (1 <= int(selection) <= len(pipelines)):
+        verboseHandle.printConsoleError("Invalid selection.")
+        return
+    selected_pipeline = pipelines[int(selection) - 1].get("name", "")
+    verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline}")
+    logger.info(f"Selected pipeline: {selected_pipeline}")
+
+    # confirm = userInputWrapper(Fore.YELLOW + "This will stop current running pipeline and reimport new pipeline after removing column. Continue? (yes/no): " + Fore.RESET).strip().lower()
+    # if confirm not in ("yes", "y"):
+    #     verboseHandle.printConsoleWarning("Operation cancelled by user.")
+    #     return
+
+    export_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+    if not export_path.strip():
+        verboseHandle.printConsoleError("Export path cannot be empty.")
+        return
+    if not os.path.exists(export_path):
+        verboseHandle.printConsoleError(f"Export path not found: {export_path}")
+        return
+
+    export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
+    export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
+    verboseHandle.printConsoleInfo(f"Running: {export_cmd}")
+    logger.info(f"Running: {export_cmd}")
+    export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+    if export_result.returncode != 0:
+        verboseHandle.printConsoleError(f"Export failed: {export_result.stderr}")
+        return
+    verboseHandle.printConsoleInfo(f"Export successful: {export_file}")
+    logger.info(f"Export successful: {export_result.stdout}")
+
+    with open(export_file, 'r') as f:
+        exported_yaml = yaml.safe_load(f)
+    # verboseHandle.printConsoleInfo("Exported YAML : " + str(exported_yaml))
+    # logger.info("Exported YAML : " + str(exported_yaml))
+    tables = exported_yaml.get("tables", [])
+    space_type_name = exported_yaml["pipelines"][0]["tablePipelines"][0]["spaceTypeName"]
+    verboseHandle.printConsoleInfo("Selected Space Type Name : " + space_type_name)
+    logger.info("Selected Space Type Name : " + space_type_name)
+
+    data = []
+    counter = 1
+    dataColumnsDict = {}
+    dataTableColumnsDict = {}
+    dataTableColumnsPropDict = {}
+    dataTableColumnsPropIndexDict = {}
+
+    objectMgmtHost = getPivotHost()
+    response = requests.get('http://' + objectMgmtHost + ':7001/list',
+                            headers={'Accept': 'application/json'})
+    objectJson = json.loads(response.text)
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
+    spaceName = readValuefromAppConfig("app.objectmanagement.space")
+    if spaceName is None or spaceName == "" or len(str(spaceName)) < 0:
+        spaceName = readValuefromAppConfig("app.tieredstorage.pu.spacename")
+
+    list_headers = [
+        Fore.YELLOW + "Sr Num"      + Fore.RESET,
+        Fore.YELLOW + "Space Name"  + Fore.RESET,
+        Fore.YELLOW + "Object Name" + Fore.RESET,
+    ]
+    list_data = []
+    for spaces in objectJson:
+        for object in spaces["objects"]:
+            dataArray = [
+                Fore.GREEN + str(counter)               + Fore.RESET,
+                Fore.GREEN + str(spaces["spacename"])   + Fore.RESET,
+                Fore.GREEN + str(object["tablename"])   + Fore.RESET,
+            ]
+            if (str(object["tablename"]).strip() == str(space_type_name).strip()):
+                dataColumnsDict.update({counter: object["columns"]})
+                dataTableColumnsDict.update({counter: object["tablename"]})
+                counter += 1
+                list_data.append(dataArray)
+    printTabular(None, list_headers, list_data)
+
+    counter = 1
+    headers = [
+        Fore.YELLOW + "Sr Num"        + Fore.RESET,
+        Fore.YELLOW + "Name"          + Fore.RESET,
+        Fore.YELLOW + "Data Type"     + Fore.RESET,
+        Fore.YELLOW + "Space Id"      + Fore.RESET,
+        Fore.YELLOW + "Space Routing" + Fore.RESET,
+        Fore.YELLOW + "Indexes"       + Fore.RESET,
+        Fore.YELLOW + "Tier Criteria" + Fore.RESET,
+    ]
+    if dataColumnsDict.get(1) is not None:
+        for col in dataColumnsDict.get(1):
+            dataArray = [
+                Fore.GREEN + str(counter)                  + Fore.RESET,
+                Fore.GREEN + str(col["columnname"])        + Fore.RESET,
+                Fore.GREEN + str(col["columntype"])        + Fore.RESET,
+                Fore.GREEN + str(col["spaceId"])           + Fore.RESET,
+                Fore.GREEN + str(col["spaceRouting"])      + Fore.RESET,
+                Fore.GREEN + str(col["spaceIndex"])        + Fore.RESET,
+                Fore.GREEN + str(col["tierCriteria"])      + Fore.RESET,
+            ]
+            dataTableColumnsPropDict.update({counter: col["columnname"]})
+            dataTableColumnsPropIndexDict.update({counter: col["spaceIndex"]})
+            counter += 1
+            data.append(dataArray)
+        printTabular(None, headers, data)
+        objectMgmtPropertyInput = str(userInputWrapper(Fore.YELLOW + "Choose property from list (e.g. 1 or 1-3 or 1,4,5) : " + Fore.RESET)).strip()
+        selected_indices = set()
+        for part in objectMgmtPropertyInput.split(","):
+            part = part.strip()
+            if "-" in part:
+                start, end = part.split("-", 1)
+                selected_indices.update(range(int(start.strip()), int(end.strip()) + 1))
+            else:
+                selected_indices.add(int(part))
+        selected_columns = [dataTableColumnsPropDict.get(i) for i in sorted(selected_indices) if dataTableColumnsPropDict.get(i) is not None]
+        verboseHandle.printConsoleInfo("Selected columns : " + str(selected_columns))
+        logger.info("Selected columns : " + str(selected_columns))
+
+        existing_exclude = exported_yaml["pipelines"][0]["tablePipelines"][0].get("excludeFields") or []
+        updated_exclude = existing_exclude + [col for col in selected_columns if col not in existing_exclude]
+        exported_yaml["pipelines"][0]["tablePipelines"][0]["excludeFields"] = updated_exclude
+
+        new_yaml_file = os.path.join(export_path, f"{selected_pipeline}_updated.yaml")
+        with open(new_yaml_file, 'w') as f:
+            yaml.dump(exported_yaml, f, default_flow_style=False, allow_unicode=True)
+        verboseHandle.printConsoleInfo(f"Updated YAML saved to: {new_yaml_file}")
+        logger.info(f"Updated YAML saved to: {new_yaml_file}")
+
+        # verboseHandle.printConsoleInfo(f"Fetching pipeline ID for: {selected_pipeline}")
+        # logger.info(f"Fetching pipeline ID for: {selected_pipeline}")
+        # pl_list_response = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
+        # pl_list = pl_list_response.json()
+        # pipeline_id = next((pl["pipelineId"] for pl in pl_list if pl.get("name") == selected_pipeline), None)
+        # if not pipeline_id:
+        #     verboseHandle.printConsoleError(f"Pipeline ID not found for: {selected_pipeline}")
+        #     return
+        # verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+        # logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+        # stop_response = requests.post(f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop", headers={"accept": "*/*", "Content-Type": "application/json"})
+        # stop_status = stop_response.json().get("status", "unknown")
+        # verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
+        # logger.info(f"Stop pipeline response status: {stop_status}")
+        #
+        # delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {selected_pipeline} --delete-pipelines"
+        # verboseHandle.printConsoleInfo(f"Running: {delete_cmd}")
+        # logger.info(f"Running: {delete_cmd}")
+        # delete_result = subprocess.run(delete_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        # if delete_result.returncode != 0:
+        #     verboseHandle.printConsoleError(f"Delete pipeline failed: {delete_result.stderr}")
+        #     return
+        # verboseHandle.printConsoleInfo(f"Pipeline deleted successfully: {selected_pipeline}")
+        # logger.info(f"Pipeline deleted successfully: {delete_result.stdout}")
+        #
+        # import_cmd = f"{rootpath}dihctl -e dev apply -s -f {new_yaml_file}"
+        # verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
+        # logger.info(f"Running: {import_cmd}")
+        # import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        # if import_result.returncode != 0:
+        #     verboseHandle.printConsoleError(f"Create pipeline failed: {import_result.stderr}")
+        #     return
+        # verboseHandle.printConsoleInfo(f"Pipeline created successfully:\n{import_result.stdout}")
+        # logger.info(f"Pipeline created successfully: {import_result.stdout}")
+
+
+
+if __name__ == '__main__':
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Remove Column')
+    logger.info('Menu -> DataEngine -> Oracle CDC Remove Column')
+    diManagerHost = getDIServerHost()
+    if diManagerHost:
+        removeColumn(diManagerHost)
+    else:
+        verboseHandle.printConsoleError("No DI Manager host found.")

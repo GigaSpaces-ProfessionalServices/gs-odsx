@@ -1,0 +1,121 @@
+import os
+import json
+import requests
+import subprocess
+from colorama import Fore, init
+from scripts.logManager import LogManager
+from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.odsx_keypress import userInputWrapper
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
+from utils.odsx_print_tabular_data import printTabular
+
+verboseHandle = LogManager(os.path.basename(__file__))
+logger = verboseHandle.logger
+
+
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
+
+def getDIServerHost():
+    nodeList = config_get_dataIntegration_nodes()
+    for node in nodeList:
+        return os.getenv(node.ip)
+    return ""
+
+
+def importPipeline(diManagerHost):
+    try:
+        import_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+        if not import_path.strip():
+
+            verboseHandle.printConsoleError("File path cannot be empty.")
+            return
+
+        if not os.path.exists(import_path):
+            verboseHandle.printConsoleError(f"Path not found: {import_path}")
+            return
+
+        files = [f for f in os.listdir(import_path) if os.path.isfile(os.path.join(import_path, f))]
+        if not files:
+            verboseHandle.printConsoleError(f"No files found in: {import_path}")
+            return
+
+        headers = [
+            Fore.YELLOW + "Sr No."    + Fore.RESET,
+            Fore.YELLOW + "File Name" + Fore.RESET,
+        ]
+        dataTable = []
+        for idx, fname in enumerate(files, start=1):
+            dataTable.append([
+                Fore.GREEN + str(idx) + Fore.RESET,
+                Fore.GREEN + fname    + Fore.RESET,
+            ])
+        printTabular(None, headers, dataTable)
+
+        selection = userInputWrapper(f"Select file number (1-{len(files)}): ").strip()
+        if not selection.isdigit() or not (1 <= int(selection) <= len(files)):
+            verboseHandle.printConsoleError("Invalid selection.")
+            return
+        selected_file = files[int(selection) - 1]
+        verboseHandle.printConsoleInfo(f"Selected file: {selected_file}")
+        logger.info(f"Selected file: {selected_file}")
+
+        nodeiidrList = config_get_dataIntegration_nodes()
+        for nodes in nodeiidrList:
+            iidrHost=os.getenv(nodes.ip)
+
+        verboseHandle.printConsoleInfo("ip -> "  + str(iidrHost))
+        
+        rootpath = "/dbagiga/utils/dihctl/"
+        login_cmd = f"{rootpath}dihctl -e dev login --noauth http://{iidrHost}:7080"
+        verboseHandle.printConsoleInfo(f"Running: {login_cmd}")
+        logger.info(f"Running: {login_cmd}")
+        login_result = subprocess.run(login_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if login_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Login failed: {login_result.stderr}")
+            return
+
+        selected_file_path = os.path.join(import_path, selected_file)
+        import_cmd = f"{rootpath}dihctl -e dev apply -s -f {selected_file_path}"
+        verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
+        logger.info(f"Running: {import_cmd}")
+        import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if import_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Import failed: {import_result.stderr}")
+            return
+        verboseHandle.printConsoleInfo(f"Import successful:\n{import_result.stdout}")
+        logger.info(f"Import successful: {import_result.stdout}")
+
+
+    except Exception as e:
+        handleException(e)
+
+
+if __name__ == '__main__':
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Import Pipeline')
+    logger.info('Menu -> DataEngine -> Oracle CDC Import Pipeline')
+    diManagerHost = getDIServerHost()
+    if diManagerHost:
+        importPipeline(diManagerHost)
+    else:
+        verboseHandle.printConsoleError("No DI Manager host found.")

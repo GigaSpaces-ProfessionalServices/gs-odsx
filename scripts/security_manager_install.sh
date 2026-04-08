@@ -537,7 +537,7 @@ function gsCreateGSServeice {
   systemctl daemon-reload
   systemctl enable $gsa_service_file
   #systemctl enable $gsc_service_file
-
+  sed -i 's/sslQuorum=true/sslQuorum=false/' $targetDir/gigaspaces-smart-ods/config/zookeeper/zoo.cfg
 
   : '
   sudo systemctl daemon-reload
