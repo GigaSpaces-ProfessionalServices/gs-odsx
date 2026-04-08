@@ -45,7 +45,7 @@ def getDIServerHost():
 
 def importPipeline(diManagerHost):
     try:
-        import_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+        import_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
         if not import_path.strip():
 
             verboseHandle.printConsoleError("File path cannot be empty.")

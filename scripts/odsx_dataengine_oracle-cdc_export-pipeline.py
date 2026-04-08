@@ -102,7 +102,7 @@ def exportPipeline(diManagerHost):
         verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline}")
         logger.info(f"Selected pipeline: {selected_pipeline}")
 
-        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
         if not export_path.strip():
             verboseHandle.printConsoleError("Export path cannot be empty.")
             return

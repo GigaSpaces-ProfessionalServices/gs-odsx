@@ -252,12 +252,16 @@ def executeCommandForUnInstall():
                     # Export pipelines and datasources, then delete them before removing DI
                     diHost = getDIServerHost()
                     if diHost:
-                        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
-                        if not export_path.strip():
-                            export_path = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-                        verboseHandle.printConsoleInfo("Exporting pipelines to: " + export_path)
-                        exportAllPipelinesBeforeRemove(diHost, export_path)
-                        exportDatasourcesBeforeRemove(diHost, export_path)
+                        export_path_pipeline = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
+                        export_path_datasource = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
+                        if not export_path_pipeline.strip():
+                            export_path_pipeline = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                        if not export_path_datasource.strip():
+                            export_path_datasource = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                        verboseHandle.printConsoleInfo("Exporting pipelines to: " + export_path_pipeline)
+                        verboseHandle.printConsoleInfo("Exporting datasource to: " + export_path_datasource)
+                        exportAllPipelinesBeforeRemove(diHost, export_path_pipeline)
+                        exportDatasourcesBeforeRemove(diHost, export_path_datasource)
                         verboseHandle.printConsoleInfo("Deleting pipelines...")
                         deleteAllPipelines(diHost)
                         verboseHandle.printConsoleInfo("Deleting datasources...")

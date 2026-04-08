@@ -105,7 +105,7 @@ def addNewColumn(diManagerHost):
     #     verboseHandle.printConsoleWarning("Operation cancelled by user.")
     #     return
 
-    export_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+    export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
     if not export_path.strip():
         verboseHandle.printConsoleError("Export path cannot be empty.")
         return

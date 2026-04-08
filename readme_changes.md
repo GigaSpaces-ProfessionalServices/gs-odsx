@@ -544,8 +544,10 @@
      cp <ODSX_HOME>/install/kafka/odsxkafka.service /dbagigashare/current/kafka/odsxkafka.service
 
 166. Add below properties in app.config properties (create folder if doesn't exist) : 
-     mkdir -p /dbagigashare/current/dihctl/yamlfiles/
-     app.dataengine.dihctl.yamlfolderpath=/dbagigashare/current/dihctl/yamlfiles/
+     mkdir -p /dbagigashare/current/dihctl/pipelines/
+     mkdir -p /dbagigashare/current/dihctl/datasource/
+     app.dataengine.dihctl.pipelinefolderpath=/dbagigashare/current/dihctl/pipelines/
+     app.dataengine.dihctl.datasourcefolderpath=/dbagigashare/current/dihctl/datasource/
 167. Install Instructions for Dihctl tool - https://docs.gigaspaces.com/latest/Data%20Integration/DI-DIHCTL.html?Highlight=DIUntar
      download link for rhel/rocky linux: https://generic-odsx.s3.us-east-2.amazonaws.com/giga/utils/dihctl-1.0.0-Rhel-Rocky-Linux-x86_64.tgz
      Steps from dihctl document:

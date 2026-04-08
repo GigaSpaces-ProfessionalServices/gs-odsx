@@ -310,7 +310,7 @@ def createDatasource():
 
         # Try to load datasources from the export file
         exported_list = []
-        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.datasourcefolderpath"))
         if export_path.strip():
             export_file = os.path.join(export_path, "datasources.json")
             if os.path.isfile(export_file):
@@ -357,9 +357,9 @@ def importAllPipelines():
     """Import all pipeline YAML files from the configured import folder via dihctl."""
     logger.info("importAllPipelines()")
     try:
-        import_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+        import_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
         if not import_path.strip() or import_path.strip().lower() == "none":
-            verboseHandle.printConsoleInfo("Pipeline import path (app.dataengine.dihctl.yamlfolderpath) is not configured; skipping pipeline import.")
+            verboseHandle.printConsoleInfo("Pipeline import path (app.dataengine.dihctl.pipelinefolderpath) is not configured; skipping pipeline import.")
             return
         if not os.path.exists(import_path):
             verboseHandle.printConsoleError("Pipeline import path not found: " + import_path)
