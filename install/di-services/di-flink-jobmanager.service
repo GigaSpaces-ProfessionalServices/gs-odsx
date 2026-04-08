@@ -1,0 +1,15 @@
+[Unit]
+Description=Apache Flink Standalone JobManager
+After=network.target
+
+[Service]
+Type=forking
+User=gsods
+Environment=FLINK_HOME=/home/gsods/di-flink/latest-di-flink FLINK_LOG_DIR=/dbagigalogs/di-iidr/di-flink
+ExecStart=/home/gsods/di-flink/latest-di-flink/bin/jobmanager.sh start
+ExecStop=/home/gsods/di-flink/latest-di-flink/bin/jobmanager.sh stop
+SyslogIdentifier=di-flink-jobmanager
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

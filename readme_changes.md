@@ -523,3 +523,35 @@
 161. Chmod 3 errors for gs-webui 
 162. ODSX needs to do chown -R influxdb.influxdb /*gigainfl* before installing influxdb 
 163. Added more robust kill of WEBUI so it won't still run and interfere by holding port 8099 when reinstalling
+### TAU v5.6.8-tau-release tag
+164. Pre check for DI make sure folder and below packages exist in before installing DI in /dbagigashare/current/:
+     DI MDM: /dbagigashare/current/data-integration/di-mdm/di-mdm-3.6.2-264.tar.gz  (s3://giga-di/di-releases/17.1.5/di-mdm-3.6.2-264.tar.gz)
+     DI Processor: /dbagigashare/current/data-integration/di-processor/di-processor-5.6.1.tgz  (s3://giga-di/di-releases/17.1.5/di-processor-5.6.1.tgz)
+     DI Transformations: /dbagigashare/current/data-integration/di-transformations/di-transformations-2.2.1.tgz  (s3://giga-di/di-releases/17.1.5/di-transformations-2.2.1.tgz)
+     DI Flink (JobManager Service): /dbagigashare/current/data-integration/di-flink/di-flink-jobmanager.service  
+     DI Flink (TaskManager Service): /dbagigashare/current/data-integration/di-flink/di-flink-taskmanager.service
+     DI Flink (Binary): /dbagigashare/current/data-integration/di-flink/flink-2.2.0-bin-scala_2.12.tgz  (s3://giga-di/di-releases/17.1.5/flink-install/flink-2.2.0-bin-scala_2.12.tgz)
+     DI Manager: /dbagigashare/current/data-integration/di-manager/di-manager-4.6.7-381.tar.gz (s3://giga-di/di-releases/17.1.5/di-manager-4.6.7-381.tar.gz)
+     DI Subscription Manager: /dbagigashare/current/data-integration/di-subscription-manager/di-subscription-manager-2.3.20.tgz  (s3://giga-di/di-releases/17.1.5/di-subscription-manager-2.3.20.tgz)
+     DIH Admin: /dbagigashare/current/data-integration/dih-admin/dih-admin-1.9.1.tgz  (s3://giga-di/di-releases/17.1.5/dih-admin-1.9.1.tgz)
+     Zookeeper: /dbagigashare/current/zk/apache-zookeeper-3.8.1-bin.tar.gz  (https://archive.apache.org/dist/zookeeper/zookeeper-3.8.1/apache-zookeeper-3.8.1-bin.tar.gz)
+     Zookeeper Service: /dbagigashare/current/zk/odsxzookeeper.service
+     Kafka: /dbagigashare/current/kafka/kafka_2.13-4.0.0.tgz  (https://archive.apache.org/dist/kafka/4.0.0/kafka_2.13-4.0.0.tgz)
+     Kafka Service: /dbagigashare/current/kafka/odsxkafka.service
+165. cp <ODSX_HOME>/install/di-services/di-flink-jobmanager.service /dbagigashare/current/data-integration/di-flink/di-flink-jobmanager.service
+     cp <ODSX_HOME>/install/di-services/di-flink-taskmanager.service /dbagigashare/current/data-integration/di-flink/di-flink-taskmanager.service
+     cp <ODSX_HOME>/install/zookeeper/odsxzookeeper.service /dbagigashare/current/zk/odsxzookeeper.service
+     cp <ODSX_HOME>/install/kafka/odsxkafka.service /dbagigashare/current/kafka/odsxkafka.service
+
+166. Add below properties in app.config properties (create folder if doesn't exist) : 
+     mkdir -p /dbagigashare/current/dihctl/yamlfiles/
+     app.dataengine.dihctl.yamlfolderpath=/dbagigashare/current/dihctl/yamlfiles/
+167. Install Instructions for Dihctl tool - https://docs.gigaspaces.com/latest/Data%20Integration/DI-DIHCTL.html?Highlight=DIUntar
+     download link for rhel/rocky linux: https://generic-odsx.s3.us-east-2.amazonaws.com/giga/utils/dihctl-1.0.0-Rhel-Rocky-Linux-x86_64.tgz
+     Steps from dihctl document:
+      tar -xzvf dihctl-1.0.0-Rhel-Rocky-Linux-x86_64.tgz -C /dbagiga/utils/
+      cd /dbagiga/utils/
+      sudo xattr -r -d com.apple.quarantine dihctl/
+      dihctl/dihctl version
+
+168. Added by default sslQuorum=false if it is True issue (code bug fix)

@@ -3,6 +3,9 @@
 import os
 import signal
 import subprocess
+import requests
+import json
+import datetime
 
 from colorama import Fore
 
@@ -12,7 +15,7 @@ from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFo
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_manager_node, \
     config_get_dataIntegrationiidr_nodes
-from utils.ods_manager import getManagerInfo
+from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
 from utils.odsx_keypress import userInputWrapper
@@ -103,6 +106,8 @@ def installCluster():
     global iidrHost
     global iidrUser
     global iidrPass
+    global spaceLookupGroups
+    global spaceLookupLocators
 
     kafkaBrokerHost1 = str(os.getenv("di1"))
     logger.info("kafkaBrokerHost1 : " + str(kafkaBrokerHost1))
@@ -217,6 +222,20 @@ def installCluster():
 
     logger.info("clusterHosts : " + str(clusterHosts))
     logger.info("host_type_dictionary_obj : " + str(host_type_dictionary_obj))
+    managerHost = getManagerHost()
+    managerInfo = getManagerInfo()
+    spaceLookupGroups = str(managerInfo['lookupGroups'])
+    spaceLookupLocators = str(managerHost) + ":4174"
+    # Fallback: if getManagerHost() returned empty, derive host from cluster config
+    if not managerHost:
+        managerNodes = config_get_manager_node()
+        for node in managerNodes:
+            fallbackManagerHost = str(os.getenv(str(node.ip)))
+            if fallbackManagerHost:
+                spaceLookupLocators = fallbackManagerHost + ":4174"
+                verboseHandle.printConsoleWarning("getManagerHost() returned empty; using config manager host: " + fallbackManagerHost)
+                break
+    verboseHandle.printConsoleInfo("spaceLookupGroups=" + spaceLookupGroups + "  spaceLookupLocators=" + spaceLookupLocators)
     nodeiidrList = config_get_dataIntegrationiidr_nodes()
     for nodes in nodeiidrList:
         iidrHost=os.getenv(nodes.ip)
@@ -262,6 +281,130 @@ def installCluster():
             commandToExecute = "scripts/servers_di_post_install.sh "+additionalParam
             os.system(commandToExecute)
 
+        # Create Oracle datasource and import pipelines after DI install
+        createDatasource()
+        importAllPipelines()
+
+def createDatasource():
+    """Create datasource(s) via di-manager API after DI install.
+    Loads exported datasources.json if available; each field falls back to app.config defaults
+    when the exported value is missing or blank."""
+    logger.info("createDatasource()")
+    try:
+        # Always compute defaults so they can fill in any missing/blank exported fields
+        defaultUsername = str(readValuefromAppConfig("app.dataengine.oracle-feeder.oracle.username"))
+        defaultPassword = str(readValuefromAppConfig("app.dataengine.oracle-feeder.oracle.password"))
+        defaultIidrHost = ""
+        for node in config_get_dataIntegrationiidr_nodes():
+            defaultIidrHost = os.getenv(node.ip)
+            break
+        defaults = {
+            "sorName":        "ORACLE",
+            "dbProvider":     "ORACLE",
+            "url":            f"iidr://{defaultIidrHost}:11001",
+            "username":       defaultUsername,
+            "password":       defaultPassword,
+            "additionalInfo": "",
+            "offlineMode":    False
+        }
+
+        # Try to load datasources from the export file
+        exported_list = []
+        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+        if export_path.strip():
+            export_file = os.path.join(export_path, "datasources.json")
+            if os.path.isfile(export_file):
+                with open(export_file, 'r') as f:
+                    exported_list = json.load(f) or []
+                if exported_list:
+                    verboseHandle.printConsoleInfo("Found exported datasource file: " + export_file)
+
+        # Build the list to create: exported entries with per-field fallback, or just the default
+        if exported_list:
+            datasources_to_create = []
+            for ds in exported_list:
+                entry = {}
+                for field, default_val in defaults.items():
+                    exported_val = ds.get(field)
+                    # Use exported value only when it is set and non-empty string
+                    if exported_val is not None and str(exported_val).strip() != "":
+                        entry[field] = exported_val
+                    else:
+                        entry[field] = default_val
+                        verboseHandle.printConsoleInfo(
+                            "Field '" + field + "' missing/blank in export for datasource '" +
+                            str(ds.get("sorName", "?")) + "'; using default: " + str(default_val))
+                datasources_to_create.append(entry)
+        else:
+            verboseHandle.printConsoleInfo("No exported datasource file found; using default ORACLE config.")
+            datasources_to_create = [defaults]
+
+        api_url = f"http://{kafkaBrokerHost1}:6080/api/v1/datasource/save-connection"
+        for body in datasources_to_create:
+            verboseHandle.printConsoleInfo("Creating datasource " + body["sorName"] + ", url=" + body["url"])
+            logger.info("createDatasource POST " + api_url)
+            response = requests.post(api_url, json=body, headers={"Content-Type": "application/json"})
+            if response.status_code in (200, 201):
+                verboseHandle.printConsoleInfo("Datasource " + body["sorName"] + " created successfully.")
+            else:
+                verboseHandle.printConsoleError("Datasource creation failed for " + body["sorName"] + ": " + str(response.status_code) + " " + response.text)
+            logger.info("createDatasource response: " + str(response.status_code) + " " + str(response.text))
+    except Exception as e:
+        handleException(e)
+
+
+def importAllPipelines():
+    """Import all pipeline YAML files from the configured import folder via dihctl."""
+    logger.info("importAllPipelines()")
+    try:
+        import_path = str(readValuefromAppConfig("app.dataengine.dihctl.yamlfolderpath"))
+        if not import_path.strip() or import_path.strip().lower() == "none":
+            verboseHandle.printConsoleInfo("Pipeline import path (app.dataengine.dihctl.yamlfolderpath) is not configured; skipping pipeline import.")
+            return
+        if not os.path.exists(import_path):
+            verboseHandle.printConsoleError("Pipeline import path not found: " + import_path)
+            return
+        files = [f for f in os.listdir(import_path) if os.path.isfile(os.path.join(import_path, f)) and f.endswith('.yaml')]
+        if not files:
+            verboseHandle.printConsoleInfo("No pipeline YAML files found in: " + import_path)
+            return
+        rootpath = "/dbagiga/utils/dihctl/"
+        login_cmd = f"{rootpath}dihctl -e dev login --noauth http://{kafkaBrokerHost1}:7080"
+        verboseHandle.printConsoleInfo("dihctl login: " + login_cmd)
+        login_result = subprocess.run(login_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if login_result.returncode != 0:
+            verboseHandle.printConsoleError("dihctl login failed: " + login_result.stderr)
+            return
+        for fname in files:
+            fpath = os.path.join(import_path, fname)
+            import_cmd = f"{rootpath}dihctl -e dev apply -s -f {fpath}"
+            verboseHandle.printConsoleInfo("Importing pipeline: " + import_cmd)
+            result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            if result.returncode != 0:
+                verboseHandle.printConsoleError("Pipeline import failed for " + fname + ": " + result.stderr)
+            else:
+                verboseHandle.printConsoleInfo("Pipeline imported: " + fname + "\n" + result.stdout)
+        logger.info("importAllPipelines() completed")
+    except Exception as e:
+        handleException(e)
+
+
+def _downloadDIArtifacts(pkg):
+    logger.info("_downloadDIArtifacts()")
+    for artifact in pkg.artifacts:
+        if artifact.id == "xap" or artifact.action != "download":
+            continue
+        dest_subpath = _ARTIFACT_DEST.get(artifact.id)
+        if not dest_subpath:
+            logger.warning("No destination mapping for artifact '" + artifact.id + "', skipping download")
+            continue
+        dest_dir = os.path.join(sourceInstallerDirectory, dest_subpath)
+        verboseHandle.printConsoleInfo("Downloading " + artifact.id + " to " + dest_dir + " ...")
+        with Spinner():
+            process_artifact_by_id(pkg, artifact.id, dest_dir)
+        verboseHandle.printConsoleInfo("Downloaded " + artifact.id)
+
+
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :" + str(host))
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
@@ -280,6 +423,7 @@ def buildTarFileToLocalMachine(host):
     with Spinner():
         status = os.system(cmd)
         logger.info("Creating tar file status : " + str(status))
+        print("Creating tar file status : " + str(status))
 
 
 def buildUploadInstallTarToServer(host):
@@ -303,10 +447,10 @@ def executeCommandForInstall(host, type, count,nodeListSize):
         #    additionalParam = additionalParam + kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + zkWitnessHost + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+ host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag
         if(len(clusterHosts)==3):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag + ' ' +zkClientPort+ ' ' + zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' '+ iidrHost + ' '+ iidrUser + ' '+ iidrPass
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + kafkaBrokerHost2 + ' ' + kafkaBrokerHost3 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' + dimMdmFlinkInstallon1bFlag + ' ' +zkClientPort+ ' ' + zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' '+ iidrHost + ' '+ iidrUser + ' '+ iidrPass + ' ' + spaceLookupGroups + ' ' + spaceLookupLocators
         if(len(clusterHosts)==1):
             commandToExecute = "scripts/servers_di_install_all.sh"
-            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' +zkClientPort+ ' ' +zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' ' + iidrHost+ ' '+ iidrUser + ' '+ iidrPass
+            additionalParam = additionalParam +' '+str(nodeListSize)+' '+ kafkaBrokerHost1 + ' ' + str(count) + ' ' + str(baseFolderLocation)+ ' ' + str(dataFolderKafka)+ ' ' + str(dataFolderZK)+ ' ' + str(logsFolderKafka)+ ' ' + str(logsFolderZK)+' '+str(wantJava)+' '+sourceInstallerDirectory+' '+host + ' ' + flinkJobManagerMemoryMetaspaceSize + ' ' + flinkTaskManagerMemoryProcessSize + ' ' +zkClientPort+ ' ' +zkInitLimit+ ' ' +zkSyncLimit+ ' ' +zkTickTime + ' ' + iidrHost+ ' '+ iidrUser + ' '+ iidrPass + ' ' + spaceLookupGroups + ' ' + spaceLookupLocators
         logger.info("Additional Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(
             host) + " User:" + str(user))
         print(additionalParam)

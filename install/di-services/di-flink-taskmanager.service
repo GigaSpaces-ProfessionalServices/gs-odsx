@@ -1,0 +1,15 @@
+[Unit]
+Description=Apache Flink TaskManager
+After=network.target di-flink-jobmanager.service
+
+[Service]
+Type=forking
+User=gsods
+Environment=FLINK_HOME=/home/gsods/di-flink/latest-di-flink FLINK_LOG_DIR=/dbagigalogs/di-iidr/di-flink
+ExecStart=/home/gsods/di-flink/latest-di-flink/bin/taskmanager.sh start
+ExecStop=/home/gsods/di-flink/latest-di-flink/bin/taskmanager.sh stop
+SyslogIdentifier=di-flink-taskmanager
+Restart=on-failure
+
+[Install]
+WantedBy=multi-user.target

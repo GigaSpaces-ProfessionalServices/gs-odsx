@@ -1,4 +1,7 @@
-#source /dbagiga/setenv.sh
+#!/bin/bash
+set -x
+
+source setenv.sh 2>/dev/null || true
 
 wantToRemoveKafka=$1
 wantToRemoveZk=$2
@@ -28,21 +31,66 @@ if [ "$wantToRemoveTelegraf" == "y" ]; then
 fi
 
 
-
-#DIM - Services
-systemctl stop di-mdm.service
-systemctl stop di-manager.service
-
-systemctl stop di-flink-taskmanager.service
-systemctl stop di-flink-jobmanager.service
-systemctl stop di-subscription-manager-iidr.service
+# Stop all DI services before removing files
+systemctl stop dih-admin.service || true
+systemctl stop di-transformations.service || true
+systemctl stop di-manager.service || true
+systemctl stop di-mdm.service || true
+systemctl stop di-flink-taskmanager.service || true
+systemctl stop di-flink-jobmanager.service || true
+systemctl stop di-subscription-manager-iidr.service || true
 systemctl daemon-reload
-/dbagiga/di-flink/latest-flink/bin/stop-cluster.sh
+
+# Stop Flink cluster gracefully before removing files
+ bash /dbagiga/di-flink/latest-flink/bin/stop-cluster.sh || true
 sleep 5
 
-rm -f /dbagiga/di-mdm/latest-flink /dbagiga/di-mdm/latest-di-mdm /dbagiga/di-mdm/latest-di-manager /etc/systemd/system/di-mdm.service /etc/systemd/system/di-manager.service
-rm -rf /dbagiga/di-flink/* /dbagiga/di-mdm/* /dbagiga/di-manager/* /dbagiga/di-processor/* /dbagiga/di-subscription-manager/*
-rm -f /etc/systemd/system/di-flink-jobmanager.service /etc/systemd/system/di-flink-taskmanager.service
-rm -rf /dbagiga/di-mdm/latest-di-processor /dbagiga/di-mdm/latest-di-subscription-manager /etc/systemd/system/di-mdm.service /etc/systemd/system/di-processor.service /etc/systemd/system/di-subscription-manager-iidr.service
+# Remove /home/gsods symlinks created during install
+# (use rm -f not rm -rf to remove the symlink itself, not its target)
+ rm -f /home/gsods/di-flink
+ rm -f /home/gsods/di-mdm
+ rm -f /home/gsods/di-manager
+ rm -f /home/gsods/di-processor
+ rm -f /home/gsods/di-transformations
+ rm -f /home/gsods/dih-admin
+ rm -f /home/gsods/di-subscription-manager
+# Remove the actual directory created for flink checkpoints/savepoints
+ rm -rf /home/gsods/latest-flink
 
-systemctl daemon-reload
+# Remove DI service files
+ rm -f /etc/systemd/system/di-flink-jobmanager.service
+ rm -f /etc/systemd/system/di-flink-taskmanager.service
+ rm -f /etc/systemd/system/di-mdm.service
+ rm -f /etc/systemd/system/di-manager.service
+ rm -f /etc/systemd/system/di-processor.service
+ rm -f /etc/systemd/system/di-transformations.service
+ rm -f /etc/systemd/system/di-subscription-manager-iidr.service
+
+# Remove DI installation directories
+ rm -rf /dbagiga/di-flink
+ rm -rf /dbagiga/di-mdm
+ rm -rf /dbagiga/di-manager
+ rm -rf /dbagiga/di-processor
+ rm -rf /dbagiga/di-transformations
+ rm -rf /dbagiga/dih-admin
+ rm -rf /dbagiga/di-subscription-manager
+
+# Remove DI log directories
+ rm -rf /dbagigalogs/di-flink
+ rm -rf /dbagigalogs/di-mdm
+ rm -rf /dbagigalogs/di-manager
+ rm -rf /dbagigalogs/di-processor
+ rm -rf /dbagigalogs/di-transformations
+ rm -rf /dbagigalogs/dih-admin
+ rm -rf /dbagigalogs/di-subscription-manager
+
+# Remove properties files written during install
+ rm -f /dbagiga/di-mdm.properties
+ rm -f /dbagiga/di-manager.properties
+ rm -f /dbagiga/di-processor.properties
+ rm -f /dbagiga/di-transformations.properties
+ rm -f /dbagiga/dih-admin.properties
+ rm -f /dbagiga/di-subscription-manager.properties
+
+ systemctl daemon-reload
+echo "DI removal completed on host: $(hostname)"
