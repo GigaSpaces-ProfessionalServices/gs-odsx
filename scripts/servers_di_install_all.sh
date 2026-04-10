@@ -1,5 +1,5 @@
 #!/bin/bash
-# set -x
+#set -x
 echo "scripts/servers_di_install_all.sh"
 print_style () {
     if [ "$2" == "debug" ] ; then
@@ -64,8 +64,8 @@ function installFlink() {
   chown -R gsods:gsods /dbagiga/di-flink/
   extracted_folder_flink=$(ls -I "*.tgz" /dbagiga/di-flink/)
   cd /dbagiga/di-flink/
-  ln -s /dbagiga/di-flink/ /home/gsods/di-flink
-  ln -s /dbagiga/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
+  ln -snf /dbagiga/di-flink/ /home/gsods/di-flink
+  ln -snf /dbagiga/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
   mkdir -p /home/gsods/di-flink/latest-flink/data/savepoints
   mkdir -p /home/gsods/di-flink/latest-flink/data/checkpoints
 
@@ -133,8 +133,8 @@ function installDIMatadata {
   extracted_folder_mdm=$(ls -I "*.gz" /dbagiga/di-mdm/)
   cd /dbagiga/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
-  ln -s /dbagiga/di-mdm/ /home/gsods/di-mdm
-  ln -s /dbagiga/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
+  ln -snf /dbagiga/di-mdm/ /home/gsods/di-mdm
+  ln -snf /dbagiga/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
   echo "spring.profiles.active=zookeeper">/dbagiga/di-mdm.properties
   echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm.properties
 
@@ -172,8 +172,8 @@ function installDIManager {
   extracted_folder_manager=$(ls -I "*.gz" /dbagiga/di-manager/)
   cd /dbagiga/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
-  ln -s /dbagiga/di-manager/ /home/gsods/di-manager
-  ln -s /dbagiga/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
+  ln -snf /dbagiga/di-manager/ /home/gsods/di-manager
+  ln -snf /dbagiga/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
 
   echo "springdoc.api-docs.path=/api-docs">/dbagiga/di-manager.properties
   echo "springdoc.swagger-ui.path=/swagger-ui">>/dbagiga/di-manager.properties
@@ -214,8 +214,8 @@ function installDIProcessor {
     extracted_folder_manager=$(ls -I "*.tgz" /dbagiga/di-processor/)
     cd /dbagiga/di-processor/
     info "Creating symlink for :"$extracted_folder_manager
-    ln -s /dbagiga/di-processor/ /home/gsods/di-processor
-    ln -s /dbagiga/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
+    ln -snf /dbagiga/di-processor/ /home/gsods/di-processor
+    ln -snf /dbagiga/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
 
     echo "mdm.server.url=http://$kafkaBrokerHost1:6081">/dbagiga/di-processor.properties
     if [ "$kafkaBrokerCount" == 1 ]; then
@@ -248,8 +248,8 @@ function installDITransformations {
   extracted_folder_transformations=$(ls -I "*.tgz" /dbagiga/di-transformations/)
   cd /dbagiga/di-transformations/
   info "Creating symlink for :"$extracted_folder_transformations
-   ln -s /dbagiga/di-transformations/ /home/gsods/di-transformations
-   ln -s /dbagiga/di-transformations/$extracted_folder_transformations /home/gsods/di-transformations/latest-di-transformations
+   ln -snf /dbagiga/di-transformations/ /home/gsods/di-transformations
+   ln -snf /dbagiga/di-transformations/$extracted_folder_transformations /home/gsods/di-transformations/latest-di-transformations
 
   # Derive XAP manager host from spaceLookupLocators (strip :4174)
   xapManagerHost=${spaceLookupLocators%:4174}
@@ -315,7 +315,7 @@ function installDIHAdmin {
 
   extracted_folder_dih_admin=$(find /dbagiga/dih-admin -maxdepth 1 -type d -name "dih-admin-*" -printf "%f\n" | sort -V | tail -1)
   info "Creating symlink for :"$extracted_folder_dih_admin
-   ln -s /dbagiga/dih-admin/ /home/gsods/dih-admin
+   ln -snf /dbagiga/dih-admin/ /home/gsods/dih-admin
 
   # Derive XAP manager host from spaceLookupLocators (strip :4174)
   xapManagerHost=${spaceLookupLocators%:4174}
@@ -382,8 +382,8 @@ function installDISubscription {
     extracted_folder_manager=$(ls -I "*.tgz" /dbagiga/di-subscription-manager/)
     cd /dbagiga/di-subscription-manager/
     info "Creating symlink for :"$extracted_folder_manager
-     ln -s $extracted_folder_manager /home/gsods/di-subscription-manager
-     ln -s /dbagiga/di-subscription-manager/$extracted_folder_manager /home/gsods/di-subscription-manager/latest-di-subscription-manager
+     ln -snf $extracted_folder_manager /home/gsods/di-subscription-manager
+     ln -snf /dbagiga/di-subscription-manager/$extracted_folder_manager /home/gsods/di-subscription-manager/latest-di-subscription-manager
 
     echo "##iidr.as##" > /dbagiga/di-subscription-manager.properties
     echo "iidr-as.hostname=$iidrHost" >> /dbagiga/di-subscription-manager.properties
@@ -535,7 +535,7 @@ if [[ $id != 4 ]]; then
     sed -i '/export KAFKA_LOGS_PATH/d' setenv.sh
     echo "extracted_folder: "$extracted_folder
     kafka_home_path="export KAFKAPATH="$baseFolderLocation$extracted_folder
-    ln -s $baseFolderLocation$extracted_folder /dbagiga/kafka_latest
+    ln -snf $baseFolderLocation$extracted_folder /dbagiga/kafka_latest
     echo "$kafka_home_path">>setenv.sh
     echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
     echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
@@ -556,7 +556,10 @@ fi
     replace=""
     extracted_folder=${var//'.tar.gz'/$replace}
     zk_home_path="export ZOOKEEPERPATH="$baseFolderLocation$extracted_folder
-    ln -s $baseFolderLocation$extracted_folder /dbagiga/zookeeper_latest
+    ln -snf $baseFolderLocation$extracted_folder /dbagiga/zookeeper_latest
+    sed -i '/export ZOOKEEPERPATH/d' setenv.sh
+    sed -i '/export ZOOKEEPER_DATA_PATH/d' setenv.sh
+    sed -i '/export ZOOKEEPER_LOGS_PATH/d' setenv.sh
     echo "$zk_home_path">>setenv.sh
     echo "export ZOOKEEPER_DATA_PATH="$dataFolderZK >> setenv.sh
     echo "export ZOOKEEPER_LOGS_PATH="$logsFolderZK >> setenv.sh

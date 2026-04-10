@@ -350,7 +350,8 @@ def createDatasource():
         for body in datasources_to_create:
             verboseHandle.printConsoleInfo("Creating datasource " + body["sorName"] + ", url=" + body["url"])
             logger.info("createDatasource POST " + api_url)
-            response = requests.post(api_url, json=body, headers={"Content-Type": "application/json"})
+            response = requests.post(api_url, json=body, headers={"Content-Type": "application/json"},
+                                     proxies={"http": None, "https": None})
             if response.status_code in (200, 201):
                 verboseHandle.printConsoleInfo("Datasource " + body["sorName"] + " created successfully.")
             else:

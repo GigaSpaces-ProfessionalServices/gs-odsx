@@ -16,7 +16,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
     config_get_dataIntegrationiidr_nodes
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -113,7 +113,8 @@ def exportDatasourcesBeforeRemove(diHost, export_path):
         os.makedirs(export_path, exist_ok=True)
         url = f"http://{diHost}:6080/api/v1/datasource/"
         verboseHandle.printConsoleInfo("Fetching datasources from: " + url)
-        response = requests.get(url, headers={"Content-Type": "application/json"})
+        response = requests.get(url, headers={"Content-Type": "application/json"},
+                                   proxies={"http": None, "https": None})
         if response.status_code != 200:
             verboseHandle.printConsoleError("Failed to list datasources: " + str(response.status_code) + " " + response.text)
             return
@@ -167,7 +168,8 @@ def deleteDatasources(diHost):
     logger.info("deleteDatasources()")
     try:
         url = f"http://{diHost}:6080/api/v1/datasource/"
-        response = requests.get(url, headers={"Content-Type": "application/json"})
+        response = requests.get(url, headers={"Content-Type": "application/json"},
+                                   proxies={"http": None, "https": None})
         if response.status_code != 200:
             verboseHandle.printConsoleError("Failed to list datasources: " + str(response.status_code) + " " + response.text)
             return
@@ -181,7 +183,7 @@ def deleteDatasources(diHost):
                 continue
             del_url = f"http://{diHost}:6080/api/v1/datasource/{sor_name}"
             verboseHandle.printConsoleInfo("Deleting datasource: " + sor_name)
-            del_response = requests.delete(del_url)
+            del_response = requests.delete(del_url, proxies={"http": None, "https": None})
             if del_response.status_code in (200, 204):
                 verboseHandle.printConsoleInfo("Datasource deleted: " + sor_name)
             else:
@@ -189,6 +191,66 @@ def deleteDatasources(diHost):
         logger.info("deleteDatasources() completed")
     except Exception as e:
         handleException(e)
+
+
+def fetchSetenvValues(host):
+    """Read exported variable values from setenv.sh on the remote DI server."""
+    logger.info("fetchSetenvValues() host=" + str(host))
+    paths = {}
+    try:
+        output = executeRemoteCommandAndGetOutput(host, user, "cat /root/setenv.sh")
+        for line in str(output).splitlines():
+            line = line.strip()
+            if line.startswith("export "):
+                kv = line[len("export "):].split("=", 1)
+                if len(kv) == 2:
+                    paths[kv[0].strip()] = kv[1].strip()
+    except Exception as e:
+        handleException(e)
+    return paths
+
+
+def printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost):
+    """Print a summary of all folders that will be deleted during DI removal."""
+    logger.info("printRemoveFolderSummary()")
+    setenv = fetchSetenvValues(diHost) if diHost else {}
+
+    print(Fore.YELLOW + "\n========== DI Removal - Folders to be Deleted ==========" + Fore.RESET)
+    print(Fore.YELLOW + "Target DI nodes: " + str(nodes) + Fore.RESET)
+
+    if wantToRemoveKafka == 'y':
+        print(Fore.RED + "\n[KAFKA] The following Kafka dirs will be deleted:" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("KAFKA_LOGS_PATH", "$KAFKA_LOGS_PATH") + "   (Kafka log dir)" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("KAFKA_DATA_PATH", "$KAFKA_DATA_PATH") + "   (Kafka data/KRaft dir)" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("KAFKAPATH", "$KAFKAPATH") + "   (Kafka binary dir)" + Fore.RESET)
+
+    if wantToRemoveZk == 'y':
+        print(Fore.RED + "\n[ZOOKEEPER] The following ZooKeeper dirs will be deleted:" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("ZOOKEEPER_DATA_PATH", "$ZOOKEEPER_DATA_PATH") + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("ZOOKEEPER_LOGS_PATH", "$ZOOKEEPER_LOGS_PATH") + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("ZOOKEEPERPATH", "$ZOOKEEPERPATH") + Fore.RESET)
+
+    print(Fore.RED + "\n[DI SERVICES] Installation directories:" + Fore.RESET)
+    di_install_dirs = [
+        "/dbagiga/di-flink", "/dbagiga/di-mdm", "/dbagiga/di-manager",
+        "/dbagiga/di-processor", "/dbagiga/di-transformations",
+        "/dbagiga/dih-admin", "/dbagiga/di-subscription-manager",
+    ]
+    for d in di_install_dirs:
+        print(Fore.RED + "  - " + d + Fore.RESET)
+
+    print(Fore.RED + "\n[DI SERVICES] Log directories:" + Fore.RESET)
+    di_log_dirs = [
+        "/dbagigalogs/di-flink", "/dbagigalogs/di-mdm", "/dbagigalogs/di-manager",
+        "/dbagigalogs/di-processor", "/dbagigalogs/di-transformations",
+        "/dbagigalogs/dih-admin", "/dbagigalogs/di-subscription-manager",
+    ]
+    for d in di_log_dirs:
+        print(Fore.RED + "  - " + d + Fore.RESET)
+
+    print(Fore.RED + "\n[FLINK] Checkpoint/savepoint directory:" + Fore.RESET)
+    print(Fore.RED + "  - /home/gsods/latest-flink" + Fore.RESET)
+    print(Fore.YELLOW + "\n========================================================\n" + Fore.RESET)
 
 
 def removeInputUserAndHost():
@@ -244,13 +306,15 @@ def executeCommandForUnInstall():
                 verboseHandle.printConsoleInfo("Want to remove kafka : "+str(wantToRemoveKafka))
                 verboseHandle.printConsoleInfo("Want to remove zookeeper : "+str(wantToRemoveZk))
                 verboseHandle.printConsoleInfo("Want to remove telegraf : "+str(wantToRemoveTelegraf))
+                diHost = getDIServerHost()
+                printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost)
                 confirmUninstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
                     # Export pipelines and datasources, then delete them before removing DI
-                    diHost = getDIServerHost()
+                    # diHost already fetched above for the folder summary
                     if diHost:
                         export_path_pipeline = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
                         export_path_datasource = str(readValuefromAppConfig("app.dataengine.dihctl.datasourcefolderpath"))
