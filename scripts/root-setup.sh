@@ -13,17 +13,36 @@ function usage () {
 
   USAGE:
 
-    $(basename $0) <gigashare dir> <gigashare.tgz>
+    $(basename $0) <gigashare dir> <gigashare.tgz> [--overwrite]
+
+  OPTIONS:
+
+    --overwrite   Re-extract gigashare.tgz even if gigashare dir is not empty,
+                  overwrite sqlite files, and overwrite gsods SSH config.
 
   EXAMPLE:
 
-    $(basename $0) /gigashare /tmp/gigashare.tgz
+    ./$(basename $0) /gigashare /giga/gigashare.tgz
+    ./$(basename $0) /gigashare /giga/gigashare.tgz --overwrite
 
 EOF
 exit
 }
 
 set -e
+
+# Parse --overwrite flag (accepted in any position)
+OVERWRITE=false
+_ARGS=()
+for _arg in "$@"; do
+    if [ "$_arg" = "--overwrite" ]; then
+        OVERWRITE=true
+    else
+        _ARGS+=("$_arg")
+    fi
+done
+set -- "${_ARGS[@]}"
+unset _ARGS _arg
 
 # Must run as root
 if [ "$(id -u)" -ne 0 ]; then
@@ -36,8 +55,16 @@ fi
 [[ ! -d $1 ]] && { echo -e "\nThe gigashare directory does not exist.\n" ; exit 1 ; }
 [[ ! -s $2 ]] && { echo -e "\nThe gigashare.tgz is empty or does not exist.\n" ; exit 1 ; }
 
-echo -e "Extracting gigashare..."
-tar xzf $2 -C $1
+if [ -z "$(ls -A "$1" 2>/dev/null)" ]; then
+    echo "Extracting gigashare..."
+    tar xzf "$2" -C "$1"
+elif $OVERWRITE; then
+    echo "Overwrite mode: emptying $1 and re-extracting..."
+    rm -rf "$1"/*
+    tar xzf "$2" -C "$1"
+else
+    echo "$1 is not empty — skipping extraction. Use --overwrite to force re-extraction."
+fi
 
 ENV_CONFIG_PATH="$1/env_config"
 echo "ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
@@ -87,8 +114,15 @@ NOFILE_LIMIT=$(read_property "app.user.nofile.limit")
 NOFILE_LIMIT=${NOFILE_LIMIT:-50000}
 
 # Read remote hosts from host.yaml
-ALL_HOSTS=$(grep -E '^\s+host[0-9]+\s*:' "$HOST_YAML" | awk '{print $NF}' | sort -u)
+ALL_HOSTS=$(grep -E '^\s+host[0-9]+\s*:' "$HOST_YAML" | awk -F':' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); if($2!="") print $2}' | sort -u)
 PIVOT_IP=$(hostname -I | awk '{print $1}')
+
+# Non-pivot hosts only (NFS clients)
+REMOTE_HOSTS=""
+for _h in $ALL_HOSTS; do
+    [ "$_h" != "$PIVOT_IP" ] && REMOTE_HOSTS="$REMOTE_HOSTS $_h"
+done
+REMOTE_HOSTS="${REMOTE_HOSTS# }"
 
 echo "============================================"
 echo "  ODSX Non-Root Setup"
@@ -114,11 +148,17 @@ mkdir -p $GIGA_LOG $GIGA_SHARE $GIGA_WORK $GIGA_PATH $GIGA_DATA $GIGA_INFLUX
 touch $GIGA_LOG/odsx.log
 
 mkdir -p $GIGA_WORK/sqlite
-cp $GIGA_SHARE/current/sqlite3/* $GIGA_WORK/sqlite/
+if [ -z "$(ls -A "$GIGA_WORK/sqlite" 2>/dev/null)" ]; then
+    cp $GIGA_SHARE/current/sqlite/* $GIGA_WORK/sqlite/
+    echo "    SQLite files copied."
+elif $OVERWRITE; then
+    cp $GIGA_SHARE/current/sqlite/* $GIGA_WORK/sqlite/
+    echo "    SQLite files overwritten (--overwrite)."
+else
+    echo "    $GIGA_WORK/sqlite/ is not empty — skipping sqlite copy. Use --overwrite to force."
+fi
 
-chown gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
-chown -R gsods:gsods $GIGA_SHARE/*
-chown -R gsods:gsods $GIGA_PATH
+chown -R gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
 echo "    Directories created and ownership set."
 
 # --- Step 1: Generate SSH key for gsods on pivot ---
@@ -133,8 +173,9 @@ fi
 GSODS_PUBKEY=$(cat "$GSODS_HOME/.ssh/id_ed25519.pub")
 
 # Create SSH config for gsods
-install -m 600 -o gsods -g gsods /dev/null "$GSODS_HOME/.ssh/config"
-cat > "$GSODS_HOME/.ssh/config" << 'SSHCONFIG'
+if [ ! -f "$GSODS_HOME/.ssh/config" ] || $OVERWRITE; then
+    install -m 600 -o gsods -g gsods /dev/null "$GSODS_HOME/.ssh/config"
+    cat > "$GSODS_HOME/.ssh/config" << 'SSHCONFIG'
 Host *
     StrictHostKeyChecking no
     UserKnownHostsFile /dev/null
@@ -143,7 +184,14 @@ Host *
     ConnectTimeout 10
     LogLevel ERROR
 SSHCONFIG
-echo "    SSH config created."
+    if $OVERWRITE; then
+        echo "    SSH config overwritten (--overwrite)."
+    else
+        echo "    SSH config created."
+    fi
+else
+    echo "    SSH config already exists — skipping. Use --overwrite to force."
+fi
 
 # --- Step 2: Configure pivot ---
 echo ">>> Step 2: Configuring pivot..."
@@ -201,10 +249,33 @@ chown gsods:gsods "$GSODS_HOME/.bashrc"
 echo "    Pivot configured."
 echo ""
 
-# --- Step 3: Configure each remote host ---
-echo ">>> Step 3: Configuring remote hosts..."
+# --- Step 3: Set up NFS server on pivot ---
+echo ">>> Step 3: Setting up NFS server on pivot..."
 
-for HOST in $ALL_HOSTS; do
+if ! rpm -q nfs-utils &>/dev/null; then
+    yum install -y nfs-utils
+    echo "    nfs-utils installed."
+fi
+
+# Add per-host export entries (idempotent)
+for HOST in $REMOTE_HOSTS; do
+    if ! grep -qF "$GIGA_SHARE $HOST(" /etc/exports 2>/dev/null; then
+        echo "$GIGA_SHARE $HOST(rw,sync,no_root_squash,no_subtree_check)" >> /etc/exports
+        echo "    Export added for $HOST."
+    else
+        echo "    Export for $HOST already present."
+    fi
+done
+
+systemctl enable --now nfs-server
+exportfs -ra
+echo "    NFS server configured and exports refreshed."
+echo ""
+
+# --- Step 4: Configure each remote host ---
+echo ">>> Step 4: Configuring remote hosts..."
+
+for HOST in $REMOTE_HOSTS; do
     echo "  --- $HOST ---"
 
     ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 "$HOST" bash <<REMOTE_SCRIPT
@@ -243,6 +314,35 @@ for HOST in $ALL_HOSTS; do
         chown gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
         chown gsods:gsods "$GIGA_PATH/bin" 2>/dev/null || true
 
+        # Set up NFS client for gigashare
+        if ! rpm -q nfs-utils &>/dev/null; then
+            yum install -y nfs-utils 2>/dev/null || apt-get install -y nfs-common 2>/dev/null || true
+            echo "    nfs-utils installed."
+        fi
+
+        # Add fstab entry (idempotent)
+        # users: any user can mount/unmount without sudo
+        if ! grep -qF "$PIVOT_IP:$GIGA_SHARE" /etc/fstab 2>/dev/null; then
+            echo "$PIVOT_IP:$GIGA_SHARE  $GIGA_SHARE  nfs  defaults,_netdev,users  0  0" >> /etc/fstab
+            echo "    fstab entry added."
+        else
+            echo "    fstab entry already present."
+        fi
+
+        # Mount if not already mounted
+        if ! findmnt "$GIGA_SHARE" > /dev/null 2>&1; then
+            mount "$GIGA_SHARE" && echo "    $GIGA_SHARE mounted." || echo "    WARNING: Failed to mount $GIGA_SHARE"
+        else
+            echo "    $GIGA_SHARE already mounted."
+        fi
+
+        # Verify mount
+        if findmnt "$GIGA_SHARE" > /dev/null 2>&1; then
+            echo "    Mount verified: $GIGA_SHARE is mounted."
+        else
+            echo "    WARNING: $GIGA_SHARE is NOT mounted after mount attempt."
+        fi
+
         # Set nofile limits
         sed -i '/gsods.*hard.*nofile/d' /etc/security/limits.conf
         sed -i '/gsods.*soft.*nofile/d' /etc/security/limits.conf
@@ -273,6 +373,9 @@ done
 echo ""
 echo "============================================"
 echo "  Setup complete."
+echo ""
+echo "  Verify NFS mounts on remote hosts:"
+echo "    (from pivot, run: showmount -e $PIVOT_IP)"
 echo ""
 echo "  Verify SSH as gsods from pivot:"
 echo "    su - gsods"

@@ -363,13 +363,6 @@ def executeLocalCommandAndGetOutput(commandToExecute):
 
 def validateRPM():
     logger.info("validateRPM()")
-    installerArray = []
-    cmd = "pwd"
-    home = executeLocalCommandAndGetOutput(cmd)
-    logger.info("home dir : " + str(home))
-    cmd = 'find '+sourceInstallerDirectory+'/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-    javaRpm = executeLocalCommandAndGetOutput(cmd)
-    logger.info("javaRpm found :" + str(javaRpm))
     cmd = 'find '+sourceInstallerDirectory+'/kafka/ -name *.tgz -printf "%f\n"'  # Checking .tgz file on Pivot machine
     kafkaZip = executeLocalCommandAndGetOutput(cmd)
     logger.info("kafkaZip found :" + str(kafkaZip))
@@ -378,17 +371,11 @@ def validateRPM():
     logger.info("ZookeeperZip found :" + str(zkZip))
     cmd = 'find '+sourceInstallerDirectory+'/kafka/ -name *.jar -printf "%f\n"'  # Checking .tar.gz file on Pivot machine
     jolokiaJar = executeLocalCommandAndGetOutput(cmd)
-    #cmd = 'find '+sourceInstallerDirectory+'/telegraf/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-    #telegrafRpm = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("telegrafRpm found :" + str(telegrafRpm))
 
     di_installer_dict = obj_type_dictionary()
-    di_installer_dict.add('Java', javaRpm)
     di_installer_dict.add('KafkaZip', kafkaZip)
     di_installer_dict.add('zkZip', zkZip)
     di_installer_dict.add('jolokiaJar', jolokiaJar)
-    #di_installer_dict.add('CR8-LocalSetupZip', localSetupZip)
-    #di_installer_dict.add('Telegraf', telegrafRpm)
 
     for name, installer in di_installer_dict.items():
         if (len(str(installer)) == 0):

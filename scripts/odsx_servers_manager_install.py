@@ -535,37 +535,16 @@ def getPlainOutput(input):
 
 def validateRPMS():
     logger.info("validateRPM()")
-    installerArray = []
-    cmd = "pwd"
-    home = executeLocalCommandAndGetOutput(cmd)
-    home = getPlainOutput(home)
-    logger.info("home dir : " + str(home))
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
-    cmd = 'find ' + str(sourceInstallerDirectory) + '/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-    javaRpm = executeLocalCommandAndGetOutput(cmd)
-    javaRpm = getPlainOutput(javaRpm)
-    logger.info("javaRpm found :" + str(javaRpm))
-
-    cmd = 'find ' + str(sourceInstallerDirectory)  + '/unzip/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-    unZip = executeLocalCommandAndGetOutput(cmd)
-    unZip = getPlainOutput(unZip)
-    logger.info("unZip found :" + str(unZip))
-
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     cmd = 'find ' + str(sourceInstallerDirectory) + '/gs/ -name *.zip -printf "%f\n"'  # Checking .zip file on Pivot machine
     gsZip = executeLocalCommandAndGetOutput(cmd)
     gsZip = getPlainOutput(gsZip)
     logger.info("Gigaspace Zip found :" + str(gsZip))
 
-    di_installer_dict = obj_type_dictionary()
-    di_installer_dict.add('Java', javaRpm)
-    di_installer_dict.add('unZip', unZip)
-    di_installer_dict.add('gsZip', gsZip)
-
-    for name, installer in di_installer_dict.items():
-        if (len(str(installer)) == 0):
-            verboseHandle.printConsoleInfo(
-                "Pre-requisite installer " + str(gsZip) + " not found")
-            return False
+    if len(str(gsZip)) == 0:
+        verboseHandle.printConsoleInfo(
+            "Pre-requisite installer " + str(sourceInstallerDirectory) + "/gs/*.zip not found")
+        return False
     return True
 
 def downloadDihGSPackage():

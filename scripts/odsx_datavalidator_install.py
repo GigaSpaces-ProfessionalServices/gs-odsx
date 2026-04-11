@@ -144,24 +144,6 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     return str(out).replace('\n','')
 
 def validateRPM():
-    logger.info("validateRPM()")
-    installerArray = []
-    cmd = "pwd"
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-    print(sourceInstallerDirectory)
-    home = executeLocalCommandAndGetOutput(cmd)
-    logger.info("home dir : "+str(home))
-    cmd = 'find '+str(sourceInstallerDirectory)+'/jdk/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
-    javaRpm = executeLocalCommandAndGetOutput(cmd)
-    logger.info("javaRpm found :"+str(javaRpm))
-
-    di_installer_dict = obj_type_dictionary()
-    di_installer_dict.add('Java',javaRpm)
-
-    for name,installer in di_installer_dict.items():
-        if(len(str(installer))==0):
-            verboseHandle.printConsoleInfo("Pre-requisite installer "+str(home)+"/install  "+str(name)+" not found")
-            return False
     return True
 
 
