@@ -293,8 +293,8 @@ def createDatasource():
     logger.info("createDatasource()")
     try:
         # Always compute defaults so they can fill in any missing/blank exported fields
-        defaultUsername = str(readValuefromAppConfig("app.dataengine.oracle-feeder.oracle.username"))
-        defaultPassword = str(readValuefromAppConfig("app.dataengine.oracle-feeder.oracle.password"))
+        defaultUsername = str(readValuefromAppConfig("app.cdc.datasource.username"))
+        defaultPassword = str(readValuefromAppConfig("app.cdc.datasource.password"))
         defaultIidrHost = ""
         for node in config_get_dataIntegrationiidr_nodes():
             defaultIidrHost = os.getenv(node.ip)

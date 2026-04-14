@@ -29,7 +29,8 @@ if [ "$wantToRemoveKafka" == "y" ]; then
   [ -n "$KAFKA_LOGS_PATH" ] && [ -d "$KAFKA_LOGS_PATH" ] && rm -rf $KAFKA_LOGS_PATH
   [ -n "$KAFKA_DATA_PATH" ] && [ -d "$KAFKA_DATA_PATH" ] && rm -rf $KAFKA_DATA_PATH
   [ -n "$KAFKAPATH" ]       && [ -d "$KAFKAPATH" ]       && rm -rf $KAFKAPATH
-  [ -f /usr/local/bin/st*_kafka.sh ] && rm -f /usr/local/bin/st*_kafka.sh
+  [ -L /dbagiga/kafka_latest ] && rm -f /dbagiga/kafka_latest
+  rm -f /usr/local/bin/st*_kafka.sh
   [ -f /etc/systemd/system/kafka.service ]     && rm -f /etc/systemd/system/kafka.service
   [ -f /etc/systemd/system/odsxkafka.service ] && rm -f /etc/systemd/system/odsxkafka.service
   [ -f install.tar ] && rm -f install.tar
@@ -47,7 +48,8 @@ if [ "$wantToRemoveZk" == "y" ]; then
   [ -n "$ZOOKEEPER_DATA_PATH" ] && [ -d "$ZOOKEEPER_DATA_PATH" ] && rm -rf $ZOOKEEPER_DATA_PATH
   [ -n "$ZOOKEEPER_LOGS_PATH" ] && [ -d "$ZOOKEEPER_LOGS_PATH" ] && rm -rf $ZOOKEEPER_LOGS_PATH
   [ -n "$ZOOKEEPERPATH" ]       && [ -d "$ZOOKEEPERPATH" ]       && rm -rf $ZOOKEEPERPATH
-  [ -f /usr/local/bin/st*_zookeeper.sh ]              && rm -f /usr/local/bin/st*_zookeeper.sh
+  [ -L /dbagiga/zookeeper_latest ] && rm -f /dbagiga/zookeeper_latest
+  rm -f /usr/local/bin/st*_zookeeper.sh
   [ -f /etc/systemd/system/odsxzookeeper.service ]    && rm -f /etc/systemd/system/odsxzookeeper.service
 fi
 

@@ -128,6 +128,16 @@ PROPEOF
     # runs daemon-reload, enable, and starts the service
     cd /dbagiga/di-subscription-manager/$extracted_folder_manager/utils/
     ./install_new_version.sh /dbagiga/di-subscription-manager.properties
+
+    # Replace localhost with IIDR server IP in config files deployed by install_new_version.sh
+    _sm_config="/dbagiga/di-subscription-manager/$extracted_folder_manager/config"
+    if [ -d "$_sm_config" ]; then
+        info "\nReplacing localhost with $iidrHost in $_sm_config\n"
+        find "$_sm_config" -type f -exec sed -i "s/localhost/$iidrHost/g" {} +
+    else
+        warning "\nWARNING: $_sm_config not found, skipping localhost replacement\n"
+    fi
+
     chown -R gsods:gsods /home/gsods/di-subscription-manager/
     systemctl daemon-reload
     info "\n Installation DI-Subscription-Manager completed.\n"

@@ -92,6 +92,8 @@ function installFlink() {
   echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize">>$flink_conf_file
   echo "state.savepoints.dir: file:///home/gsods/di-flink/latest-flink/data/savepoints">>$flink_conf_file
   echo "state.checkpoints.dir: file:///home/gsods/di-flink/latest-flink/data/checkpoints">>$flink_conf_file
+  echo "env.java.opts: \"--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED\"">>$flink_conf_file
+
   chmod +x /dbagiga/di-flink/$extracted_folder_flink/bin/*
    cp $installation_path_flink/di-flink-jobmanager.service /etc/systemd/system/
    cp $installation_path_flink/di-flink-taskmanager.service /etc/systemd/system/

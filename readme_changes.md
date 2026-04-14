@@ -557,3 +557,7 @@
       dihctl/dihctl version
 
 168. Added by default sslQuorum=false if it is True issue (code bug fix)
+### TAU v5.6.10-tau-release tag
+169. Added new datasource credential configs:
+     app.cdc.datasource.username=
+     app.cdc.datasource.password=
