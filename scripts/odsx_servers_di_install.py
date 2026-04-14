@@ -17,7 +17,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_ge
     config_get_dataIntegrationiidr_nodes
 from utils.ods_manager import getManagerHost, getManagerInfo
 from utils.ods_scp import scp_upload
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -277,7 +277,10 @@ def installCluster():
             logger.info("outputShFile iidr subscription : " + str(outputShFile))
 
             #Post DI install setup
-            additionalParam = diserver1 +" "+ iidrHost + ' '+ managerHost1 + ' '+ lookupGroup + ' '+ di_all_servers
+            diProcessorJar = executeRemoteCommandAndGetOutput(iidrHost, user,
+                "ls /home/gsods/di-processor/latest-di-processor/lib/job-*.jar 2>/dev/null | head -n 1").strip()
+            print("diProcessorJar from iidrHost: " + str(diProcessorJar))
+            additionalParam = diserver1 +" "+ iidrHost + ' '+ managerHost1 + ' '+ lookupGroup + ' '+ di_all_servers + ' '+ diProcessorJar
             commandToExecute = "scripts/servers_di_post_install.sh "+additionalParam
             os.system(commandToExecute)
 

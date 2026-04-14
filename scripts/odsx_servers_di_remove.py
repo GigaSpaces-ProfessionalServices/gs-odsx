@@ -210,10 +210,12 @@ def fetchSetenvValues(host):
     return paths
 
 
-def printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost):
+def printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost, export_path_pipeline, export_path_datasource):
     """Print a summary of all folders that will be deleted during DI removal."""
     logger.info("printRemoveFolderSummary()")
     setenv = fetchSetenvValues(diHost) if diHost else {}
+    print(Fore.GREEN + "\n[EXPORT] Pipelines will be exported to:  " + str(export_path_pipeline) + Fore.RESET)
+    print(Fore.GREEN + "[EXPORT] Datasources will be exported to: " + str(export_path_datasource) + Fore.RESET)
 
     print(Fore.YELLOW + "\n========== DI Removal - Folders to be Deleted ==========" + Fore.RESET)
     print(Fore.YELLOW + "Target DI nodes: " + str(nodes) + Fore.RESET)
@@ -307,21 +309,21 @@ def executeCommandForUnInstall():
                 verboseHandle.printConsoleInfo("Want to remove zookeeper : "+str(wantToRemoveZk))
                 verboseHandle.printConsoleInfo("Want to remove telegraf : "+str(wantToRemoveTelegraf))
                 diHost = getDIServerHost()
-                printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost)
+                export_path_pipeline = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
+                export_path_datasource = str(readValuefromAppConfig("app.dataengine.dihctl.datasourcefolderpath"))
+                if not export_path_pipeline.strip():
+                    export_path_pipeline = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                if not export_path_datasource.strip():
+                    export_path_datasource = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost, export_path_pipeline, export_path_datasource)
                 confirmUninstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
                     # Export pipelines and datasources, then delete them before removing DI
-                    # diHost already fetched above for the folder summary
+                    # diHost, export paths already resolved above for the summary
                     if diHost:
-                        export_path_pipeline = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
-                        export_path_datasource = str(readValuefromAppConfig("app.dataengine.dihctl.datasourcefolderpath"))
-                        if not export_path_pipeline.strip():
-                            export_path_pipeline = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
-                        if not export_path_datasource.strip():
-                            export_path_datasource = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
                         verboseHandle.printConsoleInfo("Exporting pipelines to: " + export_path_pipeline)
                         verboseHandle.printConsoleInfo("Exporting datasource to: " + export_path_datasource)
                         exportAllPipelinesBeforeRemove(diHost, export_path_pipeline)
