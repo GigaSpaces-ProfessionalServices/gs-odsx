@@ -98,6 +98,6 @@ mv -f /tmp/$service_name $HOME/.config/systemd/user/
 systemctl --user daemon-reload
 systemctl --user enable $service_name
 systemctl --user start $service_name
-sudo sleep 10s
+sleep 10s
 systemctl --user restart $service_name 
 echo "Object Management service setup - Completed!."

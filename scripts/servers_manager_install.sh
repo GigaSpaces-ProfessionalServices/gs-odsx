@@ -138,7 +138,10 @@ function unzipGS {
     mkdir $targetDir
   fi
   echo $targetDir
-  unzip install/gigaspaces-${gsType}-enterprise-${gsVersion}.zip -d  $targetDir  #/home/ec2-user/install/
+  # -o: overwrite without prompting. Without it, a re-run prompts on stdin,
+  # but stdin here is the script body (ssh ... bash -s < script.sh), so unzip
+  # eats the rest of the script and later functions never get defined.
+  unzip -o install/gigaspaces-${gsType}-enterprise-${gsVersion}.zip -d  $targetDir
   echo "unzipping GS - Done!"
   }
 function activateGS {
@@ -417,9 +420,9 @@ function installTelegraf {
 function gsCreateGSServeice {
   echo "GS Creating services started."
 
-  # Set ownership for gsods user
-  echo "Setting ownership for $applicativeUser on all GigaSpaces directories..."
-  sudo find $gigalogpath -maxdepth 1 ! -regex '^'$gigalogpath'/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
+  # /gigalogs/ is already owned by gsods from root-setup.sh — no chown needed.
+  # (The original root variant ran `sudo chown` here; gsods has no sudo for
+  # chown, which triggered the sudo password prompt.)
 
   # Set proper permissions
   echo "Setting permissions..."

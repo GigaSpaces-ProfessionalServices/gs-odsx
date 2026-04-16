@@ -61,7 +61,7 @@ rm -rf $GS_HOME
 echo "Removing additional files and directories..."
 rm -rf setenv.sh gs dbagigashare install install.tar $gigapath/giga* $gigaworkPath/* /giga/bin/start_gs*.sh /giga/bin/stop_gs*.sh $HOME/.config/systemd/user/gs*.service
 echo "Cleaning log directories..."
-sudo find $gigalogpath/ -mindepth 1 ! -regex '^'$gigalogpath'/consul\|'$gigalogpath'/nginx\(/.*\)?\|'$gigalogpath'/CEF\(/.*\)?' -delete
+find $gigalogpath/ -mindepth 1 ! -regex '^'$gigalogpath'/consul\|'$gigalogpath'/nginx\(/.*\)?\|'$gigalogpath'/CEF\(/.*\)?' -delete
 cd $gigapath
 echo "Removing symlink and config files..."
 rm -f gigaspaces-smart-ods $gigapath/gs_config/metrics.xml

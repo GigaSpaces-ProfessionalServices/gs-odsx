@@ -143,8 +143,13 @@ fi
 GSODS_HOME=$(eval echo ~gsods)
 
 # --- Create giga directories and set ownership ---
+# $GIGA_INFLUX is intentionally NOT created here. It belongs to the influxdb
+# system user (not gsods) and is created + chowned by influxdbctl.sh -i on
+# whichever host runs the influxdb daemon. Pre-creating it here would leave
+# an empty dir on every host and would be immediately clobbered by
+# influxdbctl.sh's `chown -R influxdb:influxdb $dir` anyway.
 echo ">>> Creating giga directories..."
-mkdir -p $GIGA_LOG $GIGA_SHARE $GIGA_WORK $GIGA_PATH $GIGA_DATA $GIGA_INFLUX
+mkdir -p $GIGA_LOG $GIGA_SHARE $GIGA_WORK $GIGA_PATH $GIGA_DATA
 touch $GIGA_LOG/odsx.log
 
 mkdir -p $GIGA_WORK/sqlite
@@ -158,7 +163,7 @@ else
     echo "    $GIGA_WORK/sqlite/ is not empty — skipping sqlite copy. Use --overwrite to force."
 fi
 
-chown -R gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
+chown -R gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE
 echo "    Directories created and ownership set."
 
 # --- Step 1: Generate SSH key for gsods on pivot ---
@@ -246,6 +251,23 @@ if ! grep -q "XDG_RUNTIME_DIR" "$GSODS_HOME/.bashrc" 2>/dev/null; then
 fi
 chown gsods:gsods "$GSODS_HOME/.bashrc"
 
+# Set env vars in root's .bashrc on pivot (idempotent)
+# So root can run standalone helper scripts (e.g. influxdbctl.sh) that
+# read $ENV_CONFIG and $ODSXARTIFACTS without re-exporting them by hand.
+ROOT_BASHRC="/root/.bashrc"
+if ! grep -q "export ENV_CONFIG=" "$ROOT_BASHRC" 2>/dev/null; then
+    echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> "$ROOT_BASHRC"
+    echo "    ENV_CONFIG added to root .bashrc."
+fi
+if ! grep -q "export PYTHONPATH=" "$ROOT_BASHRC" 2>/dev/null; then
+    echo "export PYTHONPATH=$GIGA_PATH/gs-odsx" >> "$ROOT_BASHRC"
+    echo "    PYTHONPATH added to root .bashrc."
+fi
+if ! grep -q "export ODSXARTIFACTS=" "$ROOT_BASHRC" 2>/dev/null; then
+    echo "export ODSXARTIFACTS=$GIGA_SHARE/current/" >> "$ROOT_BASHRC"
+    echo "    ODSXARTIFACTS added to root .bashrc."
+fi
+
 echo "    Pivot configured."
 echo ""
 
@@ -308,11 +330,17 @@ for HOST in $REMOTE_HOSTS; do
         mkdir -p "\$GSODS_HOME/.config/systemd/user/"
         chown -R gsods:gsods "\$GSODS_HOME/.config/"
 
-        # Create giga directories and set ownership
-        mkdir -p $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
+        # Create giga directories and set ownership. -R on the local dirs heals
+        # any pre-existing cruft (e.g. legacy /gigawork/sqlite files left over
+        # from an older setup flow) so gsods can rm them later. $GIGA_SHARE is
+        # chowned non-recursively because it becomes an NFS mount a few lines
+        # down — recursing into it would try to chown the pivot-owned export.
+        # $GIGA_INFLUX is not created on remote hosts — it belongs only on the
+        # influxdb host and is provisioned by influxdbctl.sh.
+        mkdir -p $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE
         mkdir -p $GIGA_PATH/bin
-        chown gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK $GIGA_SHARE $GIGA_INFLUX
-        chown gsods:gsods "$GIGA_PATH/bin" 2>/dev/null || true
+        chown -R gsods:gsods $GIGA_PATH $GIGA_DATA $GIGA_LOG $GIGA_WORK
+        chown gsods:gsods $GIGA_SHARE
 
         # Set up NFS client for gigashare
         if ! rpm -q nfs-utils &>/dev/null; then

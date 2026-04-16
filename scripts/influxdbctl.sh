@@ -4,43 +4,37 @@
 # through the ODSX menu. Mirrors the atomic actions performed by
 # scripts/servers_influxdb_install.sh and scripts/servers_influxdb_remove.sh,
 # with fixes applied:
-#   * template data dir is parameterized via sed so a custom -d works
+#   * template data dir is parameterized from app.gigainfluxdata.path
 #   * `CREATE DATABASE mydb` is piped into influx -execute (idempotent)
+#   * config-file append is idempotent (marker-bounded)
 #
-# Requires: $ODSXARTIFACTS set (for install), sudo, yum.
-# Reads $ENV_CONFIG/app.config for app.gigainfluxdata.path default when -d omitted.
+# Data directory is always read from $ENV_CONFIG/app.config (key
+# app.gigainfluxdata.path) — the same source the rest of ODSX uses. To
+# deploy to a different path, edit app.config, do not override here.
+#
+# Requires: $ENV_CONFIG set, $ODSXARTIFACTS set (for install), sudo, yum.
 
 set -euo pipefail
 
 usage() {
     cat <<EOF
-Usage: $(basename "$0") {-i|-r|-h} [-d <data-dir>] [--purge]
+Usage: $(basename "$0") {-i|-r|-h} [--purge]
 
-  -i            Install InfluxDB on this host
-  -r            Remove InfluxDB from this host
-  -d <dir>      Data directory. For -i, where to place data; for -r --purge,
-                which directory to delete. Defaults to app.gigainfluxdata.path
-                from \$ENV_CONFIG/app.config.
+  -i            Install InfluxDB on this host. Data dir is read from
+                app.gigainfluxdata.path in \$ENV_CONFIG/app.config.
+  -r            Remove InfluxDB from this host (stop, yum erase, delete
+                /etc/influxdb/). Data directory is left intact unless
+                --purge is given.
   --purge       (with -r) Also delete the InfluxDB data directory
-                (<data-dir>/influxdb/{data,meta,wal}) after removal. Without
-                --purge, data is left intact so a reinstall can reuse it.
+                (<data-dir>/influxdb/{data,meta,wal}) after removal.
                 Passing --purge is itself the confirmation — no prompt.
   -h            Show this help
 
 Environment:
+  ENV_CONFIG     Required. Directory containing app.config.
   ODSXARTIFACTS  Required for -i. Path containing influx/*.rpm and
                  influx/config/influxdb.conf.template (e.g. /gigashare/current).
-  ENV_CONFIG     Optional. Used to read app.gigainfluxdata.path default.
 EOF
-}
-
-resolve_data_dir() {
-    local dir=$1
-    if [ -z "$dir" ]; then
-        dir=$(read_app_config app.gigainfluxdata.path || true)
-    fi
-    [ -n "$dir" ] || { echo "Error: no -d given and app.gigainfluxdata.path unreadable" >&2; exit 1; }
-    printf '%s\n' "$dir"
 }
 
 read_app_config() {
@@ -50,8 +44,17 @@ read_app_config() {
         "$ENV_CONFIG/app.config"
 }
 
+resolve_data_dir() {
+    local dir
+    dir=$(read_app_config app.gigainfluxdata.path || true)
+    [ -n "$dir" ] || {
+        echo "Error: cannot read app.gigainfluxdata.path from \$ENV_CONFIG/app.config" >&2
+        exit 1
+    }
+    printf '%s\n' "$dir"
+}
+
 install_influxdb() {
-    local dir=$1
     : "${ODSXARTIFACTS:?ODSXARTIFACTS must be set}"
 
     if rpm -q influxdb >/dev/null 2>&1; then
@@ -65,7 +68,8 @@ install_influxdb() {
     rpm=$(find "$src" -maxdepth 1 -name '*.rpm' -printf '%p\n' | head -n1)
     [ -n "$rpm" ] || { echo "Error: no RPM found in $src"; exit 1; }
 
-    dir=$(resolve_data_dir "$dir")
+    local dir
+    dir=$(resolve_data_dir)
     echo "InfluxDB data dir: $dir"
     echo "Installing RPM:    $rpm"
 
@@ -127,7 +131,7 @@ install_influxdb() {
 }
 
 remove_influxdb() {
-    local purge=$1 data_dir=$2
+    local purge=$1
 
     if systemctl list-unit-files 2>/dev/null | grep -q '^influxdb\.service'; then
         sudo systemctl stop influxdb.service 2>/dev/null || true
@@ -137,8 +141,9 @@ remove_influxdb() {
     sudo rm -rf /etc/influxdb/
 
     if [ "$purge" = "yes" ]; then
-        data_dir=$(resolve_data_dir "$data_dir")
-        local target="$data_dir/influxdb"
+        local data_dir target
+        data_dir=$(resolve_data_dir)
+        target="$data_dir/influxdb"
         if [ ! -d "$target" ]; then
             echo "Purge requested but $target does not exist — nothing to delete."
             return 0
@@ -152,7 +157,6 @@ remove_influxdb() {
 }
 
 action=""
-data_dir=""
 purge=no
 args=()
 for a in "$@"; do
@@ -163,14 +167,12 @@ for a in "$@"; do
 done
 set -- "${args[@]+"${args[@]}"}"
 
-while getopts ":irhd:" opt; do
+while getopts ":irh" opt; do
     case $opt in
         i) action=install ;;
         r) action=remove ;;
         h) usage; exit 0 ;;
-        d) data_dir=$OPTARG ;;
         \?) echo "Unknown option: -$OPTARG" >&2; usage; exit 2 ;;
-        :)  echo "Option -$OPTARG requires an argument" >&2; usage; exit 2 ;;
     esac
 done
 
@@ -180,7 +182,7 @@ if [ "$purge" = "yes" ] && [ "$action" != "remove" ]; then
 fi
 
 case $action in
-    install) install_influxdb "$data_dir" ;;
-    remove)  remove_influxdb "$purge" "$data_dir" ;;
+    install) install_influxdb ;;
+    remove)  remove_influxdb "$purge" ;;
     *)       usage; exit 2 ;;
 esac

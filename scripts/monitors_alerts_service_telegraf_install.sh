@@ -15,7 +15,7 @@ if [ "$hostType" == "pivot" ]; then
   #cp $sourceInstallerDirectory/telegraf/scripts/pivot/space-status.gc-state.sh /giga/bin/
   #cp $sourceInstallerDirectory/telegraf/scripts/pivot/pipeline-state.sh /giga/bin/
   #cp $sourceInstallerDirectory/telegraf/scripts/pivot/test.sh /giga/bin/
-  sed -i -e 's|mgr1,mgr2,mgr3|'$managerHost'|g' /giga/bin/test.sh
+  # test.sh removed — pipeline-state.sh falls back gracefully when absent
 fi
 chmod +x /giga/bin/*.sh
 cp $sourceInstallerDirectory/telegraf/jars/readFromShob-1.0.0.jar /giga/bin/

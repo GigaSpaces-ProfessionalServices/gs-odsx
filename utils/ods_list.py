@@ -98,7 +98,7 @@ def getGrafanaServerDetails(grafanaServers):
 
 def isInstalledAndGetVersionInflux(host):
     logger.info("isInstalledAndGetVersion")
-    commandToExecute='ls ~/.config/systemd/user/influx*'
+    commandToExecute='rpm -q influxdb && ls /usr/lib/systemd/system/influxdb.service'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
