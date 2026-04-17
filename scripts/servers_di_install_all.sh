@@ -150,10 +150,10 @@ function installFlink() {
 
   extracted_folder_flink=$(ls -I "*.tgz" $gigapath/di-flink/)
   cd $gigapath/di-flink/
-  ln -s $gigapath/di-flink/ /home/gsods/di-flink
-  ln -s $gigapath/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
-  mkdir -p /home/gsods/di-flink/latest-flink/data/savepoints
-  mkdir -p /home/gsods/di-flink/latest-flink/data/checkpoints
+  ln -s $gigapath/di-flink/ $HOME/di-flink
+  ln -s $gigapath/di-flink/$extracted_folder_flink $HOME/di-flink/latest-flink
+  mkdir -p $HOME/di-flink/latest-flink/data/savepoints
+  mkdir -p $HOME/di-flink/latest-flink/data/checkpoints
 
   # Flink 2.x renamed flink-conf.yaml to config.yaml; handle both
   flink_conf_dir="$gigapath/di-flink/$extracted_folder_flink/conf"
@@ -176,8 +176,8 @@ function installFlink() {
   echo "parallelism.default: 1">>$flink_conf_file
   echo "jobmanager.execution.failover-strategy: region">>$flink_conf_file
   echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize">>$flink_conf_file
-  echo "state.savepoints.dir: file:///home/gsods/di-flink/latest-flink/data/savepoints">>$flink_conf_file
-  echo "state.checkpoints.dir: file:///home/gsods/di-flink/latest-flink/data/checkpoints">>$flink_conf_file
+  echo "state.savepoints.dir: file://$HOME/di-flink/latest-flink/data/savepoints">>$flink_conf_file
+  echo "state.checkpoints.dir: file://$HOME/di-flink/latest-flink/data/checkpoints">>$flink_conf_file
   chmod +x $gigapath/di-flink/$extracted_folder_flink/bin/*
   cp $installation_path_flink/di-flink-jobmanager.service $HOME/.config/systemd/user/
   cp $installation_path_flink/di-flink-taskmanager.service $HOME/.config/systemd/user/
@@ -188,7 +188,7 @@ function installFlink() {
   sed -i "s|FLINK_LOG_DIR=[^ ]*|FLINK_LOG_DIR=$gigalogpath/di-iidr/di-flink|g" $HOME/.config/systemd/user/di-flink-taskmanager.service
   # Copy extra JARs if present in gigashare (optional — skip if missing)
   cp $installation_path_flink/*.jar $gigapath/di-flink/$extracted_folder_flink/lib/ 2>/dev/null || true
-  mkdir -p /home/gsods/latest-flink/data/checkpoints/ /home/gsods/latest-flink/data/savepoints/
+  mkdir -p $HOME/latest-flink/data/checkpoints/ $HOME/latest-flink/data/savepoints/
 
   # Set final ownership to gsods
   restorecon $HOME/.config/systemd/user/di-* 2>/dev/null || true
@@ -217,13 +217,13 @@ function installDIMatadata {
   extracted_folder_mdm=$(ls -I "*.gz" $gigapath/di-mdm/)
   cd $gigapath/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
-  ln -s $gigapath/di-mdm/ /home/gsods/di-mdm
-  ln -s $gigapath/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
+  ln -s $gigapath/di-mdm/ $HOME/di-mdm
+  ln -s $gigapath/di-mdm/$extracted_folder_mdm $HOME/di-mdm/latest-di-mdm
   echo "spring.profiles.active=zookeeper">$gigapath/di-mdm.properties
   echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>$gigapath/di-mdm.properties
 
   # Set final ownership to gsods
-  # Use absolute path - cannot cd into /home/gsods/ (mode 700)
+  # Use absolute path - cannot cd into $HOME/ (mode 700)
   bash $gigapath/di-mdm/$extracted_folder_mdm/utils/install_new_version.sh $gigapath/di-mdm.properties
   rm -f $gigapath/di-mdm/di-mdm
 
@@ -256,8 +256,8 @@ function installDIManager {
   extracted_folder_manager=$(ls -I "*.gz" $gigapath/di-manager/)
   cd $gigapath/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
-  ln -s $gigapath/di-manager/ /home/gsods/di-manager
-  ln -s $gigapath/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
+  ln -s $gigapath/di-manager/ $HOME/di-manager
+  ln -s $gigapath/di-manager/$extracted_folder_manager $HOME/di-manager/latest-di-manager
 
   echo "springdoc.api-docs.path=/api-docs">$gigapath/di-manager.properties
   echo "springdoc.swagger-ui.path=/swagger-ui">>$gigapath/di-manager.properties
@@ -275,7 +275,7 @@ function installDIManager {
   echo "mdm.client.timeouts.read.ms=60000">>$gigapath/di-manager.properties
 
   # Set final ownership to gsods
-  # Use absolute path - cannot cd into /home/gsods/ (mode 700)
+  # Use absolute path - cannot cd into $HOME/ (mode 700)
   bash $gigapath/di-manager/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-manager.properties
   rm -f $gigapath/di-manager/di-manager
   info "\n Installation DI-Manager completed.\n"
@@ -300,8 +300,8 @@ function installDIProcessor {
     extracted_folder_manager=$(ls -I "*.tgz" $gigapath/di-processor/)
     cd $gigapath/di-processor/
     info "Creating symlink for :"$extracted_folder_manager
-    ln -s $gigapath/di-processor/ /home/gsods/di-processor
-    ln -s $gigapath/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
+    ln -s $gigapath/di-processor/ $HOME/di-processor
+    ln -s $gigapath/di-processor/$extracted_folder_manager $HOME/di-processor/latest-di-processor
 
     echo "mdm.server.url=http://$kafkaBrokerHost1:6081">$gigapath/di-processor.properties
     if [ "$kafkaBrokerCount" == 1 ]; then
@@ -311,7 +311,7 @@ function installDIProcessor {
     fi
 
     # Set final ownership to gsods
-    # Use absolute path - cannot cd into /home/gsods/ (mode 700)
+    # Use absolute path - cannot cd into $HOME/ (mode 700)
     bash $gigapath/di-processor/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-processor.properties
     rm -f $gigapath/di-processor/di-processor
 }
@@ -332,8 +332,8 @@ function installDITransformations {
   extracted_folder_transformations=$(ls -I "*.tgz" $gigapath/di-transformations/)
   cd $gigapath/di-transformations/
   info "Creating symlink for :"$extracted_folder_transformations
-  ln -s $gigapath/di-transformations/ /home/gsods/di-transformations
-  ln -s $gigapath/di-transformations/$extracted_folder_transformations /home/gsods/di-transformations/latest-di-transformations
+  ln -s $gigapath/di-transformations/ $HOME/di-transformations
+  ln -s $gigapath/di-transformations/$extracted_folder_transformations $HOME/di-transformations/latest-di-transformations
 
   # Derive XAP manager host from spaceLookupLocators (strip :4174)
   xapManagerHost=${spaceLookupLocators%:4174}
@@ -398,8 +398,8 @@ function installDISubscription {
     extracted_folder_manager=$(ls -I "*.tgz" $gigapath/di-subscription-manager/)
     cd $gigapath/di-subscription-manager/
     info "Creating symlink for :"$extracted_folder_manager
-    ln -s $extracted_folder_manager /home/gsods/di-subscription-manager
-    ln -s $gigapath/di-subscription-manager/$extracted_folder_manager /home/gsods/di-subscription-manager/latest-di-subscription-manager
+    ln -s $extracted_folder_manager $HOME/di-subscription-manager
+    ln -s $gigapath/di-subscription-manager/$extracted_folder_manager $HOME/di-subscription-manager/latest-di-subscription-manager
 
     echo "##iidr.as##" > $gigapath/di-subscription-manager.properties
     echo "iidr-as.hostname=$iidrHost" >> $gigapath/di-subscription-manager.properties
@@ -448,7 +448,7 @@ function installDISubscription {
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> $gigapath/di-subscription-manager.properties
     sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' $HOME/.config/systemd/user/di-subscription-manager-iidr.service
-    # Use absolute path - cannot cd into /home/gsods/ (mode 700)
+    # Use absolute path - cannot cd into $HOME/ (mode 700)
     bash $gigapath/di-subscription-manager/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-subscription-manager.properties
     systemctl --user daemon-reload
     systemctl --user enable di-subscription-manager

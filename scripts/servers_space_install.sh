@@ -2,7 +2,7 @@
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
-set -x
+# set -x
 echo "Installation starting..."
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set

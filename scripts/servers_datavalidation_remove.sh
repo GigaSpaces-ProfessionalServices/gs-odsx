@@ -10,4 +10,4 @@ sleep 2
 #yum -y remove java*
 #yum -y remove jdk*
 
-rm -rf /home/gsods/install/data-validation /giga/bin/st*_data_validation.sh $HOME/.config/systemd/user/odsxdatavalidation.service
+rm -rf $HOME/install/data-validation /giga/bin/st*_data_validation.sh $HOME/.config/systemd/user/odsxdatavalidation.service

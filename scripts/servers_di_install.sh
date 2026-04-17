@@ -90,7 +90,7 @@ function installFlink() {
   extracted_folder_flink=$(ls -I "*.tgz" $gigapath/di-flink/)
   cd $gigapath/di-flink/
   ln -s $extracted_folder_flink latest-flink
-  ln -s $extracted_folder_manager /home/gsods/di-flink/
+  ln -s $extracted_folder_manager $HOME/di-flink/
   cd
   sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' $gigapath/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' $gigapath/di-flink/latest-flink/conf/flink-conf.yaml
@@ -133,7 +133,7 @@ function installDIMatadata {
   cd $gigapath/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
   ln -s $extracted_folder_mdm latest-di-mdm
-  ln -s $extracted_folder_manager /home/gsods/di-mdm/
+  ln -s $extracted_folder_manager $HOME/di-mdm/
   cd latest-di-mdm
   sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|'$gigalogpath'/di-mdm|g' config/di-mdm.service
   sed -i -e 's|/home/gsods|'$gigapath'|g' config/di-mdm.service
@@ -167,7 +167,7 @@ function installDIManager {
   cd $gigapath/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
   ln -s $extracted_folder_manager latest-di-manager
-  ln -s $extracted_folder_manager /home/gsods/di-manager/
+  ln -s $extracted_folder_manager $HOME/di-manager/
   cd latest-di-manager
   sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|'$gigalogpath'/di-manager|g' config/di-manager.service
   sed -i -e 's|/home/gsods|'$gigapath'|g' config/di-manager.service
@@ -205,7 +205,7 @@ function installDISubscription {
     cd $gigapath/di-subscription-manager/
     info "Creating symlink for :"$extracted_folder_manager
     ln -s $extracted_folder_manager latest-di-subscription-manager
-    ln -s $extracted_folder_manager /home/gsods/di-subscription-manager/
+    ln -s $extracted_folder_manager $HOME/di-subscription-manager/
     #cd latest-di-subscription-manager
 
     echo "##iidr.as##" > $gigapath/di-subscription-manager.properties
@@ -255,7 +255,7 @@ function installDISubscription {
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> $gigapath/di-subscription-manager.properties
     sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' $HOME/.config/systemd/user/di-subscription-manager-iidr.service
-    cd /home/gsods/di-subscription-manager/latest-di-subscription-manager/utils
+    cd $HOME/di-subscription-manager/latest-di-subscription-manager/utils
     sudo ./install_new_version.sh $gigapath/di-subscription-manager.properties
     systemctl --user daemon-reload
     systemctl --user enable di-subscription-manager

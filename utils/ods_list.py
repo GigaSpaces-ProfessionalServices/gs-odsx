@@ -134,7 +134,7 @@ def isInstalledIIDROracleAgent(host):
 
 def isInstalledIIDRSubscriptionManager(host):
     logger.info("isInstalledIIDRSubscriptionManager")
-    commandToExecute='ls /home/gsods/di-subscription-manager/latest-di-subscription-manager*'
+    commandToExecute='ls $HOME/di-subscription-manager/latest-di-subscription-manager*'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')

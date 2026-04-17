@@ -66,16 +66,16 @@ systemctl --user daemon-reload
 bash $gigapath/di-flink/latest-flink/bin/stop-cluster.sh || true
 sleep 5
 
-# Remove /home/gsods symlinks created during install
+# Remove $HOME symlinks created during install
 # (use rm -f not rm -rf to remove the symlink itself, not its target)
-rm -f /home/gsods/di-flink
-rm -f /home/gsods/di-mdm
-rm -f /home/gsods/di-manager
-rm -f /home/gsods/di-processor
-rm -f /home/gsods/di-transformations
-rm -f /home/gsods/di-subscription-manager
+rm -f $HOME/di-flink
+rm -f $HOME/di-mdm
+rm -f $HOME/di-manager
+rm -f $HOME/di-processor
+rm -f $HOME/di-transformations
+rm -f $HOME/di-subscription-manager
 # Remove the actual directory created for flink checkpoints/savepoints
-rm -rf /home/gsods/latest-flink
+rm -rf $HOME/latest-flink
 
 # Remove DI service files
 rm -f $HOME/.config/systemd/user/di-flink-jobmanager.service

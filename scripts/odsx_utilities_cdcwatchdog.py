@@ -63,7 +63,7 @@ def configureLicenseManagerAndSpace():
     watchdogHost = str(readValuefromAppConfig("app.iidr.watchdog.host"))
     sourcePath= sourceInstallerDirectory+"/iidr/watchdog/"
     targetPathService=str(readValuefromAppConfig("app.iidr.watchdog.service.target"))
-    targetPathScripts=str(readValuefromAppConfig("app.iidr.watchdog.script.target"))
+    targetPathScripts=os.path.expanduser(str(readValuefromAppConfig("app.iidr.watchdog.script.target")))
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("1. Source files : "+sourcePath)
     verboseHandle.printConsoleInfo("2. *.service target files : "+targetPathService)
