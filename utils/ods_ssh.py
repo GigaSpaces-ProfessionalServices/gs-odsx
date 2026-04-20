@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import getpass
 import os
 import subprocess
 from subprocess import Popen, PIPE
@@ -11,7 +12,7 @@ logger = verboseHandle.logger
 
 def get_ssh_user():
     user = readValuefromAppConfig("app.server.user")
-    return user if user else 'gsods'
+    return user if user else getpass.getuser()
 
 def connectExecuteSSH(host, user, shellScript, params):
     if (isValidHost(host)):

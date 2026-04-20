@@ -128,7 +128,7 @@ build_full_config() {
     generate_base_config "$influx_urls"
 
     # Telegraf runs as its own 'telegraf' user (created by the RPM), so monitoring
-    # scripts must live in /usr/local/bin/ — NOT in gsods-owned paths like
+    # scripts must live in /usr/local/bin/ — NOT in app-user-owned paths like
     # $giga_bin. The configs ship referencing /usr/local/bin/ already, so we
     # append them verbatim.
     if [ "$has_pivot" = "true" ] && [ -f "$src/config/pivot/pivot.telegraf.conf" ]; then
@@ -169,7 +169,7 @@ install_on_host() {
 set -e
 src=$1; has_pivot=$2; has_space=$3
 
-# Telegraf runs as its own 'telegraf' user and cannot read gsods-owned paths,
+# Telegraf runs as its own 'telegraf' user and cannot read app-user-owned paths,
 # so monitoring scripts go into /usr/local/bin/. This script runs as root on
 # the remote host (SSH target), so writing to /usr/local/bin/ is fine.
 bin=/usr/local/bin

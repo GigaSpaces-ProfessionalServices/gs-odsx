@@ -77,7 +77,7 @@ def configureLicenseManagerAndSpace():
         #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  /dbagiga/gigaspaces-smart-ods/bin/setenv-overrides.sh"
 
         commandToExecute = "sudo cp "+sourceGSLicense+" "+targetGSLicense
-        commandToFixOwner = "sudo chown gsods:gsods "+targetGSLicense
+        commandToFixOwner = "sudo chown "+get_ssh_user()+":"+get_ssh_user()+" "+targetGSLicense
         logger.info("commandToExecute:"+commandToExecute)
 
         for host in managerHosts.split(','):

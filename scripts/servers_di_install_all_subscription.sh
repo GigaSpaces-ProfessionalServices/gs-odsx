@@ -92,7 +92,7 @@ function installDISubscription {
     extracted_folder_manager=$(ls -I "*.tgz" $gigapath/di-subscription-manager/)
     info "Creating symlink for :"$extracted_folder_manager
 
-    # Create symlink in gsods home (install_new_version.sh expects $HOME/di-subscription-manager to exist)
+    # Create symlink in app user home (install_new_version.sh expects $HOME/di-subscription-manager to exist)
     ln -snf $gigapath/di-subscription-manager $HOME/di-subscription-manager
 
     # Patch service file log path in config template BEFORE install_new_version.sh deploys it to $HOME/.config/systemd/user/

@@ -29,6 +29,8 @@ gigasharepath=$(read_property "app.gigashare.path")
 gigadatapath=$(read_property "app.gigadata.path")
 gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
+APP_USER=$(read_property "app.server.user")
+APP_USER=${APP_USER:-$(whoami)}
 
 print_style () {
     if [ "$2" == "debug" ] ; then
@@ -190,7 +192,7 @@ function installFlink() {
   cp $installation_path_flink/*.jar $gigapath/di-flink/$extracted_folder_flink/lib/ 2>/dev/null || true
   mkdir -p $HOME/latest-flink/data/checkpoints/ $HOME/latest-flink/data/savepoints/
 
-  # Set final ownership to gsods
+  # Set final ownership to app user
   restorecon $HOME/.config/systemd/user/di-* 2>/dev/null || true
   systemctl --user daemon-reload
   systemctl --user restart di-flink-taskmanager.service
@@ -222,7 +224,7 @@ function installDIMatadata {
   echo "spring.profiles.active=zookeeper">$gigapath/di-mdm.properties
   echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>$gigapath/di-mdm.properties
 
-  # Set final ownership to gsods
+  # Set final ownership to app user
   # Use absolute path - cannot cd into $HOME/ (mode 700)
   bash $gigapath/di-mdm/$extracted_folder_mdm/utils/install_new_version.sh $gigapath/di-mdm.properties
   rm -f $gigapath/di-mdm/di-mdm
@@ -274,7 +276,7 @@ function installDIManager {
   echo "mdm.client.timeouts.connection.ms=10000">>$gigapath/di-manager.properties
   echo "mdm.client.timeouts.read.ms=60000">>$gigapath/di-manager.properties
 
-  # Set final ownership to gsods
+  # Set final ownership to app user
   # Use absolute path - cannot cd into $HOME/ (mode 700)
   bash $gigapath/di-manager/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-manager.properties
   rm -f $gigapath/di-manager/di-manager
@@ -310,7 +312,7 @@ function installDIProcessor {
       echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigapath/di-processor.properties
     fi
 
-    # Set final ownership to gsods
+    # Set final ownership to app user
     # Use absolute path - cannot cd into $HOME/ (mode 700)
     bash $gigapath/di-processor/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-processor.properties
     rm -f $gigapath/di-processor/di-processor
@@ -752,9 +754,9 @@ if [[ $id != 4 ]]; then
     chmod 755 -R $dataFolderZK
 
     # KRaft: format Kafka storage before first start; save cluster ID to gigashare for other nodes
-    KAFKA_CLUSTER_ID=$(sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh random-uuid)
+    KAFKA_CLUSTER_ID=$(sudo -u $APP_USER $KAFKAPATH/bin/kafka-storage.sh random-uuid)
     echo "$KAFKA_CLUSTER_ID" | tee $gigasharepath/kafka-cluster-id > /dev/null
-    sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh format -t "$KAFKA_CLUSTER_ID" -c $KAFKAPATH/config/server.properties
+    sudo -u $APP_USER $KAFKAPATH/bin/kafka-storage.sh format -t "$KAFKA_CLUSTER_ID" -c $KAFKAPATH/config/server.properties
     restorecon $HOME/.config/systemd/user/odsx* 2>/dev/null || true
     systemctl --user daemon-reload
     systemctl --user enable --now odsxzookeeper.service
@@ -777,7 +779,7 @@ if [[ $id != 4 ]]; then
     installDITransformations
     # Run global_config.sh to configure MDM (flink, space, kafka)
     di_mdm_utils=$gigapath/di-mdm/$(ls -d $gigapath/di-mdm/di-mdm-* 2>/dev/null | head -1 | xargs basename)/utils
-    sudo -u gsods bash $di_mdm_utils/global_config.sh $di_mdm_utils/global-${currentHost}.env
+    sudo -u $APP_USER bash $di_mdm_utils/global_config.sh $di_mdm_utils/global-${currentHost}.env
   fi
 fi
 
@@ -795,9 +797,9 @@ if [[ $id != 1 ]]; then
       KAFKA_CLUSTER_ID=$(cat $gigasharepath/kafka-cluster-id)
     else
       echo "WARNING: $gigasharepath/kafka-cluster-id not found; generating independent ID (multi-node cluster may not form)"
-      KAFKA_CLUSTER_ID=$(sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh random-uuid)
+      KAFKA_CLUSTER_ID=$(sudo -u $APP_USER $KAFKAPATH/bin/kafka-storage.sh random-uuid)
     fi
-    sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh format -t "$KAFKA_CLUSTER_ID" -c $KAFKAPATH/config/server.properties
+    sudo -u $APP_USER $KAFKAPATH/bin/kafka-storage.sh format -t "$KAFKA_CLUSTER_ID" -c $KAFKAPATH/config/server.properties
   fi
   restorecon $HOME/.config/systemd/user/odsx* 2>/dev/null || true
   systemctl --user daemon-reload

@@ -5,6 +5,7 @@ import platform
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_node, config_get_nb_list, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -103,11 +104,12 @@ def getServerIps(optionSelected):
 def copyFile(hostips, srcPath, destPath, dryrun=False):
     username = ""
     if not dryrun:
-        username = userInputWrapper("Enter username for host [gsods] : ")
+        default_user = get_ssh_user()
+        username = userInputWrapper("Enter username for host [" + default_user + "] : ")
         if username == "":
-            username = "gsods"
+            username = default_user
     else:
-        username = "gsods"
+        username = get_ssh_user()
     for hostip in hostips:
         scp_upload(hostip, username, srcPath, destPath)
         verboseHandle.printConsoleInfo(hostip)

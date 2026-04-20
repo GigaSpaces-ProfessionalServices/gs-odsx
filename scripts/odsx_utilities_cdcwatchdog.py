@@ -74,7 +74,8 @@ def configureLicenseManagerAndSpace():
     confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
     dbaGigaLogPath=readValuefromAppConfig("app.gigalog.path")
     if confirm=='y' or confirm=='':
-        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p " + dbaGigaLogPath + "/iidr;chown -R gsods.gsods " + dbaGigaLogPath + "/iidr;cp "+sourcePath+"*.service "+targetPathService
+        sshUser = get_ssh_user()
+        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p " + dbaGigaLogPath + "/iidr;chown -R "+sshUser+"."+sshUser+" " + dbaGigaLogPath + "/iidr;cp "+sourcePath+"*.service "+targetPathService
         logger.info("commandToExecute:"+commandToExecute)
         outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, get_ssh_user(), commandToExecute)
         verboseHandle.printConsoleInfo("Files *.service copied for for host:"+watchdogHost)

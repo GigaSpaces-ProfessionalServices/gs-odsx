@@ -133,7 +133,7 @@ def installSingle():
                 verboseHandle.printConsoleWarning('');
                 data = {
                     "agentHostIp": agentHost,
-                    "agentUser": 'gsods',
+                    "agentUser": get_ssh_user(),
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
                 response = requests.post("http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/agent/register"

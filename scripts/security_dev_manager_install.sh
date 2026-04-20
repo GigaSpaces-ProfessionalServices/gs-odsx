@@ -368,7 +368,7 @@ function gsCreateGSServeice {
   echo "GS Creating services started."
 
   chown -R $applicativeUser:$applicativeUser $gigalogpath/ $gigaworkPath/ $gigapath/*
-  #chgrp -R gsods $gigalogpath/ / $gigaworkPath/ $gigapath/*
+  #chgrp -R $applicativeUser $gigalogpath/ / $gigaworkPath/ $gigapath/*
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"

@@ -27,6 +27,8 @@ gigasharepath=$(read_property "app.gigashare.path")
 gigadatapath=$(read_property "app.gigadata.path")
 gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
+APP_USER=$(read_property "app.server.user")
+APP_USER=${APP_USER:-$(whoami)}
 
 print_style () {
     if [ "$2" == "debug" ] ; then
@@ -124,7 +126,7 @@ function installDIMatadata {
   info "InstallationFile:"$installation_file_mdm"\n"
   mkdir -p $gigapath/di-mdm
   mkdir -p $gigalogpath/di-mdm
-  chown gsods:gsods $gigalogpath/di-mdm
+  chown $APP_USER:$APP_USER $gigalogpath/di-mdm
   info "Copying file from "$installation_path_mdm/$installation_file_mdm +" to "$gigapath"/di-mdm \n"
   cp $installation_path_mdm/$installation_file_mdm $gigapath/di-mdm
   info "\nExtracting zip file...\n"
@@ -158,7 +160,7 @@ function installDIManager {
   info "InstallationFile:"$installation_file_manager"\n"
   mkdir -p $gigapath/di-manager
   mkdir -p $gigalogpath/di-manager
-  chown gsods:gsods $gigalogpath/di-manager
+  chown $APP_USER:$APP_USER $gigalogpath/di-manager
   info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-manager \n"
   cp $installation_path_manager/$installation_file_manager $gigapath/di-manager
   info "\nExtracting zip file...\n"
@@ -196,7 +198,7 @@ function installDISubscription {
     info "InstallationFile:"$installation_file_manager"\n"
     mkdir -p $gigapath/di-subscription-manager
     mkdir -p $gigalogpath/di-subscription-manager
-    chown gsods:gsods $gigalogpath/di-subscription-manager
+    chown $APP_USER:$APP_USER $gigalogpath/di-subscription-manager
     info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-subscription-manager \n"
     cp $installation_path_manager/$installation_file_manager $gigapath/di-subscription-manager
     info "\nExtracting zip file...\n"
@@ -514,10 +516,10 @@ if [[ $installtelegrafFlag == "y" ]]; then
 
 fi
 
-chown gsods:gsods -R $baseFolderLocation*
-chown gsods:gsods -R $logsFolderKafka
-chown gsods:gsods -R $dataFolderKafka
-chown gsods:gsods -R $dataFolderZK
+chown $APP_USER:$APP_USER -R $baseFolderLocation*
+chown $APP_USER:$APP_USER -R $logsFolderKafka
+chown $APP_USER:$APP_USER -R $dataFolderKafka
+chown $APP_USER:$APP_USER -R $dataFolderZK
 
 chmod 755 -R $baseFolderLocation
 chmod 755 -R $logsFolderKafka

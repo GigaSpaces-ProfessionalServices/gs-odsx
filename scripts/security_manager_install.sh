@@ -479,7 +479,7 @@ function gsCreateGSServeice {
 
   chown -R $applicativeUser:$applicativeUser $gigaworkPath"/" $gigapath"/*" #$gigalogpath/   Removed $gigalogpath as mentioned by Josh on 4th April
   find $gigalogpath -maxdepth 1 ! -regex '^'$gigalogpath'/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
-  #chgrp -R gsods $gigalogpath/ $gigaworkPath/ $gigapath/*
+  #chgrp -R $applicativeUser $gigalogpath/ $gigaworkPath/ $gigapath/*
 
   start_gsa_file="start_gsa.sh"
   start_gsc_file="start_gsc.sh"

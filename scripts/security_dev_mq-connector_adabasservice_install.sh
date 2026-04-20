@@ -27,6 +27,8 @@ gigasharepath=$(read_property "app.gigashare.path")
 gigadatapath=$(read_property "app.gigadata.path")
 gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
+APP_USER=$(read_property "app.server.user")
+APP_USER=${APP_USER:-$(whoami)}
 
 tar -xvf install.tar
 targetDir=$1
@@ -79,8 +81,8 @@ mv $home_dir_sh/install/mq-connector/config/*.yml $targetDir/config
 mv $home_dir_sh/$sourceAdabasJarFile $targetDir
 mv $home_dir_sh/$keystoreFile $targetDir/$keystoreFile
 
-chown gsods:gsods $targetDir/*.sh
-chown gsods:gsods $targetDir/config/*.*
+chown $APP_USER:$APP_USER $targetDir/*.sh
+chown $APP_USER:$APP_USER $targetDir/config/*.*
 chmod +x $targetDir/*.sh
 chmod 755 $targetDir/config/*.*
 
@@ -120,10 +122,10 @@ chmod +x /giga/bin/st*_adabasFeeder.sh
 mv /tmp/$service_file $HOME/.config/systemd/user/
 systemctl --user daemon-reload
 
-chown gsods:gsods $rootDir
-chown gsods:gsods $targetDir
-chown gsods:gsods $targetDir/*
-chown gsods:gsods $logDir
+chown $APP_USER:$APP_USER $rootDir
+chown $APP_USER:$APP_USER $targetDir
+chown $APP_USER:$APP_USER $targetDir/*
+chown $APP_USER:$APP_USER $logDir
 
 
 #rm -rf /dbagigasoft/Adabas/ /giga/bin/*_adabasFeeder.sh $HOME/.config/systemd/user/odsxadabas.service install install.tar /dbagigasoft setenv.sh

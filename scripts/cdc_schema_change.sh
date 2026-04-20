@@ -27,7 +27,8 @@ gigaworkPath=$(read_property "app.gigawork.path")
 ### ENV variables ###
 objectType=$1
 MANAGER=$2
-GS_USER="gsods"
+GS_USER=$(read_property "app.server.user")
+GS_USER=${GS_USER:-$(whoami)}
 diManagerURL=$3 #"10.0.1.201:6080"
 iidrSubscriptionMangerHost=$4 #"10.0.1.137:6082"  #only di-subscription manager is running here
 dataSource="ORACLE"

@@ -391,7 +391,7 @@ function installAirGapGS {
    mkdir -p $gigadatapath/manager
    mkdir -p $gigalogpath/manager
 
-   # Set ownership and permissions for gsods user
+   # Set ownership and permissions for app user
    echo "Setting ownership for $applicativeUser user..."
    chmod -R 755 $gigaworkPath/
    chmod -R 755 $gigadatapath/
@@ -416,8 +416,8 @@ function loadEnv {
 function gsCreateGSServeice {
     echo "GS Creating services started."
 
-  # /gigalogs/ is already owned by gsods from root-setup.sh — no chown needed.
-  # (The original root variant ran `sudo chown` here; gsods has no sudo for
+  # /gigalogs/ is already owned by the app user from root-setup.sh — no chown needed.
+  # (The original root variant ran `sudo chown` here; the app user has no sudo for
   # chown, which triggered the sudo password prompt.)
 
   # Set proper permissions
