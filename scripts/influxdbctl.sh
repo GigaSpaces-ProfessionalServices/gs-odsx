@@ -37,16 +37,16 @@ Environment:
 EOF
 }
 
-read_app_config() {
-    local key=$1
-    [ -n "${ENV_CONFIG:-}" ] && [ -f "$ENV_CONFIG/app.config" ] || return 1
-    awk -F'=' -v k="$key" '$1==k {sub(/^[ \t]+/,"",$2); print $2; exit}' \
-        "$ENV_CONFIG/app.config"
-}
+# Load shared read_property helper.
+source "$(dirname "$0")/lib_app_config.sh"
 
 resolve_data_dir() {
+    [ -n "${ENV_CONFIG:-}" ] && [ -f "$ENV_CONFIG/app.config" ] || {
+        echo "Error: ENV_CONFIG not set or app.config not found" >&2
+        exit 1
+    }
     local dir
-    dir=$(read_app_config app.gigainfluxdata.path || true)
+    dir=$(read_property app.gigainfluxdata.path)
     [ -n "$dir" ] || {
         echo "Error: cannot read app.gigainfluxdata.path from \$ENV_CONFIG/app.config" >&2
         exit 1

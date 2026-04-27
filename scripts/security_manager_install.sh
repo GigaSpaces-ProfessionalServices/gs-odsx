@@ -1,4 +1,7 @@
 # Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
@@ -13,13 +16,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -520,8 +516,8 @@ function gsCreateGSServeice {
   mv $home_dir_sh/st*_gs*.sh /tmp
   mv $gs_installation_path/$gsa_service_file /tmp
   #mv $home_dir_sh/install/gs/$gsc_service_file /tmp
-  mv /tmp/st*_gs*.sh /giga/bin/
-  chmod +x /giga/bin/st*_gs*.sh
+  mv /tmp/st*_gs*.sh $gigapath/bin/
+  chmod +x $gigapath/bin/st*_gs*.sh
   mv /tmp/gs*.service $HOME/.config/systemd/user/
   if [ "$selinux" == "true" ]; then
      restorecon $HOME/.config/systemd/user/gs*.service

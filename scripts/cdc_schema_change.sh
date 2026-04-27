@@ -1,4 +1,7 @@
 #!/bin/bash
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -9,13 +12,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -32,7 +28,7 @@ GS_USER=${GS_USER:-$(whoami)}
 diManagerURL=$3 #"10.0.1.201:6080"
 iidrSubscriptionMangerHost=$4 #"10.0.1.137:6082"  #only di-subscription manager is running here
 dataSource="ORACLE"
-AS_HOME=/giga/iidr/as
+AS_HOME=$gigapath/iidr/as
 AS_HOST=$5 #"10.0.1.129" # IIDR Access Server, IIDR Kafka Agent, IIDR DB Agent, KAFKA SERVER & ZK, ORACLE DB.
 AS_PORT=$6
 AS_USER=$7 #"admin" #bring from vault

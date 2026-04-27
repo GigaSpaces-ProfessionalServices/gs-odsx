@@ -5,8 +5,8 @@ Requires=gsa.service
 
 [Service]
 Type=simple
-ExecStart=/bin/bash /giga/bin/start_gsc.sh
-ExecStop=/bin/bash /giga/bin/stop_gsc.sh
+ExecStart=/bin/bash ${app.giga.path}/bin/start_gsc.sh
+ExecStop=/bin/bash ${app.giga.path}/bin/stop_gsc.sh
 #RemainAfterExit=yes
 Restart=on-failure
 

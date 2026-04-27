@@ -1,8 +1,17 @@
 #!/bin/bash
 # Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper.
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
+ENV_CONFIG_PATH="${ENV_CONFIG}/app.config"
+if [ -z "$ENV_CONFIG" ] || [ ! -f "$ENV_CONFIG_PATH" ]; then
+    echo "Error: ENV_CONFIG not set or $ENV_CONFIG_PATH missing." >&2
+    exit 1
+fi
+gigapath=$(read_property "app.giga.path")
 
 portNumber=$1
 timeRestart=$2
@@ -13,11 +22,11 @@ home_dir_sh=$(pwd)
 #echo $home_dir_sh
 
 cp $home_dir_sh/install/data-validation/datavalidator-measurment.service /tmp/datavalidator-measurment.service
-cp $home_dir_sh/scripts/servers_datavalidation_schedulerservice.sh /giga/bin/
+cp $home_dir_sh/scripts/servers_datavalidation_schedulerservice.sh $gigapath/bin/
 
 #echo $portNumber
 #echo $measurmentArray
-chmod 333 /giga/bin/servers_datavalidation_schedulerservice.sh
+chmod 333 $gigapath/bin/servers_datavalidation_schedulerservice.sh
 
 sed -i 's,$portNumber,'$portNumber',g' /tmp/datavalidator-measurment.service
 sed -i 's,$timeRestart,'$timeRestart',g' /tmp/datavalidator-measurment.service

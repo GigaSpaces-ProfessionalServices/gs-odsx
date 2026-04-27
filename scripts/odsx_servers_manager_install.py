@@ -7,7 +7,7 @@ from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideFolderList, getYamlFileNamesInsideFolderList, \
     getYamlFilePathInsideFolderList1
@@ -459,6 +459,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             if os.path.exists('install/install.tar'):
                 os.remove('install/install.tar')
             logger.info("Building .tar file : tar -cvf install/install.tar install")
+            render_install_templates()
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
                 status = os.system(cmd)

@@ -1,3 +1,13 @@
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+ENV_CONFIG_PATH="${ENV_CONFIG}/app.config"
+if [ -z "$ENV_CONFIG" ] || [ ! -f "$ENV_CONFIG_PATH" ]; then
+    echo "Error: ENV_CONFIG not set or $ENV_CONFIG_PATH missing." >&2
+    exit 1
+fi
+gigapath=$(read_property "app.giga.path")
+
 echo "Starting Telegraf Installation."
 sourceInstallerDirectory=$1
 managerHost=$2
@@ -11,14 +21,14 @@ echo "InstallationFile:"$installation_file
 systemctl stop telegraf
 sleep 5
 if [ "$hostType" == "pivot" ]; then
-  cp $sourceInstallerDirectory/telegraf/scripts/pivot/*.sh /giga/bin/
-  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/space-status.gc-state.sh /giga/bin/
-  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/pipeline-state.sh /giga/bin/
-  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/test.sh /giga/bin/
+  cp $sourceInstallerDirectory/telegraf/scripts/pivot/*.sh $gigapath/bin/
+  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/space-status.gc-state.sh $gigapath/bin/
+  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/pipeline-state.sh $gigapath/bin/
+  #cp $sourceInstallerDirectory/telegraf/scripts/pivot/test.sh $gigapath/bin/
   # test.sh removed — pipeline-state.sh falls back gracefully when absent
 fi
-chmod +x /giga/bin/*.sh
-cp $sourceInstallerDirectory/telegraf/jars/readFromShob-1.0.0.jar /giga/bin/
+chmod +x $gigapath/bin/*.sh
+cp $sourceInstallerDirectory/telegraf/jars/readFromShob-1.0.0.jar $gigapath/bin/
 
 sleep 5
 

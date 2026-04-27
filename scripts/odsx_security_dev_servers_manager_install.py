@@ -11,7 +11,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap, \
     config_get_dataIntegration_nodes
@@ -434,6 +434,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
                 # Remove stale tar to ensure fresh build from current install/ contents
                 if os.path.exists('install/install.tar'):
                     os.remove('install/install.tar')
+                render_install_templates()
                 cmd = 'tar -cvf install/install.tar install'
                 with Spinner():
                     status = os.system(cmd)

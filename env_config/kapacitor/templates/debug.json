@@ -1,0 +1,13 @@
+{ "records": [ {
+
+    "source": "ODS-STG",
+    "node": "{{ range .Data.Series }}{{ index .Tags "host" }}{{ end }}",
+    "message_key": "{{ .ID }}",
+    "resource": "{{ range .Data.Series }}{{ index .Tags "snowResource" }}{{ end }}",
+    "metric_name": "{{ range .Data.Series }}{{ index .Tags "snowMetricName" }}{{ end }}",
+    "type": "{{ range .Data.Series }}{{ index .Tags "snowType" }}{{ end }}",
+    "severity": "{{ if eq (.Level|print) "OK" }}0{{ else }}4{{ end }}",
+    "description": "{{ .Message }}",
+    "additional_info": "{{ .Data }}"
+
+} ] }

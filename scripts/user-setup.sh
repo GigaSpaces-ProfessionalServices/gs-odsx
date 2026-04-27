@@ -14,9 +14,12 @@
 #   - Gigashare dir exists and is writable by app user
 #
 # Typical workflow:
-#   1. user-setup.sh -d /gigashare -u gsods -t /path/gigashare.tgz
-#   2. root-setup.sh /gigashare          (as root)
+#   1. user-setup.sh -d /gigashare -u gsods -tar /path/gigashare.tgz
+#   2. root-setup.sh -d /gigashare       (as root)
 #   3. user-setup.sh -d /gigashare -u gsods   (re-run for remote hosts)
+
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
 
 function usage () {
   cat << EOF
@@ -27,20 +30,20 @@ function usage () {
 
   USAGE
 
-    $(basename $0) -d <gigashare dir> -u <username> [-t <gigashare.tgz>] [--overwrite]
+    $(basename $0) -d <gigashare dir> -u <username> [-tar <gigashare.tgz>] [--overwrite]
 
   OPTIONS
 
     -d <dir>      Gigashare directory (e.g. /gigashare)
     -u <user>     App username (e.g. gsods)
-    -t <tgz>      Gigashare tarball to extract into -d (optional; skipped
+    -tar <tgz>    Gigashare tarball to extract into -d (optional; skipped
                   if -d is already populated, unless --overwrite)
     --overwrite   Re-extract tgz, overwrite sqlite files, overwrite SSH config
 
   EXAMPLES
 
     # First run — extract tgz and set up pivot:
-    ./$(basename $0) -d /gigashare -u gsods -t /giga/gigashare.tgz
+    ./$(basename $0) -d /gigashare -u gsods -tar /giga/gigashare.tgz
 
     # After root-setup.sh — complete remote host config:
     ./$(basename $0) -d /gigashare -u gsods
@@ -57,23 +60,31 @@ APP_USER=""
 TGZ_FILE=""
 OVERWRITE=false
 
-# Extract --overwrite before getopts
+# Extract multi-char flags (--overwrite, -tar) before getopts.
+# getopts only handles single-letter options, so anything longer
+# must be consumed here.
 _ARGS=()
+_consume_tar=false
 for _arg in "$@"; do
-    if [ "$_arg" = "--overwrite" ]; then
-        OVERWRITE=true
-    else
-        _ARGS+=("$_arg")
+    if $_consume_tar; then
+        TGZ_FILE=$_arg
+        _consume_tar=false
+        continue
     fi
+    case "$_arg" in
+        --overwrite) OVERWRITE=true ;;
+        -tar)        _consume_tar=true ;;
+        *)           _ARGS+=("$_arg") ;;
+    esac
 done
+$_consume_tar && { echo "Error: -tar requires a path argument." >&2; usage; }
 set -- "${_ARGS[@]+"${_ARGS[@]}"}"
-unset _ARGS _arg
+unset _ARGS _arg _consume_tar
 
-while getopts ":d:u:t:h" opt; do
+while getopts ":d:u:h" opt; do
     case $opt in
         d) GIGASHARE_DIR=$OPTARG ;;
         u) APP_USER=$OPTARG ;;
-        t) TGZ_FILE=$OPTARG ;;
         h) usage ;;
         \?) echo "Unknown option: -$OPTARG" >&2; usage ;;
         :)  echo "Option -$OPTARG requires an argument" >&2; usage ;;
@@ -110,22 +121,18 @@ if [ -n "$TGZ_FILE" ]; then
         echo "    $GIGASHARE_DIR is not empty — skipping extraction. Use --overwrite to force."
     fi
 else
-    echo ">>> Step 1: No -t given — skipping gigashare extraction."
+    echo ">>> Step 1: No -tar given — skipping gigashare extraction."
 fi
 
 # --- Config paths ---
 ENV_CONFIG_PATH="$GIGASHARE_DIR/env_config"
-[[ ! -d "$ENV_CONFIG_PATH" ]] && { echo "Error: $ENV_CONFIG_PATH does not exist. Extract gigashare first (-t)."; exit 1; }
+[[ ! -d "$ENV_CONFIG_PATH" ]] && { echo "Error: $ENV_CONFIG_PATH does not exist. Extract gigashare first (-tar)."; exit 1; }
 
 APP_CONFIG="$ENV_CONFIG_PATH/app.config"
 HOST_YAML="$ENV_CONFIG_PATH/host.yaml"
 [[ ! -f "$APP_CONFIG" ]] && { echo "Error: $APP_CONFIG not found."; exit 1; }
 [[ ! -f "$HOST_YAML" ]] && { echo "Error: $HOST_YAML not found."; exit 1; }
 
-read_property() {
-    local prop_name="$1"
-    grep "^$prop_name=" "$APP_CONFIG" | awk -F'=' '{print $2}'
-}
 
 GIGA_PATH=$(read_property "app.giga.path")
 GIGA_SHARE=$(read_property "app.gigashare.path")

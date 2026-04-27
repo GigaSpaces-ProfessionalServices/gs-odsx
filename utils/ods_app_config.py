@@ -1,9 +1,11 @@
 #!/usr/bin/env python3
-import os.path, pathlib
+import os.path, pathlib, re, glob
 from configparser import ConfigParser
 from scripts.logManager import LogManager
 from configobj import ConfigObj
 import configparser,yaml
+
+_PLACEHOLDER_RE = re.compile(r'\$\{(app\.[a-z]+\.path)\}')
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -37,23 +39,20 @@ def setConfigProperties():
     dbaGigainfluxdataPath=str(configProperties.get("app.gigainfluxdata.path"))
 
 
+def expand_path_placeholders(value):
+    """Resolve ${app.*.path} placeholders against current configProperties.
+    Path-root keys themselves contain no ${...} so are unaffected."""
+    if not value or '${' not in value:
+        return value
+    return _PLACEHOLDER_RE.sub(
+        lambda m: str(configProperties.get(m.group(1), m.group(0))),
+        value,
+    )
+
+
 def readValuefromAppConfig(key, verbose=False):
     setConfigProperties()
-    # verboseHandle.setVerboseFlag(True)
-    # print("key -> " + key + ", configProperties.get(key) " + str(configProperties.get(key)))
-    # dbaGigaPath=str(configProperties.get("app.giga.path"))
-    # dbaGigaSharePath=str(configProperties.get("app.gigashare.path"))
-    # dbaGigaLogPath=str(configProperties.get("app.gigalog.path"))
-    # dbaGigaWorkPath=str(configProperties.get("app.gigawork.path"))
-    # dbaGigaDataPath=str(configProperties.get("app.gigadata.path"))
-    # dbaGigainfluxdataPath=str(configProperties.get("app.gigainfluxdata.path"))
-    readValue = str(configProperties.get(key))
-    # logger.info("readValue -> " + readValue)
-    if readValue.count('/') != 1:
-        readValue = readValue.replace("/dbagiga/",dbaGigaPath + "/").replace("/dbagigashare/",dbaGigaSharePath + "/").replace("/dbagigalogs/",dbaGigaLogPath + "/").replace("/dbagigawork/",dbaGigaWorkPath + "/").replace("/dbagigadata/",dbaGigaDataPath + "/").replace("/dbagigainfluxdata/",dbaGigainfluxdataPath)
-    readValue = readValue.replace("/dbagiga",dbaGigaPath).replace("/dbagigashare",dbaGigaSharePath).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagigawork",dbaGigaWorkPath).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigainfluxdata",dbaGigainfluxdataPath)
-    # logger.info("readValue -> " + readValue)
-    return readValue
+    return expand_path_placeholders(str(configProperties.get(key)))
 
 def writeToFile(key,value,verbose=False):
     verboseHandle.setVerboseFlag(verbose)
@@ -121,19 +120,28 @@ def readValueByConfigObj(key,file='config/app.config'):
     sourceInstallerDirectory = str(os.getenv("ENV_CONFIG"))
     file=sourceInstallerDirectory+'/app.config'
     config = ConfigObj(file)
-    # dbaGigaPath=str(configProperties.get("app.giga.path"))
-    # dbaGigaSharePath=str(configProperties.get("app.gigashare.path"))
-    # dbaGigaLogPath=str(configProperties.get("app.gigalog.path"))
-    # dbaGigaWorkPath=str(configProperties.get("app.gigawork.path"))
-    # dbaGigaDataPath=str(configProperties.get("app.gigadata.path"))
-    # dbaGigainfluxdataPath=str(configProperties.get("app.gigainfluxdata.path"))
-    # logger.info("key -> " + key + ", config.get(key) " + config.get(key))
-    # print("key -> " + key + ", config.get(key) " + config.get(key))
-    readValue = str(config.get(key))
-    if readValue.count('/') != 1:
-        readValue = readValue.replace("/dbagiga/",dbaGigaPath + "/").replace("/dbagigashare/",dbaGigaSharePath + "/").replace("/dbagigalogs/",dbaGigaLogPath + "/").replace("/dbagigawork/",dbaGigaWorkPath + "/").replace("/dbagigadata/",dbaGigaDataPath + "/").replace("/dbagigainfluxdata/",dbaGigainfluxdataPath)
-    readValue = readValue.replace("/dbagiga",dbaGigaPath).replace("/dbagigashare",dbaGigaSharePath).replace("/dbagigalogs",dbaGigaLogPath).replace("/dbagigawork",dbaGigaWorkPath).replace("/dbagigadata",dbaGigaDataPath).replace("/dbagigainfluxdata",dbaGigainfluxdataPath)
-    return readValue
+    return expand_path_placeholders(str(config.get(key)))
+
+
+def render_install_templates(install_dir='install'):
+    """Resolve ${app.*.path} placeholders in every install template file
+    in-place. Called by install scripts before they build install.tar so
+    rendered files land on remote hosts ready to use. Covers .service
+    (systemd units) and .yml/.yaml (Spring Boot configs)."""
+    setConfigProperties()
+    seen = set()
+    for pattern in ('*.service', '*.yml', '*.yaml'):
+        for path in glob.glob(os.path.join(install_dir, '**', pattern),
+                              recursive=True):
+            if path in seen:
+                continue
+            seen.add(path)
+            with open(path) as f:
+                text = f.read()
+            rendered = expand_path_placeholders(text)
+            if rendered != text:
+                with open(path, 'w') as f:
+                    f.write(rendered)
 
 def readValueFromYaml(key):
     key = pathlib.Path(key).suffix[1:]

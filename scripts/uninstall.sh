@@ -1,4 +1,13 @@
 #!/bin/bash
+# Load shared read_property helper.
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+# Resolve $gigapath/bin/pip3 path (only used in the Ubuntu branch below).
+# Falls back to /giga/bin if app.config isn't readable.
+if [ -n "${ENV_CONFIG:-}" ] && [ -f "${ENV_CONFIG}/app.config" ] && command -v read_property >/dev/null 2>&1; then
+    gigapath=$(read_property "app.giga.path")
+fi
+gigapath=${gigapath:-/giga}
 
 # Determine OS platform
 checkOS() {
@@ -43,7 +52,7 @@ if [[ $DISTRO == *"Ubuntu"* ]]; then
     sed -i '/eval "$(register-python-argcomplete odsx.py)"/d' ~/.profile
     FILE=/home/ubuntu/.local/bin/pip3.8
     if [ ! -f "$FILE" ]; then
-        rm -f /giga/bin/pip3
+        rm -f $gigapath/bin/pip3
     fi
     source ~/.profile
 else

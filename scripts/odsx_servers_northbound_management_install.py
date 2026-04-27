@@ -15,7 +15,7 @@ from utils.ods_ssh import get_ssh_user
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -195,6 +195,7 @@ def proceedForPreInstallation(nbServers, param):
     # Remove stale tar to ensure fresh build from current install/ contents
     if os.path.exists('install/install.tar'):
         os.remove('install/install.tar')
+    render_install_templates()
     cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)

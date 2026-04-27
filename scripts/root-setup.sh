@@ -5,9 +5,12 @@
 # or manually) so that app.config and host.yaml are readable.
 #
 # Typical workflow:
-#   1. user-setup.sh -d /gigashare -u <appuser> -t /path/gigashare.tgz
-#   2. root-setup.sh /gigashare          (this script)
+#   1. user-setup.sh -d /gigashare -u <appuser> -tar /path/gigashare.tgz
+#   2. root-setup.sh -d /gigashare       (this script)
 #   3. user-setup.sh -d /gigashare -u <appuser>   (re-run for remote hosts)
+
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
 
 function usage () {
   cat << EOF
@@ -18,16 +21,20 @@ function usage () {
 
   USAGE
 
-    $(basename $0) <gigashare dir>
+    $(basename $0) -d <gigashare dir>
+
+  OPTIONS
+
+    -d <dir>      Gigashare directory (e.g. /gigashare)
 
   PREREQUISITE
 
     Gigashare must already be extracted (app.config and host.yaml must exist
-    inside <gigashare dir>/env_config/). Use user-setup.sh -t to extract.
+    inside <gigashare dir>/env_config/). Use user-setup.sh -tar to extract.
 
   EXAMPLE
 
-    ./$(basename $0) /gigashare
+    ./$(basename $0) -d /gigashare
 
   NEXT STEP
 
@@ -49,11 +56,79 @@ if [ "$(id -u)" -ne 0 ]; then
     exit 1
 fi
 
-[[ $# -eq 0 || $1 == "-h" ]] && usage
-[[ -z $1 ]] && { echo -e "\nMust provide a directory for gigashare as argument.\n" ; exit 1 ; }
-[[ ! -d $1 ]] && { echo -e "\nThe gigashare directory does not exist.\n" ; exit 1 ; }
+[[ $# -eq 0 ]] && usage
 
-ENV_CONFIG_PATH="$1/env_config"
+# Pre-scan for help/info flags (also accepts the legacy positional usage hint)
+for _arg in "$@"; do
+    case "$_arg" in
+        -h|--help) usage ;;
+        --info) _SHOW_INFO=true ;;
+    esac
+done
+
+[[ "${_SHOW_INFO:-false}" == "true" ]] && {
+  cat <<'INFO'
+
+  root-setup.sh — What it does
+  ============================
+
+  Prerequisite: Gigashare must already be extracted (by user-setup.sh -tar
+  or manually) so app.config and host.yaml exist.
+
+  Config reading:
+    - Reads app.giga.path, app.gigashare.path, app.gigainfluxdata.path,
+      and app.server.user from app.config
+    - Reads all host IPs from host.yaml, determines which are remote
+      (non-pivot)
+
+  Step 1 — Pivot configuration:
+    1. Creates the app user (useradd -m) if it doesn't exist
+    2. Enables systemd linger for the app user (so user services survive
+       logout)
+    3. Writes /etc/sudoers.d/odsx-monitoring — passwordless sudo for the
+       app user to start/stop/restart/status/enable Grafana, InfluxDB,
+       and Telegraf system services
+    4. Appends ENV_CONFIG, PYTHONPATH, ODSXARTIFACTS to root's .bashrc
+       (idempotent, skips if already present)
+
+  Step 2 — NFS server on pivot:
+    1. Installs nfs-utils if missing
+    2. Adds per-remote-host export entries to /etc/exports (idempotent)
+    3. Enables nfs-server and refreshes exports
+
+  Step 3 — Per-remote-host loop (via SSH as root):
+    1. Creates the app user if it doesn't exist
+    2. Enables linger
+    3. Creates the gigashare mount point directory, chowns it to the app
+       user
+    4. Installs nfs-utils if missing
+    5. Adds an fstab entry for the NFS mount (idempotent, uses 'users'
+       option so the app user can mount/umount without sudo)
+    6. Mounts the NFS share if not already mounted
+    7. Verifies the mount succeeded
+
+  In short: it does the things that require root — user creation, linger,
+  sudoers, NFS server/client setup — on the pivot and all remote hosts.
+  Everything else (SSH keys, env vars, GS install, directories) is
+  handled by user-setup.sh.
+
+INFO
+  exit
+}
+GIGASHARE_DIR=""
+while getopts ":d:h" opt; do
+    case $opt in
+        d) GIGASHARE_DIR=$OPTARG ;;
+        h) usage ;;
+        \?) echo "Unknown option: -$OPTARG" >&2; usage ;;
+        :)  echo "Option -$OPTARG requires an argument" >&2; usage ;;
+    esac
+done
+
+[[ -z "$GIGASHARE_DIR" ]] && { echo -e "\nMust provide a gigashare directory via -d.\n" ; usage ; }
+[[ ! -d "$GIGASHARE_DIR" ]] && { echo -e "\nThe gigashare directory does not exist.\n" ; exit 1 ; }
+
+ENV_CONFIG_PATH="$GIGASHARE_DIR/env_config"
 echo "ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
 [[ ! -d "$ENV_CONFIG_PATH" ]] && { echo -e "\nThe gigashare/env_config does not exist. Extract gigashare first.\n" ; exit 1 ; }
 
@@ -70,21 +145,25 @@ if [ ! -f "$HOST_YAML" ]; then
     exit 1
 fi
 
-read_property() {
-    local prop_name="$1"
-    grep "^$prop_name=" "$APP_CONFIG" | awk -F'=' '{print $2}'
-}
 
 # Read required variables from app.config
 GIGA_PATH=$(read_property "app.giga.path")
 GIGA_SHARE=$(read_property "app.gigashare.path")
 GIGA_INFLUX=$(read_property "app.gigainfluxdata.path")
+GIGA_DATA=$(read_property "app.gigadata.path")
+GIGA_LOG=$(read_property "app.gigalog.path")
+GIGA_WORK=$(read_property "app.gigawork.path")
 APP_USER=$(read_property "app.server.user")
 APP_USER=${APP_USER:-gsods}
 
 # Validate required keys
 missing_paths=0
-for key_var in "app.giga.path:$GIGA_PATH" "app.gigashare.path:$GIGA_SHARE" "app.gigainfluxdata.path:$GIGA_INFLUX"; do
+for key_var in "app.giga.path:$GIGA_PATH" \
+               "app.gigashare.path:$GIGA_SHARE" \
+               "app.gigainfluxdata.path:$GIGA_INFLUX" \
+               "app.gigadata.path:$GIGA_DATA" \
+               "app.gigalog.path:$GIGA_LOG" \
+               "app.gigawork.path:$GIGA_WORK"; do
   key="${key_var%%:*}"
   val="${key_var#*:}"
   if [ -z "$val" ]; then
@@ -95,6 +174,19 @@ done
 if [ "$missing_paths" -eq 1 ]; then
   exit 1
 fi
+
+# Compute unique parent directories of all 6 path roots. Each is mkdir'd
+# and chowned -R to APP_USER on every remote host, so that user-setup.sh
+# (running as APP_USER) can later mkdir the leaf paths under them.
+# Parents that resolve to "/" (the default top-level layout, e.g. /giga,
+# /gigashare) are skipped — chowning "/" would be catastrophic.
+PATH_PARENTS=$(
+    for p in "$GIGA_PATH" "$GIGA_SHARE" "$GIGA_INFLUX" \
+             "$GIGA_DATA"  "$GIGA_LOG"   "$GIGA_WORK"; do
+        d=$(dirname "$p")
+        case "$d" in /|.|"") ;; *) printf '%s\n' "$d" ;; esac
+    done | sort -u
+)
 
 # Read remote hosts from host.yaml
 ALL_HOSTS=$(grep -E '^\s+host[0-9]+\s*:' "$HOST_YAML" | awk -F':' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); if($2!="") print $2}' | sort -u)
@@ -198,6 +290,17 @@ for HOST in $REMOTE_HOSTS; do
 
         # Enable linger
         loginctl enable-linger $APP_USER 2>/dev/null || true
+
+        # Prepare parent directories of all 6 path roots: mkdir -p and
+        # chown -R to APP_USER. This is what allows user-setup.sh to
+        # later create leaf dirs (giga, gigalogs, gigadata, gigawork,
+        # gigashare, gigainfluxdata) as APP_USER without sudo.
+        # No-op when path roots live directly under "/" (default layout).
+        for parent in $PATH_PARENTS; do
+            mkdir -p "\$parent"
+            chown -R $APP_USER:$APP_USER "\$parent"
+            echo "    parent ready: \$parent (chowned -R to $APP_USER)"
+        done
 
         # Create gigashare mount point
         mkdir -p $GIGA_SHARE

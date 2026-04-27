@@ -1,4 +1,7 @@
 # Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
@@ -13,15 +16,9 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigasharepath=$(read_property "app.gigashare.path")
+gigapath=$(read_property "app.giga.path")
 
 #echo "Extracting install.tar to "$targetDir
 sourceInstallerDirectory=$1
@@ -77,9 +74,9 @@ mv $home_dir_sh/st*_data_validation_agent.sh /tmp
 
 mv $home_dir_sh/install/$data_validation_service_file /tmp
 
-mv /tmp/st*_data_validation_agent.sh /giga/bin/
+mv /tmp/st*_data_validation_agent.sh $gigapath/bin/
 
-chmod +x /giga/bin/st*_data_validation_agent.sh
+chmod +x $gigapath/bin/st*_data_validation_agent.sh
 
 mv /tmp/$data_validation_service_file $HOME/.config/systemd/user/
 

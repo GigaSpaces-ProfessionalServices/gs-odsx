@@ -6,7 +6,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFolder
+from utils.ods_app_config import render_install_templates, readValueByConfigObj, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_influxdb_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
@@ -165,6 +165,7 @@ def buildTarFileToLocalMachine():
     # Remove stale tar to ensure fresh build from current install/ contents
     if os.path.exists('install/install.tar'):
         os.remove('install/install.tar')
+    render_install_templates()
     cmd = 'tar -cvf install/install.tar install'  # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)

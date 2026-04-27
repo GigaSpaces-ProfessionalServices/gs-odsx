@@ -110,13 +110,16 @@ def executeRemoteShCommandAndGetOutput(host, user, additionalparam, commandToExe
     logger.info("executeRemoteShCommandAndGetOutput host:"+str(host)+" user:"+str(user)+" additinalparam:"+str(additionalparam)+" cmdtoexec:"+str(commandToExecute))
     pemFileName = readValuefromAppConfig("cluster.pemFile")
     logger.info("pemFileName : "+str(pemFileName))
-    # ssh -i aharon_ami.pem ec2-user@34.245.126.19 < scripts/streams_status.sh
     isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
     logger.info("isConnectUsingPem :"+str(isConnectUsingPem))
+    # Prepend scripts/lib_app_config.sh so read_property() is in scope on the
+    # remote host. The remote receives a concatenated stdin stream: helper
+    # function definitions first, then the script body.
+    stdin_source = "cat scripts/lib_app_config.sh " + commandToExecute
     if(isConnectUsingPem=='True'):
-        cmd = "ssh -i " + pemFileName + ' ' + user + "@" + host + ' ' + 'bash' + ' -s ' + additionalparam + " < " + commandToExecute
+        cmd = stdin_source + " | ssh -i " + pemFileName + ' ' + user + "@" + host + ' bash -s ' + additionalparam
     else:
-        cmd = "ssh " + user + "@" + host + ' ' + 'bash' + ' -s ' + additionalparam + " < " + commandToExecute
+        cmd = stdin_source + " | ssh " + user + "@" + host + ' bash -s ' + additionalparam
     logger.info("cmd:"+str(cmd))
     output = subprocess.check_output(cmd, shell=True)
     logger.info("output:"+str(output))

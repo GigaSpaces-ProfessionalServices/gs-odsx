@@ -4,7 +4,7 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash /giga/bin/servers_datavalidation_schedulerservice.sh $portNumber $timeRestart $ipAddress $measurmentArray
+ExecStart=/bin/bash ${app.giga.path}/bin/servers_datavalidation_schedulerservice.sh $portNumber $timeRestart $ipAddress $measurmentArray
 ExecStop=/bin/kill -15 $MAINPID
 Restart=always
 RestartSec=30

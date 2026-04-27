@@ -5,7 +5,7 @@ import os, subprocess, sys, argparse, platform,socket
 from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
     getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
@@ -531,6 +531,7 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
             # Remove stale tar to ensure fresh build from current install/ contents
             if os.path.exists('install/install.tar'):
                 os.remove('install/install.tar')
+            render_install_templates()
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
                 status = os.system(cmd)

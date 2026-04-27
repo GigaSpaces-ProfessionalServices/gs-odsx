@@ -6,7 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
 from scripts.odsx_security_servers_space_install import configureMetricsXML
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
     getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
@@ -481,6 +481,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             # Remove stale tar to ensure fresh build from current install/ contents
             if os.path.exists('install/install.tar'):
                 os.remove('install/install.tar')
+            render_install_templates()
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
                 status = os.system(cmd)

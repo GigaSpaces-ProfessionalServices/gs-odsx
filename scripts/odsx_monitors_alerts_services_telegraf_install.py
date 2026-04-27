@@ -11,7 +11,7 @@ from scripts.odsx_servers_northbound_applicative_install import update_app_confi
     getNBApplicativeHostFromEnv, validateAndConfigureInfluxdb
 from scripts.odsx_servers_northbound_management_remove import getNBFolderName
 from scripts.spinner import Spinner
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_node, config_get_manager_node, config_get_space_hosts, \
     config_get_nb_list, config_get_dataIntegration_nodes
 from utils.ods_scp import scp_upload
@@ -71,6 +71,7 @@ def proceedForPreInstallation(param,hostip):
     # Remove stale tar to ensure fresh build from current install/ contents
     if os.path.exists('install/install.tar'):
         os.remove('install/install.tar')
+    render_install_templates()
     cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)

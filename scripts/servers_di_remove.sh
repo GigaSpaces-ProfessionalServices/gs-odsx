@@ -1,5 +1,8 @@
 #!/bin/bash
 # Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
@@ -14,12 +17,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigalogpath=$(read_property "app.gigalog.path")
@@ -38,7 +35,7 @@ if [ "$wantToRemoveKafka" == "y" ]; then
   [ -n "$KAFKA_DATA_PATH" ] && rm -rf $KAFKA_DATA_PATH
   [ -n "$KAFKAPATH" ]       && rm -rf $KAFKAPATH
   rm -f $gigapath/kafka_latest
-  rm -rf install install.tar ~/setenv.sh /giga/bin/st*_kafka.sh \
+  rm -rf install install.tar ~/setenv.sh $gigapath/bin/st*_kafka.sh \
               $HOME/.config/systemd/user/kafka.service $HOME/.config/systemd/user/odsxkafka.service
 fi
 
@@ -49,7 +46,7 @@ if [ "$wantToRemoveZk" == "y" ]; then
   [ -n "$ZOOKEEPER_LOGS_PATH" ] && rm -rf $ZOOKEEPER_LOGS_PATH
   [ -n "$ZOOKEEPERPATH" ]       && rm -rf $ZOOKEEPERPATH
   rm -f $gigapath/zookeeper_latest
-  rm -rf /giga/bin/st*_zookeeper.sh $HOME/.config/systemd/user/odsxzookeeper.service
+  rm -rf $gigapath/bin/st*_zookeeper.sh $HOME/.config/systemd/user/odsxzookeeper.service
 fi
 
 

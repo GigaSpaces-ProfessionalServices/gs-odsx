@@ -5,8 +5,8 @@ After=network.target
 
 [Service]
 Type=simple
-ExecStart=/bin/bash /giga/bin/start_gsa.sh
-ExecStop=/bin/bash /giga/bin/stop_gsa.sh
+ExecStart=/bin/bash ${app.giga.path}/bin/start_gsa.sh
+ExecStop=/bin/bash ${app.giga.path}/bin/stop_gsa.sh
 Restart=always
 
 [Install]

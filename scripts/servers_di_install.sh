@@ -1,5 +1,8 @@
 #!/bin/bash
 # Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
@@ -13,13 +16,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -233,8 +229,8 @@ function installDISubscription {
     echo "iidr-kafka.properties.manager.client.timeouts.read.ms=60000" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.properties.manager.server.url=http://$iidrHost:6085" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.user-exit.properties.file.use-api=false" >> $gigapath/di-subscription-manager.properties
-    echo "iidr-kafka.user-exit.properties.file.read-path=/giga/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
-    echo "iidr-kafka.user-exit.properties.file.write-path=/giga/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.read-path=$gigapath/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.write-path=$gigapath/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "##mdm##" >> $gigapath/di-subscription-manager.properties
     echo "mdm.client.timeouts.connection.ms=10000" >> $gigapath/di-subscription-manager.properties
@@ -473,8 +469,8 @@ if [[ $id != 2 ]]; then
 
   mv $home_dir_sh/st*_zookeeper.sh /tmp
   mv $home_dir_sh/install/zookeeper/$zookeeper_service_file /tmp
-  mv /tmp/st*_zookeeper.sh /giga/bin/
-  chmod +x /giga/bin/st*_zookeeper.sh
+  mv /tmp/st*_zookeeper.sh $gigapath/bin/
+  chmod +x $gigapath/bin/st*_zookeeper.sh
   mv /tmp/$zookeeper_service_file $HOME/.config/systemd/user/
 fi
 
@@ -496,8 +492,8 @@ if [[ $id != 4 ]]; then
   fi
   mv $home_dir_sh/st*_kafka.sh /tmp
   mv $home_dir_sh/install/kafka/$kafka_service_file /tmp
-  mv /tmp/st*_kafka.sh /giga/bin/
-  chmod +x /giga/bin/st*_kafka.sh
+  mv /tmp/st*_kafka.sh $gigapath/bin/
+  chmod +x $gigapath/bin/st*_kafka.sh
   mv /tmp/$kafka_service_file $HOME/.config/systemd/user/
 fi
 

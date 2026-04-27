@@ -1,4 +1,7 @@
 # Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
@@ -13,13 +16,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -117,9 +113,9 @@ mv $home_dir_sh/install/mq-connector/$service_file /tmp
 sed -i "s|WorkingDirectory=/dbagigasoft/Adabas|WorkingDirectory=$targetDir|g" /tmp/$service_file
 #echo "Files moved to /tmp"
 
-mv /tmp/st*_adabasFeeder.sh /giga/bin/
+mv /tmp/st*_adabasFeeder.sh $gigapath/bin/
 
-chmod +x /giga/bin/st*_adabasFeeder.sh
+chmod +x $gigapath/bin/st*_adabasFeeder.sh
 
 mv /tmp/$service_file $HOME/.config/systemd/user/
 systemctl --user enable odsxadabas.service
@@ -131,4 +127,4 @@ chown $APP_USER:$APP_USER $targetDir/*
 chown $APP_USER:$APP_USER $logDir
 
 
-#rm -rf /dbagigasoft/Adabas/ /giga/bin/*_adabasFeeder.sh $HOME/.config/systemd/user/odsxadabas.service install install.tar /dbagigasoft setenv.sh
+#rm -rf /dbagigasoft/Adabas/ $gigapath/bin/*_adabasFeeder.sh $HOME/.config/systemd/user/odsxadabas.service install install.tar /dbagigasoft setenv.sh

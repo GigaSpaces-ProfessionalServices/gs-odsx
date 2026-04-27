@@ -1,0 +1,37 @@
+servers :
+  manager :
+    host1 : 10.0.4.97
+    host2 : 10.0.4.65
+    host3 : 10.0.4.10
+  space :
+    host1 : 10.0.4.157
+    host2 : 10.0.4.198
+    host3 : 10.0.4.153
+  dataIntegration :
+    host1 : 
+  dataIntegrationSubscriptionManager :
+    host1 : 
+  iidrdataIntegration :
+    host1 : 
+  iidrAccessServer :
+    host1 : 
+  iidrKafkaAgent :
+    host1 : 
+  iidrOracleAgent :
+    host1 : 
+  grafana :
+    host1 : 10.0.4.17
+  influxdb :
+    host1 : 10.0.4.17
+  nb_applicative :
+    host1 : 
+    host2 : 
+    host3 : 
+  nb_management :
+    host1 : 
+  data_validator_server :
+    host1 : 
+  data_validator_agent :
+    host1 : 
+  pivot : 
+    host1 : 10.0.4.17

@@ -1,0 +1,29 @@
+servers :
+  manager :
+    host1 : 10.0.8.224
+    host2 : 10.0.8.39
+#    host3 : 10.0.8.135
+  space :
+    host1 : 10.0.8.216
+    host2 : 10.0.8.104
+#    host3 : 10.0.8.46
+  dataIntegration :
+    host1 : 
+  iidrdataIntegration :
+    host1 : 
+  grafana :
+    host1 : 10.0.8.242
+  influxdb :
+    host1 : 10.0.8.242
+  nb_applicative :
+    host1 : 10.0.8.224
+    host2 : 10.0.8.39
+    host3 : 10.0.8.135
+  nb_management :
+    host1 : 10.0.8.41
+  data_validator_server :
+    host1 : 10.0.8.242
+  data_validator_agent :
+    host1 : 10.0.8.242
+  pivot : 
+    host1 : 10.0.8.242

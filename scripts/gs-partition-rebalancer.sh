@@ -37,6 +37,9 @@
 # - optimal_rebalancer.py
 ################################################################################
 
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 set -euo pipefail
 
 if [ -z "${ENV_CONFIG:-}" ]; then
@@ -49,10 +52,6 @@ readonly CONFIG_DIR="${ENV_CONFIG}"
 readonly HOST_YAML="${CONFIG_DIR}/host.yaml"
 readonly APP_CONFIG="${CONFIG_DIR}/app.config"
 
-read_property() {
-  local prop_name="$1"
-  grep "^$prop_name=" "$APP_CONFIG" | awk -F'=' '{print $2}'
-}
 
 readonly GS_HOME="$(read_property app.giga.path)/gigaspaces-smart-ods"
 readonly GIGA_WORK="$(read_property app.gigawork.path)"

@@ -42,10 +42,20 @@ printNoColor() {
     print_style "$1" "error";
 }
 
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+ENV_CONFIG_PATH="${ENV_CONFIG}/app.config"
+if [ -z "$ENV_CONFIG" ] || [ ! -f "$ENV_CONFIG_PATH" ]; then
+    echo "Error: ENV_CONFIG not set or $ENV_CONFIG_PATH missing." >&2
+    exit 1
+fi
+gigapath=$(read_property "app.giga.path")
+
 sourceInstallerDirectory=$1
 hostType=$2
 #echo "sourceInstallerDirectory: "$sourceInstallerDirectory
-cp $sourceInstallerDirectory/telegraf/scripts/space/telegraf_wal-size.sh /giga/bin/
+cp $sourceInstallerDirectory/telegraf/scripts/space/telegraf_wal-size.sh $gigapath/bin/
 sleep 5
 #cat "" >> /etc/telegraf/telegraf.conf
 
