@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 
+import json
 import os
 import signal
 import subprocess
+import time
 import requests
-import json
 import datetime
-
 from colorama import Fore
 
 from scripts.logManager import LogManager
@@ -23,7 +23,6 @@ from utils.odsx_keypress import userInputWrapper
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 clusterHosts = []
-
 
 class bcolors:
     OK = '\033[92m'  # GREEN
@@ -249,17 +248,60 @@ def installCluster():
         diserver1=""
         di_all_servers=""
         managerHost1=""
-        for host in clusterHosts:
-            logger.info("proceeding for host : " + str(host))
-            if (counter == 1):
-                buildTarFileToLocalMachine(host)
-                diserver1=host
-            di_all_servers +=host+":9092"
-            if counter != 3:
-                di_all_servers +=","
-            buildUploadInstallTarToServer(host)
-            executeCommandForInstall(host, host_type_dictionary_obj.get(host), counter,nodeListSize)
-            counter = counter + 1
+
+        if len(clusterHosts) == 3:
+            # Phase 1: Install ZK+Kafka on all 3 nodes; skip DI services on node1 (flag='n')
+            dimMdmFlinkInstallon1bFlag = 'n'
+            for host in clusterHosts:
+                logger.info("Phase 1 - proceeding for host : " + str(host))
+                if (counter == 1):
+                    buildTarFileToLocalMachine(host)
+                    diserver1=host
+                if di_all_servers:
+                    di_all_servers += ","
+                di_all_servers += host + ":9092"
+                buildUploadInstallTarToServer(host)
+                executeCommandForInstall(host, host_type_dictionary_obj.get(host), counter, nodeListSize)
+                counter = counter + 1
+
+            # Wait for ZooKeeper quorum on node1 before installing DI services
+            logger.info("Waiting for ZooKeeper quorum to form on " + kafkaBrokerHost1 + "...")
+            print("Waiting for ZooKeeper quorum to form (up to 5 minutes)...")
+            quorumFormed = False
+            for attempt in range(30):
+                try:
+                    zkStatOutput = executeRemoteCommandAndGetOutput(kafkaBrokerHost1, user,
+                        "source /home/gsods/setenv.sh 2>/dev/null; $ZOOKEEPERPATH/bin/zkServer.sh status 2>/dev/null")
+                    if 'leader' in zkStatOutput or 'follower' in zkStatOutput:
+                        quorumFormed = True
+                        logger.info("ZooKeeper quorum formed after " + str((attempt + 1) * 10) + "s")
+                        print("ZooKeeper quorum formed.")
+                        break
+                except Exception:
+                    pass
+                logger.info("ZK quorum not ready yet (" + str(attempt + 1) + "/30), retrying in 10s...")
+                time.sleep(10)
+            if not quorumFormed:
+                logger.warning("ZooKeeper quorum did not form within 5 minutes; proceeding anyway")
+                print("WARNING: ZooKeeper quorum may not be ready. Proceeding with Phase 2...")
+
+            # Phase 2: Install DI services on node1 only (flag='y')
+            dimMdmFlinkInstallon1bFlag = 'y'
+            logger.info("Phase 2 - installing DI services on node1: " + str(diserver1))
+            print("Phase 2: Installing DI services on node1...")
+            executeCommandForInstall(diserver1, host_type_dictionary_obj.get(diserver1), 1, nodeListSize)
+        else:
+            for host in clusterHosts:
+                logger.info("proceeding for host : " + str(host))
+                if (counter == 1):
+                    buildTarFileToLocalMachine(host)
+                    diserver1=host
+                if di_all_servers:
+                    di_all_servers += ","
+                di_all_servers += host + ":9092"
+                buildUploadInstallTarToServer(host)
+                executeCommandForInstall(host, host_type_dictionary_obj.get(host), counter, nodeListSize)
+                counter = counter + 1
 
         managerNodes = config_get_manager_node()
         for node in managerNodes:

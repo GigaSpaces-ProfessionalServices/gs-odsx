@@ -114,7 +114,7 @@ def exportDatasourcesBeforeRemove(diHost, export_path):
         url = f"http://{diHost}:6080/api/v1/datasource/"
         verboseHandle.printConsoleInfo("Fetching datasources from: " + url)
         response = requests.get(url, headers={"Content-Type": "application/json"},
-                                   proxies={"http": None, "https": None})
+                                proxies={"http": None, "https": None})
         if response.status_code != 200:
             verboseHandle.printConsoleError("Failed to list datasources: " + str(response.status_code) + " " + response.text)
             return
@@ -169,7 +169,7 @@ def deleteDatasources(diHost):
     try:
         url = f"http://{diHost}:6080/api/v1/datasource/"
         response = requests.get(url, headers={"Content-Type": "application/json"},
-                                   proxies={"http": None, "https": None})
+                                proxies={"http": None, "https": None})
         if response.status_code != 200:
             verboseHandle.printConsoleError("Failed to list datasources: " + str(response.status_code) + " " + response.text)
             return
@@ -303,7 +303,7 @@ def executeCommandForUnInstall():
         if(len(nodes)>0):
             removeType=''
             #if(len(nodesCount)>1):
-                #removeType = str(userInputWrapper(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
+            #removeType = str(userInputWrapper(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
                 verboseHandle.printConsoleInfo("Want to remove kafka : "+str(wantToRemoveKafka))
                 verboseHandle.printConsoleInfo("Want to remove zookeeper : "+str(wantToRemoveZk))
