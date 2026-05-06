@@ -80,8 +80,11 @@ function installDISubscription {
     installation_file_manager=$(find $installation_path_manager -name "di-subscription-manager*.tgz" -printf "%f\n")
     info "InstallationFile:"$installation_file_manager"\n"
     sudo mkdir -p $gigapath/di-subscription-manager
+    sudo mkdir -p $gigalogpath/di-subscription-manager
     sudo mkdir -p $gigalogpath/di-iidr
-    info "Copying file from "$installation_path_manager/$installation_file_manager" to "$gigapath"/di-subscription-manager \n"
+    sudo chown gsods:gsods $gigalogpath/di-iidr
+    sudo chown gsods:gsods $gigalogpath/di-subscription-manager
+    info "Copying file from "$installation_path_manager/$installation_file_manager+" to $gigapath/di-subscription-manager \n"
     sudo cp $installation_path_manager/$installation_file_manager $gigapath/di-subscription-manager
     info "\nExtracting zip file...\n"
     sudo tar -xzf $gigapath/di-subscription-manager/$installation_file_manager --directory $gigapath/di-subscription-manager/
@@ -93,7 +96,7 @@ function installDISubscription {
     sudo ln -snf $gigapath/di-subscription-manager /home/gsods/di-subscription-manager
 
     # Patch service file log path in config template BEFORE install_new_version.sh deploys it to /etc/systemd/system/
-    sudo sed -i 's|logs/di-subscription-manager-iidr.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' \
+    sudo sed -i "s|logs/di-subscription-manager-iidr.log|$gigalogpath/di-iidr/di-subscription-manager.log|g" \
         $gigapath/di-subscription-manager/$extracted_folder_manager/config/di-subscription-manager-iidr.service
 
     # Write properties file from scratch matching QA server config
@@ -132,7 +135,7 @@ mdm.url=/api/v1
 mdm.server.url=http://${kafkaBrokerHost1}:6081
 
 ##subscription manager
-subscription-manager.server.url=http://:${iidrHost}:6082
+subscription-manager.server.url=http://${iidrHost}:6082
 subscription-manager.feature.supports-transaction=true
 #mdm-waiting-timeout is in seconds
 subscription-manager.mdm-availability-waiting-timeout-seconds=300
@@ -151,6 +154,14 @@ PROPEOF
     # runs daemon-reload, enable, and starts the service
     cd $gigapath/di-subscription-manager/$extracted_folder_manager/utils/
     sudo ./install_new_version.sh $gigapath/di-subscription-manager.properties
+    _sm_config="$gigapath/di-subscription-manager/$extracted_folder_manager/config"
+    if [ -d "$_sm_config" ]; then
+        info "\nReplacing localhost with $iidrHost in $_sm_config\n"
+        sudo find "$_sm_config" -type f -exec sed -i "s/localhost/$iidrHost/g" {} +
+    else
+        warning "\nWARNING: $_sm_config not found, skipping localhost replacement\n"
+    fi
+
     sudo chown -R gsods:gsods /home/gsods/di-subscription-manager/
     sudo systemctl daemon-reload
     info "\n Installation DI-Subscription-Manager completed.\n"
@@ -179,4 +190,5 @@ javaInstalled=$(java -version 2>&1 | egrep "\S+\s+version")
 echo "">>setenv.sh
 
 installDISubscription
+sudo chown -R gsods:gsods $gigapath/*.properties
 sleep 10

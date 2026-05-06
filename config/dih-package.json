@@ -38,6 +38,26 @@
       "action": "download"
     },
     {
+      "id": "di-flink-connector-jdbc",
+      "url": "s3://giga-di/di-releases/17.1.5/flink-install/flink-connector-jdbc-3.3.0-1.20.jar",
+      "action": "download"
+    },
+    {
+      "id": "di-flink-sql-connector-kafka",
+      "url": "s3://giga-di/di-releases/17.1.5/flink-install/flink-sql-connector-kafka-4.0.0-2.0.jar",
+      "action": "download"
+    },
+    {
+      "id": "di-flink-kafka-clients",
+      "url": "s3://giga-di/di-releases/17.1.5/flink-install/kafka-clients-4.0.0.jar",
+      "action": "download"
+    },
+    {
+      "id": "di-flink-postgres",
+      "url": "s3://giga-di/di-releases/17.1.5/flink-install/postgresql-42.7.7.jar",
+      "action": "download"
+    },
+    {
       "id": "di-manager",
       "url": "s3://giga-di/di-releases/17.1.5/di-manager-4.6.7-381.tar.gz",
       "action": "download"
@@ -45,6 +65,11 @@
     {
       "id": "di-subscription-manager",
       "url": "s3://giga-di/di-releases/17.1.5/di-subscription-manager-2.3.20.tgz",
+      "action": "download"
+    },
+    {
+      "id": "dih-admin",
+      "url": "s3://giga-di/di-releases/17.1.5/dih-admin-1.9.1.tgz",
       "action": "download"
     }
   ]

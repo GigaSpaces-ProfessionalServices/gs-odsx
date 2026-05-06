@@ -6,8 +6,6 @@ import subprocess
 import urllib.request
 from urllib.parse import urlparse
 
-import boto3
-from botocore.exceptions import BotoCoreError, ClientError
 
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 
@@ -102,7 +100,8 @@ def _download_from_s3(url: str, dest_dir: str) -> str:
 
     os.makedirs(dest_dir, exist_ok=True)
     dest_path = os.path.join(dest_dir, filename)
-
+    import boto3
+    from botocore.exceptions import BotoCoreError, ClientError
     try:
         profile = os.environ.get("AWS_PROFILE")
         session = boto3.Session(profile_name=profile) if profile else boto3.Session()

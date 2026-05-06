@@ -40,8 +40,8 @@
 set -euo pipefail
 
 # Configuration
-readonly GS_HOME="/dbagiga/gigaspaces-smart-ods"
-readonly CONFIG_DIR="/dbagigashare/env_config"
+readonly GS_HOME="/giga/gigaspaces-smart-ods"
+readonly CONFIG_DIR="/gigashare/env_config"
 readonly HOST_YAML="${CONFIG_DIR}/host.yaml"
 readonly APP_CONFIG="${CONFIG_DIR}/app.config"
 
@@ -49,7 +49,7 @@ readonly APP_CONFIG="${CONFIG_DIR}/app.config"
 _USER=$(awk -F= '/app.manager.security.username=/ {print $2}' ${CONFIG_DIR}/app.config)
 if grep '^app.vault.use=true' ${CONFIG_DIR}/app.config > /dev/null ; then
   _VAULT_PASS=$(awk -F= '/app.manager.security.password.vault=/ {print $2}' ${CONFIG_DIR}/app.config)
-  _PASS=$(java -Dapp.db.path=/dbagigawork/sqlite/ -jar /dbagigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --get ${_VAULT_PASS})
+  _PASS=$(java -Dapp.db.path=/gigawork/sqlite/ -jar /gigashare/current/gs/jars/gs-vault-1.0-SNAPSHOT-jar-with-dependencies.jar --get ${_VAULT_PASS})
 else
   _PASS=$(awk -F= '/app.manager.security.password=/ {print $2}' ${CONFIG_DIR}/app.config)
 fi

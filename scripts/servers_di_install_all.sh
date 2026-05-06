@@ -135,7 +135,7 @@ function installFlink() {
   installation_file_flink=$(find $installation_path_flink -name "flink*.tgz" -printf "%f\n" | sort -V | tail -1)
   info "InstallationFile:"$installation_file_flink"\n"
   sudo mkdir -p $gigapath/di-flink
-  sudo mkdir -p $gigalogpath/di-iidr/di-flink
+  sudo mkdir -p $gigalogpath/di-flink
   info "Copying file from "$installation_path_flink/$installation_file_flink +" to "$gigapath"/di-flink \n"
   sudo cp $installation_path_flink/$installation_file_flink $gigapath/di-flink
   info "\nExtracting zip file...\n"
@@ -143,12 +143,12 @@ function installFlink() {
 
   # Change ownership to current user so we can modify config files
   current_user=$(whoami)
-  sudo chown -R $current_user:$current_user $gigapath/di-flink/
+  sudo chown -R gsods:gsods $gigapath/di-flink/
 
   extracted_folder_flink=$(ls -I "*.tgz" $gigapath/di-flink/)
   cd $gigapath/di-flink/
-  sudo ln -s $gigapath/di-flink/ /home/gsods/di-flink
-  sudo ln -s $gigapath/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
+  sudo ln -snf $gigapath/di-flink/ /home/gsods/di-flink
+  sudo ln -snf $gigapath/di-flink/$extracted_folder_flink /home/gsods/di-flink/latest-flink
   sudo mkdir -p /home/gsods/di-flink/latest-flink/data/savepoints
   sudo mkdir -p /home/gsods/di-flink/latest-flink/data/checkpoints
 
@@ -175,14 +175,15 @@ function installFlink() {
   echo "jobmanager.memory.jvm-metaspace.size: $flinkJobManagerMemoryMetaspaceSize">>$flink_conf_file
   echo "state.savepoints.dir: file:///home/gsods/di-flink/latest-flink/data/savepoints">>$flink_conf_file
   echo "state.checkpoints.dir: file:///home/gsods/di-flink/latest-flink/data/checkpoints">>$flink_conf_file
+  echo "env.java.opts: \"--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED\"">>$flink_conf_file
   chmod +x $gigapath/di-flink/$extracted_folder_flink/bin/*
   sudo cp $installation_path_flink/di-flink-jobmanager.service /etc/systemd/system/
   sudo cp $installation_path_flink/di-flink-taskmanager.service /etc/systemd/system/
   # Fix QA-server paths in service files to match this environment
   sudo sed -i 's|latest-di-flink|latest-flink|g' /etc/systemd/system/di-flink-jobmanager.service
   sudo sed -i 's|latest-di-flink|latest-flink|g' /etc/systemd/system/di-flink-taskmanager.service
-  sudo sed -i "s|FLINK_LOG_DIR=[^ ]*|FLINK_LOG_DIR=$gigalogpath/di-iidr/di-flink|g" /etc/systemd/system/di-flink-jobmanager.service
-  sudo sed -i "s|FLINK_LOG_DIR=[^ ]*|FLINK_LOG_DIR=$gigalogpath/di-iidr/di-flink|g" /etc/systemd/system/di-flink-taskmanager.service
+  sudo sed -i "s|FLINK_LOG_DIR=[^ ]*|FLINK_LOG_DIR=$gigalogpath/di-flink|g" /etc/systemd/system/di-flink-jobmanager.service
+  sudo sed -i "s|FLINK_LOG_DIR=[^ ]*|FLINK_LOG_DIR=$gigalogpath/di-flink|g" /etc/systemd/system/di-flink-taskmanager.service
   # Copy extra JARs if present in gigashare (optional — skip if missing)
   sudo cp $installation_path_flink/*.jar $gigapath/di-flink/$extracted_folder_flink/lib/ 2>/dev/null || true
   sudo mkdir -p /home/gsods/latest-flink/data/checkpoints/ /home/gsods/latest-flink/data/savepoints/
@@ -190,7 +191,7 @@ function installFlink() {
   # Set final ownership to gsods
   sudo chown -R gsods:gsods $gigapath/di-flink/
   sudo chown -R gsods:gsods /home/gsods/di-flink/
-  sudo chown -R gsods:gsods $gigalogpath/di-iidr/di-flink
+  sudo chown -R gsods:gsods $gigalogpath/di-flink
   sudo restorecon /etc/systemd/system/di-* 2>/dev/null || true
   sudo systemctl daemon-reload
   sudo systemctl restart di-flink-taskmanager.service
@@ -206,27 +207,28 @@ function installDIMatadata {
   installation_file_mdm=$(find $installation_path_mdm -name "di-mdm*.gz" -printf "%f\n" | sort -V | tail -1)
   info "InstallationFile:"$installation_file_mdm"\n"
   sudo mkdir -p $gigapath/di-mdm
-  sudo mkdir -p $gigalogpath/di-mdm       # Fixed: was $gigapathlogs (typo)
+  sudo mkdir -p $gigalogpath/di-mdm
+  current_user=$(whoami)
+  sudo chown gsods:gsods $gigalogpath/di-mdm
   sudo cp $installation_path_mdm/$installation_file_mdm $gigapath/di-mdm
   info "\nExtracting zip file...\n"
   sudo tar -xzf $gigapath/di-mdm/$installation_file_mdm --directory $gigapath/di-mdm/
-
-  # Change ownership to current user so we can modify config files
-  current_user=$(whoami)
-  sudo chown -R $current_user:$current_user $gigapath/di-mdm/
-
+  sudo chown -R gsods:gsods $gigapath/di-mdm/
   extracted_folder_mdm=$(ls -I "*.gz" $gigapath/di-mdm/)
   cd $gigapath/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
-  sudo ln -s $gigapath/di-mdm/ /home/gsods/di-mdm
-  sudo ln -s $gigapath/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
+  sudo ln -snf $gigapath/di-mdm/ /home/gsods/di-mdm
+  sudo ln -snf $gigapath/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
   echo "spring.profiles.active=zookeeper">$gigapath/di-mdm.properties
-  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>$gigapath/di-mdm.properties
+  if [ "$kafkaBrokerCount" == 3 ]; then
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>$gigapath/di-mdm.properties
+  else
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>$gigapath/di-mdm.properties
+  fi
 
   # Set final ownership to gsods
   sudo chown -R gsods:gsods $gigapath/di-mdm/
   sudo chown -R gsods:gsods /home/gsods/di-mdm/
-  # Use absolute path - cannot cd into /home/gsods/ (mode 700)
   sudo bash $gigapath/di-mdm/$extracted_folder_mdm/utils/install_new_version.sh $gigapath/di-mdm.properties
   rm -f $gigapath/di-mdm/di-mdm
 
@@ -236,9 +238,10 @@ MDM_URL=http://${kafkaBrokerHost1}:6081
 FLINK_URL=http://${kafkaBrokerHost1}:8081
 SPACE_LOOKUP_GROUPS=${spaceLookupGroups}
 SPACE_LOOKUP_LOCATORS=${spaceLookupLocators}
-KAFKA_BOOTSTRAP_SERVERS=${kafkaBrokerHost1}:9092
+KAFKA_BOOTSTRAP_SERVERS=${kafkaBrokerHost1}:9092$([ "$kafkaBrokerCount" == 3 ] && echo ",${kafkaBrokerHost2}:9092,${kafkaBrokerHost3}:9092")
 ENVEOF
   sudo chown gsods:gsods $gigapath/di-mdm/$extracted_folder_mdm/utils/global-${currentHost}.env
+  sudo chown -R gsods:gsods /home/gsods/di-mdm/
   info "\n Created global-${currentHost}.env in di-mdm utils for global_config.sh.\n"
 }
 
@@ -249,20 +252,19 @@ function installDIManager {
   info "InstallationFile:"$installation_file_manager"\n"
   sudo mkdir -p $gigapath/di-manager
   sudo mkdir -p $gigalogpath/di-manager
+  current_user=$(whoami)
+  sudo chown gsods:gsods $gigalogpath/di-manager
   info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-manager \n"
   sudo cp $installation_path_manager/$installation_file_manager $gigapath/di-manager
   info "\nExtracting zip file...\n"
   sudo tar -xzf $gigapath/di-manager/$installation_file_manager --directory $gigapath/di-manager/
-
-  # Change ownership to current user so we can modify config files
-  current_user=$(whoami)
-  sudo chown -R $current_user:$current_user $gigapath/di-manager/
+  sudo chown -R gsods:gsods $gigapath/di-manager/
 
   extracted_folder_manager=$(ls -I "*.gz" $gigapath/di-manager/)
   cd $gigapath/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
-  sudo ln -s $gigapath/di-manager/ /home/gsods/di-manager
-  sudo ln -s $gigapath/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
+  sudo ln -snf $gigapath/di-manager/ /home/gsods/di-manager
+  sudo ln -snf $gigapath/di-manager/$extracted_folder_manager /home/gsods/di-manager/latest-di-manager
 
   echo "springdoc.api-docs.path=/api-docs">$gigapath/di-manager.properties
   echo "springdoc.swagger-ui.path=/swagger-ui">>$gigapath/di-manager.properties
@@ -270,11 +272,7 @@ function installDIManager {
   sed -i '/^mdm.server.url/d' $gigapath/di-manager.properties
   echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>$gigapath/di-manager.properties
   sed -i '/^mdm.server.fallback-url/d' $gigapath/di-manager.properties
-  if [ "$kafkaBrokerCount" == 1 ]; then
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>$gigapath/di-manager.properties
-  else
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigapath/di-manager.properties
-  fi
+  echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>$gigapath/di-manager.properties
   echo "server.port=6080">>$gigapath/di-manager.properties
   echo "mdm.client.timeouts.connection.ms=10000">>$gigapath/di-manager.properties
   echo "mdm.client.timeouts.read.ms=60000">>$gigapath/di-manager.properties
@@ -284,6 +282,8 @@ function installDIManager {
   sudo chown -R gsods:gsods /home/gsods/di-manager/
   # Use absolute path - cannot cd into /home/gsods/ (mode 700)
   sudo bash $gigapath/di-manager/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-manager.properties
+  sudo chown -R gsods:gsods $gigapath/di-manager/
+  sudo chown -R gsods:gsods /home/gsods/di-manager/
   rm -f $gigapath/di-manager/di-manager
   info "\n Installation DI-Manager completed.\n"
 }
@@ -300,23 +300,17 @@ function installDIProcessor {
     sudo cp $installation_path_manager/$installation_file_manager $gigapath/di-processor
     info "\nExtracting zip file...\n"
     sudo tar -xzf $gigapath/di-processor/$installation_file_manager --directory $gigapath/di-processor/
-
-    # Change ownership to current user so we can modify config files
     current_user=$(whoami)
-    sudo chown -R $current_user:$current_user $gigapath/di-processor/
+    sudo chown -R gsods:gsods $gigapath/di-processor
 
     extracted_folder_manager=$(ls -I "*.tgz" $gigapath/di-processor/)
     cd $gigapath/di-processor/
     info "Creating symlink for :"$extracted_folder_manager
-    sudo ln -s $gigapath/di-processor/ /home/gsods/di-processor
-    sudo ln -s $gigapath/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
+    sudo ln -snf $gigapath/di-processor/ /home/gsods/di-processor
+    sudo ln -snf $gigapath/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
 
     echo "mdm.server.url=http://$kafkaBrokerHost1:6081">$gigapath/di-processor.properties
-    if [ "$kafkaBrokerCount" == 1 ]; then
-      echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>$gigapath/di-processor.properties
-    else
-      echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigapath/di-processor.properties
-    fi
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>$gigapath/di-processor.properties
 
     # Set final ownership to gsods
     sudo chown gsods:gsods $gigalogpath/di-processor
@@ -324,6 +318,8 @@ function installDIProcessor {
     sudo chown -R gsods:gsods /home/gsods/di-processor/
     # Use absolute path - cannot cd into /home/gsods/ (mode 700)
     sudo bash $gigapath/di-processor/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-processor.properties
+    sudo chown -R gsods:gsods $gigapath/di-processor/
+    sudo chown -R gsods:gsods /home/gsods/di-processor/
     rm -f $gigapath/di-processor/di-processor
 }
 
@@ -334,18 +330,17 @@ function installDITransformations {
   info "InstallationFile:"$installation_file"\n"
   sudo mkdir -p $gigapath/di-transformations
   sudo mkdir -p $gigalogpath/di-transformations
+  current_user=$(whoami)
+  sudo chown gsods:gsods $gigalogpath/di-transformations
   sudo cp $installation_path/$installation_file $gigapath/di-transformations
   info "\nExtracting zip file...\n"
   sudo tar -xzf $gigapath/di-transformations/$installation_file --directory $gigapath/di-transformations/
-
-  current_user=$(whoami)
-  sudo chown -R $current_user:$current_user $gigapath/di-transformations/
-
+  sudo chown -R gsods:gsods $gigapath/di-transformations/
   extracted_folder_transformations=$(ls -I "*.tgz" $gigapath/di-transformations/)
   cd $gigapath/di-transformations/
   info "Creating symlink for :"$extracted_folder_transformations
-  sudo ln -s $gigapath/di-transformations/ /home/gsods/di-transformations
-  sudo ln -s $gigapath/di-transformations/$extracted_folder_transformations /home/gsods/di-transformations/latest-di-transformations
+  sudo ln -snf $gigapath/di-transformations/ /home/gsods/di-transformations
+  sudo ln -snf $gigapath/di-transformations/$extracted_folder_transformations /home/gsods/di-transformations/latest-di-transformations
 
   # Derive XAP manager host from spaceLookupLocators (strip :4174)
   xapManagerHost=${spaceLookupLocators%:4174}
@@ -382,17 +377,87 @@ logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG
 server.port=6090
 TRANEOF
 
-  # Patch log path in service file BEFORE install_new_version.sh deploys it to /etc/systemd/system/
-  sudo sed -i "s|latest-di-transformations/logs/di-transformations.log|${gigalogpath}/di-transformations/di-transformations.log|g" \
-      $gigapath/di-transformations/$extracted_folder_transformations/config/di-transformations.service
-
   sudo chown -R gsods:gsods $gigapath/di-transformations/
   sudo chown -R gsods:gsods /home/gsods/di-transformations/
   sudo bash $gigapath/di-transformations/$extracted_folder_transformations/utils/install_new_version.sh $gigapath/di-transformations.properties
+  sudo chown -R gsods:gsods $gigapath/di-transformations/
+  sudo chown -R gsods:gsods /home/gsods/di-transformations/
+  sudo sed -i "s|1>>.*di-transformations\.log|1>>$gigalogpath/di-transformations/di-transformations.log|g" /etc/systemd/system/di-transformations.service
   sudo restorecon /etc/systemd/system/di-transformations.service 2>/dev/null || true
   sudo systemctl daemon-reload
+  sudo systemctl restart di-transformations.service
   rm -f $gigapath/di-transformations/di-transformations
   info "\n Installation DI-Transformations completed.\n"
+}
+
+function installDIHAdmin {
+  info "\n Installing DIH-Admin\n"
+  installation_path=$sourceInstallerDirectory/data-integration/dih-admin
+  installation_file=$(find $installation_path -name "dih-admin*.tgz" -printf "%f\n" | sort -V | tail -1)
+  info "InstallationFile:"$installation_file"\n"
+  sudo mkdir -p $gigapath/dih-admin
+  sudo mkdir -p $gigalogpath/dih-admin
+  current_user=$(whoami)
+  sudo chown gsods:gsods $gigalogpath/dih-admin
+  sudo cp $installation_path/$installation_file $gigapath/dih-admin
+  info "\nExtracting zip file...\n"
+  sudo tar -xzf $gigapath/dih-admin/$installation_file --directory $gigapath/dih-admin/
+
+  current_user=$(whoami)
+  sudo chown -R gsods:gsods $gigapath/dih-admin/
+
+  extracted_folder_dih_admin=$(find $gigapath/dih-admin -maxdepth 1 -type d -name "dih-admin-*" -printf "%f\n" | sort -V | tail -1)
+  info "Creating symlink for :"$extracted_folder_dih_admin
+  sudo ln -snf $gigapath/dih-admin/ /home/gsods/dih-admin
+
+  # Derive XAP manager host from spaceLookupLocators (strip :4174)
+  xapManagerHost=${spaceLookupLocators%:4174}
+
+  sudo tee $gigapath/dih-admin.properties > /dev/null << DIHADMINEOF
+server.port=7080
+bootstrap-servers=${kafkaBrokerHost1}:9092
+dimanager.client.timeouts.connection.ms=10000
+dimanager.client.timeouts.read.ms=60000
+dimanager.server.url=http://${kafkaBrokerHost1}:6080
+ditransformations.client.timeouts.connection.ms=10000
+ditransformations.client.timeouts.request.ms=30000
+ditransformations.server.url=http://${kafkaBrokerHost1}:6090
+kafka-topics.retention-task.delay-in-minutes=10
+kafka-topics.retention-task.duration-in-hours=168
+topic-polling-timeout-ms=2000
+task.executor.corePoolSize=5
+task.executor.maxPoolSize=10
+task.executor.queueCapacity=25
+mdm.client.timeouts.connection.ms=10000
+mdm.client.timeouts.read.ms=60000
+mdm.server.url=http://${kafkaBrokerHost1}:6081
+xap.manager.url=http://${xapManagerHost}:8090
+security.base.url=http://xap-security-service:9000
+service.creator.url=http://${kafkaBrokerHost1}:8080
+graphql.url=http://${kafkaBrokerHost1}:18080
+service.creator.client.timeouts.connection.ms=10000
+service.creator.client.timeouts.read.ms=60000
+springdoc.swagger-ui.operationsSorter=method
+springdoc.swagger-ui.path=/swagger-ui
+springdoc.api-docs.path=/api-docs
+graphql.graphiql.enabled=true
+graphql.altair.enabled=true
+graphql.playground.enabled=true
+space-deployment.waiting.timeout.seconds=60
+graphql.servlet.exception-handlers-enabled=true
+logging.level.com.gigaspaces.di.dihadmin.client=DEBUG
+DIHADMINEOF
+
+   sudo chown -R gsods:gsods $gigapath/dih-admin/
+   sudo chown -R gsods:gsods /home/gsods/dih-admin/
+   sudo sudo bash $gigapath/dih-admin/$extracted_folder_dih_admin/utils/install_new_version.sh $gigapath/dih-admin.properties
+   sudo chmod +x $gigapath/dih-admin/$extracted_folder_dih_admin/lib/*.jar
+   sudo chown -R gsods:gsods $gigapath/dih-admin/
+   sudo chown -R gsods:gsods /home/gsods/dih-admin/
+   sudo restorecon /etc/systemd/system/dih-admin.service 2>/dev/null || true
+   sudo systemctl daemon-reload
+  sudo rm -f $gigapath/dih-admin/dih-admin
+  info "\n Installation DIH-Admin completed.\n"
 }
 
 function installDISubscription {
@@ -402,21 +467,20 @@ function installDISubscription {
     info "InstallationFile:"$installation_file_manager"\n"
     sudo mkdir -p $gigapath/di-subscription-manager
     sudo mkdir -p $gigalogpath/di-subscription-manager
+    #sudo mkdir -p $gigalogpath/di-iidr
     sudo chown gsods:gsods $gigalogpath/di-subscription-manager
+    #sudo chown gsods:gsods $gigalogpath/di-iidr
     info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-subscription-manager \n"
     sudo cp $installation_path_manager/$installation_file_manager $gigapath/di-subscription-manager
     info "\nExtracting zip file...\n"
     sudo tar -xzf $gigapath/di-subscription-manager/$installation_file_manager --directory $gigapath/di-subscription-manager/
-
-    # Change ownership to current user so we can modify config files
     current_user=$(whoami)
-    sudo chown -R $current_user:$current_user $gigapath/di-subscription-manager/
-
+    sudo chown -R gsods:gsods $gigapath/di-subscription-manager/
     extracted_folder_manager=$(ls -I "*.tgz" $gigapath/di-subscription-manager/)
     cd $gigapath/di-subscription-manager/
     info "Creating symlink for :"$extracted_folder_manager
-    sudo ln -s $extracted_folder_manager /home/gsods/di-subscription-manager
-    sudo ln -s $gigapath/di-subscription-manager/$extracted_folder_manager /home/gsods/di-subscription-manager/latest-di-subscription-manager
+    sudo ln -snf $extracted_folder_manager /home/gsods/di-subscription-manager
+    sudo ln -snf $gigapath/di-subscription-manager/$extracted_folder_manager /home/gsods/di-subscription-manager/latest-di-subscription-manager
 
     echo "##iidr.as##" > $gigapath/di-subscription-manager.properties
     echo "iidr-as.hostname=$iidrHost" >> $gigapath/di-subscription-manager.properties
@@ -428,15 +492,15 @@ function installDISubscription {
     echo "datastore.save-credentials-in-mdm=false" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "###kafka properties" >> $gigapath/di-subscription-manager.properties
-    echo "kafka.host=gstest-di1.tau.ac.il" >> $gigapath/di-subscription-manager.properties
+    echo "kafka.host=$kafkaBrokerHost1" >> $gigapath/di-subscription-manager.properties
     echo "kafka.port=9092" >> $gigapath/di-subscription-manager.properties
     echo "kafka.topic.prefix=" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "###iidr kafka properties" >> $gigapath/di-subscription-manager.properties
-    echo "iidr-kafka.host=gstest-iidr1.tau.ac.il" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.host=$iidrHost" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.port=11701" >> $gigapath/di-subscription-manager.properties
-    echo "iidr-kafka.username=tsuser" >> $gigapath/di-subscription-manager.properties
-    echo "iidr-kafka.password=<password>" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.username=$iidrUsername" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.password=$iidrPassword" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.properties.manager.client.timeouts.connection.ms=10000" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.properties.manager.client.timeouts.read.ms=60000" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.properties.manager.server.url=http://$iidrHost:6085" >> $gigapath/di-subscription-manager.properties
@@ -451,7 +515,7 @@ function installDISubscription {
     echo "mdm.server.url=http://$kafkaBrokerHost1:6081" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "##subscription manager" >> $gigapath/di-subscription-manager.properties
-    echo "subscription-manager.server.url=http://:gstest-iidr1.tau.ac.il:6082" >> $gigapath/di-subscription-manager.properties
+    echo "subscription-manager.server.url=http://$iidrHost:6082" >> $gigapath/di-subscription-manager.properties
     echo "subscription-manager.feature.supports-transaction=true" >> $gigapath/di-subscription-manager.properties
     echo "#mdm-waiting-timeout is in seconds" >> $gigapath/di-subscription-manager.properties
     echo "subscription-manager.mdm-availability-waiting-timeout-seconds=300" >> $gigapath/di-subscription-manager.properties
@@ -464,12 +528,12 @@ function installDISubscription {
     echo "springdoc.swagger-ui.request-timeout=10000 # Timeout value in milliseconds" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> $gigapath/di-subscription-manager.properties
-    sudo sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' /etc/systemd/system/di-subscription-manager-iidr.service
     # Use absolute path - cannot cd into /home/gsods/ (mode 700)
     sudo bash $gigapath/di-subscription-manager/$extracted_folder_manager/utils/install_new_version.sh $gigapath/di-subscription-manager.properties
-    sudo systemctl daemon-reload
-    sudo systemctl enable di-subscription-manager
-    sudo systemctl restart di-subscription-manager
+     sed -i -e "s|logs/di-subscription-manager-iidr.log|$gigalogpath/di-subscription-manager/di-subscription-manager.log|g" /etc/systemd/system/di-subscription-manager-iidr.service
+     systemctl daemon-reload
+     systemctl enable di-subscription-manager-iidr
+     systemctl restart di-subscription-manager-iidr
     info "\n Installation DI-Subscription-Manager completed.\n"
 }
 
@@ -540,12 +604,35 @@ if [ "$wantInstallJava" == "y" ]; then
     installRemoteJava
 fi
 echo " dataFolderKafka "$8" dataFolderZK "$9" logsFolderKafka "$logsFolderKafka" logsFolderZK "$logsFolderZK" sourceInstallerDirectory "$sourceInstallerDirectory
-# install.tar is SCP'd by root to /root/; rocky user can't read /root/ (mode 700), so use sudo
 [ ! -f install.tar ] && sudo cp /root/install.tar . 2>/dev/null || true
 tar -xvf install.tar
 home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
 echo "">>setenv.sh
+
+# Phase 2 shortcut: for 3-node install, phase 2 installs DI services on node1 only
+# (ZK+Kafka already running from phase 1; skip infra setup entirely)
+if [ "$kafkaBrokerCount" == 3 ] && [[ $id == 1 ]] && [ "$dimMdmFlinkInstallon1bFlag" == "y" ]; then
+  source setenv.sh 2>/dev/null || true
+  installDIMatadata
+  echo "Waiting for di-mdm to become ready on port 6081..."
+  for i in $(seq 1 30); do
+    if curl -sf http://${kafkaBrokerHost1}:6081/api/v1/about > /dev/null 2>&1; then
+      echo "di-mdm is ready after ${i}x10s"
+      break
+    fi
+    echo "di-mdm not ready yet ($i/30), retrying in 10s..."
+    sleep 10
+  done
+  installDIManager
+  installFlink
+  installDIProcessor
+  installDITransformations
+  installDIHAdmin
+  di_mdm_utils=$gigapath/di-mdm/$(ls -d $gigapath/di-mdm/di-mdm-* 2>/dev/null | head -1 | xargs basename)/utils
+  sudo -u gsods bash $di_mdm_utils/global_config.sh $di_mdm_utils/global-${currentHost}.env
+  exit 0
+fi
 
 # Step for KAFKA Unzip and Set KAFKAPATH
 if [[ $id != 4 ]]; then
@@ -558,9 +645,8 @@ if [[ $id != 4 ]]; then
     sudo mkdir -p $dataFolderKafka
     sudo mkdir -p $logsFolderKafka
     sudo tar -xzf $installation_path"/"$installation_file -C $baseFolderLocation
-    # Change ownership to current user for modifications
     current_user=$(whoami)
-    sudo chown -R $current_user:$current_user $baseFolderLocation
+    sudo chown -R gsods:gsods $baseFolderLocation
     var=$installation_file
     echo "var"$var
     replace=""
@@ -570,7 +656,7 @@ if [[ $id != 4 ]]; then
     sed -i '/export KAFKA_LOGS_PATH/d' setenv.sh
     echo "extracted_folder: "$extracted_folder
     kafka_home_path="export KAFKAPATH="$baseFolderLocation$extracted_folder
-    sudo ln -s $baseFolderLocation$extracted_folder $gigapath/kafka_latest
+    sudo ln -snf $baseFolderLocation$extracted_folder $gigapath/kafka_latest
     echo "$kafka_home_path">>setenv.sh
     echo "export KAFKA_DATA_PATH="$dataFolderKafka >> setenv.sh
     echo "export KAFKA_LOGS_PATH="$logsFolderKafka >> setenv.sh
@@ -584,16 +670,19 @@ fi
     sudo mkdir -p $baseFolderLocation
     sudo mkdir -p $dataFolderZK
     sudo mkdir -p $logsFolderZK
+    sudo chown gsods:gsods $logsFolderZK
     sudo tar -xzf $installation_path"/"$installation_file -C $baseFolderLocation
-    # Change ownership to current user for modifications
     current_user=$(whoami)
-    sudo chown -R $current_user:$current_user $baseFolderLocation
+    sudo chown -R gsods:gsods $baseFolderLocation
     var=$installation_file
     echo "var"$var
     replace=""
     extracted_folder=${var//'.tar.gz'/$replace}
     zk_home_path="export ZOOKEEPERPATH="$baseFolderLocation$extracted_folder
-    sudo ln -s $baseFolderLocation$extracted_folder $gigapath/zookeeper_latest
+    sudo ln -snf $baseFolderLocation$extracted_folder $gigapath/zookeeper_latest
+    sed -i '/export ZOOKEEPERPATH/d' setenv.sh
+    sed -i '/export ZOOKEEPER_DATA_PATH/d' setenv.sh
+    sed -i '/export ZOOKEEPER_LOGS_PATH/d' setenv.sh
     echo "$zk_home_path">>setenv.sh
     echo "export ZOOKEEPER_DATA_PATH="$dataFolderZK >> setenv.sh
     echo "export ZOOKEEPER_LOGS_PATH="$logsFolderZK >> setenv.sh
@@ -621,6 +710,7 @@ sudo mkdir -p $dataFolderKafka
 clientPort=2181
 dataDir=${dataFolderZK}
 initLimit=${zkInitLimit}
+syncLimit=${zkSyncLimit}
 server.1=${kafkaBrokerHost1}:2888:3888
 server.2=${kafkaBrokerHost2}:2888:3888
 server.3=${kafkaBrokerHost3}:2888:3888
@@ -776,31 +866,35 @@ if [[ $id != 4 ]]; then
 
     # KRaft: format Kafka storage before first start; save cluster ID to gigashare for other nodes
     KAFKA_CLUSTER_ID=$(sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh random-uuid)
-    echo "$KAFKA_CLUSTER_ID" | sudo tee $gigasharepath/kafka-cluster-id > /dev/null
+    echo "$KAFKA_CLUSTER_ID" | sudo tee $sourceInstallerDirectory/kafka-cluster-id > /dev/null
     sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh format -t "$KAFKA_CLUSTER_ID" -c $KAFKAPATH/config/server.properties
     sudo restorecon /etc/systemd/system/odsx* 2>/dev/null || true
     sudo systemctl daemon-reload
     sudo systemctl enable --now odsxzookeeper.service
     sudo systemctl enable --now odsxkafka.service
     sudo systemctl daemon-reload
-    installDIMatadata
-    # Wait for di-mdm Spring Boot to be ready before installing dependent services
-    echo "Waiting for di-mdm to become ready on port 6081..."
-    for i in $(seq 1 5); do
-      if curl -sf http://${kafkaBrokerHost1}:6081/api/v1/about > /dev/null 2>&1; then
-        echo "di-mdm is ready after ${i}x10s"
-        break
-      fi
-      echo "di-mdm not ready yet ($i/5), retrying in 10s..."
-      sleep 10
-    done
-    installDIManager
-    installFlink
-    installDIProcessor
-    installDITransformations
-    # Run global_config.sh to configure MDM (flink, space, kafka)
-    di_mdm_utils=$gigapath/di-mdm/$(ls -d $gigapath/di-mdm/di-mdm-* 2>/dev/null | head -1 | xargs basename)/utils
-    sudo -u gsods bash $di_mdm_utils/global_config.sh $di_mdm_utils/global-${currentHost}.env
+    # For 3-node installs, DI services are installed in phase 2 (after ZK quorum forms)
+    if [ "$kafkaBrokerCount" == 1 ]; then
+      installDIMatadata
+      # Wait for di-mdm Spring Boot to be ready before installing dependent services
+      echo "Waiting for di-mdm to become ready on port 6081..."
+      for i in $(seq 1 5); do
+        if curl -sf http://${kafkaBrokerHost1}:6081/api/v1/about > /dev/null 2>&1; then
+          echo "di-mdm is ready after ${i}x10s"
+          break
+        fi
+        echo "di-mdm not ready yet ($i/5), retrying in 10s..."
+        sleep 10
+      done
+      installDIManager
+      installFlink
+      installDIProcessor
+      installDITransformations
+      installDIHAdmin
+      # Run global_config.sh to configure MDM (flink, space, kafka)
+      di_mdm_utils=$gigapath/di-mdm/$(ls -d $gigapath/di-mdm/di-mdm-* 2>/dev/null | head -1 | xargs basename)/utils
+      sudo -u gsods bash $di_mdm_utils/global_config.sh $di_mdm_utils/global-${currentHost}.env
+    fi
   fi
 fi
 
@@ -818,10 +912,10 @@ if [[ $id != 1 ]]; then
   sudo chmod 777 -R $dataFolderZK
   # KRaft: format Kafka storage using same cluster ID as node 1 (required for multi-node cluster)
   if [[ $id != 4 ]]; then
-    if [ -f $gigasharepath/kafka-cluster-id ]; then
-      KAFKA_CLUSTER_ID=$(cat $gigasharepath/kafka-cluster-id)
+    if [ -f $sourceInstallerDirectory/kafka-cluster-id ]; then
+      KAFKA_CLUSTER_ID=$(cat $sourceInstallerDirectory/kafka-cluster-id)
     else
-      echo "WARNING: $gigasharepath/kafka-cluster-id not found; generating independent ID (multi-node cluster may not form)"
+      echo "WARNING: $sourceInstallerDirectory/kafka-cluster-id not found; generating independent ID (multi-node cluster may not form)"
       KAFKA_CLUSTER_ID=$(sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh random-uuid)
     fi
     sudo -u gsods $KAFKAPATH/bin/kafka-storage.sh format -t "$KAFKA_CLUSTER_ID" -c $KAFKAPATH/config/server.properties

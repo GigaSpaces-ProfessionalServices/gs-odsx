@@ -6,12 +6,14 @@ iidr_host=$2
 manager_host1=$3
 spaceLookupGroups=$4
 di_all_servers=$5
+diProcessorJar=$6
 
 mdmUrl="$di_server1:6081"
 managerUrl="$di_server1:6080"
 flinkUrl="http://$di_server1:8081"
 diSsubscriptionManager="http://$iidr_host:6082"
-diProcessorJar="/home/gsods/di-processor/latest-di-processor/lib/job-2.3.9.jar"
+#diProcessorJar="$(ls /home/gsods/di-processor/latest-di-processor/lib/job-*.jar 2>/dev/null | head -n 1)"
+#diProcessorJar="/home/gsods/di-processor/latest-di-processor/lib/job-2.3.9.jar"
 bootstrapServers="$di_all_servers"
 kafkaGroupId="diprocessor"
 #spaceLookupGroups="xap-16.4.0"

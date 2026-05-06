@@ -1,6 +1,12 @@
 #!/usr/bin/env python3
 
+import csv
+import datetime
+import io
+import json
 import os
+import requests
+import subprocess
 
 from colorama import Fore
 
@@ -10,7 +16,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
     config_get_dataIntegrationiidr_nodes
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -54,6 +60,204 @@ def getDIServerHostList():
         else:
             nodes = nodes+','+os.getenv(node.ip)
     return nodes
+
+def getDIServerHost():
+    nodeList = config_get_dataIntegration_nodes()
+    for node in nodeList:
+        return os.getenv(node.ip)
+    return ""
+
+
+def exportAllPipelinesBeforeRemove(diHost, export_path):
+    """Export all pipelines to YAML files before removal."""
+    logger.info("exportAllPipelinesBeforeRemove()")
+    try:
+        os.makedirs(export_path, exist_ok=True)
+        dbaGigaPath = readValuefromAppConfig("app.giga.path").rstrip('/')
+        rootpath = dbaGigaPath+ "/utils/dihctl/"
+        login_cmd = f"{rootpath}dihctl -e dev login --noauth http://{diHost}:7080"
+        verboseHandle.printConsoleInfo("dihctl login: " + login_cmd)
+        login_result = subprocess.run(login_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if login_result.returncode != 0:
+            verboseHandle.printConsoleError("dihctl login failed: " + login_result.stderr)
+            return
+        result = subprocess.run(
+            [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+        )
+        reader = csv.DictReader(io.StringIO(result.stdout))
+        pipelines = list(reader)
+        if not pipelines:
+            verboseHandle.printConsoleInfo("No pipelines found to export.")
+            return
+        for pipeline in pipelines:
+            name = pipeline.get("name", "")
+            if not name:
+                continue
+            export_file = os.path.join(export_path, f"{name}.yaml")
+            export_cmd = f"{rootpath}dihctl -e dev export pipelines {name} -o {export_file}"
+            verboseHandle.printConsoleInfo("Exporting pipeline: " + export_cmd)
+            export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            if export_result.returncode != 0:
+                verboseHandle.printConsoleError("Export failed for " + name + ": " + export_result.stderr)
+            else:
+                verboseHandle.printConsoleInfo("Pipeline exported: " + export_file)
+        logger.info("exportAllPipelinesBeforeRemove() completed")
+    except Exception as e:
+        handleException(e)
+
+
+def exportDatasourcesBeforeRemove(diHost, export_path):
+    """Export all datasource configs to JSON before removal."""
+    logger.info("exportDatasourcesBeforeRemove()")
+    try:
+        os.makedirs(export_path, exist_ok=True)
+        url = f"http://{diHost}:6080/api/v1/datasource/"
+        verboseHandle.printConsoleInfo("Fetching datasources from: " + url)
+        response = requests.get(url, headers={"Content-Type": "application/json"},
+                                proxies={"http": None, "https": None})
+        if response.status_code != 200:
+            verboseHandle.printConsoleError("Failed to list datasources: " + str(response.status_code) + " " + response.text)
+            return
+        datasources = response.json()
+        export_file = os.path.join(export_path, "datasources.json")
+        with open(export_file, 'w') as f:
+            json.dump(datasources, f, indent=2)
+        verboseHandle.printConsoleInfo("Datasources exported to: " + export_file)
+        logger.info("exportDatasourcesBeforeRemove() completed: " + export_file)
+    except Exception as e:
+        handleException(e)
+
+
+def deleteAllPipelines(diHost):
+    """Delete all pipelines (with subscriptions) before removal."""
+    logger.info("deleteAllPipelines()")
+    try:
+        dbaGigaPath=readValuefromAppConfig("app.giga.path").rstrip('/')
+        rootpath = dbaGigaPath + "/utils/dihctl/"
+        login_cmd = f"{rootpath}dihctl -e dev login --noauth http://{diHost}:7080"
+        login_result = subprocess.run(login_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if login_result.returncode != 0:
+            verboseHandle.printConsoleError("dihctl login failed: " + login_result.stderr)
+            return
+        result = subprocess.run(
+            [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+        )
+        reader = csv.DictReader(io.StringIO(result.stdout))
+        pipelines = list(reader)
+        if not pipelines:
+            verboseHandle.printConsoleInfo("No pipelines found to delete.")
+            return
+        for pipeline in pipelines:
+            name = pipeline.get("name", "")
+            if not name:
+                continue
+            delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {name} --delete-subscription yes"
+            verboseHandle.printConsoleInfo("Deleting pipeline: " + delete_cmd)
+            delete_result = subprocess.run(delete_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            if delete_result.returncode != 0:
+                verboseHandle.printConsoleError("Delete failed for " + name + ": " + delete_result.stderr)
+            else:
+                verboseHandle.printConsoleInfo("Pipeline deleted: " + name)
+        logger.info("deleteAllPipelines() completed")
+    except Exception as e:
+        handleException(e)
+
+
+def deleteDatasources(diHost):
+    """Delete all datasources before removal."""
+    logger.info("deleteDatasources()")
+    try:
+        url = f"http://{diHost}:6080/api/v1/datasource/"
+        response = requests.get(url, headers={"Content-Type": "application/json"},
+                                proxies={"http": None, "https": None})
+        if response.status_code != 200:
+            verboseHandle.printConsoleError("Failed to list datasources: " + str(response.status_code) + " " + response.text)
+            return
+        datasources = response.json()
+        if not datasources:
+            verboseHandle.printConsoleInfo("No datasources found to delete.")
+            return
+        for ds in datasources:
+            sor_name = ds.get("sorName", "")
+            if not sor_name:
+                continue
+            del_url = f"http://{diHost}:6080/api/v1/datasource/{sor_name}"
+            verboseHandle.printConsoleInfo("Deleting datasource: " + sor_name)
+            del_response = requests.delete(del_url, proxies={"http": None, "https": None})
+            if del_response.status_code in (200, 204):
+                verboseHandle.printConsoleInfo("Datasource deleted: " + sor_name)
+            else:
+                verboseHandle.printConsoleError("Delete failed for " + sor_name + ": " + str(del_response.status_code) + " " + del_response.text)
+        logger.info("deleteDatasources() completed")
+    except Exception as e:
+        handleException(e)
+
+
+def fetchSetenvValues(host):
+    """Read exported variable values from setenv.sh on the remote DI server."""
+    logger.info("fetchSetenvValues() host=" + str(host))
+    paths = {}
+    try:
+        output = executeRemoteCommandAndGetOutput(host, user, "sudo cat /root/setenv.sh")
+        for line in str(output).splitlines():
+            line = line.strip()
+            if line.startswith("export "):
+                kv = line[len("export "):].split("=", 1)
+                if len(kv) == 2:
+                    paths[kv[0].strip()] = kv[1].strip()
+    except Exception as e:
+        handleException(e)
+    return paths
+
+
+def printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost, export_path_pipeline, export_path_datasource):
+    """Print a summary of all folders that will be deleted during DI removal."""
+    logger.info("printRemoveFolderSummary()")
+    setenv = fetchSetenvValues(diHost) if diHost else {}
+    print(Fore.GREEN + "\n[EXPORT] Pipelines will be exported to:  " + str(export_path_pipeline) + Fore.RESET)
+    print(Fore.GREEN + "[EXPORT] Datasources will be exported to: " + str(export_path_datasource) + Fore.RESET)
+
+    print(Fore.YELLOW + "\n========== DI Removal - Folders to be Deleted ==========" + Fore.RESET)
+    print(Fore.YELLOW + "Target DI nodes: " + str(nodes) + Fore.RESET)
+
+    if wantToRemoveKafka == 'y':
+        print(Fore.RED + "\n[KAFKA] The following Kafka dirs will be deleted:" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("KAFKA_LOGS_PATH", "$KAFKA_LOGS_PATH") + "   (Kafka log dir)" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("KAFKA_DATA_PATH", "$KAFKA_DATA_PATH") + "   (Kafka data/KRaft dir)" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("KAFKAPATH", "$KAFKAPATH") + "   (Kafka binary dir)" + Fore.RESET)
+
+    if wantToRemoveZk == 'y':
+        print(Fore.RED + "\n[ZOOKEEPER] The following ZooKeeper dirs will be deleted:" + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("ZOOKEEPER_DATA_PATH", "$ZOOKEEPER_DATA_PATH") + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("ZOOKEEPER_LOGS_PATH", "$ZOOKEEPER_LOGS_PATH") + Fore.RESET)
+        print(Fore.RED + "  - " + setenv.get("ZOOKEEPERPATH", "$ZOOKEEPERPATH") + Fore.RESET)
+
+    print(Fore.RED + "\n[DI SERVICES] Installation directories:" + Fore.RESET)
+    dbaGigaPath=readValuefromAppConfig("app.giga.path").rstrip('/')
+    di_install_dirs = [
+        dbaGigaPath +"/di-flink", dbaGigaPath +"/di-mdm", dbaGigaPath+ "/di-manager",
+        dbaGigaPath +"/di-processor", dbaGigaPath + "/di-transformations",
+        dbaGigaPath + "/dih-admin", dbaGigaPath +"/di-subscription-manager",
+    ]
+    for d in di_install_dirs:
+        print(Fore.RED + "  - " + d + Fore.RESET)
+
+    print(Fore.RED + "\n[DI SERVICES] Log directories:" + Fore.RESET)
+    dbaGigaLogPath=readValuefromAppConfig("app.gigalog.path").rstrip('/')
+    di_log_dirs = [
+        dbaGigaLogPath + "/di-flink", dbaGigaLogPath + "/di-mdm", dbaGigaLogPath + "/di-manager",
+        dbaGigaLogPath + "/di-processor", dbaGigaLogPath + "/di-transformations",
+        dbaGigaLogPath + "/dih-admin", dbaGigaLogPath + "/di-subscription-manager",
+    ]
+    for d in di_log_dirs:
+        print(Fore.RED + "  - " + d + Fore.RESET)
+
+    print(Fore.RED + "\n[FLINK] Checkpoint/savepoint directory:" + Fore.RESET)
+    print(Fore.RED + "  - /home/gsods/latest-flink" + Fore.RESET)
+    print(Fore.YELLOW + "\n========================================================\n" + Fore.RESET)
+
 
 def removeInputUserAndHost():
     logger.info("removeInputUserAndHost():")
@@ -103,16 +307,37 @@ def executeCommandForUnInstall():
         if(len(nodes)>0):
             removeType=''
             #if(len(nodesCount)>1):
-                #removeType = str(userInputWrapper(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
+            #removeType = str(userInputWrapper(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
                 verboseHandle.printConsoleInfo("Want to remove kafka : "+str(wantToRemoveKafka))
                 verboseHandle.printConsoleInfo("Want to remove zookeeper : "+str(wantToRemoveZk))
                 verboseHandle.printConsoleInfo("Want to remove telegraf : "+str(wantToRemoveTelegraf))
+                diHost = getDIServerHost()
+                export_path_pipeline = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
+                export_path_datasource = str(readValuefromAppConfig("app.dataengine.dihctl.datasourcefolderpath"))
+                if not export_path_pipeline.strip():
+                    export_path_pipeline = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                if not export_path_datasource.strip():
+                    export_path_datasource = f"/tmp/di-export-{datetime.datetime.now().strftime('%Y%m%d%H%M%S')}"
+                printRemoveFolderSummary(nodes, wantToRemoveKafka, wantToRemoveZk, diHost, export_path_pipeline, export_path_datasource)
                 confirmUninstall = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove DI servers ["+nodes+"] (y/n) [y]: "+Fore.RESET))
                 if(len(str(confirmUninstall))==0):
                     confirmUninstall='y'
                 logger.info("confirmUninstall :"+str(confirmUninstall))
                 if(confirmUninstall=='y'):
+                    # Export pipelines and datasources, then delete them before removing DI
+                    # diHost, export paths already resolved above for the summary
+                    if diHost:
+                        verboseHandle.printConsoleInfo("Exporting pipelines to: " + export_path_pipeline)
+                        verboseHandle.printConsoleInfo("Exporting datasource to: " + export_path_datasource)
+                        exportAllPipelinesBeforeRemove(diHost, export_path_pipeline)
+                        exportDatasourcesBeforeRemove(diHost, export_path_datasource)
+                        verboseHandle.printConsoleInfo("Deleting pipelines...")
+                        deleteAllPipelines(diHost)
+                        verboseHandle.printConsoleInfo("Deleting datasources...")
+                        deleteDatasources(diHost)
+                    else:
+                        verboseHandle.printConsoleError("No DI server host found; skipping pipeline/datasource export+delete.")
                     commandToExecute="scripts/servers_di_remove.sh"
                     additionalParam= wantToRemoveKafka+" "+wantToRemoveZk+" "+wantToRemoveTelegraf
                     logger.debug("Additinal Param:"+additionalParam+" cmdToExec:"+commandToExecute+" Host:"+str(nodes)+" User:"+str(user))
@@ -129,6 +354,7 @@ def executeCommandForUnInstall():
                         for nodes in nodeiidrList:
                             iidrHost=os.getenv(nodes.ip)
                             outputShFile= connectExecuteSSH(iidrHost, user,commandToExecute,additionalParam)
+                            verboseHandle.printConsoleInfo("DI Subscription Manager removal completed on IIDR host: "+str(iidrHost))
             if(removeType=='1'):
                 proceedForIndividualRemove(host_dict_obj,nodes)
             if(removeType=='99'):

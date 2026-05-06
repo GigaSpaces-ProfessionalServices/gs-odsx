@@ -9,17 +9,14 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_servers_di_install import getDIServerHostList
 from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_iidrAccessServer_node, \
-    config_get_iidrKafkaAgent_node, config_get_iidrOracleAgent_node, config_get_dataIntegrationSubscriptionManager_node
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import isValidHost, port_check
-from utils.odsx_print_tabular_data import printTabular, printTabularGrid, printTabularGridWrap, printTabularStream
-from utils.ods_cluster_config import config_get_dataIntegrationiidr_nodes
+from utils.odsx_print_tabular_data import printTabularGrid
 from utils.ods_validation import getTelnetStatus
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_list import isInstalledIIDRAccessServer, isInstalledIIDROracleAgent, isInstalledIIDRKafkaAgent, \
     isInstalledIIDRSubscriptionManager
-from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -116,7 +113,8 @@ def getZookeeperStatus(node):
 def getConsolidatedStatus(node):
     output=''
     logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
+    # Only check core DI services (kafka + zookeeper); telegraf is optional and may not be installed
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         if(str(node.type)=='kafka Broker 1b' and cmd=='systemctl status odsxzookeeper'):
@@ -347,20 +345,20 @@ def listDIServers():
     host_dict_obj = obj_type_dictionary()
     dIServers = config_get_dataIntegration_nodes("config/cluster.config")
     headers = [
-                Fore.YELLOW+"Component"+Fore.RESET,
-                Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Broker 1"+Fore.RESET,
-                Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Broker 2"+Fore.RESET,
-                Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Broker 3"+Fore.RESET,
-                Fore.YELLOW+"ZK1"+Fore.RESET,
-                Fore.YELLOW+"ZK2"+Fore.RESET,
-                Fore.YELLOW+"ZK3"+Fore.RESET,
-                Fore.YELLOW+"DI\n"+Fore.YELLOW+"Manager"+Fore.RESET,
-                Fore.YELLOW+"DI\n"+Fore.YELLOW+"MDM"+Fore.RESET,
-                Fore.YELLOW+"DI\n"+Fore.YELLOW+"FLink"+Fore.RESET,
-               Fore.YELLOW+"DI\n"+Fore.YELLOW+"Subscription\n"+Fore.YELLOW+"Manager"+Fore.RESET,
-               Fore.YELLOW+"IIDR\n"+Fore.YELLOW+"Access\n"+Fore.YELLOW+"Server"+Fore.RESET,
-               Fore.YELLOW+"IIDR\n"+Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Agent"+Fore.RESET,
-               Fore.YELLOW+"IIDR\n"+Fore.YELLOW+"Oracle\n"+Fore.YELLOW+"Agent"+Fore.RESET]
+        Fore.YELLOW+"Component"+Fore.RESET,
+        Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Broker 1"+Fore.RESET,
+        Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Broker 2"+Fore.RESET,
+        Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Broker 3"+Fore.RESET,
+        Fore.YELLOW+"ZK1"+Fore.RESET,
+        Fore.YELLOW+"ZK2"+Fore.RESET,
+        Fore.YELLOW+"ZK3"+Fore.RESET,
+        Fore.YELLOW+"DI\n"+Fore.YELLOW+"Manager"+Fore.RESET,
+        Fore.YELLOW+"DI\n"+Fore.YELLOW+"MDM"+Fore.RESET,
+        Fore.YELLOW+"DI\n"+Fore.YELLOW+"FLink"+Fore.RESET,
+        Fore.YELLOW+"DI\n"+Fore.YELLOW+"Subscription\n"+Fore.YELLOW+"Manager"+Fore.RESET,
+        Fore.YELLOW+"IIDR\n"+Fore.YELLOW+"Access\n"+Fore.YELLOW+"Server"+Fore.RESET,
+        Fore.YELLOW+"IIDR\n"+Fore.YELLOW+"Kafka\n"+Fore.YELLOW+"Agent"+Fore.RESET,
+        Fore.YELLOW+"IIDR\n"+Fore.YELLOW+"Oracle\n"+Fore.YELLOW+"Agent"+Fore.RESET]
     data=[]
     counter=1
     kafkaPortStatus1 = 'OFF'
@@ -408,63 +406,53 @@ def listDIServers():
             kafkaInstallStatus3 = isKafkaInstalledNot(os.getenv(node.ip),str(node.type))
             zkInstallStatus3 = isZkInstalledNot(os.getenv(node.ip),str(node.type))
 
-        #role = roleOfCurrentNode(os.getenv(node.ip))
-        #For Combination
-        #installStatus = isInstalledNot(os.getenv(node.ip),str(node.type))
-        # installStatusKafka = isKafkaInstalledNot(os.getenv(node.ip),str(node.type))
-        # installStatusZk = isZkInstalledNot(os.getenv(node.ip),str(node.type))
-        # logger.info("Install status Zk: "+str(installStatusZk)+"Install status kafka: "+str(installStatusKafka)+" : "+str(os.getenv(node.ip))+" : "+str(node.type))
-        nodeListSize = len(str((getDIServerHostList())).split(','))
-        installStatusMDM=isMDMInstalled(os.getenv(node.ip),str(node.type))
-        installStatusDIM=isDIMInstalled(os.getenv(node.ip),str(node.type))
-        installStatusFLink=isFLinkInstalled(os.getenv(node.ip),str(node.type))
-        serviceStatusMDM=getMDMStatus(os.getenv(node.ip),str(node.type))
-        serviceStatusDIM=getDIMStatus(os.getenv(node.ip),str(node.type))
-        serviceStatusFLink=getFlinkStatus(os.getenv(node.ip),str(node.type))
+        if counter == 1:
+            installStatusMDM   = isMDMInstalled(os.getenv(node.ip), str(node.type))
+            installStatusDIM   = isDIMInstalled(os.getenv(node.ip), str(node.type))
+            installStatusFLink = isFLinkInstalled(os.getenv(node.ip), str(node.type))
+            serviceStatusMDM   = getMDMStatus(os.getenv(node.ip), str(node.type))
+            serviceStatusDIM   = getDIMStatus(os.getenv(node.ip), str(node.type))
+            serviceStatusFLink = getFlinkStatus(os.getenv(node.ip), str(node.type))
         counter=counter+1
 
-    get_iidrAccessServerServers = config_get_iidrAccessServer_node()
-    for server in get_iidrAccessServerServers:
-        IIDRAccessServerPort = readValuefromAppConfig("app.iidr.Access.Server.Port")
-        IIDRAccessServerStatus = getTelnetStatus(os.getenv(server.ip),IIDRAccessServerPort)
-        IIDRAccessServerInstallStatus='No'
-        IIDRAccessServerInstall = isInstalledIIDRAccessServer(str(os.getenv(server.ip)))
-        logger.info("IIDRAccessServerInstall : "+str(IIDRAccessServerInstall))
-        if(len(str(IIDRAccessServerInstall))>0):
-            IIDRAccessServerInstallStatus='Yes'
+    # Use config_get_dataIntegrationiidr_nodes() as the authoritative IIDR host source —
+    # the specific node-type config functions (config_get_iidrAccessServer_node etc.) may return
+    # empty lists if those entries aren't registered in cluster.config for this environment.
+    iidrNodes = config_get_dataIntegrationiidr_nodes()
+    for server in iidrNodes:
+        iidrHost = os.getenv(server.ip)
 
-
-    get_iidrKafkaAgentServers = config_get_iidrKafkaAgent_node()
-    for server in get_iidrKafkaAgentServers:
-        IIDRKafkaAgentPort = readValuefromAppConfig("app.iidr.Kafka.Agent.Port")
-        IIDRKafkaAgentStatus = getTelnetStatus(os.getenv(server.ip),IIDRKafkaAgentPort)
-        IIDRKafkaAgentInstallStatus='No'
-        IIDRKafkaAgentInstall = isInstalledIIDRKafkaAgent(str(os.getenv(server.ip)))
-        logger.info("IIDRKafkaAgentInstall : "+str(IIDRKafkaAgentInstall))
-        if(len(str(IIDRKafkaAgentInstall))>0):
-            IIDRKafkaAgentInstallStatus='Yes'
-
-
-    get_iidrOracleAgentServers = config_get_iidrOracleAgent_node()
-    for server in get_iidrOracleAgentServers:
-        IIDROracleAgentPort = readValuefromAppConfig("app.iidr.Oracle.DB.Agent.Port")
-        IIDROracleDBAgentStatus = getTelnetStatus(os.getenv(server.ip),IIDROracleAgentPort)
-        IIDROracleAgentInstallStatus='No'
-        IIDROracleAgentInstall = isInstalledIIDROracleAgent(str(os.getenv(server.ip)))
-        logger.info("IIDROracleAgentInstall : "+str(IIDROracleAgentInstall))
-        if(len(str(IIDROracleAgentInstall))>0):
-            IIDROracleAgentInstallStatus='Yes'
-
-
-    get_dataIntegrationSubscriptionManagerServers = config_get_dataIntegrationSubscriptionManager_node()
-    for server in get_dataIntegrationSubscriptionManagerServers:
         IIDRSubscriptionMangerPort = readValuefromAppConfig("app.iidr.iidrSubscriptionMangerPort")
-        IIDRSubscriptionMangerStatus = getTelnetStatus(os.getenv(server.ip),IIDRSubscriptionMangerPort)
-        IIDRSubscriptionMangerInstallStatus='No'
-        IIDRSubscriptionMangerInstall = isInstalledIIDRSubscriptionManager(str(os.getenv(server.ip)))
+        IIDRSubscriptionMangerStatus = getTelnetStatus(iidrHost, IIDRSubscriptionMangerPort)
+        IIDRSubscriptionMangerInstallStatus = 'No'
+        IIDRSubscriptionMangerInstall = isInstalledIIDRSubscriptionManager(str(iidrHost))
         logger.info("IIDRSubscriptionMangerInstall : "+str(IIDRSubscriptionMangerInstall))
-        if(len(str(IIDRSubscriptionMangerInstall))>0):
-            IIDRSubscriptionMangerInstallStatus='Yes'
+        if len(str(IIDRSubscriptionMangerInstall)) > 0:
+            IIDRSubscriptionMangerInstallStatus = 'Yes'
+
+        IIDRAccessServerPort = readValuefromAppConfig("app.iidr.Access.Server.Port")
+        IIDRAccessServerStatus = getTelnetStatus(iidrHost, IIDRAccessServerPort)
+        IIDRAccessServerInstallStatus = 'No'
+        IIDRAccessServerInstall = isInstalledIIDRAccessServer(str(iidrHost))
+        logger.info("IIDRAccessServerInstall : "+str(IIDRAccessServerInstall))
+        if len(str(IIDRAccessServerInstall)) > 0:
+            IIDRAccessServerInstallStatus = 'Yes'
+
+        IIDRKafkaAgentPort = readValuefromAppConfig("app.iidr.Kafka.Agent.Port")
+        IIDRKafkaAgentStatus = getTelnetStatus(iidrHost, IIDRKafkaAgentPort)
+        IIDRKafkaAgentInstallStatus = 'No'
+        IIDRKafkaAgentInstall = isInstalledIIDRKafkaAgent(str(iidrHost))
+        logger.info("IIDRKafkaAgentInstall : "+str(IIDRKafkaAgentInstall))
+        if len(str(IIDRKafkaAgentInstall)) > 0:
+            IIDRKafkaAgentInstallStatus = 'Yes'
+
+        IIDROracleAgentPort = readValuefromAppConfig("app.iidr.Oracle.DB.Agent.Port")
+        IIDROracleDBAgentStatus = getTelnetStatus(iidrHost, IIDROracleAgentPort)
+        IIDROracleAgentInstallStatus = 'No'
+        IIDROracleAgentInstall = isInstalledIIDROracleAgent(str(iidrHost))
+        logger.info("IIDROracleAgentInstall : "+str(IIDROracleAgentInstall))
+        if len(str(IIDROracleAgentInstall)) > 0:
+            IIDROracleAgentInstallStatus = 'Yes'
 
     dataHostArray=[Fore.YELLOW+"HostName"+Fore.RESET,
                    Fore.YELLOW+"DI1"+Fore.RESET,
@@ -494,24 +482,24 @@ def listDIServers():
                            installStatusFLink,
                            Fore.GREEN+IIDRSubscriptionMangerInstallStatus+Fore.RESET if(IIDRSubscriptionMangerInstallStatus=='Yes') else Fore.RED+IIDRSubscriptionMangerInstallStatus+Fore.RESET,
                            Fore.GREEN+IIDRAccessServerInstallStatus+Fore.RESET if(IIDRAccessServerInstallStatus=='Yes') else Fore.RED+IIDRAccessServerInstallStatus+Fore.RESET,
-                            Fore.GREEN+IIDRKafkaAgentInstallStatus+Fore.RESET if(IIDRKafkaAgentInstallStatus=='Yes') else Fore.RED+IIDRKafkaAgentInstallStatus+Fore.RESET,
+                           Fore.GREEN+IIDRKafkaAgentInstallStatus+Fore.RESET if(IIDRKafkaAgentInstallStatus=='Yes') else Fore.RED+IIDRKafkaAgentInstallStatus+Fore.RESET,
                            Fore.GREEN+IIDROracleAgentInstallStatus+Fore.RESET if(IIDROracleAgentInstallStatus=='Yes') else Fore.RED+IIDROracleAgentInstallStatus+Fore.RESET
                            ]
 
     dataStatusArray=[Fore.YELLOW+"Port Status"+Fore.RESET,
-            Fore.GREEN+kafkaPortStatus1+Fore.RESET if(kafkaPortStatus1=='ON') else Fore.RED+kafkaPortStatus1+Fore.RESET,
-            Fore.GREEN+kafkaPortStatus2+Fore.RESET if(kafkaPortStatus2=='ON') else Fore.RED+kafkaPortStatus2+Fore.RESET,
-            Fore.GREEN+kafkaPortStatus3+Fore.RESET if(kafkaPortStatus3=='ON') else Fore.RED+kafkaPortStatus3+Fore.RESET,
-            Fore.GREEN+zkPortStatus1+Fore.RESET if(zkPortStatus1=='ON') else Fore.RED+zkPortStatus1+Fore.RESET,
-            Fore.GREEN+zkPortStatus2+Fore.RESET if(zkPortStatus2=='ON') else Fore.RED+zkPortStatus2+Fore.RESET,
-            Fore.GREEN+zkPortStatus3+Fore.RESET if(zkPortStatus3=='ON') else Fore.RED+zkPortStatus3+Fore.RESET,
-            Fore.GREEN+serviceStatusDIM+Fore.RESET if(serviceStatusDIM=='ON') else Fore.RED+serviceStatusDIM+Fore.RESET,
-            Fore.GREEN+serviceStatusMDM+Fore.RESET if(serviceStatusMDM=='ON') else Fore.RED+serviceStatusMDM+Fore.RESET,
-            Fore.GREEN+serviceStatusFLink+Fore.RESET if(serviceStatusFLink=='ON') else Fore.RED+serviceStatusFLink+Fore.RESET,
-            Fore.GREEN+IIDRSubscriptionMangerStatus+Fore.RESET if(IIDRSubscriptionMangerStatus=='ON') else Fore.RED+IIDRSubscriptionMangerStatus+Fore.RESET,
-            Fore.GREEN+IIDRAccessServerStatus+Fore.RESET if(IIDRAccessServerStatus=='ON') else Fore.RED+IIDRAccessServerStatus+Fore.RESET,
-            Fore.GREEN+IIDRKafkaAgentStatus+Fore.RESET if(IIDRKafkaAgentStatus=='ON') else Fore.RED+IIDRKafkaAgentStatus+Fore.RESET,
-            Fore.GREEN+IIDROracleDBAgentStatus+Fore.RESET if(IIDROracleDBAgentStatus=='ON') else Fore.RED+IIDROracleDBAgentStatus+Fore.RESET]
+                     Fore.GREEN+kafkaPortStatus1+Fore.RESET if(kafkaPortStatus1=='ON') else Fore.RED+kafkaPortStatus1+Fore.RESET,
+                     Fore.GREEN+kafkaPortStatus2+Fore.RESET if(kafkaPortStatus2=='ON') else Fore.RED+kafkaPortStatus2+Fore.RESET,
+                     Fore.GREEN+kafkaPortStatus3+Fore.RESET if(kafkaPortStatus3=='ON') else Fore.RED+kafkaPortStatus3+Fore.RESET,
+                     Fore.GREEN+zkPortStatus1+Fore.RESET if(zkPortStatus1=='ON') else Fore.RED+zkPortStatus1+Fore.RESET,
+                     Fore.GREEN+zkPortStatus2+Fore.RESET if(zkPortStatus2=='ON') else Fore.RED+zkPortStatus2+Fore.RESET,
+                     Fore.GREEN+zkPortStatus3+Fore.RESET if(zkPortStatus3=='ON') else Fore.RED+zkPortStatus3+Fore.RESET,
+                     Fore.GREEN+serviceStatusDIM+Fore.RESET if(serviceStatusDIM=='ON') else Fore.RED+serviceStatusDIM+Fore.RESET,
+                     Fore.GREEN+serviceStatusMDM+Fore.RESET if(serviceStatusMDM=='ON') else Fore.RED+serviceStatusMDM+Fore.RESET,
+                     Fore.GREEN+serviceStatusFLink+Fore.RESET if(serviceStatusFLink=='ON') else Fore.RED+serviceStatusFLink+Fore.RESET,
+                     Fore.GREEN+IIDRSubscriptionMangerStatus+Fore.RESET if(IIDRSubscriptionMangerStatus=='ON') else Fore.RED+IIDRSubscriptionMangerStatus+Fore.RESET,
+                     Fore.GREEN+IIDRAccessServerStatus+Fore.RESET if(IIDRAccessServerStatus=='ON') else Fore.RED+IIDRAccessServerStatus+Fore.RESET,
+                     Fore.GREEN+IIDRKafkaAgentStatus+Fore.RESET if(IIDRKafkaAgentStatus=='ON') else Fore.RED+IIDRKafkaAgentStatus+Fore.RESET,
+                     Fore.GREEN+IIDROracleDBAgentStatus+Fore.RESET if(IIDROracleDBAgentStatus=='ON') else Fore.RED+IIDROracleDBAgentStatus+Fore.RESET]
 
     data.append(dataHostArray)
     data.append(dataInstallCheckArray)

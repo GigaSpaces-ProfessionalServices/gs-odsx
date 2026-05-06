@@ -8,3 +8,5 @@ pandas
 tabulate
 requests
 pyyaml
+dataclasses
+boto3

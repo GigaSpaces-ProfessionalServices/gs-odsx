@@ -107,7 +107,7 @@ def isInstalledAndGetVersionInflux(host):
 
 def isInstalledIIDRAccessServer(host):
     logger.info("isInstalledIIDRAccessServer")
-    commandToExecute='ls /data/gs_software/iidr/as*'
+    commandToExecute='ls /giga/iidr/as*'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
@@ -116,7 +116,7 @@ def isInstalledIIDRAccessServer(host):
 
 def isInstalledIIDRKafkaAgent(host):
     logger.info("isInstalledIIDRKafkaAgent")
-    commandToExecute='ls /data/gs_software/iidr/kafka*'
+    commandToExecute='ls /giga/iidr/kafka*'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
@@ -125,7 +125,7 @@ def isInstalledIIDRKafkaAgent(host):
 
 def isInstalledIIDROracleAgent(host):
     logger.info("isInstalledIIDROracleAgent")
-    commandToExecute='ls /data/gs_software/iidr/oracle*'
+    commandToExecute='ls /giga/iidr/oracle*'
     logger.info("commandToExecute :"+str(commandToExecute))
     outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')

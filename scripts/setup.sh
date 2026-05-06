@@ -123,18 +123,18 @@ mkdir $gigadatapath
 mkdir $gigainfluxpath
 touch $gigalog/odsx.log
 
-sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0ec717f72429b6399.efs.us-east-2.amazonaws.com:/ /testgigashare/
+#sudo mount -t nfs4 -o nfsvers=4.1,rsize=1048576,wsize=1048576,hard,timeo=600,retrans=2,noresvport fs-0ec717f72429b6399.efs.us-east-2.amazonaws.com:/ /testgigashare/
 df -h
 
 useradd gsods
-chown gsods:gsods /dbagiga
-chown gsods:gsods /dbagigadata
-chown gsods:gsods /dbagigalogs
-chown gsods:gsods /dbagigawork
-chown gsods:gsods /dbagigashare
-chown gsods:gsods /dbagigainfluxdata
-chown -R gsods:gsods /dbagigashare/*
-chown -R gsods:gsods /dbagiga/*
+chown gsods:gsods $gigapath
+chown gsods:gsods $gigadatapath
+chown gsods:gsods $gigalog
+chown gsods:gsods $gigawork
+chown gsods:gsods $gigashare
+chown gsods:gsods $gigainfluxpath
+chown -R gsods:gsods $gigashare/*
+chown -R gsods:gsods $gigapath/*
 
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigapath/gs-odsx/config/logging.conf
 sed -i -e 's|/dbagigalogs/|'$gigalog'/|g' $gigashare/current/gs/config/scripts/start_gsc.sh
