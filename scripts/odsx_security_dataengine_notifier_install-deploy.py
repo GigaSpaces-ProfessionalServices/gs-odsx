@@ -123,7 +123,7 @@ def getHighestAvailableMemoryManagerHost(spaceNodes,newGSCCount,feederType):
 
         GetFreeSpaceFromManager = {}
         for spaceHost in SpaceActiveHostList:
-            response = requests.get("http://"+managerHost+":8090/v2/hosts/"+os.getenv(node.name)+"/statistics/os", headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
+            response = requests.get("http://"+managerHost+":8090/v2/hosts/"+spaceHost+"/statistics/os", headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
             jsonData = json.loads(response.text)
             GetFreeSpaceFromManager[spaceHost] = jsonData["actualFreePhysicalMemorySizeInBytes"]
 

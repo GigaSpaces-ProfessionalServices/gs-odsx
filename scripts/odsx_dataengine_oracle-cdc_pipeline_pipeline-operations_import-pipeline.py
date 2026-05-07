@@ -72,20 +72,26 @@ def importPipeline(diManagerHost):
             ])
         printTabular(None, headers, dataTable)
 
-        selection = userInputWrapper(f"Select file number (1-{len(files)}): ").strip()
-        if not selection.isdigit() or not (1 <= int(selection) <= len(files)):
+        selection = userInputWrapper(f"Select file(s) to import (e.g. 1 or 1-3 or 1,4,5): ").strip()
+        selected_indices = set()
+        for part in selection.split(","):
+            part = part.strip()
+            if "-" in part:
+                start, end = part.split("-", 1)
+                selected_indices.update(range(int(start.strip()), int(end.strip()) + 1))
+            elif part.isdigit():
+                selected_indices.add(int(part))
+        selected_indices = sorted(i for i in selected_indices if 1 <= i <= len(files))
+        if not selected_indices:
             verboseHandle.printConsoleError("Invalid selection.")
             return
-        selected_file = files[int(selection) - 1]
-        verboseHandle.printConsoleInfo(f"Selected file: {selected_file}")
-        logger.info(f"Selected file: {selected_file}")
 
         nodeiidrList = config_get_dataIntegration_nodes()
         for nodes in nodeiidrList:
-            iidrHost=os.getenv(nodes.ip)
+            iidrHost = os.getenv(nodes.ip)
 
-        verboseHandle.printConsoleInfo("ip -> "  + str(iidrHost))
-        
+        verboseHandle.printConsoleInfo("ip -> " + str(iidrHost))
+
         rootpath = "/dbagiga/utils/dihctl/"
         login_cmd = f"{rootpath}dihctl -e dev login --noauth http://{iidrHost}:7080"
         verboseHandle.printConsoleInfo(f"Running: {login_cmd}")
@@ -95,16 +101,21 @@ def importPipeline(diManagerHost):
             verboseHandle.printConsoleError(f"Login failed: {login_result.stderr}")
             return
 
-        selected_file_path = os.path.join(import_path, selected_file)
-        import_cmd = f"{rootpath}dihctl -e dev apply -s -f {selected_file_path}"
-        verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
-        logger.info(f"Running: {import_cmd}")
-        import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        if import_result.returncode != 0:
-            verboseHandle.printConsoleError(f"Import failed: {import_result.stderr}")
-            return
-        verboseHandle.printConsoleInfo(f"Import successful:\n{import_result.stdout}")
-        logger.info(f"Import successful: {import_result.stdout}")
+        for idx in selected_indices:
+            selected_file = files[idx - 1]
+            verboseHandle.printConsoleInfo(f"Selected file: {selected_file}")
+            logger.info(f"Selected file: {selected_file}")
+
+            selected_file_path = os.path.join(import_path, selected_file)
+            import_cmd = f"{rootpath}dihctl -e dev apply -f {selected_file_path}"
+            verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
+            logger.info(f"Running: {import_cmd}")
+            import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+            if import_result.returncode != 0:
+                verboseHandle.printConsoleError(f"Import failed for '{selected_file}': {import_result.stderr}")
+                continue
+            verboseHandle.printConsoleInfo(f"Import successful for '{selected_file}':\n{import_result.stdout}")
+            logger.info(f"Import successful: {import_result.stdout}")
 
 
     except Exception as e:

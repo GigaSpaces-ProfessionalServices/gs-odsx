@@ -97,13 +97,9 @@ def removeColumn(diManagerHost):
         verboseHandle.printConsoleError("Invalid selection.")
         return
     selected_pipeline = pipelines[int(selection) - 1].get("name", "")
+    selected_status = pipelines[int(selection) - 1].get("status", "").strip().upper()
     verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline}")
     logger.info(f"Selected pipeline: {selected_pipeline}")
-
-    # confirm = userInputWrapper(Fore.YELLOW + "This will stop current running pipeline and reimport new pipeline after removing column. Continue? (yes/no): " + Fore.RESET).strip().lower()
-    # if confirm not in ("yes", "y"):
-    #     verboseHandle.printConsoleWarning("Operation cancelled by user.")
-    #     return
 
     export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
     if not export_path.strip():
@@ -126,10 +122,27 @@ def removeColumn(diManagerHost):
 
     with open(export_file, 'r') as f:
         exported_yaml = yaml.safe_load(f)
-    # verboseHandle.printConsoleInfo("Exported YAML : " + str(exported_yaml))
-    # logger.info("Exported YAML : " + str(exported_yaml))
-    tables = exported_yaml.get("tables", [])
-    space_type_name = exported_yaml["pipelines"][0]["tablePipelines"][0]["spaceTypeName"]
+
+    table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
+
+    tp_headers = [
+        Fore.YELLOW + "Sr No."          + Fore.RESET,
+        Fore.YELLOW + "Space Type Name" + Fore.RESET,
+    ]
+    tp_data = []
+    for idx, tp in enumerate(table_pipelines, start=1):
+        tp_data.append([
+            Fore.GREEN + str(idx)                         + Fore.RESET,
+            Fore.GREEN + str(tp.get("spaceTypeName", "")) + Fore.RESET,
+        ])
+    printTabular(None, tp_headers, tp_data)
+
+    tp_selection = userInputWrapper(f"Select Space Type Name (1-{len(table_pipelines)}): ").strip()
+    if not tp_selection.isdigit() or not (1 <= int(tp_selection) <= len(table_pipelines)):
+        verboseHandle.printConsoleError("Invalid selection.")
+        return
+    selected_tp_idx = int(tp_selection) - 1
+    space_type_name = table_pipelines[selected_tp_idx].get("spaceTypeName", "")
     verboseHandle.printConsoleInfo("Selected Space Type Name : " + space_type_name)
     logger.info("Selected Space Type Name : " + space_type_name)
 
@@ -141,9 +154,23 @@ def removeColumn(diManagerHost):
     dataTableColumnsPropIndexDict = {}
 
     objectMgmtHost = getPivotHost()
-    response = requests.get('http://' + objectMgmtHost + ':7001/list',
-                            headers={'Accept': 'application/json'})
-    objectJson = json.loads(response.text)
+    try:
+        response = requests.get('http://' + objectMgmtHost + ':7001/list',
+                                headers={'Accept': 'application/json'})
+        response.raise_for_status()
+        if not response.text.strip():
+            verboseHandle.printConsoleError(f"Empty response from object management API at {objectMgmtHost}:7001/list")
+            return
+        objectJson = json.loads(response.text)
+    except requests.exceptions.ConnectionError:
+        verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001")
+        return
+    except requests.exceptions.HTTPError as e:
+        verboseHandle.printConsoleError(f"HTTP error from object management API: {e}")
+        return
+    except json.JSONDecodeError as e:
+        verboseHandle.printConsoleError(f"Invalid JSON from object management API: {e}")
+        return
     tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
     ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
@@ -209,9 +236,16 @@ def removeColumn(diManagerHost):
         verboseHandle.printConsoleInfo("Selected columns : " + str(selected_columns))
         logger.info("Selected columns : " + str(selected_columns))
 
-        existing_exclude = exported_yaml["pipelines"][0]["tablePipelines"][0].get("excludeFields") or []
+
+        confirm = userInputWrapper(Fore.YELLOW + "This will stop current running pipeline, Remove the Space type and reimport new pipeline after removing column. Continue? (yes/no): " + Fore.RESET).strip().lower()
+        if confirm not in ("yes", "y"):
+            verboseHandle.printConsoleWarning("Operation cancelled by user.")
+            return
+
+
+        existing_exclude = exported_yaml["pipelines"][0]["tablePipelines"][selected_tp_idx].get("excludeFields") or []
         updated_exclude = existing_exclude + [col for col in selected_columns if col not in existing_exclude]
-        exported_yaml["pipelines"][0]["tablePipelines"][0]["excludeFields"] = updated_exclude
+        exported_yaml["pipelines"][0]["tablePipelines"][selected_tp_idx]["excludeFields"] = updated_exclude
 
         new_yaml_file = os.path.join(export_path, f"{selected_pipeline}_updated.yaml")
         with open(new_yaml_file, 'w') as f:
@@ -219,40 +253,88 @@ def removeColumn(diManagerHost):
         verboseHandle.printConsoleInfo(f"Updated YAML saved to: {new_yaml_file}")
         logger.info(f"Updated YAML saved to: {new_yaml_file}")
 
-        # verboseHandle.printConsoleInfo(f"Fetching pipeline ID for: {selected_pipeline}")
-        # logger.info(f"Fetching pipeline ID for: {selected_pipeline}")
-        # pl_list_response = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
-        # pl_list = pl_list_response.json()
-        # pipeline_id = next((pl["pipelineId"] for pl in pl_list if pl.get("name") == selected_pipeline), None)
-        # if not pipeline_id:
-        #     verboseHandle.printConsoleError(f"Pipeline ID not found for: {selected_pipeline}")
-        #     return
-        # verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-        # logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-        # stop_response = requests.post(f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop", headers={"accept": "*/*", "Content-Type": "application/json"})
-        # stop_status = stop_response.json().get("status", "unknown")
-        # verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
-        # logger.info(f"Stop pipeline response status: {stop_status}")
-        #
-        # delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {selected_pipeline} --delete-pipelines"
-        # verboseHandle.printConsoleInfo(f"Running: {delete_cmd}")
-        # logger.info(f"Running: {delete_cmd}")
-        # delete_result = subprocess.run(delete_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        # if delete_result.returncode != 0:
-        #     verboseHandle.printConsoleError(f"Delete pipeline failed: {delete_result.stderr}")
-        #     return
-        # verboseHandle.printConsoleInfo(f"Pipeline deleted successfully: {selected_pipeline}")
-        # logger.info(f"Pipeline deleted successfully: {delete_result.stdout}")
-        #
-        # import_cmd = f"{rootpath}dihctl -e dev apply -s -f {new_yaml_file}"
-        # verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
-        # logger.info(f"Running: {import_cmd}")
-        # import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        # if import_result.returncode != 0:
-        #     verboseHandle.printConsoleError(f"Create pipeline failed: {import_result.stderr}")
-        #     return
-        # verboseHandle.printConsoleInfo(f"Pipeline created successfully:\n{import_result.stdout}")
-        # logger.info(f"Pipeline created successfully: {import_result.stdout}")
+        # Stop pipeline
+        verboseHandle.printConsoleInfo(f"Fetching pipeline ID for: {selected_pipeline}")
+        logger.info(f"Fetching pipeline ID for: {selected_pipeline}")
+        pl_list_response = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
+        pl_list = pl_list_response.json()
+        pipeline_id = next((pl["pipelineId"] for pl in pl_list if pl.get("name") == selected_pipeline), None)
+        if not pipeline_id:
+            verboseHandle.printConsoleError(f"Pipeline ID not found for: {selected_pipeline}")
+            return
+        verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+        logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+        stop_response = requests.post(f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop", headers={"accept": "*/*", "Content-Type": "application/json"})
+        stop_status = stop_response.json().get("status", "unknown")
+        verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
+        logger.info(f"Stop pipeline response status: {stop_status}")
+
+
+        # Delete pipeline
+        delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {selected_pipeline}"
+        verboseHandle.printConsoleInfo(f"Running: {delete_cmd}")
+        logger.info(f"Running: {delete_cmd}")
+        delete_result = subprocess.run(delete_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if delete_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Delete pipeline failed: {delete_result.stderr}")
+            return
+        verboseHandle.printConsoleInfo(f"Pipeline deleted successfully: {selected_pipeline}")
+        logger.info(f"Pipeline deleted successfully: {delete_result.stdout}")
+
+        # Validate deletion by running show pipelines and checking the pipeline is absent (retry up to 5 times)
+        max_retries = 5
+        pipeline_deleted = False
+        for attempt in range(1, max_retries + 1):
+            verboseHandle.printConsoleInfo(f"Validating pipeline deletion for: {selected_pipeline} (attempt {attempt}/{max_retries})")
+            logger.info(f"Validating pipeline deletion for: {selected_pipeline} (attempt {attempt}/{max_retries})")
+            show_result = subprocess.run(
+                [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+            )
+            show_reader = csv.DictReader(io.StringIO(show_result.stdout))
+            remaining_pipelines = [row.get("name", "") for row in show_reader]
+            if selected_pipeline not in remaining_pipelines:
+                pipeline_deleted = True
+                verboseHandle.printConsoleInfo(f"Validation passed: pipeline '{selected_pipeline}' confirmed deleted.")
+                logger.info(f"Validation passed: pipeline '{selected_pipeline}' not found in show pipelines output.")
+                break
+            verboseHandle.printConsoleError(f"Validation failed: pipeline '{selected_pipeline}' still exists after deletion. (attempt {attempt}/{max_retries})")
+            logger.error(f"Validation failed: pipeline '{selected_pipeline}' still present. Attempt {attempt}/{max_retries}.")
+        if not pipeline_deleted:
+            verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' still exists after {max_retries} attempts. Aborting.")
+            logger.error(f"Pipeline '{selected_pipeline}' not deleted after {max_retries} validation attempts.")
+            return
+
+        # Unregister the space type
+        verboseHandle.printConsoleInfo(f"Unregistering space type: {space_type_name}")
+        logger.info(f"Unregistering space type: {space_type_name}")
+        try:
+            unreg_response = requests.post(
+                f"http://{objectMgmtHost}:7001/unregistertype",
+                data={"type": space_type_name},
+                headers={"Accept": "application/json"}
+            )
+            if unreg_response.text.strip() == "success":
+                verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' unregistered successfully.")
+                logger.info(f"Space type '{space_type_name}' unregistered successfully.")
+            else:
+                verboseHandle.printConsoleError(f"Failed to unregister space type '{space_type_name}': {unreg_response.text}")
+                logger.error(f"Unregister space type response: {unreg_response.text}")
+                return
+        except requests.exceptions.ConnectionError:
+            verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for unregister.")
+            return
+
+        # Create pipeline
+        import_cmd = f"{rootpath}dihctl -e dev apply -f {new_yaml_file}"
+        verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
+        logger.info(f"Running: {import_cmd}")
+        import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if import_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Create pipeline failed: {import_result.stderr}")
+            return
+        verboseHandle.printConsoleInfo(f"Pipeline created successfully:\n{import_result.stdout}")
+        logger.info(f"Pipeline created successfully: {import_result.stdout}")
 
 
 
