@@ -125,8 +125,8 @@ def listObjects():
     dataColumnsDict = {}
     dataTableColumnsDict = {}
     #print("objectJson ->"+str(objectJson))
-    tableListfilePath= str(os.getenv("ENV_CONFIG")) + "/"
-    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) +"/"
+    tableListfilePath = str(getYamlFilePathInsideFolder(".object.config.ddlparser.ddlBatchFileName")).replace("//", "/")
+    ddlAndPropertiesBasePath = os.path.dirname(tableListfilePath) + "/"
     spaceName = readValuefromAppConfig("app.objectmanagement.space")
     # getData()
     if (spaceName is None or spaceName == "" or len(str(spaceName)) < 0):
