@@ -73,7 +73,7 @@ def getDIhostTypeDict():
     host_type_dict_obj = obj_type_dictionary()
     nodeList = config_get_dataIntegration_nodes()
     for node in nodeList:
-        host_type_dict_obj.add(os.getenv(node.ip),node.type)
+        host_type_dict_obj.add(os.getenv(node.ip), node.type)
     return host_type_dict_obj
 
 def startZookeeperServiceByHost(host):
@@ -147,7 +147,7 @@ def startSubscriptionManagerOnIIDR():
 def startDIMServices(host):
     logger.info("startDIMServices()")
     # Start order: flink first, then di-mdm (needs ZK), then di-manager (needs di-mdm), then di-transformations (needs di-mdm + di-manager)
-    cmd = " systemctl start di-flink-jobmanager.service; systemctl start di-flink-taskmanager.service;sleep 3; systemctl start di-mdm.service;sleep 5; systemctl start di-manager.service;sleep 3; systemctl start di-transformations.service;sleep 3; systemctl start dih-admin.service"
+    cmd = " systemctl start di-flink-jobmanager.service; systemctl start di-flink-taskmanager.service;sleep 3; systemctl start di-mdm.service;sleep 5; systemctl start di-manager.service;sleep 3;systemctl start di-processor.service;sleep 3;systemctl start di-transformations.service;sleep 3; systemctl start dih-admin.service"
     logger.info("Starting DIM services on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
@@ -169,6 +169,8 @@ def startKafkaService(args):
                 getDIhostTypeDict()
                 host = str(host_dict_obj.get(hostNumber))
                 nodeType = host_type_dict_obj.get(host)
+                di_nodes = list(config_get_dataIntegration_nodes())
+                di_node1_host = os.getenv(di_nodes[0].ip) if di_nodes else None
                 if nodeType != "kafka Broker 1b" and nodeListSize==4:
                     startZookeeperServiceByHost(host)
                 elif nodeListSize<4:
@@ -176,7 +178,7 @@ def startKafkaService(args):
                 if nodeType != "Zookeeper Witness":
                     startKafkaServiceByHost(host)
                 #startTelegrafServiceByHost(host)
-                if nodeType == "kafka Broker 1a" or nodeListSize < 4:
+                if nodeType == "kafka Broker 1a" or (nodeListSize < 4 and host == di_node1_host):
                     startDIMServices(host)
                     startSubscriptionManagerOnIIDR()
             else:
@@ -196,11 +198,14 @@ def startKafkaService(args):
             for node in config_get_dataIntegration_nodes():
                 if node.type != "Zookeeper Witness":
                     startKafkaServiceByHost(os.getenv(node.ip))
-            # Then start DIM services (only on node 1 / kafka Broker 1a), then subscription manager on IIDR host
+            # Then start DIM services (only on node1 for 3-node, only on kafka Broker 1a for 4-node)
+            counter = 0
             for node in config_get_dataIntegration_nodes():
+                counter += 1
                 #startTelegrafServiceByHost(os.getenv(node.ip))
-                if node.type == "kafka Broker 1a" or nodeListSize < 4:
+                if node.type == "kafka Broker 1a" or (nodeListSize < 4 and counter == 1):
                     startDIMServices(os.getenv(node.ip))
+                    break
             startSubscriptionManagerOnIIDR()
     except Exception as e:
         handleException(e)

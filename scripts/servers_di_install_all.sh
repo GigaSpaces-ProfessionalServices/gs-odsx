@@ -138,7 +138,11 @@ function installDIMatadata {
   ln -snf /dbagiga/di-mdm/ /home/gsods/di-mdm
   ln -snf /dbagiga/di-mdm/$extracted_folder_mdm /home/gsods/di-mdm/latest-di-mdm
   echo "spring.profiles.active=zookeeper">/dbagiga/di-mdm.properties
-  echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm.properties
+  if [ "$kafkaBrokerCount" == 3 ]; then
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181,"$kafkaBrokerHost2":2181,"$kafkaBrokerHost3":2181">>/dbagiga/di-mdm.properties
+  else
+    echo "zookeeper.connectUrl="$kafkaBrokerHost1":2181">>/dbagiga/di-mdm.properties
+  fi
 
   # Set final ownership to gsods
    chown -R gsods:gsods /dbagiga/di-mdm/
@@ -152,9 +156,10 @@ MDM_URL=http://${kafkaBrokerHost1}:6081
 FLINK_URL=http://${kafkaBrokerHost1}:8081
 SPACE_LOOKUP_GROUPS=${spaceLookupGroups}
 SPACE_LOOKUP_LOCATORS=${spaceLookupLocators}
-KAFKA_BOOTSTRAP_SERVERS=${kafkaBrokerHost1}:9092
+KAFKA_BOOTSTRAP_SERVERS=${kafkaBrokerHost1}:9092$([ "$kafkaBrokerCount" == 3 ] && echo ",${kafkaBrokerHost2}:9092,${kafkaBrokerHost3}:9092")
 ENVEOF
    chown gsods:gsods /dbagiga/di-mdm/$extracted_folder_mdm/utils/global-${currentHost}.env
+   chown -R gsods:gsods /home/gsods/di-mdm/
   info "\n Created global-${currentHost}.env in di-mdm utils for global_config.sh.\n"
 }
 
@@ -183,11 +188,7 @@ function installDIManager {
   sed -i '/^mdm.server.url/d' /dbagiga/di-manager.properties
   echo "mdm.server.url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager.properties
   sed -i '/^mdm.server.fallback-url/d' /dbagiga/di-manager.properties
-  if [ "$kafkaBrokerCount" == 1 ]; then
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager.properties
-  else
-    echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-manager.properties
-  fi
+  echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-manager.properties
   echo "server.port=6080">>/dbagiga/di-manager.properties
   echo "mdm.client.timeouts.connection.ms=10000">>/dbagiga/di-manager.properties
   echo "mdm.client.timeouts.read.ms=60000">>/dbagiga/di-manager.properties
@@ -197,6 +198,8 @@ function installDIManager {
    chown -R gsods:gsods /home/gsods/di-manager/
   # Use absolute path - cannot cd into /home/gsods/ (mode 700)
    sudo bash /dbagiga/di-manager/$extracted_folder_manager/utils/install_new_version.sh /dbagiga/di-manager.properties
+  sudo chown -R gsods:gsods /dbagiga/di-manager/
+  sudo chown -R gsods:gsods /home/gsods/di-manager/
   rm -f /dbagiga/di-manager/di-manager
   info "\n Installation DI-Manager completed.\n"
 }
@@ -220,11 +223,7 @@ function installDIProcessor {
     ln -snf /dbagiga/di-processor/$extracted_folder_manager /home/gsods/di-processor/latest-di-processor
 
     echo "mdm.server.url=http://$kafkaBrokerHost1:6081">/dbagiga/di-processor.properties
-    if [ "$kafkaBrokerCount" == 1 ]; then
-      echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-processor.properties
-    else
-      echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>/dbagiga/di-processor.properties
-    fi
+    echo "mdm.server.fallback-url=http://$kafkaBrokerHost1:6081">>/dbagiga/di-processor.properties
 
     # Set final ownership to gsods
      chown gsods:gsods /dbagigalogs/di-processor
@@ -232,6 +231,8 @@ function installDIProcessor {
      chown -R gsods:gsods /home/gsods/di-processor/
     # Use absolute path - cannot cd into /home/gsods/ (mode 700)
     sudo bash /dbagiga/di-processor/$extracted_folder_manager/utils/install_new_version.sh /dbagiga/di-processor.properties
+    sudo chown -R gsods:gsods /dbagiga/di-processor/
+    sudo chown -R gsods:gsods /home/gsods/di-processor/
     rm -f /dbagiga/di-processor/di-processor
 }
 
@@ -292,6 +293,8 @@ TRANEOF
    chown -R gsods:gsods /home/gsods/di-transformations/
    sudo bash /dbagiga/di-transformations/$extracted_folder_transformations/utils/install_new_version.sh /dbagiga/di-transformations.properties
    # Fix log redirect path in deployed service file (install_new_version.sh may write wrong prefix)
+  sudo chown -R gsods:gsods /dbagiga/di-transformations/
+  sudo chown -R gsods:gsods /home/gsods/di-transformations/
    sed -i 's|1>>.*di-transformations\.log|1>>/dbagigalogs/di-transformations/di-transformations.log|g' /etc/systemd/system/di-transformations.service
    restorecon /etc/systemd/system/di-transformations.service 2>/dev/null || true
    systemctl daemon-reload
@@ -313,7 +316,7 @@ function installDIHAdmin {
    tar -xzf /dbagiga/dih-admin/$installation_file --directory /dbagiga/dih-admin/
 
   current_user=$(whoami)
-   chown -R $current_user:$current_user /dbagiga/dih-admin/
+   chown -R gsods:gsods /dbagiga/dih-admin/
 
   extracted_folder_dih_admin=$(find /dbagiga/dih-admin -maxdepth 1 -type d -name "dih-admin-*" -printf "%f\n" | sort -V | tail -1)
   info "Creating symlink for :"$extracted_folder_dih_admin
@@ -360,6 +363,9 @@ DIHADMINEOF
    chown -R gsods:gsods /dbagiga/dih-admin/
    chown -R gsods:gsods /home/gsods/dih-admin/
    sudo bash /dbagiga/dih-admin/$extracted_folder_dih_admin/utils/install_new_version.sh /dbagiga/dih-admin.properties
+   sudo chmod +x /dbagiga/dih-admin/$extracted_folder_dih_admin/lib/*.jar
+   sudo chown -R gsods:gsods $gigapath/dih-admin/
+   sudo chown -R gsods:gsods /home/gsods/dih-admin/
    restorecon /etc/systemd/system/dih-admin.service 2>/dev/null || true
    systemctl daemon-reload
   rm -f /dbagiga/dih-admin/dih-admin
@@ -516,6 +522,30 @@ home_dir=$(pwd)
 javaInstalled=$(java -version 2>&1 >/dev/null | egrep "\S+\s+version")
 echo "">>setenv.sh
 
+# Phase 2 shortcut: for 3-node install, phase 2 installs DI services on node1 only
+# (ZK+Kafka already running from phase 1; skip infra setup entirely)
+if [ "$kafkaBrokerCount" == 3 ] && [[ $id == 1 ]] && [ "$dimMdmFlinkInstallon1bFlag" == "y" ]; then
+  source setenv.sh 2>/dev/null || true
+  installDIMatadata
+  echo "Waiting for di-mdm to become ready on port 6081..."
+  for i in $(seq 1 30); do
+    if curl -sf http://${kafkaBrokerHost1}:6081/api/v1/about > /dev/null 2>&1; then
+      echo "di-mdm is ready after ${i}x10s"
+      break
+    fi
+    echo "di-mdm not ready yet ($i/30), retrying in 10s..."
+    sleep 10
+  done
+  installDIManager
+  installFlink
+  installDIProcessor
+  installDITransformations
+  installDIHAdmin
+  di_mdm_utils=/dbagiga/di-mdm/$(ls -d /dbagiga/di-mdm/di-mdm-* 2>/dev/null | head -1 | xargs basename)/utils
+  sudo -u gsods bash $di_mdm_utils/global_config.sh $di_mdm_utils/global-${currentHost}.env
+  exit 0
+fi
+
 # Step for KAFKA Unzip and Set KAFKAPATH
 if [[ $id != 4 ]]; then
     echo "Install AirGapKafka"
@@ -551,6 +581,7 @@ fi
     mkdir -p $baseFolderLocation
     mkdir -p $dataFolderZK
     mkdir -p $logsFolderZK
+    chown gsods:gsods $logsFolderZK
     tar -xzf $installation_path"/"$installation_file -C $baseFolderLocation
     chown -R gsods:gsods $baseFolderLocation
     var=$installation_file
@@ -589,6 +620,7 @@ mkdir -p $dataFolderKafka
 clientPort=2181
 dataDir=${dataFolderZK}
 initLimit=${zkInitLimit}
+syncLimit=${zkSyncLimit}
 server.1=${kafkaBrokerHost1}:2888:3888
 server.2=${kafkaBrokerHost2}:2888:3888
 server.3=${kafkaBrokerHost3}:2888:3888
@@ -751,7 +783,9 @@ if [[ $id != 4 ]]; then
      systemctl enable --now odsxzookeeper.service
      systemctl enable --now odsxkafka.service
      systemctl daemon-reload
-    installDIMatadata
+    # For 3-node installs, DI services are installed in phase 2 (after ZK quorum forms)
+    if [ "$kafkaBrokerCount" == 1 ]; then
+      installDIMatadata
     # Wait for di-mdm Spring Boot to be ready before installing dependent services
     echo "Waiting for di-mdm to become ready on port 6081..."
     for i in $(seq 1 5); do
@@ -770,6 +804,7 @@ if [[ $id != 4 ]]; then
     # Run global_config.sh to configure MDM (flink, space, kafka)
     di_mdm_utils=/dbagiga/di-mdm/$(ls -d /dbagiga/di-mdm/di-mdm-* 2>/dev/null | head -1 | xargs basename)/utils
     sudo -u gsods bash $di_mdm_utils/global_config.sh $di_mdm_utils/global-${currentHost}.env
+    fi
   fi
 fi
 

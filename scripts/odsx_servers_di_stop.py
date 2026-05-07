@@ -117,15 +117,15 @@ def stopTelegrafServiceByHost(host):
 def stopDIMServices(host):
     logger.info("stopDIMServices()")
     # Stop order: di-transformations first, then di-manager, then di-mdm, then flink
-    cmd = " systemctl stop dih-admin.service;sleep 3;systemctl stop di-transformations.service;sleep 3; systemctl stop di-manager.service;sleep 3; systemctl stop di-mdm.service;sleep 3; systemctl stop di-flink-taskmanager.service; systemctl stop di-flink-jobmanager.service"
+    cmd = " systemctl stop dih-admin.service;sleep 3;systemctl stop di-transformations.service;sleep 3;systemctl stop di-processor.service;sleep 3; systemctl stop di-manager.service;sleep 3; systemctl stop di-mdm.service;sleep 3; systemctl stop di-flink-taskmanager.service; systemctl stop di-flink-jobmanager.service"
     logger.info("Stopping DIM services on "+str(host)+": "+str(cmd))
     user = 'root'
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):
-            verboseHandle.printConsoleInfo("Services dih-admin/di-transformations/di-manager/di-mdm/di-flink stopped successfully on "+str(host))
+            verboseHandle.printConsoleInfo("Services dih-admin/di-transformations/di-processor/di-manager/di-mdm/di-flink stopped successfully on "+str(host))
         else:
-            verboseHandle.printConsoleError("Services dih-admin/di-transformations/di-manager/di-mdm/di-flink failed to stop or not installed on "+str(host))
+            verboseHandle.printConsoleError("Services dih-admin/di-transformations/di-processor/di-manager/di-mdm/di-flink failed to stop or not installed on "+str(host))
 
 def stopKafkaService(args):
     logger.info("stopKafkaService()")
@@ -139,8 +139,10 @@ def stopKafkaService(args):
                 host_type_dict_obj = getDIhostTypeDict()
                 host = str(host_dict_obj.get(hostNumber))
                 nodeType = host_type_dict_obj.get(host)
+                di_nodes = list(config_get_dataIntegration_nodes())
+                di_node1_host = os.getenv(di_nodes[0].ip) if di_nodes else None
                 # Stop subscription manager on IIDR first, then DIM, then Kafka, then ZooKeeper
-                if nodeType == "kafka Broker 1a" or nodeListSize < 4:
+                if nodeType == "kafka Broker 1a" or (nodeListSize < 4 and host == di_node1_host):
                     stopSubscriptionManagerOnIIDR()
                     stopDIMServices(host)
                 if nodeType != "Zookeeper Witness":
@@ -156,11 +158,14 @@ def stopKafkaService(args):
             choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to stop DI services on "+str(nodes)+" ? (y/n) [y]: "+Fore.RESET))
             if choice.casefold() == 'n':
                 exit(0)
-            # Stop subscription manager on IIDR first, then DIM, then Kafka, then ZooKeeper
+            # Stop subscription manager on IIDR first, then DIM (node1 only), then Kafka, then ZooKeeper
             stopSubscriptionManagerOnIIDR()
+            counter = 0
             for node in config_get_dataIntegration_nodes():
-                if node.type == "kafka Broker 1a" or nodeListSize < 4:
+                counter += 1
+                if node.type == "kafka Broker 1a" or (nodeListSize < 4 and counter == 1):
                     stopDIMServices(os.getenv(node.ip))
+                    break
             for node in config_get_dataIntegration_nodes():
                 if node.type != "Zookeeper Witness" and nodeListSize==4:
                     stopKafkaServiceByHost(os.getenv(node.ip))

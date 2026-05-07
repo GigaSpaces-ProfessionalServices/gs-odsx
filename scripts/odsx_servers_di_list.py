@@ -113,7 +113,8 @@ def getZookeeperStatus(node):
 def getConsolidatedStatus(node):
     output=''
     logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
-    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
+    # Only check core DI services (kafka + zookeeper); telegraf is optional and may not be installed
+    cmdList = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper"]
     for cmd in cmdList:
         logger.info("cmd :"+str(cmd)+" host :"+str(os.getenv(node.ip)))
         if(str(node.type)=='kafka Broker 1b' and cmd=='systemctl status odsxzookeeper'):

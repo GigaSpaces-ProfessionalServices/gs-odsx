@@ -102,6 +102,7 @@ fi
 [ -f /dbagiga/di-manager.properties ]              && rm -f /dbagiga/di-manager.properties
 [ -f /dbagiga/di-processor.properties ]            && rm -f /dbagiga/di-processor.properties
 [ -f /dbagiga/di-transformations.properties ]      && rm -f /dbagiga/di-transformations.properties
+[ -f /dbagiga/di-transformations-application.properties ]               && rm -f /dbagiga/di-transformations-application.properties
 [ -f /dbagiga/dih-admin.properties ]               && rm -f /dbagiga/dih-admin.properties
 [ -f /dbagiga/di-subscription-manager.properties ] && rm -f /dbagiga/di-subscription-manager.properties
 

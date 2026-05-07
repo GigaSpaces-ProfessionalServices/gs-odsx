@@ -58,6 +58,7 @@ function installDISubscription {
     mkdir -p /dbagigalogs/di-subscription-manager
     mkdir -p /dbagigalogs/di-iidr
     chown gsods:gsods /dbagigalogs/di-iidr
+    chown gsods:gsods /dbagigalogs/di-subscription-manager
     info "Copying file from "$installation_path_manager/$installation_file_manager +" to /dbagiga/di-subscription-manager \n"
     cp $installation_path_manager/$installation_file_manager /dbagiga/di-subscription-manager
     info "\nExtracting zip file...\n"
@@ -166,4 +167,5 @@ javaInstalled=$(java -version 2>&1 | egrep "\S+\s+version")
 echo "">>setenv.sh
 
 installDISubscription
+chown -R gsods:gsods /dbagiga/*.properties
 sleep 10
