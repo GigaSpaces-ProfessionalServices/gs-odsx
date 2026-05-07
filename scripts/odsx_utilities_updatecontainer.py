@@ -89,8 +89,9 @@ def updateSpaceServersGSC():
             from utils.odsx_keypress import userInputWrapper
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to update container count="+str(gscToBeUpdated)+" and memory="+str(sizeToBeupdated)+" on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
             if(confirm=='y' or len(confirm)==0):
-                cmd = 'sed -i -e \'s|--count='+str(gscFromConfig)+'|--count='+str(gscToBeUpdated)+'|g\' /giga/bin/start_gsc.sh'
-                cmd2= 'sed -i -e \'s|--memory='+str(sizeFromConfig)+'|--memory='+str(sizeToBeupdated)+'|g\' /giga/bin/start_gsc.sh'
+                start_gsc = readValuefromAppConfig("app.giga.path") + "/bin/start_gsc.sh"
+                cmd = 'sed -i -e \'s|--count='+str(gscFromConfig)+'|--count='+str(gscToBeUpdated)+'|g\' '+start_gsc
+                cmd2= 'sed -i -e \'s|--memory='+str(sizeFromConfig)+'|--memory='+str(sizeToBeupdated)+'|g\' '+start_gsc
                 user = get_ssh_user()
                 for node in spaceNodes:
                     with Spinner():

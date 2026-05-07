@@ -1,0 +1,16 @@
+alias lt='ls -ltr'
+alias tauvimconfig='vim $ENV_CONFIG/app.config'
+alias tauvimhost='vim $ENV_CONFIG/host.yaml'
+alias taugrepappconfig='grep "app.space.gsc.count=\|app.space.gsc.memory=\|app.tieredstorage.gsc.perhost=\|app.tieredstorage.gsc.memory=\|app.spacejar.pu.partitions=\|app.tieredstorage.gsc.partitions=\|app.newspace.partitions=\|app.newspace.creategsc.gscperhost=\|app.newspace.creategsc.gscmemory=\|maxinstancepermachine=\|maxInstancesPerMachine\|app.newspace.ha=\|app.tieredstorage.pu.backuprequired=" gigashare/env_config/app.config'
+
+alias piv1='ssh 10.0.4.14'
+alias mng1='ssh 10.0.4.138'
+alias mng2='ssh 10.0.4.196'
+alias mng3='ssh 10.0.4.21'
+alias spc1='ssh 10.0.4.37'
+alias spc2='ssh 10.0.4.254'
+alias spc3='ssh 10.0.4.117'
+
+alias gojosroden='cd $ENV_CONFIG ; cd ../..'
+alias gogiga='cd $ENV_CONFIG ; cd ../../giga'
+alias dogsodsx='gogiga ; rm -rf gs-dosx ; tar xzf /tmp/gs-odsx.tar.gz ; cd gs-odsx/scripts/ ; ./user-setup.sh -d $ENV_CONFIG/.. -u josroden'

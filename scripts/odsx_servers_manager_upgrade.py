@@ -15,6 +15,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetVersionOldGS
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import build_remote_bash_cmd
 from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
@@ -178,12 +179,7 @@ def proceedForManagerUpgrade(managerStatusIP, managerStatus):
         isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
         pemFileName = readValuefromAppConfig("cluster.pemFile")
         ssh = ""
-        if isConnectUsingPem == 'True':
-            ssh = ''.join(
-                ['ssh', ' -i ', pemFileName, ' ', user, '@', str(managerStatusIP), ' '])
-        else:
-            ssh = ''.join(['ssh', ' ', str(managerStatusIP), ' '])
-        cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_manual.sh'
+        cmd = build_remote_bash_cmd(str(managerStatusIP), user, 'scripts/servers_manager_upgrade_manual.sh', '-s ' + additionalParam)
         with Spinner():
             os.system(cmd)
             pass

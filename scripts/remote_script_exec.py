@@ -3,6 +3,7 @@
 import argparse
 import os
 import sys
+from utils.ods_ssh import build_remote_bash_cmd
 
 
 def check_arg(args=None):
@@ -28,11 +29,16 @@ def remote_run(arguments):
 
     exe = {'py':'python', 'sh':'bash', 'pl':'perl'}
 
-    ssh = ''.join(['ssh ', user, '@',  host, ' '])
     for cmd in cmd_list:
         type = exe[cmd.split('.')[1]]
-        cmd = ssh + type + ' < ' + cmd #+ '>> mylog.txt 2>&1'
-        os.system(cmd)
+        if type == 'bash':
+            # Bash scripts go through build_remote_bash_cmd so lib_app_config.sh
+            # (read_property, validate_nonempty_paths, wait_for_user_bus) is in scope.
+            full_cmd = build_remote_bash_cmd(host, user, cmd, '')
+        else:
+            # python/perl don't use the bash helpers — use plain SSH invocation.
+            full_cmd = 'ssh ' + user + '@' + host + ' ' + type + ' < ' + cmd
+        os.system(full_cmd)
 
 if __name__ == '__main__':
     args = check_arg(sys.argv[1:])

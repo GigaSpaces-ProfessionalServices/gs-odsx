@@ -6,6 +6,8 @@
 
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
 
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -25,6 +27,7 @@ gigadatapath=$(read_property "app.gigadata.path")
 gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
 
+validate_nonempty_paths gigapath gigalogpath
 
 systemctl --user stop odsxadabas.service
 systemctl --user disable odsxadabas.service

@@ -14,9 +14,9 @@
 #   - Gigashare dir exists and is writable by app user
 #
 # Typical workflow:
-#   1. user-setup.sh -d /gigashare -u gsods -tar /path/gigashare.tgz
+#   1. user-setup.sh -d /gigashare -tar /path/gigashare.tgz
 #   2. root-setup.sh -d /gigashare       (as root)
-#   3. user-setup.sh -d /gigashare -u gsods   (re-run for remote hosts)
+#   3. user-setup.sh -d /gigashare       (re-run for remote hosts)
 
 # Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
 [ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
@@ -30,23 +30,27 @@ function usage () {
 
   USAGE
 
-    $(basename $0) -d <gigashare dir> -u <username> [-tar <gigashare.tgz>] [--overwrite]
+    $(basename $0) -d <gigashare dir> [-u <username>] [-tar <gigashare.tgz>] [--overwrite] [--ksh]
 
   OPTIONS
 
     -d <dir>      Gigashare directory (e.g. /gigashare)
-    -u <user>     App username (e.g. gsods)
+    -u <user>     App username (default: current user)
     -tar <tgz>    Gigashare tarball to extract into -d (optional; skipped
                   if -d is already populated, unless --overwrite)
-    --overwrite   Re-extract tgz, overwrite sqlite files, overwrite SSH config
+    --overwrite   Re-extract tgz, overwrite sqlite files, overwrite SSH config,
+                  overwrite .kshrc (when --ksh is also given)
+    --ksh         Also create ~/.kshrc derived from ~/.bashrc (drops bash-only
+                  argcomplete eval; rewrites \`source X\` to POSIX \`. X\`).
+                  Created on the pivot and on every remote host.
 
   EXAMPLES
 
     # First run — extract tgz and set up pivot:
-    ./$(basename $0) -d /gigashare -u gsods -tar /giga/gigashare.tgz
+    ./$(basename $0) -d /gigashare -tar /giga/gigashare.tgz
 
     # After root-setup.sh — complete remote host config:
-    ./$(basename $0) -d /gigashare -u gsods
+    ./$(basename $0) -d /gigashare
 
 EOF
 exit
@@ -59,6 +63,7 @@ GIGASHARE_DIR=""
 APP_USER=""
 TGZ_FILE=""
 OVERWRITE=false
+WRITE_KSHRC=false
 
 # Extract multi-char flags (--overwrite, -tar) before getopts.
 # getopts only handles single-letter options, so anything longer
@@ -73,6 +78,7 @@ for _arg in "$@"; do
     fi
     case "$_arg" in
         --overwrite) OVERWRITE=true ;;
+        --ksh)       WRITE_KSHRC=true ;;
         -tar)        _consume_tar=true ;;
         *)           _ARGS+=("$_arg") ;;
     esac
@@ -92,7 +98,7 @@ while getopts ":d:u:h" opt; do
 done
 
 [[ -z "$GIGASHARE_DIR" ]] && { echo "Error: -d <gigashare dir> is required."; usage; }
-[[ -z "$APP_USER" ]] && { echo "Error: -u <username> is required."; usage; }
+[[ -z "$APP_USER" ]] && APP_USER=$(id -un)
 [[ ! -d "$GIGASHARE_DIR" ]] && { echo "Error: $GIGASHARE_DIR does not exist."; exit 1; }
 
 # Validate running as the specified user
@@ -121,12 +127,23 @@ if [ -n "$TGZ_FILE" ]; then
         echo "    $GIGASHARE_DIR is not empty — skipping extraction. Use --overwrite to force."
     fi
 else
-    echo ">>> Step 1: No -tar given — skipping gigashare extraction."
+    if [ -z "$(ls -A "$GIGASHARE_DIR" 2>/dev/null)" ]; then
+        echo ">>> Step 1: No -tar given and $GIGASHARE_DIR is empty — skipping gigashare extraction."
+    else
+        echo ">>> Step 1: Skipping gigashare extraction."
+    fi
 fi
 
 # --- Config paths ---
 ENV_CONFIG_PATH="$GIGASHARE_DIR/env_config"
-[[ ! -d "$ENV_CONFIG_PATH" ]] && { echo "Error: $ENV_CONFIG_PATH does not exist. Extract gigashare first (-tar)."; exit 1; }
+if [[ ! -d "$ENV_CONFIG_PATH" ]]; then
+    if [ -z "$(ls -A "$GIGASHARE_DIR" 2>/dev/null)" ]; then
+        echo "Error: $ENV_CONFIG_PATH does not exist. Extract gigashare first (-tar)."
+    else
+        echo "Error: $ENV_CONFIG_PATH does not exist."
+    fi
+    exit 1
+fi
 
 APP_CONFIG="$ENV_CONFIG_PATH/app.config"
 HOST_YAML="$ENV_CONFIG_PATH/host.yaml"
@@ -139,10 +156,11 @@ GIGA_SHARE=$(read_property "app.gigashare.path")
 GIGA_LOG=$(read_property "app.gigalog.path")
 GIGA_DATA=$(read_property "app.gigadata.path")
 GIGA_WORK=$(read_property "app.gigawork.path")
+GIGA_INFLUX=$(read_property "app.gigainfluxdata.path")
 
 # Validate required path keys
 missing_paths=0
-for key_var in "app.giga.path:$GIGA_PATH" "app.gigashare.path:$GIGA_SHARE" "app.gigalog.path:$GIGA_LOG" "app.gigadata.path:$GIGA_DATA" "app.gigawork.path:$GIGA_WORK"; do
+for key_var in "app.giga.path:$GIGA_PATH" "app.gigashare.path:$GIGA_SHARE" "app.gigalog.path:$GIGA_LOG" "app.gigadata.path:$GIGA_DATA" "app.gigawork.path:$GIGA_WORK" "app.gigainfluxdata.path:$GIGA_INFLUX"; do
     key="${key_var%%:*}"
     val="${key_var#*:}"
     if [ -z "$val" ]; then
@@ -283,6 +301,30 @@ if ! grep -q "export ENV_CONFIG=" ~/.bashrc 2>/dev/null; then
     echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> ~/.bashrc
     echo "    ENV_CONFIG added."
 fi
+if ! grep -q "export GIGA_PATH=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_PATH=$GIGA_PATH" >> ~/.bashrc
+    echo "    GIGA_PATH added."
+fi
+if ! grep -q "export GIGA_SHARE=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_SHARE=$GIGA_SHARE" >> ~/.bashrc
+    echo "    GIGA_SHARE added."
+fi
+if ! grep -q "export GIGA_LOG=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_LOG=$GIGA_LOG" >> ~/.bashrc
+    echo "    GIGA_LOG added."
+fi
+if ! grep -q "export GIGA_DATA=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_DATA=$GIGA_DATA" >> ~/.bashrc
+    echo "    GIGA_DATA added."
+fi
+if ! grep -q "export GIGA_WORK=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_WORK=$GIGA_WORK" >> ~/.bashrc
+    echo "    GIGA_WORK added."
+fi
+if ! grep -q "export GIGA_INFLUX=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_INFLUX=$GIGA_INFLUX" >> ~/.bashrc
+    echo "    GIGA_INFLUX added."
+fi
 if ! grep -q "export PYTHONPATH=" ~/.bashrc 2>/dev/null; then
     echo "export PYTHONPATH=$GIGA_PATH/gs-odsx" >> ~/.bashrc
     echo "    PYTHONPATH added."
@@ -320,6 +362,22 @@ fi
 
 echo "    .bashrc configured."
 
+# Optional: derive ~/.kshrc from ~/.bashrc (--ksh flag).
+# Drops the bash-only argcomplete eval and rewrites `source X` to POSIX `. X`
+# so ksh handles them. All `export` lines and aliases work unchanged in ksh.
+if $WRITE_KSHRC; then
+    if [ ! -f ~/.kshrc ] || $OVERWRITE; then
+        grep -v "register-python-argcomplete" ~/.bashrc | sed 's/source /. /g' > ~/.kshrc
+        if $OVERWRITE; then
+            echo "    .kshrc overwritten from .bashrc (--overwrite)."
+        else
+            echo "    .kshrc created from .bashrc."
+        fi
+    else
+        echo "    .kshrc exists — skipping. Use --overwrite to force."
+    fi
+fi
+
 # --- Step 10: Configure remote hosts ---
 if [ -n "$REMOTE_HOSTS" ]; then
     echo ">>> Step 10: Configuring remote hosts..."
@@ -332,7 +390,7 @@ if [ -n "$REMOTE_HOSTS" ]; then
             continue
         fi
         ssh -o ConnectTimeout=10 "$HOST" bash -s \
-            "$NOFILE_LIMIT" "$ENV_CONFIG_PATH" "$GIGA_PATH" "$GIGA_LOG" "$GIGA_DATA" "$GIGA_WORK" << 'REMOTE'
+            "$NOFILE_LIMIT" "$ENV_CONFIG_PATH" "$GIGA_PATH" "$GIGA_LOG" "$GIGA_DATA" "$GIGA_WORK" "$GIGA_SHARE" "$GIGA_INFLUX" "$WRITE_KSHRC" "$OVERWRITE" << 'REMOTE'
 set -e
 NOFILE_LIMIT=$1
 ENV_CONFIG_PATH=$2
@@ -340,6 +398,10 @@ GIGA_PATH=$3
 GIGA_LOG=$4
 GIGA_DATA=$5
 GIGA_WORK=$6
+GIGA_SHARE=$7
+GIGA_INFLUX=$8
+WRITE_KSHRC=$9
+OVERWRITE=${10}
 
 # Giga directories
 mkdir -p "$GIGA_PATH" "$GIGA_LOG" "$GIGA_DATA" "$GIGA_WORK"
@@ -362,6 +424,24 @@ USERCONF
 if ! grep -q "export ENV_CONFIG=" ~/.bashrc 2>/dev/null; then
     echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> ~/.bashrc
 fi
+if ! grep -q "export GIGA_PATH=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_PATH=$GIGA_PATH" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_SHARE=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_SHARE=$GIGA_SHARE" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_LOG=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_LOG=$GIGA_LOG" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_DATA=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_DATA=$GIGA_DATA" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_WORK=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_WORK=$GIGA_WORK" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_INFLUX=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_INFLUX=$GIGA_INFLUX" >> ~/.bashrc
+fi
 if ! grep -q "export PYTHONPATH=" ~/.bashrc 2>/dev/null; then
     echo "export PYTHONPATH=$GIGA_PATH/gs-odsx" >> ~/.bashrc
 fi
@@ -370,6 +450,21 @@ MY_UID=$(id -u)
 if ! grep -q "XDG_RUNTIME_DIR" ~/.bashrc 2>/dev/null; then
     echo "export XDG_RUNTIME_DIR=/run/user/$MY_UID" >> ~/.bashrc
     echo "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$MY_UID/bus" >> ~/.bashrc
+fi
+
+# Optional: derive ~/.kshrc from ~/.bashrc (--ksh flag).
+# Drops bash-only argcomplete eval; rewrites `source X` to POSIX `. X`.
+if [ "$WRITE_KSHRC" = "true" ]; then
+    if [ ! -f ~/.kshrc ] || [ "$OVERWRITE" = "true" ]; then
+        grep -v "register-python-argcomplete" ~/.bashrc | sed 's/source /. /g' > ~/.kshrc
+        if [ "$OVERWRITE" = "true" ]; then
+            echo "    .kshrc overwritten from .bashrc (--overwrite)."
+        else
+            echo "    .kshrc created from .bashrc."
+        fi
+    else
+        echo "    .kshrc exists — skipping. Use --overwrite to force."
+    fi
 fi
 
 echo "    Done."
@@ -410,13 +505,28 @@ latest_zip=$(ls -1t "${gs_zips[@]}" | head -n 1)
 zip_basename=$(basename "$latest_zip")
 echo "    GigaSpaces zip: $latest_zip"
 
-# Copy to gigashare (idempotent)
-mkdir -p "$GIGA_SHARE/current/gs"
-if [ ! -f "$GIGA_SHARE/current/gs/$zip_basename" ]; then
-    cp "$latest_zip" "$GIGA_SHARE/current/gs/$zip_basename"
-    echo "    Copied to $GIGA_SHARE/current/gs/."
+# Refresh GigaSpaces zip in gigashare when needed.
+gs_share_dir="$GIGA_SHARE/current/gs"
+shopt -s nullglob
+gs_share_zips=("$gs_share_dir"/gigaspaces-smart*.zip)
+shopt -u nullglob
+
+if $OVERWRITE || [ ${#gs_share_zips[@]} -gt 1 ]; then
+    rm -f "$gs_share_dir"/gigaspaces-smart*.zip
+    echo "    Removed existing gigaspaces-smart*.zip files from $gs_share_dir/."
+    cp "$latest_zip" "$gs_share_dir/$zip_basename"
+    echo "    Copied to $gs_share_dir/."
+elif [ ${#gs_share_zips[@]} -eq 1 ]; then
+    if [ "${gs_share_zips[0]}" = "$gs_share_dir/$zip_basename" ]; then
+        echo "    $zip_basename is already the only GigaSpaces zip in $gs_share_dir/."
+    else
+        rm -f "${gs_share_zips[0]}"
+        cp "$latest_zip" "$gs_share_dir/$zip_basename"
+        echo "    Replaced existing GigaSpaces zip in $gs_share_dir/."
+    fi
 else
-    echo "    Already in $GIGA_SHARE/current/gs/."
+    cp "$latest_zip" "$gs_share_dir/$zip_basename"
+    echo "    Copied to $gs_share_dir/."
 fi
 
 # Unzip (idempotent)

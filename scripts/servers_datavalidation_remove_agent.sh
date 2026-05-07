@@ -4,6 +4,8 @@
 
 export XDG_RUNTIME_DIR=/run/user/$(id -u)
 export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
 
 source setenv.sh
 ENV_CONFIG_PATH=$ENV_CONFIG
