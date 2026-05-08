@@ -74,10 +74,10 @@ def getKafkaStatus(node):
         user = 'root'
         if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
             output=0
-            return Fore.GREEN+"NA"+Fore.RESET
+            return Fore.RED+"NA"+Fore.RESET
         if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
             output=0
-            return Fore.GREEN+"NA"+Fore.RESET
+            return Fore.RED+"NA"+Fore.RESET
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
@@ -96,10 +96,10 @@ def getZookeeperStatus(node):
         user = 'root'
         if node.type == "Zookeeper Witness" and cmd == "systemctl status odsxkafka":
             output=0
-            return Fore.GREEN+"NA"+Fore.RESET
+            return Fore.RED+"NA"+Fore.RESET
         if node.type == "kafka Broker 1b" and cmd == "systemctl status odsxzookeeper":
             output=0
-            return Fore.GREEN+"NA"+Fore.RESET
+            return Fore.RED+"NA"+Fore.RESET
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
             logger.info("output1 : "+str(output))
@@ -149,8 +149,6 @@ def roleOfCurrentNode(ip):
     else:
         return "None"
 def isZkInstalledNot(host,role):
-    if(str(role)=='kafka Broker 1b'):
-        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isKafkaInstalledNot"+str(host)+" : "+str(role))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/odsxzookeeper.service'
@@ -163,8 +161,6 @@ def isZkInstalledNot(host,role):
     return Fore.GREEN+"Yes"+Fore.RESET
 
 def isKafkaInstalledNot(host,role):
-    if(str(role)=='Zookeeper Witness'):
-        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isKafkaInstalledNot"+str(host)+" : "+str(role))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/odsxkafka.service'
@@ -177,8 +173,6 @@ def isKafkaInstalledNot(host,role):
     return Fore.GREEN+"Yes"+Fore.RESET
 
 def isMDMInstalled(host,nodeType):
-    if(str(nodeType)=='Zookeeper Witness'):
-        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isMDMInstalled"+str(host))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/di-mdm.service'
@@ -191,8 +185,6 @@ def isMDMInstalled(host,nodeType):
     return Fore.GREEN+"Yes"+Fore.RESET
 
 def getMDMStatus(host,nodeType):
-    if(str(nodeType)=='Zookeeper Witness'):
-        return Fore.GREEN+"NA"+Fore.RESET
     cmd = "systemctl status di-mdm.service"
     with Spinner():
         user='root'
@@ -204,8 +196,6 @@ def getMDMStatus(host,nodeType):
         return Fore.GREEN+"ON"+Fore.RESET
 
 def isDIMInstalled(host,nodeType):
-    if(str(nodeType)=='Zookeeper Witness'):
-        return Fore.GREEN+"NA"+Fore.RESET
     logger.info("isDIMInstalled"+str(host))
     isInstalled = "Yes"
     commandToExecute='ls /etc/systemd/system/di-manager.service'
@@ -218,8 +208,6 @@ def isDIMInstalled(host,nodeType):
     return Fore.GREEN+"Yes"+Fore.RESET
 
 def getDIMStatus(host,nodeType):
-    if(str(nodeType)=='Zookeeper Witness'):
-        return Fore.GREEN+"NA"+Fore.RESET
     cmd = "systemctl status di-manager.service"
     with Spinner():
         user='root'
@@ -231,9 +219,7 @@ def getDIMStatus(host,nodeType):
         return Fore.GREEN+"ON"+Fore.RESET
 
 def isFLinkInstalled(host,nodeType):
-    if(str(nodeType)=='Zookeeper Witness'):
-        return Fore.GREEN+"NA"+Fore.RESET
-    logger.info("isDIMInstalled"+str(host))
+    logger.info("isFLinkInstalled"+str(host))
     isInstalled = "Yes"
     commandToExecute='ls /dbagiga/di-flink/latest-flink/bin/start-cluster.sh'
     logger.info("commandToExecute :"+str(commandToExecute))
@@ -245,8 +231,6 @@ def isFLinkInstalled(host,nodeType):
     return Fore.GREEN+"Yes"+Fore.RESET
 
 def getFlinkStatus(host,nodeType):
-    if(str(nodeType)=='Zookeeper Witness'):
-        return Fore.GREEN+"NA"+Fore.RESET
     cmd = ""
     with Spinner():
         if(isValidHost(host)):
@@ -284,7 +268,7 @@ def isInstalledNot(host,role):
         outputShFile=str(outputShFile).replace('\n','')
         logger.info("outputShFile :"+str(outputShFile))
         if len(str(outputShFile))==0:
-            return Fore.GREEN+"NA"+Fore.RESET
+            return Fore.RED+"NA"+Fore.RESET
     if role != "Zookeeper Witness":
         commandToExecute='ls /etc/systemd/system/odsxkafka.service'
         logger.info("commandToExecute :"+str(commandToExecute))
@@ -292,7 +276,7 @@ def isInstalledNot(host,role):
         outputShFile=str(outputShFile).replace('\n','')
         logger.info("outputShFile :"+str(outputShFile))
         if len(str(outputShFile))==0:
-            return Fore.GREEN+"NA"+Fore.RESET
+            return Fore.RED+"NA"+Fore.RESET
 
     commandToExecute='ls /usr/lib/systemd/system/telegraf.service'
     logger.info("commandToExecute :"+str(commandToExecute))
@@ -360,19 +344,22 @@ def listDIServers():
         Fore.YELLOW+"IIDR\n"+Fore.YELLOW+"Oracle\n"+Fore.YELLOW+"Agent"+Fore.RESET]
     data=[]
     counter=1
+    nodeListSize = len(list(dIServers))
+    NA = Fore.RED + "N/A" + Fore.RESET
+
     kafkaPortStatus1 = 'OFF'
-    kafkaPortStatus2 = 'OFF'
-    kafkaPortStatus3 = 'OFF'
+    kafkaPortStatus2 = NA
+    kafkaPortStatus3 = NA
     zkPortStatus1 = 'OFF'
-    zkPortStatus2 = 'OFF'
-    zkPortStatus3 = 'OFF'
+    zkPortStatus2 = NA
+    zkPortStatus3 = NA
 
     kafkaInstallStatus1 = 'NO'
-    kafkaInstallStatus2 = 'NO'
-    kafkaInstallStatus3 = 'NO'
+    kafkaInstallStatus2 = NA
+    kafkaInstallStatus3 = NA
     zkInstallStatus1 = 'NO'
-    zkInstallStatus2 = 'NO'
-    zkInstallStatus3 = 'NO'
+    zkInstallStatus2 = NA
+    zkInstallStatus3 = NA
 
     IIDRSubscriptionMangerInstallStatus=""
     IIDRAccessServerInstallStatus=""
@@ -469,13 +456,17 @@ def listDIServers():
                    Fore.YELLOW+"IIDR-DBAgent"+Fore.RESET
                    ]
 
+    def colorInstall(s):
+        if s == NA: return s
+        return (Fore.GREEN if s == 'Yes' else Fore.RED) + s + Fore.RESET
+
     dataInstallCheckArray=[Fore.YELLOW+"Install Status"+Fore.RESET,
-                           kafkaInstallStatus1,
-                           kafkaInstallStatus2,
-                           kafkaInstallStatus3,
-                           zkInstallStatus1,
-                           zkInstallStatus2,
-                           zkInstallStatus3,
+                           colorInstall(kafkaInstallStatus1),
+                           kafkaInstallStatus2 if kafkaInstallStatus2 == NA else colorInstall(kafkaInstallStatus2),
+                           kafkaInstallStatus3 if kafkaInstallStatus3 == NA else colorInstall(kafkaInstallStatus3),
+                           colorInstall(zkInstallStatus1),
+                           zkInstallStatus2 if zkInstallStatus2 == NA else colorInstall(zkInstallStatus2),
+                           zkInstallStatus3 if zkInstallStatus3 == NA else colorInstall(zkInstallStatus3),
                            installStatusDIM,
                            installStatusMDM,
                            installStatusFLink,
@@ -485,16 +476,20 @@ def listDIServers():
                            Fore.GREEN+IIDROracleAgentInstallStatus+Fore.RESET if(IIDROracleAgentInstallStatus=='Yes') else Fore.RED+IIDROracleAgentInstallStatus+Fore.RESET
                            ]
 
+    def colorStatus(s):
+        if s == NA: return s
+        return (Fore.GREEN if s == 'ON' else Fore.RED) + s + Fore.RESET
+
     dataStatusArray=[Fore.YELLOW+"Port Status"+Fore.RESET,
-                     Fore.GREEN+kafkaPortStatus1+Fore.RESET if(kafkaPortStatus1=='ON') else Fore.RED+kafkaPortStatus1+Fore.RESET,
-                     Fore.GREEN+kafkaPortStatus2+Fore.RESET if(kafkaPortStatus2=='ON') else Fore.RED+kafkaPortStatus2+Fore.RESET,
-                     Fore.GREEN+kafkaPortStatus3+Fore.RESET if(kafkaPortStatus3=='ON') else Fore.RED+kafkaPortStatus3+Fore.RESET,
-                     Fore.GREEN+zkPortStatus1+Fore.RESET if(zkPortStatus1=='ON') else Fore.RED+zkPortStatus1+Fore.RESET,
-                     Fore.GREEN+zkPortStatus2+Fore.RESET if(zkPortStatus2=='ON') else Fore.RED+zkPortStatus2+Fore.RESET,
-                     Fore.GREEN+zkPortStatus3+Fore.RESET if(zkPortStatus3=='ON') else Fore.RED+zkPortStatus3+Fore.RESET,
-                     Fore.GREEN+serviceStatusDIM+Fore.RESET if(serviceStatusDIM=='ON') else Fore.RED+serviceStatusDIM+Fore.RESET,
-                     Fore.GREEN+serviceStatusMDM+Fore.RESET if(serviceStatusMDM=='ON') else Fore.RED+serviceStatusMDM+Fore.RESET,
-                     Fore.GREEN+serviceStatusFLink+Fore.RESET if(serviceStatusFLink=='ON') else Fore.RED+serviceStatusFLink+Fore.RESET,
+                     colorStatus(kafkaPortStatus1),
+                     kafkaPortStatus2 if kafkaPortStatus2 == NA else colorStatus(kafkaPortStatus2),
+                     kafkaPortStatus3 if kafkaPortStatus3 == NA else colorStatus(kafkaPortStatus3),
+                     colorStatus(zkPortStatus1),
+                     zkPortStatus2 if zkPortStatus2 == NA else colorStatus(zkPortStatus2),
+                     zkPortStatus3 if zkPortStatus3 == NA else colorStatus(zkPortStatus3),
+                     serviceStatusDIM,
+                     serviceStatusMDM,
+                     serviceStatusFLink,
                      Fore.GREEN+IIDRSubscriptionMangerStatus+Fore.RESET if(IIDRSubscriptionMangerStatus=='ON') else Fore.RED+IIDRSubscriptionMangerStatus+Fore.RESET,
                      Fore.GREEN+IIDRAccessServerStatus+Fore.RESET if(IIDRAccessServerStatus=='ON') else Fore.RED+IIDRAccessServerStatus+Fore.RESET,
                      Fore.GREEN+IIDRKafkaAgentStatus+Fore.RESET if(IIDRKafkaAgentStatus=='ON') else Fore.RED+IIDRKafkaAgentStatus+Fore.RESET,
