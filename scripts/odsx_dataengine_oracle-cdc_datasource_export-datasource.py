@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -35,6 +36,18 @@ def handleException(e):
         'message': str(e),
         'trace': trace
     })))
+
+
+def isMDMInstalled(host, nodeType):
+    if str(nodeType) == 'Zookeeper Witness':
+        return Fore.GREEN + "NA" + Fore.RESET
+    logger.info("isMDMInstalled" + str(host))
+    commandToExecute = 'ls /etc/systemd/system/di-mdm.service'
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = str(outputShFile).replace('\n', '')
+    if len(str(outputShFile)) == 0:
+        return Fore.RED + "NO" + Fore.RESET
+    return Fore.GREEN + "Yes" + Fore.RESET
 
 
 def exportDatasourcesBeforeRemove(diHost, export_path):
@@ -106,16 +119,20 @@ if __name__ == '__main__':
     verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Export Datasource')
     logger.info('Menu -> DataEngine -> Oracle CDC Export Datasource')
 
-    diHost = ""
-    for node in config_get_dataIntegration_nodes():
-        diHost = os.getenv(node.ip)
-        break
+    iidrHost = ""
+    dIServers = config_get_dataIntegration_nodes("config/cluster.config")
+    for node in dIServers:
+        actualIp = os.getenv(node.ip)
+        mdmStatus = isMDMInstalled(actualIp, str(node.type))
+        if "Yes" in mdmStatus:
+            iidrHost = actualIp
+            break
 
-    if not diHost:
-        verboseHandle.printConsoleError("No DI host found.")
+    if not iidrHost:
+        verboseHandle.printConsoleError("No DI node with MDM installed found.")
     else:
         export_path = str(readValuefromAppConfig("app.dataengine.dihctl.datasourcefolderpath"))
         if not export_path.strip():
             verboseHandle.printConsoleError("Export path cannot be empty (app.dataengine.dihctl.datasourcefolderpath).")
         else:
-            exportDatasourcesBeforeRemove(diHost, export_path)
+            exportDatasourcesBeforeRemove(iidrHost, export_path)

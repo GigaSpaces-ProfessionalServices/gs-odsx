@@ -8,6 +8,7 @@ from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.odsx_keypress import userInputWrapper
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -34,6 +35,18 @@ def handleException(e):
         'message': str(e),
         'trace': trace
     })))
+
+
+def isMDMInstalled(host, nodeType):
+    if str(nodeType) == 'Zookeeper Witness':
+        return Fore.GREEN + "NA" + Fore.RESET
+    logger.info("isMDMInstalled" + str(host))
+    commandToExecute = 'ls /etc/systemd/system/di-mdm.service'
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = str(outputShFile).replace('\n', '')
+    if len(str(outputShFile)) == 0:
+        return Fore.RED + "NO" + Fore.RESET
+    return Fore.GREEN + "Yes" + Fore.RESET
 
 
 def getDIServerHost():
@@ -86,9 +99,18 @@ def importPipeline(diManagerHost):
             verboseHandle.printConsoleError("Invalid selection.")
             return
 
-        nodeiidrList = config_get_dataIntegration_nodes()
-        for nodes in nodeiidrList:
-            iidrHost = os.getenv(nodes.ip)
+        iidrHost = ""
+        dIServers = config_get_dataIntegration_nodes("config/cluster.config")
+        for node in dIServers:
+            actualIp = os.getenv(node.ip)
+            mdmStatus = isMDMInstalled(actualIp, str(node.type))
+            if "Yes" in mdmStatus:
+                iidrHost = actualIp
+                break
+
+        if not iidrHost:
+            verboseHandle.printConsoleError("No DI node with MDM installed found.")
+            return
 
         verboseHandle.printConsoleInfo("ip -> " + str(iidrHost))
 

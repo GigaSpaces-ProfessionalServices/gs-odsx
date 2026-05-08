@@ -11,6 +11,7 @@ from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.odsx_objectmanagement_utilities import getPivotHost
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -39,6 +40,18 @@ def handleException(e):
     })))
 
 
+def isMDMInstalled(host, nodeType):
+    if str(nodeType) == 'Zookeeper Witness':
+        return Fore.GREEN + "NA" + Fore.RESET
+    logger.info("isMDMInstalled" + str(host))
+    commandToExecute = 'ls /etc/systemd/system/di-mdm.service'
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = str(outputShFile).replace('\n', '')
+    if len(str(outputShFile)) == 0:
+        return Fore.RED + "NO" + Fore.RESET
+    return Fore.GREEN + "Yes" + Fore.RESET
+
+
 def getDIServerHost():
     nodeList = config_get_dataIntegration_nodes()
     for node in nodeList:
@@ -47,9 +60,18 @@ def getDIServerHost():
 
 
 def addNewColumn(diManagerHost):
-    nodeiidrList = config_get_dataIntegration_nodes()
-    for nodes in nodeiidrList:
-        iidrHost = os.getenv(nodes.ip)
+    iidrHost = ""
+    dIServers = config_get_dataIntegration_nodes("config/cluster.config")
+    for node in dIServers:
+        actualIp = os.getenv(node.ip)
+        mdmStatus = isMDMInstalled(actualIp, str(node.type))
+        if "Yes" in mdmStatus:
+            iidrHost = actualIp
+            break
+
+    if not iidrHost:
+        verboseHandle.printConsoleError("No DI node with MDM installed found.")
+        return
 
     verboseHandle.printConsoleInfo("ip -> " + str(iidrHost))
 
@@ -209,12 +231,16 @@ def addNewColumn(diManagerHost):
     if not pipeline_id:
         verboseHandle.printConsoleError(f"Pipeline ID not found for: {selected_pipeline}")
         return
-    verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-    logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-    stop_response = requests.post(f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop", headers={"accept": "*/*", "Content-Type": "application/json"})
-    stop_status = stop_response.json().get("status", "unknown")
-    verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
-    logger.info(f"Stop pipeline response status: {stop_status}")
+    if selected_status == "INACTIVE":
+        verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' is already INACTIVE. Skipping stop.")
+        logger.info(f"Pipeline '{selected_pipeline}' is already INACTIVE. Skipping stop.")
+    else:
+        verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+        logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+        stop_response = requests.post(f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop", headers={"accept": "*/*", "Content-Type": "application/json"})
+        stop_status = stop_response.json().get("status", "unknown")
+        verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
+        logger.info(f"Stop pipeline response status: {stop_status}")
 
     # Delete pipeline
     delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {selected_pipeline}"
@@ -251,8 +277,8 @@ def addNewColumn(diManagerHost):
         logger.error(f"Pipeline '{selected_pipeline}' not deleted after {max_retries} validation attempts.")
         return
 
-    # Unregister all space types
-    all_space_types = [tp.get("spaceTypeName", "") for tp in table_pipelines if tp.get("spaceTypeName", "")]
+    # Unregister only the selected space type
+    all_space_types = [space_type_name] if space_type_name else []
     failed_types = []
     for stn in all_space_types:
         verboseHandle.printConsoleInfo(f"Unregistering space type: {stn}")
@@ -278,8 +304,8 @@ def addNewColumn(diManagerHost):
         verboseHandle.printConsoleError(f"Unregister incomplete. Failed types: {failed_types}. Aborting pipeline creation.")
         logger.error(f"Unregister failed for: {failed_types}")
         return
-    verboseHandle.printConsoleInfo("All space types unregistered successfully. Verifying via object management list.")
-    logger.info("All space types unregistered. Verifying removal via /list API.")
+    verboseHandle.printConsoleInfo("Space type unregistered successfully. Verifying via object management list.")
+    logger.info("Space type unregistered. Verifying removal via /list API.")
 
     try:
         list_response = requests.get(
@@ -297,8 +323,8 @@ def addNewColumn(diManagerHost):
             verboseHandle.printConsoleError(f"Verification failed: space type(s) still registered: {still_present}. Aborting pipeline creation.")
             logger.error(f"Verification failed: space type(s) still present after unregister: {still_present}")
             return
-        verboseHandle.printConsoleInfo("Verification passed: all space types confirmed removed. Proceeding to create pipeline.")
-        logger.info("Verification passed: all space types removed from object management list.")
+        verboseHandle.printConsoleInfo("Verification passed: Space type confirmed removed. Proceeding to create pipeline.")
+        logger.info("Verification passed: Space type removed from object management list.")
     except requests.exceptions.ConnectionError:
         verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for verification.")
         return

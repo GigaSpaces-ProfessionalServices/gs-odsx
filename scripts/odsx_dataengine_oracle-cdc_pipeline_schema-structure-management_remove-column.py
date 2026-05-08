@@ -10,6 +10,7 @@ from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 from utils.odsx_objectmanagement_utilities import getPivotHost
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -38,6 +39,18 @@ def handleException(e):
     })))
 
 
+def isMDMInstalled(host, nodeType):
+    if str(nodeType) == 'Zookeeper Witness':
+        return Fore.GREEN + "NA" + Fore.RESET
+    logger.info("isMDMInstalled" + str(host))
+    commandToExecute = 'ls /etc/systemd/system/di-mdm.service'
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = str(outputShFile).replace('\n', '')
+    if len(str(outputShFile)) == 0:
+        return Fore.RED + "NO" + Fore.RESET
+    return Fore.GREEN + "Yes" + Fore.RESET
+
+
 def getDIServerHost():
     nodeList = config_get_dataIntegration_nodes()
     for node in nodeList:
@@ -46,9 +59,18 @@ def getDIServerHost():
 
 
 def removeColumn(diManagerHost):
-    nodeiidrList = config_get_dataIntegration_nodes()
-    for nodes in nodeiidrList:
-        iidrHost = os.getenv(nodes.ip)
+    iidrHost = ""
+    dIServers = config_get_dataIntegration_nodes("config/cluster.config")
+    for node in dIServers:
+        actualIp = os.getenv(node.ip)
+        mdmStatus = isMDMInstalled(actualIp, str(node.type))
+        if "Yes" in mdmStatus:
+            iidrHost = actualIp
+            break
+
+    if not iidrHost:
+        verboseHandle.printConsoleError("No DI node with MDM installed found.")
+        return
 
     verboseHandle.printConsoleInfo("ip -> " + str(iidrHost))
     
@@ -207,8 +229,12 @@ def removeColumn(diManagerHost):
         Fore.YELLOW + "Indexes"       + Fore.RESET,
         Fore.YELLOW + "Tier Criteria" + Fore.RESET,
     ]
-    if dataColumnsDict.get(1) is not None:
-        for col in dataColumnsDict.get(1):
+    columns = dataColumnsDict.get(1)
+    if columns is None:
+        verboseHandle.printConsoleWarning(f"Space type '{space_type_name}' not found in object management registration.")
+        return
+    if columns is not None:
+        for col in columns:
             dataArray = [
                 Fore.GREEN + str(counter)                  + Fore.RESET,
                 Fore.GREEN + str(col["columnname"])        + Fore.RESET,
@@ -262,12 +288,16 @@ def removeColumn(diManagerHost):
         if not pipeline_id:
             verboseHandle.printConsoleError(f"Pipeline ID not found for: {selected_pipeline}")
             return
-        verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-        logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-        stop_response = requests.post(f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop", headers={"accept": "*/*", "Content-Type": "application/json"})
-        stop_status = stop_response.json().get("status", "unknown")
-        verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
-        logger.info(f"Stop pipeline response status: {stop_status}")
+        if selected_status == "INACTIVE":
+            verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' is already INACTIVE. Skipping stop.")
+            logger.info(f"Pipeline '{selected_pipeline}' is already INACTIVE. Skipping stop.")
+        else:
+            verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+            logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
+            stop_response = requests.post(f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop", headers={"accept": "*/*", "Content-Type": "application/json"})
+            stop_status = stop_response.json().get("status", "unknown")
+            verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
+            logger.info(f"Stop pipeline response status: {stop_status}")
 
 
         # Delete pipeline

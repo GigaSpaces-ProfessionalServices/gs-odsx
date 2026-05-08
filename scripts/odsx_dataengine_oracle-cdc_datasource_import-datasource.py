@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -37,6 +38,18 @@ def handleException(e):
     })))
 
 
+def isMDMInstalled(host, nodeType):
+    if str(nodeType) == 'Zookeeper Witness':
+        return Fore.GREEN + "NA" + Fore.RESET
+    logger.info("isMDMInstalled" + str(host))
+    commandToExecute = 'ls /etc/systemd/system/di-mdm.service'
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = str(outputShFile).replace('\n', '')
+    if len(str(outputShFile)) == 0:
+        return Fore.RED + "NO" + Fore.RESET
+    return Fore.GREEN + "Yes" + Fore.RESET
+
+
 def createDatasource():
     """Create datasource(s) via di-manager API after DI install.
     Loads exported datasources.json if available; each field falls back to app.config defaults
@@ -44,10 +57,18 @@ def createDatasource():
     values regardless of what is in the exported file."""
     logger.info("createDatasource()")
     try:
-        diHost = ""
-        for node in config_get_dataIntegration_nodes():
-            diHost = os.getenv(node.ip)
-            break
+        iidrHost = ""
+        dIServers = config_get_dataIntegration_nodes("config/cluster.config")
+        for node in dIServers:
+            actualIp = os.getenv(node.ip)
+            mdmStatus = isMDMInstalled(actualIp, str(node.type))
+            if "Yes" in mdmStatus:
+                iidrHost = actualIp
+                break
+
+        if not iidrHost:
+            verboseHandle.printConsoleError("No DI node with MDM installed found.")
+            return
 
         defaultUsername = str(readValuefromAppConfig("app.cdc.datasource.username"))
         defaultPassword = str(readValuefromAppConfig("app.cdc.datasource.password"))
@@ -139,7 +160,7 @@ def createDatasource():
             verboseHandle.printConsoleInfo("No exported datasource file found; using default ORACLE config.")
             datasources_to_create = [defaults]
 
-        api_url = f"http://{diHost}:6080/api/v1/datasource/save-connection"
+        api_url = f"http://{iidrHost}:6080/api/v1/datasource/save-connection"
         for body in datasources_to_create:
             verboseHandle.printConsoleInfo("Creating datasource " + body["sorName"] + ", url=" + body["url"])
             logger.info("createDatasource POST " + api_url)
