@@ -59,7 +59,6 @@ gs-odsx/
 ```
 
 ### Deployed Filesystem Layout
-All deployed paths don't have to use the `dba` prefix convention because soft links are provided for dba to non dba folders e.g. /dbagiga -> /giga :
 
 | Path | Purpose |
 |---|---|
@@ -316,18 +315,10 @@ export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 User-level systemd services **must not** have `User=` or `Group=` directives. If present, the service fails with `status=216/GROUP`. These lines are only valid for system-level services in `/etc/systemd/system/`.
 
 #### `install/install.tar` stale artifact
-The Python install scripts (e.g., `odsx_servers_manager_install.py`) build `install/install.tar` from the `install/` directory, upload it to remote hosts, and extract it. **If a stale tar exists from a previous run, it may contain outdated service files.** The code now deletes the existing tar before rebuilding (`os.remove('install/install.tar')`). Also, rsync `--delete` will remove it since it's not in the repo.
+Install scripts must delete `install/install.tar` before rebuilding (`os.remove('install/install.tar')`); a stale tar carries outdated service files to remote hosts. Don't reintroduce builds that skip the delete.
 
 #### Prerequisite-check cleanup (Java/unzip RPM)
 Java and unzip are installed by `root-setup.sh` as root prerequisites — `validateRPM()`/`validateRPMS()` no longer checks for `$ODSXARTIFACTS/jdk/*.rpm` or `$ODSXARTIFACTS/unzip/*.rpm`. Don't reintroduce those checks in `utils/ods_list.py` or any install script. `validateRPMS()` only checks `$ODSXARTIFACTS/gs/*.zip` for the manager install flow.
-
-#### `runall.sh` (`utils/runall/runall.sh`) path configurability
-`runall.sh` previously hardcoded `/dbagiga`, `/dbagigalogs`, `/dbagigashare` in four spots. Fixed to read from `$ENV_CONFIG/app.config`:
-- `GS_ROOT` ← `app.giga.path` (fallback `/giga`)
-- `LOGS_DIR` ← `app.gigalog.path` (fallback `/gigalogs`)
-- `GS_SHARE` ← `app.gigashare.path` (fallback `/gigashare`)
-
-Fallbacks fire when `ENV_CONFIG` is unset so the script remains runnable standalone. The Kafka home path and the NFS-mount health check now use these variables.
 
 #### `read_property` over SSH: the lib_app_config.sh prepend trick
 Bash scripts call `read_property "app.foo.bar"` (defined in `scripts/lib_app_config.sh`) to read app.config values with `${app.*.path}` resolution. Locally on the pivot, scripts source the file via:
@@ -378,11 +369,7 @@ The 6 root keys (`app.giga.path=/giga`, etc.) contain no `${...}` so the regex s
 The previous `/dbagiga/...` → `<gigaPath>/...` translation chain has been removed; configs must use `${app.*.path}` form. A few `/dbagiga*` literals remain intentionally as **search patterns** (not hardcoded paths) in the 3 adabas install scripts and `scripts/setup.sh`/`quickSetup.sh` sed lines — leave those alone. Backup `app.config` snapshots in `env_config/` also contain the literal but aren't loaded.
 
 ### Bash scripts: shared helper
-`scripts/lib_app_config.sh` is the canonical definition of `read_property()`. Every bash script that needs to read app.config sources it via:
-```bash
-[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
-```
-For scripts piped over SSH (`ssh host bash -s ... < script.sh`), the conditional source is a no-op; all stdin-pipe SSH helpers in `utils/ods_ssh.py` go through `build_remote_bash_cmd()`, which prepends the helper into the stdin stream so `read_property` is in scope on the remote (see Known Pitfalls). **No script should redefine `read_property` inline** — all 43+ inline definitions were removed during the refactor.
+`scripts/lib_app_config.sh` is the canonical definition of `read_property()`. See [Known Pitfalls — `read_property` over SSH](#read_property-over-ssh-the-lib_app_configsh-prepend-trick) for the source-vs-prepend mechanism. Don't redefine `read_property` inline in any script.
 
 ### `app.yaml` is unaffected
 `app.yaml` maps artifact logical keys to filenames inside `$ODSXARTIFACTS`. It plays no role in directory naming and contains no `${app.*.path}` placeholders.
