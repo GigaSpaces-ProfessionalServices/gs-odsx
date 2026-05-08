@@ -330,6 +330,13 @@ def installCluster():
         createDatasource()
         importAllPipelines()
 
+        # Restart subscription manager on di1 to pick up final config
+        logger.info("Restarting di-subscription-manager-iidr on " + kafkaBrokerHost1)
+        verboseHandle.printConsoleInfo("Restarting di-subscription-manager-iidr on " + kafkaBrokerHost1)
+        executeRemoteCommandAndGetOutput(kafkaBrokerHost1, user,
+            "sudo systemctl restart di-subscription-manager-iidr.service")
+        verboseHandle.printConsoleInfo("Completed DI installation")
+
 def createDatasource():
     """Create datasource(s) via di-manager API after DI install.
     Loads exported datasources.json if available; each field falls back to app.config defaults
@@ -431,7 +438,7 @@ def importAllPipelines():
             return
         for fname in files:
             fpath = os.path.join(import_path, fname)
-            import_cmd = f"{rootpath}dihctl -e dev apply -s -f {fpath}"
+            import_cmd = f"{rootpath}dihctl -e dev apply -f {fpath}"
             verboseHandle.printConsoleInfo("Importing pipeline: " + import_cmd)
             result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             if result.returncode != 0:
