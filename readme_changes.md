@@ -561,3 +561,8 @@
 169. Added new datasource credential configs:
      app.cdc.datasource.username=
      app.cdc.datasource.password=
+### TAU v5.6.11-tau-release tag
+170. Added new properties for datasource credential config in app.conig:
+     app.cdc.datasource.tns.host=onprem1-ora1
+     app.cdc.datasource.tns.port=1521
+     app.cdc.datasource.tns.service=ORCLPDB1

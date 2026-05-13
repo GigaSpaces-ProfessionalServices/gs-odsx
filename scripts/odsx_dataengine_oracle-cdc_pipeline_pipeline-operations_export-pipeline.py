@@ -140,8 +140,13 @@ def exportPipeline(diManagerHost):
 
         for idx in selected_indices:
             selected_pipeline = pipelines[idx - 1].get("name", "")
+            selected_status = pipelines[idx - 1].get("status", "").strip().upper()
             verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline}")
             logger.info(f"Selected pipeline: {selected_pipeline}")
+            if selected_status == "ERROR":
+                verboseHandle.printConsoleError("Pipeline Is in ERROR state Cannot perform Export pipeline operation")
+                logger.error(f"Pipeline '{selected_pipeline}' is in ERROR state. Skipping.")
+                continue
 
             export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
             export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"

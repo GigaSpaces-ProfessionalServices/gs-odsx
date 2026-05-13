@@ -136,6 +136,11 @@ def stopPipeline(diManagerHost):
             verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")
             logger.info(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")
 
+            if selected_status == "ERROR":
+                verboseHandle.printConsoleError("Pipeline Is in ERROR state Cannot perform Stop pipeline operation")
+                logger.error(f"Pipeline '{selected_pipeline}' is in ERROR state.")
+                continue
+
             if selected_status != "RUNNING":
                 verboseHandle.printConsoleWarning(f"Pipeline '{selected_pipeline}' is not running (status: {selected_status}). Skipping.")
                 continue

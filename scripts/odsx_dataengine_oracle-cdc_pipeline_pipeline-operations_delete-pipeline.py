@@ -134,6 +134,16 @@ def deletePipeline(diManagerHost):
     verboseHandle.printConsoleInfo(f"Selected pipelines: {selected_pipelines}")
     logger.info(f"Selected pipelines: {selected_pipelines}")
 
+    pl_list_response = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
+    pl_list = pl_list_response.json()
+
+    for selected_pipeline in selected_pipelines:
+        pipeline_status = next((pl.get("status", "").strip().upper() for pl in pl_list if pl.get("name") == selected_pipeline), "")
+        if pipeline_status == "ERROR":
+            verboseHandle.printConsoleError(f"Pipeline Is in ERROR state Cannot perform {selected_pipeline} Delete pipeline operation")
+            logger.error(f"Pipeline '{selected_pipeline}' is in ERROR state.")
+            return
+
     export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
     if not export_path.strip():
         verboseHandle.printConsoleError("Export path cannot be empty.")
@@ -150,8 +160,6 @@ def deletePipeline(diManagerHost):
         return
 
     objectMgmtHost = getPivotHost()
-    pl_list_response = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
-    pl_list = pl_list_response.json()
 
     for selected_pipeline in selected_pipelines:
         verboseHandle.printConsoleInfo(f"--- Processing pipeline: {selected_pipeline} ---")
@@ -194,7 +202,6 @@ def deletePipeline(diManagerHost):
         if not pipeline_id:
             verboseHandle.printConsoleError(f"Pipeline ID not found for: {selected_pipeline}")
             continue
-        pipeline_status = next((pl.get("status", "").strip().upper() for pl in pl_list if pl.get("name") == selected_pipeline), "")
         if pipeline_status == "INACTIVE":
             verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' is already INACTIVE. Skipping stop.")
             logger.info(f"Pipeline '{selected_pipeline}' is already INACTIVE. Skipping stop.")

@@ -122,6 +122,10 @@ def removeColumn(diManagerHost):
     selected_status = pipelines[int(selection) - 1].get("status", "").strip().upper()
     verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline}")
     logger.info(f"Selected pipeline: {selected_pipeline}")
+    if selected_status == "ERROR":
+        verboseHandle.printConsoleError("Pipeline Is in ERROR state Cannot perform Remove Column operation")
+        logger.error(f"Pipeline '{selected_pipeline}' is in ERROR state.")
+        return
 
     export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
     if not export_path.strip():

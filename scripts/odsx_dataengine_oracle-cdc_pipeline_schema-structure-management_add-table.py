@@ -127,6 +127,10 @@ def addTable(diManagerHost):
         selected_sor_name  = pipelines[int(selection) - 1].get("sorName", "")
         verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline} (status: {selected_status}, sor: {selected_sor_name})")
         logger.info(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")
+        if selected_status == "ERROR":
+            verboseHandle.printConsoleError("Pipeline Is in ERROR state Cannot perform Add Table operation")
+            logger.error(f"Pipeline '{selected_pipeline}' is in ERROR state.")
+            return
 
         # Fetch pipeline ID from REST API
         verboseHandle.printConsoleInfo(f"Fetching pipeline ID for: {selected_pipeline}")
