@@ -386,7 +386,9 @@ def addTable(diManagerHost):
         exported_yaml = None
         selected_pl_tbl_name = None
         selected_pl_tbl_schema = None
-        if not export_path.strip():
+        if edit_cols_confirm not in ("yes", "y"):
+            verboseHandle.printConsoleInfo("Skipping column editing.")
+        elif not export_path.strip():
             verboseHandle.printConsoleError("Export path cannot be empty. Skipping export.")
         elif not os.path.exists(export_path):
             verboseHandle.printConsoleError(f"Export path not found: {export_path}. Skipping export.")
@@ -497,9 +499,9 @@ def addTable(diManagerHost):
             except Exception as col_ex:
                 verboseHandle.printConsoleError(f"Failed to fetch columns for {tbl_schema}.{tbl_name}: {col_ex}")
                 logger.error(f"Columns fetch failed for {tbl_schema}.{tbl_name}: {col_ex}")
-        else:
-            verboseHandle.printConsoleInfo("Skipping column editing.")
-            logger.info("User skipped column editing.")
+        # else:
+        #     verboseHandle.printConsoleInfo("Skipping column editing.")
+        #     logger.info("User skipped column editing.")
 
         if export_file and exported_yaml and col_exclude_map:
             table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]

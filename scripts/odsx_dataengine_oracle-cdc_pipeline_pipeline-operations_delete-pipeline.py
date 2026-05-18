@@ -152,6 +152,38 @@ def deletePipeline(diManagerHost):
         verboseHandle.printConsoleError(f"Export path not found: {export_path}")
         return
 
+    # Export all selected pipelines upfront to show space types before confirmation
+    pipeline_space_types = {}
+    for selected_pipeline in selected_pipelines:
+        export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
+        export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
+        logger.info(f"Running export: {export_cmd}")
+        export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if export_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Export failed for '{selected_pipeline}': {export_result.stderr}")
+            pipeline_space_types[selected_pipeline] = []
+            continue
+        logger.info(f"Export successful: {export_result.stdout}")
+        with open(export_file, 'r') as f:
+            exported_yaml = yaml.safe_load(f)
+        table_pipelines = exported_yaml.get("pipelines", [{}])[0].get("tablePipelines", [])
+        space_types = [tp.get("spaceTypeName", "") for tp in table_pipelines if tp.get("spaceTypeName", "")]
+        pipeline_space_types[selected_pipeline] = space_types
+
+        verboseHandle.printConsoleInfo(f"Space types for pipeline '{selected_pipeline}':")
+        tp_headers = [
+            Fore.YELLOW + "Sr No."          + Fore.RESET,
+            Fore.YELLOW + "Space Type Name" + Fore.RESET,
+        ]
+        tp_data = []
+        for idx, name in enumerate(space_types, start=1):
+            tp_data.append([
+                Fore.GREEN + str(idx)  + Fore.RESET,
+                Fore.GREEN + str(name) + Fore.RESET,
+            ])
+        printTabular(None, tp_headers, tp_data)
+        logger.info(f"Space types to unregister: {space_types}")
+
     confirm = userInputWrapper(
         Fore.YELLOW + f"This will stop and permanently delete {selected_pipelines} pipeline(s) and unregister all their space types. Continue? (yes/no): " + Fore.RESET
     ).strip().lower()
@@ -165,37 +197,7 @@ def deletePipeline(diManagerHost):
         verboseHandle.printConsoleInfo(f"--- Processing pipeline: {selected_pipeline} ---")
         logger.info(f"--- Processing pipeline: {selected_pipeline} ---")
 
-        # Export pipeline to discover space types
-        export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
-        export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
-        verboseHandle.printConsoleInfo(f"Running: {export_cmd}")
-        logger.info(f"Running: {export_cmd}")
-        export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        if export_result.returncode != 0:
-            verboseHandle.printConsoleError(f"Export failed for '{selected_pipeline}': {export_result.stderr}")
-            continue
-        verboseHandle.printConsoleInfo(f"Export successful: {export_file}")
-        logger.info(f"Export successful: {export_result.stdout}")
-
-        with open(export_file, 'r') as f:
-            exported_yaml = yaml.safe_load(f)
-
-        table_pipelines = exported_yaml.get("pipelines", [{}])[0].get("tablePipelines", [])
-        space_types = [tp.get("spaceTypeName", "") for tp in table_pipelines if tp.get("spaceTypeName", "")]
-
-        tp_headers = [
-            Fore.YELLOW + "Sr No."          + Fore.RESET,
-            Fore.YELLOW + "Space Type Name" + Fore.RESET,
-        ]
-        tp_data = []
-        for idx, name in enumerate(space_types, start=1):
-            tp_data.append([
-                Fore.GREEN + str(idx)  + Fore.RESET,
-                Fore.GREEN + str(name) + Fore.RESET,
-            ])
-        printTabular(None, tp_headers, tp_data)
-        verboseHandle.printConsoleInfo(f"All above space types will be unregistered.")
-        logger.info(f"Space types to unregister: {space_types}")
+        space_types = pipeline_space_types.get(selected_pipeline, [])
 
         # Stop pipeline
         pipeline_id = next((pl["pipelineId"] for pl in pl_list if pl.get("name") == selected_pipeline), None)

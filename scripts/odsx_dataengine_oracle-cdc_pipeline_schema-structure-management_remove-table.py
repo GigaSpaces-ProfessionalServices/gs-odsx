@@ -273,32 +273,30 @@ def removeTable(diManagerHost):
         logger.info(f"Delete table pipeline response: {delete_tp_response.status_code} {delete_tp_response.text}")
     except Exception as e:
         handleException(e)
-        return
-
-    # Start the pipeline
-    verboseHandle.printConsoleInfo(f"Starting pipeline: {selected_pipeline} [{pipeline_id}]")
-    logger.info(f"Starting pipeline: {selected_pipeline} [{pipeline_id}]")
-    start_payload = {
-        "reconciliationPolicy": "NONE",
-        "kafkaRunParameters": {
-            "CDC": {
-                "kafkaOffsetStrategy": "COMMITTED",
-                "kafkaOffset": -1
-            }
-        }
-    }
-    try:
-        start_response = requests.post(
-            f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/start",
-            headers={"accept": "*/*", "Content-Type": "application/json"},
-            json=start_payload
-        )
-        if start_response.status_code in (200, 201, 202, 204):
-            verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' started successfully.")
-            logger.info(f"Start pipeline response [{start_response.status_code}]: {start_response.text}")
-        else:
-            verboseHandle.printConsoleError(f"Failed to start pipeline '{selected_pipeline}'. Status: {start_response.status_code} Response: {start_response.text}")
-            logger.error(f"Start pipeline failed [{start_response.status_code}]: {start_response.text}")
+        return    # # Start the pipeline
+    # verboseHandle.printConsoleInfo(f"Starting pipeline: {selected_pipeline} [{pipeline_id}]")
+    # logger.info(f"Starting pipeline: {selected_pipeline} [{pipeline_id}]")
+    # start_payload = {
+    #     "reconciliationPolicy": "NONE",
+    #     "kafkaRunParameters": {
+    #         "CDC": {
+    #             "kafkaOffsetStrategy": "COMMITTED",
+    #             "kafkaOffset": -1
+    #         }
+    #     }
+    # }
+    # try:
+    #     start_response = requests.post(
+    #         f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/start",
+    #         headers={"accept": "*/*", "Content-Type": "application/json"},
+    #         json=start_payload
+    #     )
+    #     if start_response.status_code in (200, 201, 202, 204):
+    #         verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' started successfully.")
+    #         logger.info(f"Start pipeline response [{start_response.status_code}]: {start_response.text}")
+    #     else:
+    #         verboseHandle.printConsoleError(f"Failed to start pipeline '{selected_pipeline}'. Status: {start_response.status_code} Response: {start_response.text}")
+    #         logger.error(f"Start pipeline failed [{start_response.status_code}]: {start_response.text}")
     except Exception as e:
         handleException(e)
 
