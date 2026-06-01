@@ -116,15 +116,18 @@ def exportPipeline(diManagerHost):
             verboseHandle.printConsoleWarning("No pipeline available.")
             return
 
-        selection = userInputWrapper(f"Select pipeline(s) to export (e.g. 1 or 1-3 or 1,4,5): ").strip()
+        selection = userInputWrapper(f"Select pipeline(s) to export (e.g. 1 or 1-3 or 1,4,5 or all): ").strip()
         selected_indices = set()
-        for part in selection.split(","):
-            part = part.strip()
-            if "-" in part:
-                start, end = part.split("-", 1)
-                selected_indices.update(range(int(start.strip()), int(end.strip()) + 1))
-            elif part.isdigit():
-                selected_indices.add(int(part))
+        if selection.lower() == "all":
+            selected_indices = set(range(1, len(pipelines) + 1))
+        else:
+            for part in selection.split(","):
+                part = part.strip()
+                if "-" in part:
+                    start, end = part.split("-", 1)
+                    selected_indices.update(range(int(start.strip()), int(end.strip()) + 1))
+                elif part.isdigit():
+                    selected_indices.add(int(part))
         selected_indices = sorted(i for i in selected_indices if 1 <= i <= len(pipelines))
         if not selected_indices:
             verboseHandle.printConsoleError("Invalid selection.")

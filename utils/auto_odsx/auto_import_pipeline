@@ -1,0 +1,69 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+if {[llength $argv] != 1} {
+    puts "Usage:   ./auto_import_pipeline <pipeline_name|all>"
+    exit 1
+}
+
+set arg [lindex $argv 0]
+set tmpfile "/tmp/auto_pipeline_[pid]"
+
+cd /dbagiga/gs-odsx
+log_file -noappend $tmpfile
+spawn ./odsx.py dataengine oracle-cdc pipeline pipeline-operations import-pipeline
+
+expect "or all): "
+log_file
+
+if {$arg eq "all"} {
+    sleep 1
+    send -- "a"
+    sleep 0.3
+    send -- "l"
+    sleep 0.3
+    send -- "l"
+    sleep 1
+    send -- "\n"
+    expect eof
+    exit 0
+}
+
+if {[string match "*.yaml" $arg]} {
+    set filename $arg
+} else {
+    set filename "${arg}.yaml"
+}
+
+set fh [open $tmpfile r]
+set content [read $fh]
+close $fh
+file delete $tmpfile
+
+regsub -all {\x1b\[[0-9;]*[a-zA-Z]} $content "" clean
+regsub -all {\r} $clean "" clean
+
+# Escape dots in filename so they match literally in the regex
+regsub -all {[.]} $filename {[.]} escaped_filename
+
+set row_num ""
+foreach line [split $clean "\n"] {
+    if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${escaped_filename}\\s*\\|" $line -> num]} {
+        set row_num $num
+        break
+    }
+}
+
+if {$row_num eq ""} {
+    puts "\nFile '$filename' not found in pipeline folder."
+    exit 1
+}
+
+sleep 1
+send -- "$row_num"
+sleep 1
+send -- "\n"
+
+expect eof

@@ -1,0 +1,14 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+if {[llength $argv] != 0} {
+    puts "Usage:   ./auto_show_datasource"
+    exit 1
+}
+
+cd /dbagiga/gs-odsx
+spawn ./odsx.py dataengine oracle-cdc datasource show-datasources
+
+expect eof

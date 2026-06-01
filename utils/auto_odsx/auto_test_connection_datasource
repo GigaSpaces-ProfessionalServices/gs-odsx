@@ -1,0 +1,90 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+if {[llength $argv] != 2} {
+    puts "Usage:   ./auto_test_connection_datasource <datasource_name> <schema_name>"
+    exit 1
+}
+set datasource_name [lindex $argv 0]
+set schema_name     [lindex $argv 1]
+set table_number    1
+set tmpfile1 "/tmp/auto_testconn1_[pid]"
+set tmpfile2 "/tmp/auto_testconn2_[pid]"
+
+cd /dbagiga/gs-odsx
+log_file -noappend $tmpfile1
+spawn ./odsx.py dataengine oracle-cdc datasource test-datasource-connection
+
+expect "Select datasource"
+log_file
+
+set fh [open $tmpfile1 r]
+set content [read $fh]
+close $fh
+file delete $tmpfile1
+
+regsub -all {\x1b\[[0-9;]*m} $content "" clean
+set ds_row ""
+foreach line [split $clean "\n"] {
+    if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${datasource_name}\\.json\\s*\\|" $line -> num]} {
+        set ds_row $num
+        break
+    }
+}
+
+if {$ds_row eq ""} {
+    foreach line [split $clean "\n"] {
+        if {[regexp "\\|\\s+(\\d+)\\s+\\|[^|]*\\|\\s*${datasource_name}\\s*\\|" $line -> num]} {
+            set ds_row $num
+            break
+        }
+    }
+}
+
+if {$ds_row eq ""} {
+    puts "\nDatasource '$datasource_name' not found."
+    exit 1
+}
+
+sleep 1
+send -- "$ds_row"
+sleep 1
+send -- "\n"
+
+log_file -noappend $tmpfile2
+expect "Select schema number"
+log_file
+
+set fh2 [open $tmpfile2 r]
+set content2 [read $fh2]
+close $fh2
+file delete $tmpfile2
+
+regsub -all {\x1b\[[0-9;]*m} $content2 "" clean2
+set schema_row ""
+foreach line [split $clean2 "\n"] {
+    if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${schema_name}\\s*\\|" $line -> num]} {
+        set schema_row $num
+        break
+    }
+}
+
+if {$schema_row eq ""} {
+    puts "\nSchema '$schema_name' not found."
+    exit 1
+}
+
+sleep 1
+send -- "$schema_row"
+sleep 1
+send -- "\n"
+
+expect "Select table number"
+sleep 1
+send -- "$table_number"
+sleep 1
+send -- "\n"
+
+expect eof

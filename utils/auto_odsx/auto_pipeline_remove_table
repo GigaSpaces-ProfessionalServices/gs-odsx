@@ -1,0 +1,81 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+if {[llength $argv] != 2} {
+    puts "Usage:   ./auto_pipeline_remove_table <pipeline_name> <table_name>"
+    exit 1
+}
+set pipeline_name [lindex $argv 0]
+set table_name    [lindex $argv 1]
+
+set tmpfile1 "/tmp/auto_pipeline_rt1_[pid]"
+set tmpfile2 "/tmp/auto_pipeline_rt2_[pid]"
+
+cd /dbagiga/gs-odsx
+log_file -noappend $tmpfile1
+spawn ./odsx.py dataengine oracle-cdc pipeline schema-structure-management remove-table
+
+expect "Select pipeline number to remove table from"
+log_file
+
+set fh [open $tmpfile1 r]
+set content1 [read $fh]
+close $fh
+file delete $tmpfile1
+
+regsub -all {\x1b\[[0-9;]*m} $content1 "" clean1
+set row_num ""
+foreach line [split $clean1 "\n"] {
+    if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${pipeline_name}\\s*\\|" $line -> num]} {
+        set row_num $num
+        break
+    }
+}
+
+if {$row_num eq ""} {
+    puts "\nPipeline '$pipeline_name' not found."
+    exit 1
+}
+
+sleep 1
+send -- "$row_num"
+sleep 1
+send -- "\n"
+
+log_file -noappend $tmpfile2
+expect "Select table to remove"
+log_file
+
+set fh [open $tmpfile2 r]
+set content2 [read $fh]
+close $fh
+file delete $tmpfile2
+
+regsub -all {\x1b\[[0-9;]*m} $content2 "" clean2
+set tp_num ""
+foreach line [split $clean2 "\n"] {
+    if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${table_name}\\s*\\|" $line -> num]} {
+        set tp_num $num
+        break
+    }
+}
+
+if {$tp_num eq ""} {
+    puts "\nTable '$table_name' not found in pipeline '$pipeline_name'."
+    exit 1
+}
+
+sleep 1
+send -- "$tp_num"
+sleep 1
+send -- "\n"
+
+expect "Continue? (yes/no):"
+sleep 1
+send -- "y"
+sleep 1
+send -- "\n"
+
+expect eof

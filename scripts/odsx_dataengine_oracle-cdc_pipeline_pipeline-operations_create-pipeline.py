@@ -2,18 +2,23 @@ import os
 import csv
 import io
 import json
+import time
 import yaml
 import requests
 import subprocess
 
 from colorama import Fore
 from scripts.logManager import LogManager
-from utils.ods_cluster_config import config_get_dataIntegration_nodes
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_manager_node
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 from utils.ods_app_config import readValuefromAppConfig
 from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from scripts.odsx_tieredstorage_undeploy import getManagerHost
+from scripts.odsx_space_spacelist import listDeployed
+from requests.auth import HTTPBasicAuth
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -35,11 +40,11 @@ def handleException(e):
         'message': str(e),
         'trace': trace
     }))
-    verboseHandle.printConsoleError((str({
+    verboseHandle.printConsoleError(str({
         'type': type(e).__name__,
         'message': str(e),
         'trace': trace
-    })))
+    }))
 
 
 def isMDMInstalled(host, nodeType):
@@ -61,7 +66,7 @@ def getDIServerHost():
     return ""
 
 
-def addTable(diManagerHost):
+def createPipeline(diManagerHost):
     try:
         iidrHost = ""
         dIServers = config_get_dataIntegration_nodes("config/cluster.config")
@@ -87,98 +92,146 @@ def addTable(diManagerHost):
             verboseHandle.printConsoleError(f"Login failed: {login_result.stderr}")
             return
 
-        result = subprocess.run(
+        di1_host = str(os.getenv("di1"))
+
+        # Get pipeline name
+        pipeline_name = userInputWrapper(Fore.YELLOW + "Enter new pipeline name: " + Fore.RESET).strip()
+        if not pipeline_name:
+            verboseHandle.printConsoleError("Pipeline name cannot be empty.")
+            return
+
+        # Verify pipeline name is not already taken
+        verboseHandle.printConsoleInfo("Verifying pipeline name availability...")
+        pl_check = subprocess.run(
             [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
             stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
         )
-        reader = csv.DictReader(io.StringIO(result.stdout))
-        pipelines = list(reader)
+        pl_reader = csv.DictReader(io.StringIO(pl_check.stdout))
+        existing_pipelines = [row.get("name", "") for row in pl_reader]
+        if pipeline_name in existing_pipelines:
+            verboseHandle.printConsoleError(f"Pipeline '{pipeline_name}' already exists. Please choose a different name.")
+            return
+        verboseHandle.printConsoleInfo(f"Pipeline name '{pipeline_name}' is available.")
 
-        headers = [
-            Fore.YELLOW + "Sr No."        + Fore.RESET,
-            Fore.YELLOW + "Pipeline Name" + Fore.RESET,
-            Fore.YELLOW + "SOR Name"      + Fore.RESET,
-            Fore.YELLOW + "Space Name"    + Fore.RESET,
-            Fore.YELLOW + "Status"        + Fore.RESET,
+        # Fetch space list from manager REST API
+        managerNodes = config_get_manager_node()
+        managerHost = getManagerHost(managerNodes)
+        profile = str(readValuefromAppConfig("app.setup.profile"))
+        logger.info("managerHost :" + str(managerHost))
+        if profile == 'security':
+            username = str(getUsernameByHost())
+            password = str(getPasswordByHost())
+            spaces_response = requests.get("http://" + str(managerHost) + ":8090/v2/spaces", auth=HTTPBasicAuth(username, password))
+        else:
+            spaces_response = requests.get("http://" + str(managerHost) + ":8090/v2/spaces")
+        logger.info("response status of host :" + str(managerHost) + " status :" + str(spaces_response.status_code) + " Content: " + str(spaces_response.content))
+        spaces_json = json.loads(spaces_response.text)
+        if not spaces_json:
+            verboseHandle.printConsoleError("No spaces found on cluster.")
+            return
+        space_headers = [
+            Fore.YELLOW + "Sr No."     + Fore.RESET,
+            Fore.YELLOW + "Space Name" + Fore.RESET,
         ]
-
-        dataTable = []
-        for idx, pipeline in enumerate(pipelines, start=1):
-            dataTable.append([
-                Fore.GREEN + str(idx)                      + Fore.RESET,
-                Fore.GREEN + pipeline.get("name", "")      + Fore.RESET,
-                Fore.GREEN + pipeline.get("sorName", "")   + Fore.RESET,
-                Fore.GREEN + pipeline.get("spaceName", "") + Fore.RESET,
-                Fore.GREEN + pipeline.get("status", "")    + Fore.RESET,
+        space_data = []
+        for idx, sp in enumerate(spaces_json, start=1):
+            space_data.append([
+                Fore.GREEN + str(idx)         + Fore.RESET,
+                Fore.GREEN + str(sp["name"])  + Fore.RESET,
             ])
+        printTabular(None, space_headers, space_data)
+        space_sel = userInputWrapper(Fore.YELLOW + f"Select space number (1-{len(spaces_json)}): " + Fore.RESET).strip()
+        if not space_sel.isdigit() or not (1 <= int(space_sel) <= len(spaces_json)):
+            verboseHandle.printConsoleError("Invalid space selection.")
+            return
+        space_name = str(spaces_json[int(space_sel) - 1]["name"]).strip()
 
-        printTabular(None, headers, dataTable)
+        verboseHandle.printConsoleInfo(f"Selected space: {space_name}")
+        logger.info(f"Selected space: {space_name}")
 
-        if not dataTable:
-            verboseHandle.printConsoleWarning("No pipeline available.")
+        sor_name = ""
+
+        # Live datasources via dihctl
+        verboseHandle.printConsoleInfo("Fetching live datasources...")
+        logger.info("Fetching datasources list via dihctl")
+        ds_result = subprocess.run(
+            [f'{rootpath}dihctl', '-e', 'dev', 'show', 'datasources', '--format', 'csv'],
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+        )
+        ds_reader  = csv.DictReader(io.StringIO(ds_result.stdout))
+        datasources = list(ds_reader)
+        if not datasources:
+            verboseHandle.printConsoleWarning("No live datasources found. Using 'ORACLE' as default.")
+            sor_name = "ORACLE"
+        else:
+            ds_headers = [
+                Fore.YELLOW + "Sr No."          + Fore.RESET,
+                Fore.YELLOW + "Datasource Name" + Fore.RESET,
+                Fore.YELLOW + "DB Provider"     + Fore.RESET,
+            ]
+            ds_data = []
+            for idx, ds in enumerate(datasources, start=1):
+                ds_data.append([
+                    Fore.GREEN + str(idx)                                        + Fore.RESET,
+                    Fore.GREEN + str(ds.get("name") or ds.get("sorName") or "")  + Fore.RESET,
+                    Fore.GREEN + str(ds.get("dbProvider", ""))                   + Fore.RESET,
+                ])
+            printTabular(None, ds_headers, ds_data)
+            ds_selection = userInputWrapper(f"Select datasource number (1-{len(datasources)}): ").strip()
+            if not ds_selection.isdigit() or not (1 <= int(ds_selection) <= len(datasources)):
+                verboseHandle.printConsoleError("Invalid selection.")
+                return
+            selected_ds = datasources[int(ds_selection) - 1]
+            sor_name = str(selected_ds.get("name") or selected_ds.get("sorName") or "ORACLE").strip()
+
+        verboseHandle.printConsoleInfo(f"Selected datasource (SOR): {sor_name}")
+        logger.info(f"Selected datasource: {sor_name}")
+
+        # Create pipeline via REST API
+        create_payload = {
+            "name": pipeline_name,
+            "sorName": sor_name,
+            "cdcProvider": "IIDR",
+            "spaceName": space_name,
+            "batchWrite": 2000,
+            "checkpointInterval": 6000
+        }
+        verboseHandle.printConsoleInfo(f"Creating pipeline '{pipeline_name}' in space '{space_name}'...")
+        verboseHandle.printConsoleInfo(f"Payload: {json.dumps(create_payload, indent=2)}")
+        logger.info(f"Creating pipeline: {json.dumps(create_payload)}")
+        create_url = f"http://{iidrHost}:6080/api/v1/pipeline/"
+        verboseHandle.printConsoleInfo(f"POST {create_url}")
+        create_response = requests.post(
+            create_url,
+            headers={"accept": "*/*", "Content-Type": "application/json"},
+            json=create_payload
+        )
+        if create_response.status_code not in (200, 201, 202):
+            verboseHandle.printConsoleError(f"Failed to create pipeline. Status: {create_response.status_code} Response: {create_response.text}")
+            logger.error(f"Pipeline creation failed [{create_response.status_code}]: {create_response.text}")
             return
 
-        selection = userInputWrapper(f"Select pipeline number to add table (1-{len(pipelines)}): ").strip()
-        if not selection.isdigit() or not (1 <= int(selection) <= len(pipelines)):
-            verboseHandle.printConsoleError("Invalid selection.")
-            return
-        selected_pipeline  = pipelines[int(selection) - 1].get("name", "")
-        selected_status    = pipelines[int(selection) - 1].get("status", "").strip().upper()
-        selected_sor_name  = pipelines[int(selection) - 1].get("sorName", "")
-        verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline} (status: {selected_status}, sor: {selected_sor_name})")
-        logger.info(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")
-        if selected_status == "ERROR":
-            verboseHandle.printConsoleError("Pipeline Is in ERROR state Cannot perform Add Table operation")
-            logger.error(f"Pipeline '{selected_pipeline}' is in ERROR state.")
-            return
-
-        # Fetch pipeline ID from REST API
-        verboseHandle.printConsoleInfo(f"Fetching pipeline ID for: {selected_pipeline}")
-        logger.info(f"Fetching pipeline ID for: {selected_pipeline}")
-        pl_list_response = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
-        pl_list_json = pl_list_response.json()
-        pl_list = pl_list_json.get("data", pl_list_json) if isinstance(pl_list_json, dict) else pl_list_json
-        pipeline_id = next((pl["pipelineId"] for pl in pl_list if pl.get("name") == selected_pipeline), None)
+        create_json = create_response.json()
+        pipeline_id = create_json.get("pipelineId") or (create_json.get("data") or {}).get("pipelineId")
         if not pipeline_id:
-            verboseHandle.printConsoleError(f"Pipeline ID not found for: {selected_pipeline}")
+            # Fall back to fetching from list
+            pl_list_resp = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
+            pl_list = pl_list_resp.json()
+            if isinstance(pl_list, dict):
+                pl_list = pl_list.get("data", [])
+            pipeline_id = next((pl["pipelineId"] for pl in pl_list if pl.get("name") == pipeline_name), None)
+
+        if not pipeline_id:
+            verboseHandle.printConsoleError(f"Pipeline created but ID not found for: {pipeline_name}")
             return
-        verboseHandle.printConsoleInfo(f"Pipeline ID: {pipeline_id}")
-        logger.info(f"Pipeline ID: {pipeline_id}")
 
-        # # Export pipeline YAML to get tables currently attached to the pipeline
-        # export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
-        # if not export_path.strip() or not os.path.exists(export_path):
-        #     verboseHandle.printConsoleError(f"Export path not found: {export_path}")
-        #     return
-        # export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
-        # export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
-        # verboseHandle.printConsoleInfo(f"Running: {export_cmd}")
-        # logger.info(f"Running: {export_cmd}")
-        # export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        # if export_result.returncode != 0:
-        #     verboseHandle.printConsoleError(f"Export failed: {export_result.stderr}")
-        #     return
-        # with open(export_file, 'r') as f:
-        #     exported_yaml = yaml.safe_load(f)
-        # existing_table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
-        # existing_space_types = [str(tp.get("spaceTypeName", "")).strip() for tp in existing_table_pipelines]
-        #
-        # verboseHandle.printConsoleInfo(f"Tables currently attached to pipeline '{selected_pipeline}':")
-        # existing_headers = [
-        #     Fore.YELLOW + "Sr No."          + Fore.RESET,
-        #     Fore.YELLOW + "Space Type Name" + Fore.RESET,
-        # ]
-        # existing_data = []
-        # for idx, stn in enumerate(existing_space_types, start=1):
-        #     existing_data.append([
-        #         Fore.GREEN + str(idx) + Fore.RESET,
-        #         Fore.GREEN + stn      + Fore.RESET,
-        #     ])
-        # printTabular(None, existing_headers, existing_data)
+        verboseHandle.printConsoleInfo(f"Pipeline '{pipeline_name}' created successfully. ID: {pipeline_id}")
+        logger.info(f"Pipeline '{pipeline_name}' created. ID: {pipeline_id}")
 
-        # Fetch Oracle schemas for the selected datasource and let user choose
-        di1_host = str(os.getenv("di1"))
-        schemas_url = f"http://{di1_host}:6080/api/v2/datasource/{selected_sor_name}/schemas"
+        # ── Add tables (same logic as add-table operation) ──────────────────
+
+        # Fetch Oracle schemas for the selected datasource
+        schemas_url = f"http://{di1_host}:6080/api/v2/datasource/{sor_name}/schemas"
         verboseHandle.printConsoleInfo(f"Fetching schemas from: {schemas_url}")
         logger.info(f"Fetching schemas URL: {schemas_url}")
         schemas_response = requests.get(schemas_url, headers={"accept": "*/*"})
@@ -196,7 +249,7 @@ def addTable(diManagerHost):
                     schemas.append(name)
 
         if not schemas:
-            verboseHandle.printConsoleError(f"No schemas found for datasource '{selected_sor_name}'.")
+            verboseHandle.printConsoleError(f"No schemas found for datasource '{sor_name}'.")
             return
 
         schema_headers = [
@@ -219,29 +272,33 @@ def addTable(diManagerHost):
         verboseHandle.printConsoleInfo(f"Selected Oracle schema: {oracle_schema}")
         logger.info(f"Selected Oracle schema: {oracle_schema}")
 
-        # Fetch tables already attached to the selected pipeline
-        tablepipeline_url = f"http://{di1_host}:6080/api/v2/pipeline/{pipeline_id}/tablepipeline"
-        verboseHandle.printConsoleInfo(f"Fetching pipeline tables from: {tablepipeline_url}")
-        logger.info(f"Fetching pipeline tables URL: {tablepipeline_url}")
-        tp_response = requests.get(tablepipeline_url, headers={"accept": "*/*"})
-        tp_response.raise_for_status()
-        tp_json = tp_response.json()
-        tp_raw = tp_json.get("data", tp_json) if isinstance(tp_json, dict) else tp_json
+        # Fetch tables already attached to the pipeline (none for fresh, but keep for consistency)
         attached_tables_upper = set()
-        for tp in tp_raw:
-            if isinstance(tp, str):
-                attached_tables_upper.add(tp.strip().upper())
-            else:
-                t = str(tp.get("tableName") or tp.get("sourceTable") or tp.get("table", "")).strip().upper()
-                s = str(tp.get("schemaName") or tp.get("sourceSchema") or tp.get("schema", "")).strip().upper()
-                if t:
-                    attached_tables_upper.add(t)
-                if s and t:
-                    attached_tables_upper.add(f"{s}.{t}")
+        try:
+            tp_response = requests.get(
+                f"http://{di1_host}:6080/api/v2/pipeline/{pipeline_id}/tablepipeline",
+                headers={"accept": "*/*"}
+            )
+            if tp_response.ok:
+                tp_raw = tp_response.json()
+                if isinstance(tp_raw, dict):
+                    tp_raw = tp_raw.get("data", [])
+                for tp in tp_raw:
+                    if isinstance(tp, str):
+                        attached_tables_upper.add(tp.strip().upper())
+                    else:
+                        t = str(tp.get("tableName") or tp.get("sourceTable") or tp.get("table", "")).strip().upper()
+                        s = str(tp.get("schemaName") or tp.get("sourceSchema") or tp.get("schema", "")).strip().upper()
+                        if t:
+                            attached_tables_upper.add(t)
+                        if s and t:
+                            attached_tables_upper.add(f"{s}.{t}")
+        except Exception:
+            pass
 
         # List available tables from the datasource
-        schema_tables_url = f"http://{di1_host}:6080/api/v2/datasource/{selected_sor_name}/tables?schemaName={oracle_schema}"
-        verboseHandle.printConsoleInfo(f"Fetching available tables from datasource '{selected_sor_name}' schema '{oracle_schema}'")
+        schema_tables_url = f"http://{di1_host}:6080/api/v2/datasource/{sor_name}/tables?schemaName={oracle_schema}"
+        verboseHandle.printConsoleInfo(f"Fetching available tables from datasource '{sor_name}' schema '{oracle_schema}'")
         verboseHandle.printConsoleInfo(f"URL: {schema_tables_url}")
         logger.info(f"Fetching available tables URL: {schema_tables_url}")
         ds_tables_response = requests.get(schema_tables_url, headers={"accept": "*/*"})
@@ -264,7 +321,7 @@ def addTable(diManagerHost):
             tables.append({"sourceSchema": s_schema, "sourceTable": s_table})
 
         if not tables:
-            verboseHandle.printConsoleWarning(f"No available tables found in datasource '{selected_sor_name}' (all may already be attached to the pipeline).")
+            verboseHandle.printConsoleWarning(f"No available tables found in datasource '{sor_name}' (all may already be attached to the pipeline).")
             return
 
         tbl_headers = [
@@ -281,7 +338,7 @@ def addTable(diManagerHost):
             ])
         printTabular(None, tbl_headers, tbl_data)
 
-        tbl_selection = userInputWrapper(f"Select table number(s) to add to pipeline '{selected_pipeline}' (e.g. 1 or 1-3 or 1,4,5): ").strip()
+        tbl_selection = userInputWrapper(f"Select table number(s) to add to pipeline '{pipeline_name}' (e.g. 1 or 1-3 or 1,4,5): ").strip()
         selected_tbl_indices = set()
         for part in tbl_selection.split(","):
             part = part.strip()
@@ -296,9 +353,9 @@ def addTable(diManagerHost):
             verboseHandle.printConsoleError("Invalid selection.")
             return
 
-        selected_tables     = [tables[i - 1] for i in selected_tbl_indices]
-        source_schema       = selected_tables[0]["sourceSchema"]
-        source_tables_list  = [tbl["sourceTable"] for tbl in selected_tables]
+        selected_tables      = [tables[i - 1] for i in selected_tbl_indices]
+        source_schema        = selected_tables[0]["sourceSchema"]
+        source_tables_list   = [tbl["sourceTable"] for tbl in selected_tables]
         selected_table_names = [f"{tbl['sourceSchema']}.{tbl['sourceTable']}" for tbl in selected_tables]
         verboseHandle.printConsoleInfo(f"Selected tables: {selected_table_names}")
         logger.info(f"Selected tables: {selected_table_names}")
@@ -310,55 +367,7 @@ def addTable(diManagerHost):
         verboseHandle.printConsoleInfo(f"Payload: {json.dumps(payload, indent=2)}")
         logger.info(f"Payload: {json.dumps(payload)}")
 
-        # Confirm before stopping pipeline
-        confirm = userInputWrapper(
-            Fore.YELLOW + f"Pipeline '{selected_pipeline}' will be stopped, {len(selected_tables)} table(s) will be added, Continue? (yes/no): " + Fore.RESET
-        ).strip().lower()
-        if confirm not in ("yes", "y"):
-            verboseHandle.printConsoleWarning("Operation cancelled by user.")
-            return
-
-        # Stop pipeline before adding table (only if currently running)
-        if selected_status == "RUNNING":
-            verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-            logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-            stop_response = requests.post(
-                f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop",
-                headers={"accept": "*/*", "Content-Type": "application/json"}
-            )
-            stop_status = stop_response.json().get("status", "unknown")
-            verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
-            logger.info(f"Stop pipeline response status: {stop_status}")
-
-            # Wait until pipeline is fully INACTIVE before proceeding
-            import time
-            max_wait = 60
-            poll_interval = 5
-            elapsed = 0
-            verboseHandle.printConsoleInfo(f"Waiting for pipeline '{selected_pipeline}' to become INACTIVE...")
-            logger.info(f"Polling pipeline status, max_wait={max_wait}s, interval={poll_interval}s")
-            while elapsed < max_wait:
-                time.sleep(poll_interval)
-                elapsed += poll_interval
-                status_resp = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
-                status_list = status_resp.json()
-                current_status = next(
-                    (pl.get("status", "").strip().upper() for pl in status_list if pl.get("pipelineId") == pipeline_id),
-                    None
-                )
-                verboseHandle.printConsoleInfo(f"Pipeline status: {current_status} ({elapsed}s elapsed)")
-                logger.info(f"Pipeline status poll [{elapsed}s]: {current_status}")
-                if current_status and current_status != "RUNNING":
-                    break
-            else:
-                verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' did not stop within {max_wait}s. Aborting.")
-                logger.error(f"Pipeline '{selected_pipeline}' still RUNNING after {max_wait}s polling.")
-                return
-        else:
-            verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' is not running (status: {selected_status}), skipping stop.")
-            logger.info(f"Pipeline '{selected_pipeline}' status is '{selected_status}', stop skipped.")
-
-        # Adding table
+        # Add tables
         add_url = f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/add_tables"
         verboseHandle.printConsoleInfo(f"Calling POST {add_url}")
         logger.info(f"Calling POST {add_url}")
@@ -376,7 +385,7 @@ def addTable(diManagerHost):
         failed_tables  = add_resp_json.get("failedTablesAndReasons", {}) if isinstance(add_resp_json, dict) else {}
 
         if add_response.status_code in (200, 201, 202, 204):
-            verboseHandle.printConsoleInfo(f"Tables {selected_table_names} added to pipeline '{selected_pipeline}' successfully.")
+            verboseHandle.printConsoleInfo(f"Tables {selected_table_names} added to pipeline '{pipeline_name}' successfully.")
             logger.info(f"Add table response [{add_response.status_code}]: {add_response.text}")
         elif add_api_status == "PART_OF_TABLES_ADDED_SUCCESSFULLY":
             for tbl_name, reason in failed_tables.items():
@@ -397,12 +406,12 @@ def addTable(diManagerHost):
             logger.error(f"Add table failed [{add_response.status_code}]: {add_response.text}")
             return
 
-        # Ask user whether to remove columns
+        # ── Optional column exclusion ────────────────────────────────────────
+
         edit_cols_confirm = userInputWrapper(
             Fore.YELLOW + "Do you want to remove columns for the added table(s)? (yes/no): " + Fore.RESET
         ).strip().lower()
 
-        # Export pipeline to list available tables before asking about column editing
         export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
         export_file = None
         exported_yaml = None
@@ -415,22 +424,21 @@ def addTable(diManagerHost):
         elif not os.path.exists(export_path):
             verboseHandle.printConsoleError(f"Export path not found: {export_path}. Skipping export.")
         else:
-            export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
-            export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
+            export_file = os.path.join(export_path, f"{pipeline_name}.yaml")
+            export_cmd = f"{rootpath}dihctl -e dev export pipelines {pipeline_name} -o {export_file}"
             verboseHandle.printConsoleInfo(f"Exporting pipeline: {export_cmd}")
             logger.info(f"Running export: {export_cmd}")
             export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
             if export_result.returncode != 0:
-                verboseHandle.printConsoleError(f"Export failed for '{selected_pipeline}': {export_result.stderr}")
+                verboseHandle.printConsoleError(f"Export failed for '{pipeline_name}': {export_result.stderr}")
                 logger.error(f"Export failed [{export_result.returncode}]: {export_result.stderr}")
                 export_file = None
             else:
-                verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' exported successfully to: {export_file}")
+                verboseHandle.printConsoleInfo(f"Pipeline '{pipeline_name}' exported successfully to: {export_file}")
                 logger.info(f"Export successful: {export_result.stdout}")
                 with open(export_file, 'r') as f:
                     exported_yaml = yaml.safe_load(f)
 
-                # List all tables currently in the pipeline
                 pipeline_table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
                 pl_tbl_headers = [
                     Fore.YELLOW + "Sr No."          + Fore.RESET,
@@ -442,39 +450,33 @@ def addTable(diManagerHost):
                         Fore.GREEN + str(idx)                         + Fore.RESET,
                         Fore.GREEN + str(tp.get("spaceTypeName", "")) + Fore.RESET,
                     ])
-                verboseHandle.printConsoleInfo(f"Tables in pipeline '{selected_pipeline}':")
+                verboseHandle.printConsoleInfo(f"Tables in pipeline '{pipeline_name}':")
                 printTabular(None, pl_tbl_headers, pl_tbl_data)
 
                 pl_tbl_selection = userInputWrapper(
                     f"Select table number to edit columns (1-{len(pipeline_table_pipelines)}): "
                 ).strip()
                 if pl_tbl_selection.isdigit() and (1 <= int(pl_tbl_selection) <= len(pipeline_table_pipelines)):
-                    selected_pl_tbl_idx = int(pl_tbl_selection) - 1
+                    selected_pl_tbl_idx  = int(pl_tbl_selection) - 1
                     selected_pl_tbl_name = str(pipeline_table_pipelines[selected_pl_tbl_idx].get("spaceTypeName", "")).strip()
-                    matched_src = next((t for t in selected_tables if t["sourceTable"] == selected_pl_tbl_name), None)
+                    matched_src          = next((t for t in selected_tables if t["sourceTable"] == selected_pl_tbl_name), None)
                     selected_pl_tbl_schema = matched_src["sourceSchema"] if matched_src else oracle_schema
                 else:
                     verboseHandle.printConsoleError("Invalid table selection.")
-                    selected_pl_tbl_name = None
-                    selected_pl_tbl_schema = None
 
-        # List columns for each added table from the Oracle datasource
-        col_exclude_map = {}  # {tableName: [columnName, ...]}
+        col_exclude_map = {}
         if edit_cols_confirm in ("yes", "y") and selected_pl_tbl_name:
             tbl_schema = selected_pl_tbl_schema
             tbl_name   = selected_pl_tbl_name
-            cols_url   = f"http://{di1_host}:6080/api/v1/datasource/{selected_sor_name}/table?schemaName={tbl_schema}&tableName={tbl_name}&refreshMetadata=false"
-            verboseHandle.printConsoleInfo(f"Fetching columns for {tbl_schema}.{tbl_name} from datasource '{selected_sor_name}'")
+            cols_url   = f"http://{di1_host}:6080/api/v1/datasource/{sor_name}/table?schemaName={tbl_schema}&tableName={tbl_name}&refreshMetadata=false"
+            verboseHandle.printConsoleInfo(f"Fetching columns for {tbl_schema}.{tbl_name} from datasource '{sor_name}'")
             logger.info(f"Fetching columns URL: {cols_url}")
             try:
                 cols_response = requests.get(cols_url, headers={"accept": "*/*"})
                 cols_response.raise_for_status()
-                cols_json = cols_response.json()
+                cols_json  = cols_response.json()
                 table_data = cols_json.get("data", cols_json) if isinstance(cols_json, dict) else cols_json
-                if isinstance(table_data, dict):
-                    cols_raw = table_data.get("tableColumns", [])
-                else:
-                    cols_raw = table_data
+                cols_raw   = table_data.get("tableColumns", []) if isinstance(table_data, dict) else table_data
 
                 col_headers = [
                     Fore.YELLOW + "Sr No."      + Fore.RESET,
@@ -483,15 +485,14 @@ def addTable(diManagerHost):
                 ]
                 col_rows = []
                 for cidx, col in enumerate(cols_raw, start=1):
-                    col_name = str(col.get("columnName", "")).strip()
-                    col_type = str(col.get("columnType", "")).strip()
                     col_rows.append([
-                        Fore.GREEN + str(cidx) + Fore.RESET,
-                        Fore.GREEN + col_name  + Fore.RESET,
-                        Fore.GREEN + col_type  + Fore.RESET,
+                        Fore.GREEN + str(cidx)                              + Fore.RESET,
+                        Fore.GREEN + str(col.get("columnName", "")).strip() + Fore.RESET,
+                        Fore.GREEN + str(col.get("columnType", "")).strip() + Fore.RESET,
                     ])
                 verboseHandle.printConsoleInfo(f"Columns for {tbl_schema}.{tbl_name}:")
                 printTabular(None, col_headers, col_rows)
+
                 if col_rows:
                     col_remove_input = userInputWrapper(
                         Fore.YELLOW + f"Select column number(s) to remove from '{tbl_name}' (e.g. 1 or 1-3 or 1,4,5, or press Enter to skip): " + Fore.RESET
@@ -521,12 +522,9 @@ def addTable(diManagerHost):
             except Exception as col_ex:
                 verboseHandle.printConsoleError(f"Failed to fetch columns for {tbl_schema}.{tbl_name}: {col_ex}")
                 logger.error(f"Columns fetch failed for {tbl_schema}.{tbl_name}: {col_ex}")
-        # else:
-        #     verboseHandle.printConsoleInfo("Skipping column editing.")
-        #     logger.info("User skipped column editing.")
 
         if export_file and exported_yaml and col_exclude_map:
-            table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
+            table_pipelines      = exported_yaml["pipelines"][0]["tablePipelines"]
             modified_space_types = []
             for tp_idx, tp in enumerate(table_pipelines):
                 stn = str(tp.get("spaceTypeName", "")).strip()
@@ -537,62 +535,51 @@ def addTable(diManagerHost):
                 )
                 if matched_cols:
                     existing_exclude = tp.get("excludeFields") or []
-                    updated_exclude = existing_exclude + [col for col in matched_cols if col not in existing_exclude]
+                    updated_exclude  = existing_exclude + [col for col in matched_cols if col not in existing_exclude]
                     exported_yaml["pipelines"][0]["tablePipelines"][tp_idx]["excludeFields"] = updated_exclude
                     modified_space_types.append(stn)
                     verboseHandle.printConsoleInfo(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
                     logger.info(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
 
             if modified_space_types:
-                new_yaml_file = os.path.join(export_path, f"{selected_pipeline}_updated.yaml")
+                new_yaml_file = os.path.join(export_path, f"{pipeline_name}_updated.yaml")
                 with open(new_yaml_file, 'w') as f:
                     yaml.dump(exported_yaml, f, default_flow_style=False, allow_unicode=True)
                 verboseHandle.printConsoleInfo(f"Updated YAML saved to: {new_yaml_file}")
                 logger.info(f"Updated YAML saved to: {new_yaml_file}")
 
-                # # Stop pipeline
-                # verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-                # logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-                # stop_rc_response = requests.post(
-                #     f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop",
-                #     headers={"accept": "*/*", "Content-Type": "application/json"}
-                # )
-                # stop_rc_status = stop_rc_response.json().get("status", "unknown")
-                # verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_rc_status}")
-                # logger.info(f"Stop pipeline response status: {stop_rc_status}")
-
                 # Delete pipeline
-                delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {selected_pipeline}"
+                delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {pipeline_name}"
                 verboseHandle.printConsoleInfo(f"Running: {delete_cmd}")
                 logger.info(f"Running: {delete_cmd}")
                 delete_result = subprocess.run(delete_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
                 if delete_result.returncode != 0:
                     verboseHandle.printConsoleError(f"Delete pipeline failed: {delete_result.stderr}")
                     return
-                verboseHandle.printConsoleInfo(f"Pipeline deleted successfully: {selected_pipeline}")
+                verboseHandle.printConsoleInfo(f"Pipeline deleted successfully: {pipeline_name}")
                 logger.info(f"Pipeline deleted successfully: {delete_result.stdout}")
 
                 # Validate deletion
-                max_del_retries = 5
+                max_del_retries  = 5
                 pipeline_deleted = False
                 for attempt in range(1, max_del_retries + 1):
-                    verboseHandle.printConsoleInfo(f"Validating pipeline deletion for: {selected_pipeline} (attempt {attempt}/{max_del_retries})")
+                    verboseHandle.printConsoleInfo(f"Validating pipeline deletion for: {pipeline_name} (attempt {attempt}/{max_del_retries})")
                     logger.info(f"Validating pipeline deletion: attempt {attempt}/{max_del_retries}")
                     show_result = subprocess.run(
                         [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
                         stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
                     )
-                    show_reader = csv.DictReader(io.StringIO(show_result.stdout))
+                    show_reader        = csv.DictReader(io.StringIO(show_result.stdout))
                     remaining_pipelines = [row.get("name", "") for row in show_reader]
-                    if selected_pipeline not in remaining_pipelines:
+                    if pipeline_name not in remaining_pipelines:
                         pipeline_deleted = True
-                        verboseHandle.printConsoleInfo(f"Validation passed: pipeline '{selected_pipeline}' confirmed deleted.")
-                        logger.info(f"Validation passed: pipeline '{selected_pipeline}' not found in show pipelines output.")
+                        verboseHandle.printConsoleInfo(f"Validation passed: pipeline '{pipeline_name}' confirmed deleted.")
+                        logger.info(f"Validation passed: pipeline '{pipeline_name}' not found in show pipelines output.")
                         break
-                    verboseHandle.printConsoleError(f"Validation failed: pipeline '{selected_pipeline}' still exists. (attempt {attempt}/{max_del_retries})")
+                    verboseHandle.printConsoleError(f"Validation failed: pipeline '{pipeline_name}' still exists. (attempt {attempt}/{max_del_retries})")
                     logger.error(f"Validation failed: pipeline still present. Attempt {attempt}/{max_del_retries}.")
                 if not pipeline_deleted:
-                    verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' still exists after {max_del_retries} attempts. Aborting.")
+                    verboseHandle.printConsoleError(f"Pipeline '{pipeline_name}' still exists after {max_del_retries} attempts. Aborting.")
                     return
 
                 # Unregister each modified space type
@@ -616,7 +603,7 @@ def addTable(diManagerHost):
                         verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for unregister.")
                         return
 
-                # Import updated pipeline
+                # Import updated pipeline with excludeFields
                 import_cmd = f"{rootpath}dihctl -e dev apply -f {new_yaml_file}"
                 verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
                 logger.info(f"Running: {import_cmd}")
@@ -632,10 +619,10 @@ def addTable(diManagerHost):
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Add Table')
-    logger.info('Menu -> DataEngine -> Oracle CDC Add Table')
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC -> Pipeline -> Pipeline Operations -> Create Pipeline')
+    logger.info('Menu -> DataEngine -> Oracle CDC -> Pipeline -> Pipeline Operations -> Create Pipeline')
     diManagerHost = getDIServerHost()
     if diManagerHost:
-        addTable(diManagerHost)
+        createPipeline(diManagerHost)
     else:
         verboseHandle.printConsoleError("No DI Manager host found.")

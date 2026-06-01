@@ -1,0 +1,84 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+set argc [llength $argv]
+if {$argc < 1 || $argc > 2} {
+    puts "Usage:   ./auto_show_pipeline <pipeline_name> \[table_name\]"
+    exit 1
+}
+set pipeline_name [lindex $argv 0]
+set table_name    [expr {$argc == 2 ? [lindex $argv 1] : ""}]
+set tmpfile "/tmp/auto_pipeline_[pid]"
+
+cd /dbagiga/gs-odsx
+log_file -noappend $tmpfile
+spawn ./odsx.py dataengine oracle-cdc pipeline pipeline-operations show-pipeline
+
+expect "Select pipeline"
+log_file
+
+set fh [open $tmpfile r]
+set content [read $fh]
+close $fh
+file delete $tmpfile
+
+regsub -all {\x1b\[[0-9;]*m} $content "" clean
+set row_num ""
+foreach line [split $clean "\n"] {
+    if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${pipeline_name}\\s*\\|" $line -> num]} {
+        set row_num $num
+        break
+    }
+}
+
+if {$row_num eq ""} {
+    puts "\nPipeline '$pipeline_name' not found."
+    exit 1
+}
+
+sleep 1
+send -- "$row_num"
+sleep 1
+send -- "\n"
+
+if {$table_name ne ""} {
+    set tmpfile2 "/tmp/auto_pipeline_tbl_[pid]"
+    log_file -noappend $tmpfile2
+
+    expect "Select table number"
+    log_file
+
+    set fh2 [open $tmpfile2 r]
+    set content2 [read $fh2]
+    close $fh2
+    file delete $tmpfile2
+
+    regsub -all {\x1b\[[0-9;]*m} $content2 "" clean2
+    set tbl_row_num ""
+    foreach line [split $clean2 "\n"] {
+        if {[regexp "\\|\\s+(\\d+)\\s+\\|\[^|\]+\\|\[^|\]+\\|\\s*${table_name}\\s*\\|" $line -> num]} {
+            set tbl_row_num $num
+            break
+        }
+    }
+
+    if {$tbl_row_num eq ""} {
+        puts "\nTable '$table_name' not found in pipeline '$pipeline_name'."
+        exit 1
+    }
+
+    sleep 1
+    send -- "$tbl_row_num"
+    sleep 1
+    send -- "\n"
+} else {
+    expect "Select table number"
+    sleep 1
+    send -- "1"
+    sleep 1
+    send -- "\n"
+}
+
+expect eof
