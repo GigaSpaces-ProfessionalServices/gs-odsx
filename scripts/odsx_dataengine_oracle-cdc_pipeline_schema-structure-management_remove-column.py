@@ -1,5 +1,6 @@
 import os
 import json
+import time
 import yaml
 import requests
 from colorama import Fore
@@ -334,6 +335,7 @@ def removeColumn(diManagerHost):
                 break
             verboseHandle.printConsoleError(f"Validation failed: pipeline '{selected_pipeline}' still exists after deletion. (attempt {attempt}/{max_retries})")
             logger.error(f"Validation failed: pipeline '{selected_pipeline}' still present. Attempt {attempt}/{max_retries}.")
+            time.sleep(10)
         if not pipeline_deleted:
             verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' still exists after {max_retries} attempts. Aborting.")
             logger.error(f"Pipeline '{selected_pipeline}' not deleted after {max_retries} validation attempts.")

@@ -566,3 +566,5 @@
      app.cdc.datasource.tns.host=onprem1-ora1
      app.cdc.datasource.tns.port=1521
      app.cdc.datasource.tns.service=ORCLPDB1
+### TAU v5.6.12-tau-release tag
+180. Added new feature - Create pipeline

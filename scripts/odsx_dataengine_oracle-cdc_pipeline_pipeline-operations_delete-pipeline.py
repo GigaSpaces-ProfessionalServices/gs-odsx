@@ -1,7 +1,7 @@
 import os
 import csv
 import io
-import yaml
+import time
 import requests
 import subprocess
 
@@ -10,8 +10,6 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
-from utils.ods_app_config import readValuefromAppConfig
-from utils.odsx_objectmanagement_utilities import getPivotHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -147,60 +145,16 @@ def deletePipeline(diManagerHost):
             logger.error(f"Pipeline '{selected_pipeline}' is in ERROR state.")
             return
 
-    export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
-    if not export_path.strip():
-        verboseHandle.printConsoleError("Export path cannot be empty.")
-        return
-    if not os.path.exists(export_path):
-        verboseHandle.printConsoleError(f"Export path not found: {export_path}")
-        return
-
-    # Export all selected pipelines upfront to show space types before confirmation
-    pipeline_space_types = {}
-    for selected_pipeline in selected_pipelines:
-        export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
-        export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
-        logger.info(f"Running export: {export_cmd}")
-        export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        if export_result.returncode != 0:
-            verboseHandle.printConsoleError(f"Export failed for '{selected_pipeline}': {export_result.stderr}")
-            pipeline_space_types[selected_pipeline] = []
-            continue
-        logger.info(f"Export successful: {export_result.stdout}")
-        with open(export_file, 'r') as f:
-            exported_yaml = yaml.safe_load(f)
-        table_pipelines = exported_yaml.get("pipelines", [{}])[0].get("tablePipelines", [])
-        space_types = [tp.get("spaceTypeName", "") for tp in table_pipelines if tp.get("spaceTypeName", "")]
-        pipeline_space_types[selected_pipeline] = space_types
-
-        verboseHandle.printConsoleInfo(f"Space types for pipeline '{selected_pipeline}':")
-        tp_headers = [
-            Fore.YELLOW + "Sr No."          + Fore.RESET,
-            Fore.YELLOW + "Space Type Name" + Fore.RESET,
-        ]
-        tp_data = []
-        for idx, name in enumerate(space_types, start=1):
-            tp_data.append([
-                Fore.GREEN + str(idx)  + Fore.RESET,
-                Fore.GREEN + str(name) + Fore.RESET,
-            ])
-        printTabular(None, tp_headers, tp_data)
-        logger.info(f"Space types to unregister: {space_types}")
-
     confirm = userInputWrapper(
-        Fore.YELLOW + f"This will stop and permanently delete {selected_pipelines} pipeline(s) and unregister all their space types. Continue? (yes/no): " + Fore.RESET
+        Fore.YELLOW + f"This will stop and permanently delete {selected_pipelines} pipeline(s). Continue? (yes/no): " + Fore.RESET
     ).strip().lower()
     if confirm not in ("yes", "y"):
         verboseHandle.printConsoleWarning("Operation cancelled by user.")
         return
 
-    objectMgmtHost = getPivotHost()
-
     for selected_pipeline in selected_pipelines:
         verboseHandle.printConsoleInfo(f"--- Processing pipeline: {selected_pipeline} ---")
         logger.info(f"--- Processing pipeline: {selected_pipeline} ---")
-
-        space_types = pipeline_space_types.get(selected_pipeline, [])
 
         # Stop pipeline
         pipeline_id = next((pl["pipelineId"] for pl in pl_list if pl.get("name") == selected_pipeline), None)
@@ -232,49 +186,6 @@ def deletePipeline(diManagerHost):
         verboseHandle.printConsoleInfo(f"Pipeline deleted successfully: {selected_pipeline}")
         logger.info(f"Pipeline deleted successfully: {delete_result.stdout}")
 
-        # Validate deletion (retry up to 5 times)
-        max_retries = 5
-        pipeline_deleted = False
-        for attempt in range(1, max_retries + 1):
-            verboseHandle.printConsoleInfo(f"Validating pipeline deletion for: {selected_pipeline} (attempt {attempt}/{max_retries})")
-            logger.info(f"Validating pipeline deletion for: {selected_pipeline} (attempt {attempt}/{max_retries})")
-            show_result = subprocess.run(
-                [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
-                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
-            )
-            show_reader = csv.DictReader(io.StringIO(show_result.stdout))
-            remaining_pipelines = [row.get("name", "") for row in show_reader]
-            if selected_pipeline not in remaining_pipelines:
-                pipeline_deleted = True
-                verboseHandle.printConsoleInfo(f"Validation passed: pipeline '{selected_pipeline}' confirmed deleted.")
-                logger.info(f"Validation passed: pipeline '{selected_pipeline}' not found in show pipelines output.")
-                break
-            verboseHandle.printConsoleError(f"Validation failed: pipeline '{selected_pipeline}' still exists. (attempt {attempt}/{max_retries})")
-            logger.error(f"Validation failed: pipeline '{selected_pipeline}' still present. Attempt {attempt}/{max_retries}.")
-        if not pipeline_deleted:
-            verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' still exists after {max_retries} attempts. Skipping unregister.")
-            logger.error(f"Pipeline '{selected_pipeline}' not deleted after {max_retries} validation attempts.")
-            continue
-
-        # Unregister all space types
-        for space_type_name in space_types:
-            verboseHandle.printConsoleInfo(f"Unregistering space type: {space_type_name}")
-            logger.info(f"Unregistering space type: {space_type_name}")
-            try:
-                unreg_response = requests.post(
-                    f"http://{objectMgmtHost}:7001/unregistertype",
-                    data={"type": space_type_name},
-                    headers={"Accept": "application/json"}
-                )
-                if unreg_response.text.strip() == "success":
-                    verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' unregistered successfully.")
-                    logger.info(f"Space type '{space_type_name}' unregistered successfully.")
-                else:
-                    verboseHandle.printConsoleError(f"Failed to unregister space type '{space_type_name}': {unreg_response.text}")
-                    logger.error(f"Unregister space type response: {unreg_response.text}")
-            except requests.exceptions.ConnectionError:
-                verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for unregister.")
-                break
 
 
 if __name__ == '__main__':

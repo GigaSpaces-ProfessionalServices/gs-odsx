@@ -2,6 +2,7 @@ import os
 import csv
 import io
 import json
+import time
 import yaml
 import requests
 import subprocess
@@ -125,6 +126,7 @@ def addTable(diManagerHost):
         selected_pipeline  = pipelines[int(selection) - 1].get("name", "")
         selected_status    = pipelines[int(selection) - 1].get("status", "").strip().upper()
         selected_sor_name  = pipelines[int(selection) - 1].get("sorName", "")
+        selected_space_name = pipelines[int(selection) - 1].get("spaceName", "").strip()
         verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline} (status: {selected_status}, sor: {selected_sor_name})")
         logger.info(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")
         if selected_status == "ERROR":
@@ -302,6 +304,27 @@ def addTable(diManagerHost):
         selected_table_names = [f"{tbl['sourceSchema']}.{tbl['sourceTable']}" for tbl in selected_tables]
         verboseHandle.printConsoleInfo(f"Selected tables: {selected_table_names}")
         logger.info(f"Selected tables: {selected_table_names}")
+
+        # Check if selected tables are already registered in the space
+        try:
+            objectMgmtHost = getPivotHost()
+            obj_response = requests.get(
+                f"http://{objectMgmtHost}:7001/list",
+                headers={"Accept": "application/json"}
+            )
+            objectJson = obj_response.json()
+            space_table_names = set()
+            for space in objectJson:
+                if str(space.get("spacename", "")).strip().upper() == selected_space_name.upper():
+                    for obj in space.get("objects", []):
+                        space_table_names.add(str(obj.get("tablename", "")).strip().upper())
+            for tbl in selected_tables:
+                if tbl["sourceTable"].strip().upper() in space_table_names:
+                    verboseHandle.printConsoleError(f"Table '{tbl['sourceTable']}' is already available in space '{selected_space_name}'.")
+                    logger.error(f"Table '{tbl['sourceTable']}' already exists in space '{selected_space_name}'.")
+                    return
+        except Exception as obj_ex:
+            logger.warning(f"Could not check space table availability: {obj_ex}")
 
         payload = {
             "sourceSchema": source_schema,
@@ -591,6 +614,7 @@ def addTable(diManagerHost):
                         break
                     verboseHandle.printConsoleError(f"Validation failed: pipeline '{selected_pipeline}' still exists. (attempt {attempt}/{max_del_retries})")
                     logger.error(f"Validation failed: pipeline still present. Attempt {attempt}/{max_del_retries}.")
+                    time.sleep(10)
                 if not pipeline_deleted:
                     verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' still exists after {max_del_retries} attempts. Aborting.")
                     return
