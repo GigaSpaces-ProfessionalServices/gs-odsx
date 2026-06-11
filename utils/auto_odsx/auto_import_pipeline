@@ -49,10 +49,24 @@ regsub -all {\r} $clean "" clean
 regsub -all {[.]} $filename {[.]} escaped_filename
 
 set row_num ""
+
+# Try exact filename match (e.g. my_pipeline.yaml)
 foreach line [split $clean "\n"] {
     if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${escaped_filename}\\s*\\|" $line -> num]} {
         set row_num $num
         break
+    }
+}
+
+# Fallback: try matching the arg directly (without .yaml)
+if {$row_num eq ""} {
+    set escaped_arg $arg
+    regsub -all {[.]} $escaped_arg {[.]} escaped_arg
+    foreach line [split $clean "\n"] {
+        if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${escaped_arg}\\s*\\|" $line -> num]} {
+            set row_num $num
+            break
+        }
     }
 }
 
@@ -62,8 +76,11 @@ if {$row_num eq ""} {
 }
 
 sleep 1
-send -- "$row_num"
-sleep 1
+foreach char [split $row_num ""] {
+    send -- "$char"
+    sleep 0.3
+}
+sleep 0.5
 send -- "\n"
 
 expect eof

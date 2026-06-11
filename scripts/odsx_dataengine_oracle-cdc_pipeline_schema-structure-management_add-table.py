@@ -106,11 +106,11 @@ def addTable(diManagerHost):
         dataTable = []
         for idx, pipeline in enumerate(pipelines, start=1):
             dataTable.append([
-                Fore.GREEN + str(idx)                      + Fore.RESET,
-                Fore.GREEN + pipeline.get("name", "")      + Fore.RESET,
-                Fore.GREEN + pipeline.get("sorName", "")   + Fore.RESET,
-                Fore.GREEN + pipeline.get("spaceName", "") + Fore.RESET,
-                Fore.GREEN + pipeline.get("status", "")    + Fore.RESET,
+                Fore.GREEN + str(idx)                               + Fore.RESET,
+                Fore.GREEN + pipeline.get("name", "").strip()       + Fore.RESET,
+                Fore.GREEN + pipeline.get("sorName", "").strip()    + Fore.RESET,
+                Fore.GREEN + pipeline.get("spaceName", "").strip()  + Fore.RESET,
+                Fore.GREEN + pipeline.get("status", "").strip()     + Fore.RESET,
             ])
 
         printTabular(None, headers, dataTable)
@@ -123,9 +123,9 @@ def addTable(diManagerHost):
         if not selection.isdigit() or not (1 <= int(selection) <= len(pipelines)):
             verboseHandle.printConsoleError("Invalid selection.")
             return
-        selected_pipeline  = pipelines[int(selection) - 1].get("name", "")
+        selected_pipeline  = pipelines[int(selection) - 1].get("name", "").strip()
         selected_status    = pipelines[int(selection) - 1].get("status", "").strip().upper()
-        selected_sor_name  = pipelines[int(selection) - 1].get("sorName", "")
+        selected_sor_name  = pipelines[int(selection) - 1].get("sorName", "").strip()
         selected_space_name = pipelines[int(selection) - 1].get("spaceName", "").strip()
         verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline} (status: {selected_status}, sor: {selected_sor_name})")
         logger.info(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")
@@ -146,37 +146,6 @@ def addTable(diManagerHost):
             return
         verboseHandle.printConsoleInfo(f"Pipeline ID: {pipeline_id}")
         logger.info(f"Pipeline ID: {pipeline_id}")
-
-        # # Export pipeline YAML to get tables currently attached to the pipeline
-        # export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
-        # if not export_path.strip() or not os.path.exists(export_path):
-        #     verboseHandle.printConsoleError(f"Export path not found: {export_path}")
-        #     return
-        # export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
-        # export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
-        # verboseHandle.printConsoleInfo(f"Running: {export_cmd}")
-        # logger.info(f"Running: {export_cmd}")
-        # export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-        # if export_result.returncode != 0:
-        #     verboseHandle.printConsoleError(f"Export failed: {export_result.stderr}")
-        #     return
-        # with open(export_file, 'r') as f:
-        #     exported_yaml = yaml.safe_load(f)
-        # existing_table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
-        # existing_space_types = [str(tp.get("spaceTypeName", "")).strip() for tp in existing_table_pipelines]
-        #
-        # verboseHandle.printConsoleInfo(f"Tables currently attached to pipeline '{selected_pipeline}':")
-        # existing_headers = [
-        #     Fore.YELLOW + "Sr No."          + Fore.RESET,
-        #     Fore.YELLOW + "Space Type Name" + Fore.RESET,
-        # ]
-        # existing_data = []
-        # for idx, stn in enumerate(existing_space_types, start=1):
-        #     existing_data.append([
-        #         Fore.GREEN + str(idx) + Fore.RESET,
-        #         Fore.GREEN + stn      + Fore.RESET,
-        #     ])
-        # printTabular(None, existing_headers, existing_data)
 
         # Fetch Oracle schemas for the selected datasource and let user choose
         di1_host = str(os.getenv("di1"))
@@ -305,7 +274,37 @@ def addTable(diManagerHost):
         verboseHandle.printConsoleInfo(f"Selected tables: {selected_table_names}")
         logger.info(f"Selected tables: {selected_table_names}")
 
-        # Check if selected tables are already registered in the space
+        # Ask if user wants to modify table names (space type names)
+        modify_names_confirm = userInputWrapper(
+            Fore.YELLOW + "Do you want to modify table names? (yes/no): " + Fore.RESET
+        ).strip().lower()
+
+        table_rename_map = {}
+        if modify_names_confirm in ("yes", "y"):
+            for tbl in selected_tables:
+                new_name = userInputWrapper(
+                    Fore.YELLOW + f"Enter new name for '{tbl['sourceTable']}' (press Enter to keep): " + Fore.RESET
+                ).strip()
+                table_rename_map[tbl['sourceTable']] = new_name if new_name else tbl['sourceTable']
+        else:
+            for tbl in selected_tables:
+                table_rename_map[tbl['sourceTable']] = tbl['sourceTable']
+
+        # Apply prefix from config, default STUD.
+        prefix = str(readValuefromAppConfig("app.dataengine.dihctl.addpipeline.prefixname")).strip()
+        if not prefix:
+            prefix = "STUD."
+
+        space_type_name_map = {}
+        for tbl in selected_tables:
+            name = table_rename_map[tbl['sourceTable']]
+            if not name.upper().startswith(prefix.upper()):
+                name = prefix + name
+            space_type_name_map[tbl['sourceTable']] = name
+            verboseHandle.printConsoleInfo(f"Table '{tbl['sourceTable']}' -> Space Type: '{name}'")
+            logger.info(f"Table '{tbl['sourceTable']}' -> Space Type: '{name}'")
+
+        # Check if selected tables (with final space type names) are already registered in the space
         try:
             objectMgmtHost = getPivotHost()
             obj_response = requests.get(
@@ -319,9 +318,10 @@ def addTable(diManagerHost):
                     for obj in space.get("objects", []):
                         space_table_names.add(str(obj.get("tablename", "")).strip().upper())
             for tbl in selected_tables:
-                if tbl["sourceTable"].strip().upper() in space_table_names:
-                    verboseHandle.printConsoleError(f"Table '{tbl['sourceTable']}' is already available in space '{selected_space_name}'.")
-                    logger.error(f"Table '{tbl['sourceTable']}' already exists in space '{selected_space_name}'.")
+                final_name = space_type_name_map[tbl["sourceTable"]]
+                if final_name.strip().upper() in space_table_names:
+                    verboseHandle.printConsoleError(f"Table '{final_name}' is already available in space '{selected_space_name}'.")
+                    logger.error(f"Table '{final_name}' already exists in space '{selected_space_name}'.")
                     return
         except Exception as obj_ex:
             logger.warning(f"Could not check space table availability: {obj_ex}")
@@ -349,34 +349,27 @@ def addTable(diManagerHost):
                 f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop",
                 headers={"accept": "*/*", "Content-Type": "application/json"}
             )
-            stop_status = stop_response.json().get("status", "unknown")
-            verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
-            logger.info(f"Stop pipeline response status: {stop_status}")
-
-            # Wait until pipeline is fully INACTIVE before proceeding
             import time
-            max_wait = 60
-            poll_interval = 5
-            elapsed = 0
-            verboseHandle.printConsoleInfo(f"Waiting for pipeline '{selected_pipeline}' to become INACTIVE...")
-            logger.info(f"Polling pipeline status, max_wait={max_wait}s, interval={poll_interval}s")
-            while elapsed < max_wait:
+            current_status = None
+            check_count = 0
+            elapsed_secs = 0
+            poll_interval = 10
+            verboseHandle.printConsoleInfo(f"Waiting for pipeline '{selected_pipeline}' to become INACTIVE, polling every {poll_interval}s")
+            logger.info(f"Waiting for pipeline '{selected_pipeline}' to become INACTIVE, polling every {poll_interval}s")
+            while current_status != "INACTIVE":
                 time.sleep(poll_interval)
-                elapsed += poll_interval
+                check_count += 1
+                elapsed_secs += poll_interval
                 status_resp = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
                 status_list = status_resp.json()
                 current_status = next(
                     (pl.get("status", "").strip().upper() for pl in status_list if pl.get("pipelineId") == pipeline_id),
                     None
                 )
-                verboseHandle.printConsoleInfo(f"Pipeline status: {current_status} ({elapsed}s elapsed)")
-                logger.info(f"Pipeline status poll [{elapsed}s]: {current_status}")
-                if current_status and current_status != "RUNNING":
-                    break
-            else:
-                verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' did not stop within {max_wait}s. Aborting.")
-                logger.error(f"Pipeline '{selected_pipeline}' still RUNNING after {max_wait}s polling.")
-                return
+                verboseHandle.printConsoleInfo(f"Pipeline status: {current_status} (check #{check_count}, elapsed: {elapsed_secs}s)")
+                logger.info(f"Pipeline status poll #{check_count} [{elapsed_secs}s]: {current_status}")
+            verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' is now INACTIVE. Proceeding.")
+            logger.info(f"Pipeline '{selected_pipeline}' confirmed INACTIVE.")
         else:
             verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' is not running (status: {selected_status}), skipping stop.")
             logger.info(f"Pipeline '{selected_pipeline}' status is '{selected_status}', stop skipped.")
@@ -420,23 +413,26 @@ def addTable(diManagerHost):
             logger.error(f"Add table failed [{add_response.status_code}]: {add_response.text}")
             return
 
-        # Ask user whether to remove columns
+        # Step 10: Rename space types with prefix and/or remove columns
+        needs_rename = any(
+            space_type_name_map[tbl["sourceTable"]] != tbl["sourceTable"]
+            for tbl in selected_tables
+        )
+
         edit_cols_confirm = userInputWrapper(
             Fore.YELLOW + "Do you want to remove columns for the added table(s)? (yes/no): " + Fore.RESET
         ).strip().lower()
 
-        # Export pipeline to list available tables before asking about column editing
         export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
-        export_file = None
-        exported_yaml = None
-        selected_pl_tbl_name = None
-        selected_pl_tbl_schema = None
-        if edit_cols_confirm not in ("yes", "y"):
-            verboseHandle.printConsoleInfo("Skipping column editing.")
+        col_exclude_map = {}
+        needs_yaml_update = needs_rename or edit_cols_confirm in ("yes", "y")
+
+        if not needs_yaml_update:
+            verboseHandle.printConsoleInfo("No YAML changes required. Skipping pipeline update.")
         elif not export_path.strip():
-            verboseHandle.printConsoleError("Export path cannot be empty. Skipping export.")
+            verboseHandle.printConsoleError("Export path cannot be empty. Skipping pipeline update.")
         elif not os.path.exists(export_path):
-            verboseHandle.printConsoleError(f"Export path not found: {export_path}. Skipping export.")
+            verboseHandle.printConsoleError(f"Export path not found: {export_path}. Skipping pipeline update.")
         else:
             export_file = os.path.join(export_path, f"{selected_pipeline}.yaml")
             export_cmd = f"{rootpath}dihctl -e dev export pipelines {selected_pipeline} -o {export_file}"
@@ -446,143 +442,158 @@ def addTable(diManagerHost):
             if export_result.returncode != 0:
                 verboseHandle.printConsoleError(f"Export failed for '{selected_pipeline}': {export_result.stderr}")
                 logger.error(f"Export failed [{export_result.returncode}]: {export_result.stderr}")
-                export_file = None
             else:
-                verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' exported successfully to: {export_file}")
+                verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' exported to: {export_file}")
                 logger.info(f"Export successful: {export_result.stdout}")
                 with open(export_file, 'r') as f:
                     exported_yaml = yaml.safe_load(f)
 
-                # List all tables currently in the pipeline
-                pipeline_table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
-                pl_tbl_headers = [
-                    Fore.YELLOW + "Sr No."          + Fore.RESET,
-                    Fore.YELLOW + "Space Type Name" + Fore.RESET,
-                ]
-                pl_tbl_data = []
-                for idx, tp in enumerate(pipeline_table_pipelines, start=1):
-                    pl_tbl_data.append([
-                        Fore.GREEN + str(idx)                         + Fore.RESET,
-                        Fore.GREEN + str(tp.get("spaceTypeName", "")) + Fore.RESET,
-                    ])
-                verboseHandle.printConsoleInfo(f"Tables in pipeline '{selected_pipeline}':")
-                printTabular(None, pl_tbl_headers, pl_tbl_data)
+                # Rename spaceTypeName for newly added tables (apply prefix/user rename)
+                table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
+                original_stn_map = {}  # {sourceTable: original spaceTypeName before rename}
+                for tp_idx, tp in enumerate(table_pipelines):
+                    stn = str(tp.get("spaceTypeName", "")).strip()
+                    for tbl in selected_tables:
+                        if stn.upper() == tbl["sourceTable"].upper():
+                            original_stn_map[tbl["sourceTable"]] = stn
+                            new_stn = space_type_name_map[tbl["sourceTable"]]
+                            if new_stn != stn:
+                                exported_yaml["pipelines"][0]["tablePipelines"][tp_idx]["spaceTypeName"] = new_stn
+                                verboseHandle.printConsoleInfo(f"Renamed spaceTypeName: '{stn}' -> '{new_stn}'")
+                                logger.info(f"Renamed spaceTypeName: '{stn}' -> '{new_stn}'")
+                            break
 
-                pl_tbl_selection = userInputWrapper(
-                    f"Select table number to edit columns (1-{len(pipeline_table_pipelines)}): "
-                ).strip()
-                if pl_tbl_selection.isdigit() and (1 <= int(pl_tbl_selection) <= len(pipeline_table_pipelines)):
-                    selected_pl_tbl_idx = int(pl_tbl_selection) - 1
-                    selected_pl_tbl_name = str(pipeline_table_pipelines[selected_pl_tbl_idx].get("spaceTypeName", "")).strip()
-                    matched_src = next((t for t in selected_tables if t["sourceTable"] == selected_pl_tbl_name), None)
-                    selected_pl_tbl_schema = matched_src["sourceSchema"] if matched_src else oracle_schema
-                else:
-                    verboseHandle.printConsoleError("Invalid table selection.")
-                    selected_pl_tbl_name = None
-                    selected_pl_tbl_schema = None
+                # Handle column removal
+                selected_pl_tbl_name = None
+                selected_pl_tbl_schema = None
+                selected_src_tbl_name = None
+                if edit_cols_confirm in ("yes", "y"):
+                    pipeline_table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
+                    pl_tbl_headers = [
+                        Fore.YELLOW + "Sr No."          + Fore.RESET,
+                        Fore.YELLOW + "Space Type Name" + Fore.RESET,
+                    ]
+                    pl_tbl_data = []
+                    for idx, tp in enumerate(pipeline_table_pipelines, start=1):
+                        pl_tbl_data.append([
+                            Fore.GREEN + str(idx)                         + Fore.RESET,
+                            Fore.GREEN + str(tp.get("spaceTypeName", "")) + Fore.RESET,
+                        ])
+                    verboseHandle.printConsoleInfo(f"Tables in pipeline '{selected_pipeline}':")
+                    printTabular(None, pl_tbl_headers, pl_tbl_data)
 
-        # List columns for each added table from the Oracle datasource
-        col_exclude_map = {}  # {tableName: [columnName, ...]}
-        if edit_cols_confirm in ("yes", "y") and selected_pl_tbl_name:
-            tbl_schema = selected_pl_tbl_schema
-            tbl_name   = selected_pl_tbl_name
-            cols_url   = f"http://{di1_host}:6080/api/v1/datasource/{selected_sor_name}/table?schemaName={tbl_schema}&tableName={tbl_name}&refreshMetadata=false"
-            verboseHandle.printConsoleInfo(f"Fetching columns for {tbl_schema}.{tbl_name} from datasource '{selected_sor_name}'")
-            logger.info(f"Fetching columns URL: {cols_url}")
-            try:
-                cols_response = requests.get(cols_url, headers={"accept": "*/*"})
-                cols_response.raise_for_status()
-                cols_json = cols_response.json()
-                table_data = cols_json.get("data", cols_json) if isinstance(cols_json, dict) else cols_json
-                if isinstance(table_data, dict):
-                    cols_raw = table_data.get("tableColumns", [])
-                else:
-                    cols_raw = table_data
-
-                col_headers = [
-                    Fore.YELLOW + "Sr No."      + Fore.RESET,
-                    Fore.YELLOW + "Column Name" + Fore.RESET,
-                    Fore.YELLOW + "Data Type"   + Fore.RESET,
-                ]
-                col_rows = []
-                for cidx, col in enumerate(cols_raw, start=1):
-                    col_name = str(col.get("columnName", "")).strip()
-                    col_type = str(col.get("columnType", "")).strip()
-                    col_rows.append([
-                        Fore.GREEN + str(cidx) + Fore.RESET,
-                        Fore.GREEN + col_name  + Fore.RESET,
-                        Fore.GREEN + col_type  + Fore.RESET,
-                    ])
-                verboseHandle.printConsoleInfo(f"Columns for {tbl_schema}.{tbl_name}:")
-                printTabular(None, col_headers, col_rows)
-                if col_rows:
-                    col_remove_input = userInputWrapper(
-                        Fore.YELLOW + f"Select column number(s) to remove from '{tbl_name}' (e.g. 1 or 1-3 or 1,4,5, or press Enter to skip): " + Fore.RESET
+                    pl_tbl_selection = userInputWrapper(
+                        f"Select table number to edit columns (1-{len(pipeline_table_pipelines)}): "
                     ).strip()
-                    if col_remove_input:
-                        rm_indices = set()
-                        for part in col_remove_input.split(","):
-                            part = part.strip()
-                            if "-" in part:
-                                s_v, e_v = part.split("-", 1)
-                                rm_indices.update(range(int(s_v.strip()), int(e_v.strip()) + 1))
-                            elif part.isdigit():
-                                rm_indices.add(int(part))
-                        rm_indices = sorted(i for i in rm_indices if 1 <= i <= len(cols_raw))
-                        if rm_indices:
-                            cols_to_remove = [cols_raw[i - 1].get("columnName", "") for i in rm_indices]
-                            verboseHandle.printConsoleInfo(f"Columns to remove from '{tbl_name}': {cols_to_remove}")
-                            logger.info(f"Columns to remove from '{tbl_name}': {cols_to_remove}")
-                            confirm_remove = userInputWrapper(
-                                Fore.YELLOW + f"Confirm removing {cols_to_remove} from '{tbl_name}'? (yes/no): " + Fore.RESET
-                            ).strip().lower()
-                            if confirm_remove in ("yes", "y"):
-                                col_exclude_map[tbl_name] = cols_to_remove
-                            else:
-                                verboseHandle.printConsoleWarning(f"Column removal cancelled for '{tbl_name}'.")
-                                logger.info(f"User cancelled column removal for '{tbl_name}'.")
-            except Exception as col_ex:
-                verboseHandle.printConsoleError(f"Failed to fetch columns for {tbl_schema}.{tbl_name}: {col_ex}")
-                logger.error(f"Columns fetch failed for {tbl_schema}.{tbl_name}: {col_ex}")
-        # else:
-        #     verboseHandle.printConsoleInfo("Skipping column editing.")
-        #     logger.info("User skipped column editing.")
+                    if pl_tbl_selection.isdigit() and (1 <= int(pl_tbl_selection) <= len(pipeline_table_pipelines)):
+                        selected_pl_tbl_idx = int(pl_tbl_selection) - 1
+                        selected_pl_tbl_name = str(pipeline_table_pipelines[selected_pl_tbl_idx].get("spaceTypeName", "")).strip()
+                        # Find original source table (for columns API which uses source table name)
+                        matched_src = next(
+                            (t for t in selected_tables if space_type_name_map[t["sourceTable"]].upper() == selected_pl_tbl_name.upper()),
+                            None
+                        )
+                        if not matched_src:
+                            matched_src = next(
+                                (t for t in selected_tables if t["sourceTable"].upper() == selected_pl_tbl_name.upper()),
+                                None
+                            )
+                        selected_pl_tbl_schema = matched_src["sourceSchema"] if matched_src else oracle_schema
+                        selected_src_tbl_name  = matched_src["sourceTable"] if matched_src else selected_pl_tbl_name
+                    else:
+                        verboseHandle.printConsoleError("Invalid table selection.")
 
-        if export_file and exported_yaml and col_exclude_map:
-            table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
-            modified_space_types = []
-            for tp_idx, tp in enumerate(table_pipelines):
-                stn = str(tp.get("spaceTypeName", "")).strip()
-                matched_cols = (
-                    col_exclude_map.get(stn) or
-                    col_exclude_map.get(stn.upper()) or
-                    col_exclude_map.get(stn.lower())
-                )
-                if matched_cols:
-                    existing_exclude = tp.get("excludeFields") or []
-                    updated_exclude = existing_exclude + [col for col in matched_cols if col not in existing_exclude]
-                    exported_yaml["pipelines"][0]["tablePipelines"][tp_idx]["excludeFields"] = updated_exclude
-                    modified_space_types.append(stn)
-                    verboseHandle.printConsoleInfo(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
-                    logger.info(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
+                if edit_cols_confirm in ("yes", "y") and selected_pl_tbl_name:
+                    tbl_schema = selected_pl_tbl_schema
+                    tbl_name   = selected_src_tbl_name
+                    cols_url   = f"http://{di1_host}:6080/api/v1/datasource/{selected_sor_name}/table?schemaName={tbl_schema}&tableName={tbl_name}&refreshMetadata=false"
+                    verboseHandle.printConsoleInfo(f"Fetching columns for {tbl_schema}.{tbl_name} from datasource '{selected_sor_name}'")
+                    logger.info(f"Fetching columns URL: {cols_url}")
+                    try:
+                        cols_response = requests.get(cols_url, headers={"accept": "*/*"})
+                        cols_response.raise_for_status()
+                        cols_json = cols_response.json()
+                        table_data = cols_json.get("data", cols_json) if isinstance(cols_json, dict) else cols_json
+                        cols_raw = table_data.get("tableColumns", []) if isinstance(table_data, dict) else table_data
 
-            if modified_space_types:
+                        col_headers = [
+                            Fore.YELLOW + "Sr No."      + Fore.RESET,
+                            Fore.YELLOW + "Column Name" + Fore.RESET,
+                            Fore.YELLOW + "Data Type"   + Fore.RESET,
+                        ]
+                        col_rows = []
+                        for cidx, col in enumerate(cols_raw, start=1):
+                            col_name = str(col.get("columnName", "")).strip()
+                            col_type = str(col.get("columnType", "")).strip()
+                            col_rows.append([
+                                Fore.GREEN + str(cidx) + Fore.RESET,
+                                Fore.GREEN + col_name  + Fore.RESET,
+                                Fore.GREEN + col_type  + Fore.RESET,
+                            ])
+                        verboseHandle.printConsoleInfo(f"Columns for {tbl_schema}.{tbl_name}:")
+                        printTabular(None, col_headers, col_rows)
+                        if col_rows:
+                            col_remove_input = userInputWrapper(
+                                Fore.YELLOW + f"Select column number(s) to remove from '{selected_pl_tbl_name}' (e.g. 1 or 1-3 or 1,4,5, or press Enter to skip): " + Fore.RESET
+                            ).strip()
+                            if col_remove_input:
+                                rm_indices = set()
+                                for part in col_remove_input.split(","):
+                                    part = part.strip()
+                                    if "-" in part:
+                                        s_v, e_v = part.split("-", 1)
+                                        rm_indices.update(range(int(s_v.strip()), int(e_v.strip()) + 1))
+                                    elif part.isdigit():
+                                        rm_indices.add(int(part))
+                                rm_indices = sorted(i for i in rm_indices if 1 <= i <= len(cols_raw))
+                                if rm_indices:
+                                    cols_to_remove = [cols_raw[i - 1].get("columnName", "") for i in rm_indices]
+                                    verboseHandle.printConsoleInfo(f"Columns to remove from '{selected_pl_tbl_name}': {cols_to_remove}")
+                                    logger.info(f"Columns to remove from '{selected_pl_tbl_name}': {cols_to_remove}")
+                                    confirm_remove = userInputWrapper(
+                                        Fore.YELLOW + f"Confirm removing {cols_to_remove} from '{selected_pl_tbl_name}'? (yes/no): " + Fore.RESET
+                                    ).strip().lower()
+                                    if confirm_remove in ("yes", "y"):
+                                        col_exclude_map[selected_pl_tbl_name] = cols_to_remove
+                                    else:
+                                        verboseHandle.printConsoleWarning(f"Column removal cancelled for '{selected_pl_tbl_name}'.")
+                                        logger.info(f"User cancelled column removal for '{selected_pl_tbl_name}'.")
+                    except Exception as col_ex:
+                        verboseHandle.printConsoleError(f"Failed to fetch columns for {tbl_schema}.{tbl_name}: {col_ex}")
+                        logger.error(f"Columns fetch failed for {tbl_schema}.{tbl_name}: {col_ex}")
+
+                # Apply excludeFields and collect renamed space type names to unregister
+                unregister_types = []
+                table_pipelines_upd = exported_yaml["pipelines"][0]["tablePipelines"]
+                for tp_idx, tp in enumerate(table_pipelines_upd):
+                    stn = str(tp.get("spaceTypeName", "")).strip()
+                    matched_cols = (
+                        col_exclude_map.get(stn) or
+                        col_exclude_map.get(stn.upper()) or
+                        col_exclude_map.get(stn.lower())
+                    )
+                    if matched_cols:
+                        existing_exclude = tp.get("excludeFields") or []
+                        updated_exclude = existing_exclude + [col for col in matched_cols if col not in existing_exclude]
+                        exported_yaml["pipelines"][0]["tablePipelines"][tp_idx]["excludeFields"] = updated_exclude
+                        if stn not in unregister_types:
+                            unregister_types.append(stn)
+                        verboseHandle.printConsoleInfo(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
+                        logger.info(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
+                    # For renamed new tables: track the renamed spaceTypeName (STUD.TABLE_C) —
+                    # the check below will skip unregister if this name is not yet registered.
+                    is_renamed_table = any(
+                        space_type_name_map[t["sourceTable"]].upper() == stn.upper()
+                        for t in selected_tables
+                    )
+                    if is_renamed_table and stn not in unregister_types:
+                        unregister_types.append(stn)
+
                 new_yaml_file = os.path.join(export_path, f"{selected_pipeline}_updated.yaml")
                 with open(new_yaml_file, 'w') as f:
                     yaml.dump(exported_yaml, f, default_flow_style=False, allow_unicode=True)
                 verboseHandle.printConsoleInfo(f"Updated YAML saved to: {new_yaml_file}")
                 logger.info(f"Updated YAML saved to: {new_yaml_file}")
-
-                # # Stop pipeline
-                # verboseHandle.printConsoleInfo(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-                # logger.info(f"Stopping pipeline: {selected_pipeline} [{pipeline_id}]")
-                # stop_rc_response = requests.post(
-                #     f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop",
-                #     headers={"accept": "*/*", "Content-Type": "application/json"}
-                # )
-                # stop_rc_status = stop_rc_response.json().get("status", "unknown")
-                # verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_rc_status}")
-                # logger.info(f"Stop pipeline response status: {stop_rc_status}")
 
                 # Delete pipeline
                 delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {selected_pipeline}"
@@ -619,9 +630,29 @@ def addTable(diManagerHost):
                     verboseHandle.printConsoleError(f"Pipeline '{selected_pipeline}' still exists after {max_del_retries} attempts. Aborting.")
                     return
 
-                # Unregister each modified space type
+                # Unregister space types (original names for renamed tables, current names for col-excluded tables)
                 objectMgmtHost = getPivotHost()
-                for space_type_name in modified_space_types:
+
+                # Fetch currently registered types before unregistering
+                registered_types = None
+                try:
+                    list_resp = requests.get(
+                        f"http://{objectMgmtHost}:7001/list",
+                        headers={"Accept": "application/json"}
+                    )
+                    registered_types = set()
+                    for space in list_resp.json():
+                        for obj in space.get("objects", []):
+                            registered_types.add(str(obj.get("tablename", "")).strip().upper())
+                    logger.info(f"Registered types fetched: {registered_types}")
+                except Exception as list_ex:
+                    logger.warning(f"Could not fetch registered types list: {list_ex}")
+
+                for space_type_name in unregister_types:
+                    if registered_types is not None and space_type_name.strip().upper() not in registered_types:
+                        verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' is not registered, skipping unregister.")
+                        logger.info(f"Space type '{space_type_name}' not found in registered types, skipping unregister.")
+                        continue
                     verboseHandle.printConsoleInfo(f"Unregistering space type: {space_type_name}")
                     logger.info(f"Unregistering space type: {space_type_name}")
                     try:
@@ -634,8 +665,8 @@ def addTable(diManagerHost):
                             verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' unregistered successfully.")
                             logger.info(f"Space type '{space_type_name}' unregistered successfully.")
                         else:
-                            verboseHandle.printConsoleError(f"Failed to unregister space type '{space_type_name}': {unreg_response.text}")
-                            return
+                            verboseHandle.printConsoleWarning(f"Unregister '{space_type_name}': {unreg_response.text}")
+                            logger.warning(f"Unregister response for '{space_type_name}': {unreg_response.text}")
                     except requests.exceptions.ConnectionError:
                         verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for unregister.")
                         return

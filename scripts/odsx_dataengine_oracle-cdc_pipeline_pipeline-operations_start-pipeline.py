@@ -104,11 +104,11 @@ def startPipeline(diManagerHost):
         dataTable = []
         for idx, pipeline in enumerate(pipelines, start=1):
             dataTable.append([
-                Fore.GREEN + str(idx)                      + Fore.RESET,
-                Fore.GREEN + pipeline.get("name", "")      + Fore.RESET,
-                Fore.GREEN + pipeline.get("sorName", "")   + Fore.RESET,
-                Fore.GREEN + pipeline.get("spaceName", "") + Fore.RESET,
-                Fore.GREEN + pipeline.get("status", "")    + Fore.RESET,
+                Fore.GREEN + str(idx)                               + Fore.RESET,
+                Fore.GREEN + pipeline.get("name", "").strip()       + Fore.RESET,
+                Fore.GREEN + pipeline.get("sorName", "").strip()    + Fore.RESET,
+                Fore.GREEN + pipeline.get("spaceName", "").strip()  + Fore.RESET,
+                Fore.GREEN + pipeline.get("status", "").strip()     + Fore.RESET,
             ])
         printTabular(None, headers, dataTable)
 
@@ -144,7 +144,7 @@ def startPipeline(diManagerHost):
         }
 
         for idx in selected_indices:
-            selected_pipeline = pipelines[idx - 1].get("name", "")
+            selected_pipeline = pipelines[idx - 1].get("name", "").strip()
             selected_status   = pipelines[idx - 1].get("status", "").strip().upper()
             verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")
             logger.info(f"Selected pipeline: {selected_pipeline} (status: {selected_status})")

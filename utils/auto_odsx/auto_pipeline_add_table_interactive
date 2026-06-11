@@ -1,0 +1,15 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+cd /dbagiga/gs-odsx
+spawn ./odsx.py dataengine oracle-cdc pipeline schema-structure-management add-table
+
+expect {
+    "Select pipeline" {
+        interact
+    }
+    eof {
+    }
+}

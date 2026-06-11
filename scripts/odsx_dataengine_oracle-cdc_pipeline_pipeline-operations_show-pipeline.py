@@ -102,11 +102,11 @@ def showPipelines():
         dataTable = []
         for idx, pipeline in enumerate(pipelines, start=1):
             dataTable.append([
-                Fore.GREEN + str(idx)                      + Fore.RESET,
-                Fore.GREEN + pipeline.get("name", "")      + Fore.RESET,
-                Fore.GREEN + pipeline.get("sorName", "")   + Fore.RESET,
-                Fore.GREEN + pipeline.get("spaceName", "") + Fore.RESET,
-                Fore.GREEN + pipeline.get("status", "")    + Fore.RESET,
+                Fore.GREEN + str(idx)                               + Fore.RESET,
+                Fore.GREEN + pipeline.get("name", "").strip()       + Fore.RESET,
+                Fore.GREEN + pipeline.get("sorName", "").strip()    + Fore.RESET,
+                Fore.GREEN + pipeline.get("spaceName", "").strip()  + Fore.RESET,
+                Fore.GREEN + pipeline.get("status", "").strip()     + Fore.RESET,
                 ])
 
         printTabular(None, headers, dataTable)
@@ -117,7 +117,7 @@ def showPipelines():
             return
 
         selected_pipeline = pipelines[int(selection) - 1]
-        selected_name = selected_pipeline.get("name", "")
+        selected_name = selected_pipeline.get("name", "").strip()
         verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_name}")
         logger.info(f"Selected pipeline: {selected_name}")
 

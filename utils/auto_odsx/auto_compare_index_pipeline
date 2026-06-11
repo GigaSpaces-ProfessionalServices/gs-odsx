@@ -4,7 +4,7 @@ set timeout -1
 set force_conservative 1
 
 if {[llength $argv] != 1} {
-    puts "Usage:   ./auto_compare_pipeline <pipeline_name>"
+    puts "Usage:   ./auto_compare_index_pipeline <pipeline_name>"
     exit 1
 }
 set pipeline_name [lindex $argv 0]
@@ -12,7 +12,7 @@ set tmpfile "/tmp/auto_pipeline_[pid]"
 
 cd /dbagiga/gs-odsx
 log_file -noappend $tmpfile
-spawn ./odsx.py dataengine oracle-cdc pipeline pipeline-operations compare-pipeline
+spawn ./odsx.py dataengine oracle-cdc pipeline pipeline-operations compare-index-pipeline
 
 expect "Select pipeline"
 log_file

@@ -566,3 +566,7 @@
      app.cdc.datasource.tns.host=onprem1-ora1
      app.cdc.datasource.tns.port=1521
      app.cdc.datasource.tns.service=ORCLPDB1
+### TAU v5.6.15-tau-release tag
+171. Added new properties for datasource credential config in app.config
+     app.dataengine.dihctl.addpipeline.prefixname=STUD.
+     app.cdc.datasource.oracle.username=gsods

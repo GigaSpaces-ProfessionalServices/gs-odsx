@@ -101,11 +101,11 @@ def removeTable(diManagerHost):
     dataTable = []
     for idx, pipeline in enumerate(pipelines, start=1):
         dataTable.append([
-            Fore.GREEN + str(idx)                      + Fore.RESET,
-            Fore.GREEN + pipeline.get("name", "")      + Fore.RESET,
-            Fore.GREEN + pipeline.get("sorName", "")   + Fore.RESET,
-            Fore.GREEN + pipeline.get("spaceName", "") + Fore.RESET,
-            Fore.GREEN + pipeline.get("status", "")    + Fore.RESET,
+            Fore.GREEN + str(idx)                              + Fore.RESET,
+            Fore.GREEN + pipeline.get("name", "").strip()      + Fore.RESET,
+            Fore.GREEN + pipeline.get("sorName", "").strip()   + Fore.RESET,
+            Fore.GREEN + pipeline.get("spaceName", "").strip() + Fore.RESET,
+            Fore.GREEN + pipeline.get("status", "").strip()    + Fore.RESET,
         ])
 
     printTabular(None, headers, dataTable)
@@ -118,7 +118,7 @@ def removeTable(diManagerHost):
     if not selection.isdigit() or not (1 <= int(selection) <= len(pipelines)):
         verboseHandle.printConsoleError("Invalid selection.")
         return
-    selected_pipeline = pipelines[int(selection) - 1].get("name", "")
+    selected_pipeline = pipelines[int(selection) - 1].get("name", "").strip()
     selected_status = pipelines[int(selection) - 1].get("status", "").strip().upper()
     verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_pipeline}")
     logger.info(f"Selected pipeline: {selected_pipeline}")
@@ -168,6 +168,7 @@ def removeTable(diManagerHost):
         )
         tp_api_response.raise_for_status()
         api_table_pipelines = tp_api_response.json()
+        verboseHandle.printConsoleInfo(f"Table pipelines result: {api_table_pipelines}")
         logger.info(f"Table pipelines API response: {api_table_pipelines}")
     except Exception as e:
         handleException(e)
@@ -184,15 +185,18 @@ def removeTable(diManagerHost):
     tp_headers = [
         Fore.YELLOW + "Sr No."            + Fore.RESET,
         Fore.YELLOW + "Space Type Name"   + Fore.RESET,
+        Fore.YELLOW + "Source Table Name"   + Fore.RESET,
         Fore.YELLOW + "Table Pipeline ID" + Fore.RESET,
     ]
     tp_data = []
     for idx, tp in enumerate(api_table_pipelines, start=1):
         tp_id   = tp.get("tablePipelineId") or tp.get("id") or tp.get("pipelineId", "")
-        tp_name = tp.get("spaceTypeName") or tp.get("name") or tp.get("sourceTable", "")
+        tp_sourceTable   = tp.get("sourceTable")
+        tp_name = tp.get("spaceTypeName") or tp.get("name") or tp.get("destinationSpaceTable", "")
         tp_data.append([
             Fore.GREEN + str(idx)     + Fore.RESET,
             Fore.GREEN + str(tp_name) + Fore.RESET,
+            Fore.GREEN + str(tp_sourceTable) + Fore.RESET,
             Fore.GREEN + str(tp_id)   + Fore.RESET,
         ])
     printTabular(None, tp_headers, tp_data)
@@ -204,19 +208,19 @@ def removeTable(diManagerHost):
     selected_tp_idx = int(tp_selection) - 1
     selected_tp     = api_table_pipelines[selected_tp_idx]
     selected_tp_id  = selected_tp.get("tablePipelineId") or selected_tp.get("id") or selected_tp.get("pipelineId", "")
-    space_type_name = selected_tp.get("spaceTypeName") or selected_tp.get("name") or selected_tp.get("sourceTable", "")
+    space_type_name = selected_tp.get("spaceTypeName") or selected_tp.get("name") or selected_tp.get("destinationSpaceTable", "")
     verboseHandle.printConsoleInfo(f"Selected table to remove: {space_type_name}")
     verboseHandle.printConsoleInfo(f"Selected table pipeline ID: {selected_tp_id}")
     logger.info(f"Selected table to remove: {space_type_name}, Table Pipeline ID: {selected_tp_id}")
 
     confirm = userInputWrapper(
-        Fore.YELLOW + f"This will stop the pipeline, remove table '{space_type_name}', unregister its space type, and reimport the pipeline. Continue? (yes/no): " + Fore.RESET
+        Fore.YELLOW + f"This will stop the pipeline, remove table '{space_type_name}' and reimport the pipeline. Continue? (yes/no): " + Fore.RESET
     ).strip().lower()
     if confirm not in ("yes", "y"):
         verboseHandle.printConsoleWarning("Operation cancelled by user.")
         return
 
-    objectMgmtHost = getPivotHost()
+    # objectMgmtHost = getPivotHost()
     # Stop pipeline
     verboseHandle.printConsoleInfo(f"Fetching pipeline ID for: {selected_pipeline}")
     logger.info(f"Fetching pipeline ID for: {selected_pipeline}")
@@ -236,29 +240,47 @@ def removeTable(diManagerHost):
             f"http://{iidrHost}:6080/api/v1/pipeline/{pipeline_id}/stop",
             headers={"accept": "*/*", "Content-Type": "application/json"}
         )
-        stop_status = stop_response.json().get("status", "unknown")
-        verboseHandle.printConsoleInfo(f"Stop pipeline response status: {stop_status}")
-        logger.info(f"Stop pipeline response status: {stop_status}")
+        import time
+        current_status = None
+        check_count = 0
+        elapsed_secs = 0
+        poll_interval = 10
+        verboseHandle.printConsoleInfo(f"Waiting for pipeline '{selected_pipeline}' to become INACTIVE, polling every {poll_interval}s")
+        logger.info(f"Waiting for pipeline '{selected_pipeline}' to become INACTIVE, polling every {poll_interval}s")
+        while current_status != "INACTIVE":
+            time.sleep(poll_interval)
+            check_count += 1
+            elapsed_secs += poll_interval
+            status_resp = requests.get(f"http://{iidrHost}:6080/api/v1/pipeline/", headers={"accept": "*/*"})
+            status_list = status_resp.json()
+            current_status = next(
+                (pl.get("status", "").strip().upper() for pl in status_list if pl.get("pipelineId") == pipeline_id),
+                None
+            )
+            verboseHandle.printConsoleInfo(f"Pipeline status: {current_status} (check #{check_count}, elapsed: {elapsed_secs}s)")
+            logger.info(f"Pipeline status poll #{check_count} [{elapsed_secs}s]: {current_status}")
+        verboseHandle.printConsoleInfo(f"Pipeline '{selected_pipeline}' is now INACTIVE. Proceeding.")
+        logger.info(f"Pipeline '{selected_pipeline}' confirmed INACTIVE.")
 
-    # Unregister space type for removed table
-    verboseHandle.printConsoleInfo(f"Unregistering space type: {space_type_name}")
-    logger.info(f"Unregistering space type: {space_type_name}")
-    try:
-        unreg_response = requests.post(
-            f"http://{objectMgmtHost}:7001/unregistertype",
-            data={"type": space_type_name},
-            headers={"Accept": "application/json"}
-        )
-        if unreg_response.text.strip() == "success":
-            verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' unregistered successfully.")
-            logger.info(f"Space type '{space_type_name}' unregistered successfully.")
-        else:
-            verboseHandle.printConsoleError(f"Failed to unregister space type '{space_type_name}': {unreg_response.text}")
-            logger.error(f"Unregister space type response: {unreg_response.text}")
-            return
-    except requests.exceptions.ConnectionError:
-        verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for unregister.")
-        return
+    # # Unregister space type for removed table
+    # verboseHandle.printConsoleInfo(f"Unregistering space type: {space_type_name}")
+    # logger.info(f"Unregistering space type: {space_type_name}")
+    # try:
+    #     unreg_response = requests.post(
+    #         f"http://{objectMgmtHost}:7001/unregistertype",
+    #         data={"type": space_type_name},
+    #         headers={"Accept": "application/json"}
+    #     )
+    #     if unreg_response.text.strip() == "success":
+    #         verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' unregistered successfully.")
+    #         logger.info(f"Space type '{space_type_name}' unregistered successfully.")
+    #     else:
+    #         verboseHandle.printConsoleError(f"Failed to unregister space type '{space_type_name}': {unreg_response.text}")
+    #         logger.error(f"Unregister space type response: {unreg_response.text}")
+    #         return
+    # except requests.exceptions.ConnectionError:
+    #     verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for unregister.")
+    #     return
 
     # Delete table pipeline
     verboseHandle.printConsoleInfo(f"Deleting table pipeline: {space_type_name} [{selected_tp_id}] from pipeline [{pipeline_id}]")

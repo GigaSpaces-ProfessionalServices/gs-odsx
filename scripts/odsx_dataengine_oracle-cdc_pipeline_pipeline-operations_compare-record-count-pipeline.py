@@ -166,11 +166,12 @@ def getOracleTables(iidrHost, sorName, schema):
         username = str(readValuefromAppConfig("app.cdc.datasource.username")).strip()
     if not password:
         password = str(readValuefromAppConfig("app.cdc.datasource.password")).strip()
+    oracle_user = str(readValuefromAppConfig("app.cdc.datasource.oracle.username") or "").strip()
 
     if not service and oracle_host:
         try:
             sid_output = executeRemoteCommandAndGetOutputValuePython36(
-                oracle_host, 'root', "su - oracle -c 'echo $ORACLE_SID'")
+                oracle_host, 'root', f"su - {oracle_user} -c 'echo $ORACLE_SID'")
             oracle_sid = str(sid_output).strip()
             if oracle_sid:
                 service = oracle_sid
@@ -190,7 +191,7 @@ def getOracleTables(iidrHost, sorName, schema):
         f"printf \"SELECT table_name FROM all_tables WHERE owner='{ schema.upper() }' "
         f"ORDER BY table_name;\\nEXIT;\\n\" | sqlplus -S {conn_str}"
     )
-    remote_cmd = f"su - oracle -c \"{sql_cmd}\""
+    remote_cmd = f"su - {oracle_user} -c \"{sql_cmd}\""
     verboseHandle.printConsoleInfo(f"  [Oracle] listing tables for schema {schema.upper()} on {oracle_host}")
     logger.info(f"getOracleTables SSH to {oracle_host}: {remote_cmd}")
     try:
@@ -220,6 +221,7 @@ def getOracleCount(iidrHost, sorName, schema, table):
     """SSH to iidrOracleAgent, su - oracle, run sqlplus, feed SELECT COUNT(*)."""
     username = str(readValuefromAppConfig("app.cdc.datasource.username") or "").strip()
     password = str(readValuefromAppConfig("app.cdc.datasource.password") or "").strip()
+    oracle_user = str(readValuefromAppConfig("app.cdc.datasource.oracle.username") or "").strip()
 
     # Get iidrOracleAgent: IP for SSH, name (hostname) for commands
     oracle_agent_ip   = ""
@@ -258,7 +260,7 @@ def getOracleCount(iidrHost, sorName, schema, table):
         # Step 1: SSH to oracle_agent_ip
         # Step 2: su - oracle, step 3: sqlplus (via su -c)
         # Step 4: feed SQL via stdin
-        remote_cmd = f'su - oracle -c "{sqlplus_cmd}"'
+        remote_cmd = f'su - {oracle_user} -c "{sqlplus_cmd}"'
         pem_file = str(readValuefromAppConfig("cluster.pemFile") or "").strip()
         use_pem  = str(readValuefromAppConfig("cluster.usingPemFile") or "").strip()
         if use_pem == 'True' and pem_file:
@@ -279,18 +281,48 @@ def getOracleCount(iidrHost, sorName, schema, table):
             logger.warning(f"getOracleCount stderr: {sql_err.strip()!r}")
         logger.info(f"Oracle sqlplus output: {sql_output!r}")
 
+        count = "N/A"
         for line in sql_output.splitlines():
             if re.match(r'^\d+$', line.strip()):
-                return int(line.strip())
-        verboseHandle.printConsoleError(f"  [Oracle] could not parse count from output: {sql_output[:200]!r}")
-        return "N/A"
+                count = int(line.strip())
+                break
+
+        if count == "N/A":
+            logger.info("getOracleCount: retrying with schema-based connection...")
+            conn_str    = f"{username}/{password}@{schema}"
+            sqlplus_cmd = f"sqlplus {conn_str}"
+            remote_cmd  = f'su - {oracle_user} -c "{sqlplus_cmd}"'
+            if use_pem == 'True' and pem_file:
+                ssh_args = ['ssh', '-i', pem_file, f'root@{oracle_agent_ip}', remote_cmd]
+            else:
+                ssh_args = ['ssh', oracle_agent_ip, remote_cmd]
+            logger.info(
+                f"getOracleCount retry SSH={oracle_agent_ip} sqlplus={sqlplus_cmd} query={sql_query}")
+            proc2 = subprocess.Popen(
+                ssh_args,
+                stdin=subprocess.PIPE,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
+                universal_newlines=True
+            )
+            sql_output2, sql_err2 = proc2.communicate(input=f"{sql_query}\nEXIT;\n")
+            sql_output2 = (sql_output2 or "").strip()
+            if sql_err2:
+                logger.warning(f"getOracleCount stderr (retry): {sql_err2.strip()!r}")
+            logger.info(f"Oracle sqlplus output (retry): {sql_output2!r}")
+            for line in sql_output2.splitlines():
+                if re.match(r'^\d+$', line.strip()):
+                    count = int(line.strip())
+                    break
+
+        return count
     except Exception as e:
         verboseHandle.printConsoleError(f"  [Oracle] SSH error: {e}")
         logger.warning(f"getOracleCount SSH error: {e}")
         return "N/A"
 
 
-def comparePipelineMenu():
+def compareRecordCountPipelineMenu():
     try:
         iidrHost = ""
         dIServers = config_get_dataIntegration_nodes("config/cluster.config")
@@ -338,11 +370,11 @@ def comparePipelineMenu():
         dataTable = []
         for idx, pipeline in enumerate(pipelines, start=1):
             dataTable.append([
-                Fore.GREEN + str(idx)                      + Fore.RESET,
-                Fore.GREEN + pipeline.get("name", "")      + Fore.RESET,
-                Fore.GREEN + pipeline.get("sorName", "")   + Fore.RESET,
-                Fore.GREEN + pipeline.get("spaceName", "") + Fore.RESET,
-                Fore.GREEN + pipeline.get("status", "")    + Fore.RESET,
+                Fore.GREEN + str(idx)                               + Fore.RESET,
+                Fore.GREEN + pipeline.get("name", "").strip()       + Fore.RESET,
+                Fore.GREEN + pipeline.get("sorName", "").strip()    + Fore.RESET,
+                Fore.GREEN + pipeline.get("spaceName", "").strip()  + Fore.RESET,
+                Fore.GREEN + pipeline.get("status", "").strip()     + Fore.RESET,
                 ])
         printTabular(None, headers, dataTable)
 
@@ -352,9 +384,9 @@ def comparePipelineMenu():
             return
 
         selected = pipelines[int(selection) - 1]
-        selected_name = selected.get("name", "")
-        space_name = selected.get("spaceName", "")
-        sor_name = selected.get("sorName", "ORACLE")
+        selected_name = selected.get("name", "").strip()
+        space_name = selected.get("spaceName", "").strip()
+        sor_name = selected.get("sorName", "ORACLE").strip()
         selected_status = selected.get("status", "").strip().upper()
         verboseHandle.printConsoleInfo(f"Selected pipeline: {selected_name}")
         logger.info(f"Selected pipeline: {selected_name}")
@@ -434,11 +466,11 @@ def comparePipelineMenu():
             oracle_count = getOracleCount(iidrHost, sor_name, source_schema, source_table)
 
             if isinstance(space_count, int) and isinstance(oracle_count, int):
-                match_str = Fore.GREEN + "YES" + Fore.RESET if space_count == oracle_count else Fore.RED + "NO" + Fore.RESET
+                match_str = Fore.GREEN + "True" + Fore.RESET if space_count == oracle_count else Fore.RED + "False" + Fore.RESET
                 space_color = Fore.GREEN if space_count == oracle_count else Fore.RED
                 oracle_color = Fore.GREEN if space_count == oracle_count else Fore.RED
             else:
-                match_str = Fore.YELLOW + "N/A" + Fore.RESET
+                match_str = Fore.YELLOW + "False" + Fore.RESET
                 space_color = Fore.YELLOW
                 oracle_color = Fore.YELLOW
 
@@ -458,6 +490,6 @@ def comparePipelineMenu():
 
 
 if __name__ == '__main__':
-    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Compare Pipeline')
-    logger.info('Menu -> DataEngine -> Oracle CDC Compare Pipeline')
-    comparePipelineMenu()
+    verboseHandle.printConsoleWarning('Menu -> DataEngine -> Oracle CDC Compare Record Count Pipeline')
+    logger.info('Menu -> DataEngine -> Oracle CDC Compare Record Count Pipeline')
+    compareRecordCountPipelineMenu()

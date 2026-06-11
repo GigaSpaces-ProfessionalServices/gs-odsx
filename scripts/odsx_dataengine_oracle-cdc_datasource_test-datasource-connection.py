@@ -426,6 +426,7 @@ def testDatasourceConnections():
                                         oracle_host    = str(readValuefromAppConfig("app.cdc.datasource.tns.host") or "").strip()
                                         oracle_port    = str(readValuefromAppConfig("app.cdc.datasource.tns.port") or "1521").strip()
                                         oracle_service = str(readValuefromAppConfig("app.cdc.datasource.tns.service") or "").strip()
+                                        oracle_user    = str(readValuefromAppConfig("app.cdc.datasource.oracle.username") or "").strip()
                                         conn_str = (
                                             f"{username}/{password}"
                                             f"@//{oracle_host}:{oracle_port}/{oracle_service}"
@@ -433,9 +434,7 @@ def testDatasourceConnections():
 
                                         sql_query    = f"SELECT COUNT(*) FROM {full_table};"
                                         sqlplus_cmd  = f"sqlplus {conn_str}"
-                                        su_cmd       = "su - oracle"
-
-                                        # Print all 4 steps separately
+                                        su_cmd       = f"su - {oracle_user}"
                                         # verboseHandle.printConsoleInfo(
                                         #     "  [Oracle CMD] Commands to be executed:")
                                         # verboseHandle.printConsoleInfo(
@@ -446,15 +445,15 @@ def testDatasourceConnections():
                                         #     f"    3 - {sqlplus_cmd}")
                                         # verboseHandle.printConsoleInfo(
                                         #     f"    4 - {sql_query}")
-                                        logger.info(
-                                            f"testDatasource: SSH={oracle_agent_host} "
-                                            f"su={su_cmd} sqlplus={sqlplus_cmd} query={sql_query}")
+                                        # logger.info(
+                                        #     f"testDatasource: SSH={oracle_agent_host} "
+                                        #     f"su={su_cmd} sqlplus={sqlplus_cmd} query={sql_query}")
 
                                         try:
                                             # Step 1: SSH to oracle_agent_host
                                             # Step 2: su - oracle, then run sqlplus (step 3)
                                             # Step 4: feed SQL query via stdin to sqlplus
-                                            remote_cmd = f'su - oracle -c "{sqlplus_cmd}"'
+                                            remote_cmd = f'su - {oracle_user} -c "{sqlplus_cmd}"'
                                             pem_file = str(readValuefromAppConfig("cluster.pemFile") or "").strip()
                                             use_pem  = str(readValuefromAppConfig("cluster.usingPemFile") or "").strip()
                                             if use_pem == 'True' and pem_file:
@@ -484,6 +483,51 @@ def testDatasourceConnections():
                                                 if re.match(r'^\d+$', line.strip()):
                                                     count = int(line.strip())
                                                     break
+
+                                            if count == "N/A":
+                                                # verboseHandle.printConsoleInfo(
+                                                #     "  [Oracle] Count N/A — retrying with schema-based connection...")
+                                                conn_str    = f"{username}/{password}@{sel_t_schema}"
+                                                sqlplus_cmd = f"sqlplus {conn_str}"
+                                                remote_cmd  = f'su - {oracle_user} -c "{sqlplus_cmd}"'
+                                                if use_pem == 'True' and pem_file:
+                                                    ssh_args = ['ssh', '-i', pem_file,
+                                                                f'root@{oracle_agent_host}',
+                                                                remote_cmd]
+                                                else:
+                                                    ssh_args = ['ssh', oracle_agent_host, remote_cmd]
+                                                # verboseHandle.printConsoleInfo(
+                                                #     "  [Oracle CMD] Commands to be executed:")
+                                                # verboseHandle.printConsoleInfo(
+                                                #     f"    1 - ssh {oracle_agent_host}")
+                                                # verboseHandle.printConsoleInfo(
+                                                #     f"    2 - {su_cmd}")
+                                                # verboseHandle.printConsoleInfo(
+                                                #     f"    3 - {sqlplus_cmd}")
+                                                # verboseHandle.printConsoleInfo(
+                                                #     f"    4 - {sql_query}")
+                                                # logger.info(
+                                                #     f"testDatasource retry: SSH={oracle_agent_host} "
+                                                #     f"su={su_cmd} sqlplus={sqlplus_cmd} query={sql_query}")
+                                                proc2 = subprocess.Popen(
+                                                    ssh_args,
+                                                    stdin=subprocess.PIPE,
+                                                    stdout=subprocess.PIPE,
+                                                    stderr=subprocess.PIPE,
+                                                    universal_newlines=True
+                                                )
+                                                sql_output2, sql_err2 = proc2.communicate(
+                                                    input=sql_input)
+                                                sql_output2 = (sql_output2 or "").strip()
+                                                if sql_err2:
+                                                    logger.warning(
+                                                        f"sqlplus stderr (retry): {sql_err2.strip()!r}")
+                                                logger.info(
+                                                    f"sqlplus output (retry): {sql_output2!r}")
+                                                for line in sql_output2.splitlines():
+                                                    if re.match(r'^\d+$', line.strip()):
+                                                        count = int(line.strip())
+                                                        break
 
                                             count_headers = [
                                                 Fore.YELLOW + "Table"         + Fore.RESET,

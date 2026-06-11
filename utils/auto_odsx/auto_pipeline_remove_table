@@ -55,10 +55,22 @@ file delete $tmpfile2
 
 regsub -all {\x1b\[[0-9;]*m} $content2 "" clean2
 set tp_num ""
+
+# Try column 2 (Space Type Name)
 foreach line [split $clean2 "\n"] {
     if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${table_name}\\s*\\|" $line -> num]} {
         set tp_num $num
         break
+    }
+}
+
+# Fallback: try column 3 (Source Table Name)
+if {$tp_num eq ""} {
+    foreach line [split $clean2 "\n"] {
+        if {[regexp "\\|\\s+(\\d+)\\s+\\|[^|]*\\|\\s*${table_name}\\s*\\|" $line -> num]} {
+            set tp_num $num
+            break
+        }
     }
 }
 

@@ -80,8 +80,8 @@ def importPipeline(diManagerHost):
         dataTable = []
         for idx, fname in enumerate(files, start=1):
             dataTable.append([
-                Fore.GREEN + str(idx) + Fore.RESET,
-                Fore.GREEN + fname    + Fore.RESET,
+                Fore.GREEN + str(idx)        + Fore.RESET,
+                Fore.GREEN + fname.strip()   + Fore.RESET,
             ])
         printTabular(None, headers, dataTable)
 

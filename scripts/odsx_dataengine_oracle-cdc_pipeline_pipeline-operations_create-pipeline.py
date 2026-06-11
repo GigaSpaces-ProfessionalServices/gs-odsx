@@ -291,7 +291,27 @@ def createPipeline(diManagerHost):
         verboseHandle.printConsoleInfo(f"Selected tables: {selected_table_names}")
         logger.info(f"Selected tables: {selected_table_names}")
 
-        # Check if selected tables are already registered in the space
+        # Ask user about table name modification
+        rename_map = {}
+        modify_confirm = userInputWrapper(
+            Fore.YELLOW + "Do you want to modify table name(s)? (yes/no): " + Fore.RESET
+        ).strip().lower()
+        if modify_confirm in ("yes", "y"):
+            for tbl in selected_tables:
+                orig_name = tbl["sourceTable"]
+                verboseHandle.printConsoleInfo(f"Table: {orig_name}")
+                new_name = userInputWrapper(
+                    Fore.YELLOW + f"  Enter new name for '{orig_name}' (or press Enter to keep): " + Fore.RESET
+                ).strip()
+                if new_name and new_name != orig_name:
+                    rename_map[orig_name] = new_name
+                    verboseHandle.printConsoleInfo(f"  '{orig_name}' will be renamed to '{new_name}'")
+                    logger.info(f"Table rename: '{orig_name}' -> '{new_name}'")
+
+        # Read prefix from config; default to STUD. if not configured
+        table_prefix = str(readValuefromAppConfig("app.dataengine.dihctl.addpipeline.prefixname")).strip()
+
+        # Check if final space type names (prefix + renamed) are already registered in Space
         try:
             objectMgmtHost = getPivotHost()
             obj_response = requests.get(
@@ -305,9 +325,12 @@ def createPipeline(diManagerHost):
                     for obj in space.get("objects", []):
                         space_table_names.add(str(obj.get("tablename", "")).strip().upper())
             for tbl in selected_tables:
-                if tbl["sourceTable"].strip().upper() in space_table_names:
-                    verboseHandle.printConsoleError(f"Table '{tbl['sourceTable']}' is already available in space '{space_name}'.")
-                    logger.error(f"Table '{tbl['sourceTable']}' already exists in space '{space_name}'.")
+                final_name = rename_map.get(tbl["sourceTable"], tbl["sourceTable"])
+                if not final_name.startswith(table_prefix):
+                    final_name = table_prefix + final_name
+                if final_name.strip().upper() in space_table_names:
+                    verboseHandle.printConsoleError(f"Table '{final_name}' is already available in space '{space_name}'.")
+                    logger.error(f"Table '{final_name}' already exists in space '{space_name}'.")
                     return
         except Exception as obj_ex:
             logger.warning(f"Could not check space table availability: {obj_ex}")
@@ -401,212 +424,240 @@ def createPipeline(diManagerHost):
         verboseHandle.printConsoleInfo(f"{pipeline_name} Pipeline created successfully")
         logger.info(f"{pipeline_name} Pipeline created successfully")
 
-        # ── Optional column exclusion ────────────────────────────────────────
+        # Export YAML to apply rename + prefix (always required)
+        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
+        if not export_path.strip():
+            verboseHandle.printConsoleError("Export path cannot be empty. Aborting.")
+            return
+        if not os.path.exists(export_path):
+            verboseHandle.printConsoleError(f"Export path not found: {export_path}. Aborting.")
+            return
 
+        export_file = os.path.join(export_path, f"{pipeline_name}.yaml")
+        export_cmd = f"{rootpath}dihctl -e dev export pipelines {pipeline_name} -o {export_file}"
+        verboseHandle.printConsoleInfo(f"Exporting pipeline: {export_cmd}")
+        logger.info(f"Running export: {export_cmd}")
+        export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if export_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Export failed for '{pipeline_name}': {export_result.stderr}")
+            logger.error(f"Export failed [{export_result.returncode}]: {export_result.stderr}")
+            return
+        verboseHandle.printConsoleInfo(f"Pipeline '{pipeline_name}' exported to: {export_file}")
+        logger.info(f"Export successful: {export_result.stdout}")
+        with open(export_file, 'r') as f:
+            exported_yaml = yaml.safe_load(f)
+
+        # Apply rename_map + prefix to spaceTypeName for all added tables
+        table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
+        source_tables_upper = {t.upper() for t in source_tables_list}
+        types_to_unregister = []
+
+        for tp_idx, tp in enumerate(table_pipelines):
+            stn = str(tp.get("spaceTypeName", "")).strip()
+            if stn.upper() in source_tables_upper:
+                new_stn = rename_map.get(stn, stn)
+                if not new_stn.startswith(table_prefix):
+                    new_stn = table_prefix + new_stn
+                if new_stn != stn:
+                    exported_yaml["pipelines"][0]["tablePipelines"][tp_idx]["spaceTypeName"] = new_stn
+                    types_to_unregister.append(stn)
+                    verboseHandle.printConsoleInfo(f"Renamed spaceTypeName: '{stn}' → '{new_stn}'")
+                    logger.info(f"spaceTypeName '{stn}' → '{new_stn}'")
+
+        # Reload after rename/prefix changes
+        table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
+
+        # Ask user about column removal; if no, proceed with rename-only reimport and stop
         edit_cols_confirm = userInputWrapper(
             Fore.YELLOW + "Do you want to remove columns for the added table(s)? (yes/no): " + Fore.RESET
         ).strip().lower()
 
-        export_path = str(readValuefromAppConfig("app.dataengine.dihctl.pipelinefolderpath"))
-        export_file = None
-        exported_yaml = None
-        selected_pl_tbl_name = None
-        selected_pl_tbl_schema = None
-        if edit_cols_confirm not in ("yes", "y"):
-            verboseHandle.printConsoleInfo("Skipping column editing.")
-        elif not export_path.strip():
-            verboseHandle.printConsoleError("Export path cannot be empty. Skipping export.")
-        elif not os.path.exists(export_path):
-            verboseHandle.printConsoleError(f"Export path not found: {export_path}. Skipping export.")
-        else:
-            export_file = os.path.join(export_path, f"{pipeline_name}.yaml")
-            export_cmd = f"{rootpath}dihctl -e dev export pipelines {pipeline_name} -o {export_file}"
-            verboseHandle.printConsoleInfo(f"Exporting pipeline: {export_cmd}")
-            logger.info(f"Running export: {export_cmd}")
-            export_result = subprocess.run(export_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-            if export_result.returncode != 0:
-                verboseHandle.printConsoleError(f"Export failed for '{pipeline_name}': {export_result.stderr}")
-                logger.error(f"Export failed [{export_result.returncode}]: {export_result.stderr}")
-                export_file = None
-            else:
-                verboseHandle.printConsoleInfo(f"Pipeline '{pipeline_name}' exported successfully to: {export_file}")
-                logger.info(f"Export successful: {export_result.stdout}")
-                with open(export_file, 'r') as f:
-                    exported_yaml = yaml.safe_load(f)
-
-                pipeline_table_pipelines = exported_yaml["pipelines"][0]["tablePipelines"]
-                pl_tbl_headers = [
-                    Fore.YELLOW + "Sr No."          + Fore.RESET,
-                    Fore.YELLOW + "Space Type Name" + Fore.RESET,
-                ]
-                pl_tbl_data = []
-                for idx, tp in enumerate(pipeline_table_pipelines, start=1):
-                    pl_tbl_data.append([
-                        Fore.GREEN + str(idx)                         + Fore.RESET,
-                        Fore.GREEN + str(tp.get("spaceTypeName", "")) + Fore.RESET,
-                    ])
-                verboseHandle.printConsoleInfo(f"Tables in pipeline '{pipeline_name}':")
-                printTabular(None, pl_tbl_headers, pl_tbl_data)
-
-                pl_tbl_selection = userInputWrapper(
-                    f"Select table number to edit columns (1-{len(pipeline_table_pipelines)}): "
-                ).strip()
-                if pl_tbl_selection.isdigit() and (1 <= int(pl_tbl_selection) <= len(pipeline_table_pipelines)):
-                    selected_pl_tbl_idx  = int(pl_tbl_selection) - 1
-                    selected_pl_tbl_name = str(pipeline_table_pipelines[selected_pl_tbl_idx].get("spaceTypeName", "")).strip()
-                    matched_src          = next((t for t in selected_tables if t["sourceTable"] == selected_pl_tbl_name), None)
-                    selected_pl_tbl_schema = matched_src["sourceSchema"] if matched_src else oracle_schema
-                else:
-                    verboseHandle.printConsoleError("Invalid table selection.")
-
         col_exclude_map = {}
-        if edit_cols_confirm in ("yes", "y") and selected_pl_tbl_name:
-            tbl_schema = selected_pl_tbl_schema
-            tbl_name   = selected_pl_tbl_name
-            cols_url   = f"http://{di1_host}:6080/api/v1/datasource/{sor_name}/table?schemaName={tbl_schema}&tableName={tbl_name}&refreshMetadata=false"
-            verboseHandle.printConsoleInfo(f"Fetching columns for {tbl_schema}.{tbl_name} from datasource '{sor_name}'")
-            logger.info(f"Fetching columns URL: {cols_url}")
-            try:
-                cols_response = requests.get(cols_url, headers={"accept": "*/*"})
-                cols_response.raise_for_status()
-                cols_json  = cols_response.json()
-                table_data = cols_json.get("data", cols_json) if isinstance(cols_json, dict) else cols_json
-                cols_raw   = table_data.get("tableColumns", []) if isinstance(table_data, dict) else table_data
+        if edit_cols_confirm in ("yes", "y"):
+            pl_tbl_headers = [
+                Fore.YELLOW + "Sr No."          + Fore.RESET,
+                Fore.YELLOW + "Space Type Name" + Fore.RESET,
+                Fore.YELLOW + "Source Table Name" + Fore.RESET,
+            ]
+            pl_tbl_data = []
+            for idx, tp in enumerate(table_pipelines, start=1):
+                pl_tbl_data.append([
+                    Fore.GREEN + str(idx)                         + Fore.RESET,
+                    Fore.GREEN + str(tp.get("spaceTypeName", "")) + Fore.RESET,
+                    Fore.GREEN + str(tp.get("name", "")) + Fore.RESET
+                ])
+            verboseHandle.printConsoleInfo(f"Tables in pipeline '{pipeline_name}':")
+            printTabular(None, pl_tbl_headers, pl_tbl_data)
 
-                col_headers = [
-                    Fore.YELLOW + "Sr No."      + Fore.RESET,
-                    Fore.YELLOW + "Column Name" + Fore.RESET,
-                    Fore.YELLOW + "Data Type"   + Fore.RESET,
-                ]
-                col_rows = []
-                for cidx, col in enumerate(cols_raw, start=1):
-                    col_rows.append([
-                        Fore.GREEN + str(cidx)                              + Fore.RESET,
-                        Fore.GREEN + str(col.get("columnName", "")).strip() + Fore.RESET,
-                        Fore.GREEN + str(col.get("columnType", "")).strip() + Fore.RESET,
-                    ])
-                verboseHandle.printConsoleInfo(f"Columns for {tbl_schema}.{tbl_name}:")
-                printTabular(None, col_headers, col_rows)
-
-                if col_rows:
-                    col_remove_input = userInputWrapper(
-                        Fore.YELLOW + f"Select column number(s) to remove from '{tbl_name}' (e.g. 1 or 1-3 or 1,4,5, or press Enter to skip): " + Fore.RESET
-                    ).strip()
-                    if col_remove_input:
-                        rm_indices = set()
-                        for part in col_remove_input.split(","):
-                            part = part.strip()
-                            if "-" in part:
-                                s_v, e_v = part.split("-", 1)
-                                rm_indices.update(range(int(s_v.strip()), int(e_v.strip()) + 1))
-                            elif part.isdigit():
-                                rm_indices.add(int(part))
-                        rm_indices = sorted(i for i in rm_indices if 1 <= i <= len(cols_raw))
-                        if rm_indices:
-                            cols_to_remove = [cols_raw[i - 1].get("columnName", "") for i in rm_indices]
-                            verboseHandle.printConsoleInfo(f"Columns to remove from '{tbl_name}': {cols_to_remove}")
-                            logger.info(f"Columns to remove from '{tbl_name}': {cols_to_remove}")
-                            confirm_remove = userInputWrapper(
-                                Fore.YELLOW + f"Confirm removing {cols_to_remove} from '{tbl_name}'? (yes/no): " + Fore.RESET
-                            ).strip().lower()
-                            if confirm_remove in ("yes", "y"):
-                                col_exclude_map[tbl_name] = cols_to_remove
-                            else:
-                                verboseHandle.printConsoleWarning(f"Column removal cancelled for '{tbl_name}'.")
-                                logger.info(f"User cancelled column removal for '{tbl_name}'.")
-            except Exception as col_ex:
-                verboseHandle.printConsoleError(f"Failed to fetch columns for {tbl_schema}.{tbl_name}: {col_ex}")
-                logger.error(f"Columns fetch failed for {tbl_schema}.{tbl_name}: {col_ex}")
-
-        if export_file and exported_yaml and col_exclude_map:
-            table_pipelines      = exported_yaml["pipelines"][0]["tablePipelines"]
-            modified_space_types = []
-            for tp_idx, tp in enumerate(table_pipelines):
-                stn = str(tp.get("spaceTypeName", "")).strip()
-                matched_cols = (
-                    col_exclude_map.get(stn) or
-                    col_exclude_map.get(stn.upper()) or
-                    col_exclude_map.get(stn.lower())
+            pl_tbl_selection = userInputWrapper(
+                f"Select table number to edit columns (1-{len(table_pipelines)}): "
+            ).strip()
+            selected_pl_tbl_name = None
+            selected_pl_tbl_schema = None
+            if pl_tbl_selection.isdigit() and (1 <= int(pl_tbl_selection) <= len(table_pipelines)):
+                selected_pl_tbl_idx = int(pl_tbl_selection) - 1
+                selected_pl_tbl_name = str(table_pipelines[selected_pl_tbl_idx].get("name", "")).strip()
+                # Resolve original source table name for column API lookup
+                orig_tbl_name = next(
+                    (orig for orig, new in rename_map.items() if table_prefix + new == selected_pl_tbl_name),
+                    selected_pl_tbl_name[len(table_prefix):] if selected_pl_tbl_name.startswith(table_prefix) else selected_pl_tbl_name
                 )
-                if matched_cols:
-                    existing_exclude = tp.get("excludeFields") or []
-                    updated_exclude  = existing_exclude + [col for col in matched_cols if col not in existing_exclude]
-                    exported_yaml["pipelines"][0]["tablePipelines"][tp_idx]["excludeFields"] = updated_exclude
-                    modified_space_types.append(stn)
-                    verboseHandle.printConsoleInfo(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
-                    logger.info(f"Updated excludeFields for space type '{stn}': {updated_exclude}")
+                matched_src = next((t for t in selected_tables if t["sourceTable"] == orig_tbl_name), None)
+                selected_pl_tbl_schema = matched_src["sourceSchema"] if matched_src else oracle_schema
+            else:
+                verboseHandle.printConsoleError("Invalid table selection.")
 
-            if modified_space_types:
-                new_yaml_file = os.path.join(export_path, f"{pipeline_name}_updated.yaml")
-                with open(new_yaml_file, 'w') as f:
-                    yaml.dump(exported_yaml, f, default_flow_style=False, allow_unicode=True)
-                verboseHandle.printConsoleInfo(f"Updated YAML saved to: {new_yaml_file}")
-                logger.info(f"Updated YAML saved to: {new_yaml_file}")
+            if selected_pl_tbl_name:
+                tbl_schema = selected_pl_tbl_schema
+                orig_tbl_name = next(
+                    (orig for orig, new in rename_map.items() if table_prefix + new == selected_pl_tbl_name),
+                    selected_pl_tbl_name[len(table_prefix):] if selected_pl_tbl_name.startswith(table_prefix) else selected_pl_tbl_name
+                )
+                cols_url = f"http://{di1_host}:6080/api/v1/datasource/{sor_name}/table?schemaName={tbl_schema}&tableName={orig_tbl_name}&refreshMetadata=false"
+                verboseHandle.printConsoleInfo(f"Fetching columns for {tbl_schema}.{orig_tbl_name}")
+                logger.info(f"Fetching columns URL: {cols_url}")
+                verboseHandle.printConsoleInfo(f"Fetching columns URL: {cols_url}")
+                try:
+                    cols_response = requests.get(cols_url, headers={"accept": "*/*"})
+                    cols_response.raise_for_status()
+                    cols_json  = cols_response.json()
+                    table_data = cols_json.get("data", cols_json) if isinstance(cols_json, dict) else cols_json
+                    cols_raw   = table_data.get("tableColumns", []) if isinstance(table_data, dict) else table_data
 
-                # Delete pipeline
-                delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {pipeline_name}"
-                verboseHandle.printConsoleInfo(f"Running: {delete_cmd}")
-                logger.info(f"Running: {delete_cmd}")
-                delete_result = subprocess.run(delete_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-                if delete_result.returncode != 0:
-                    verboseHandle.printConsoleError(f"Delete pipeline failed: {delete_result.stderr}")
-                    return
-                verboseHandle.printConsoleInfo(f"Pipeline deleted successfully: {pipeline_name}")
-                logger.info(f"Pipeline deleted successfully: {delete_result.stdout}")
+                    col_headers = [
+                        Fore.YELLOW + "Sr No."      + Fore.RESET,
+                        Fore.YELLOW + "Column Name" + Fore.RESET,
+                        Fore.YELLOW + "Data Type"   + Fore.RESET,
+                    ]
+                    col_rows = []
+                    for cidx, col in enumerate(cols_raw, start=1):
+                        col_rows.append([
+                            Fore.GREEN + str(cidx)                              + Fore.RESET,
+                            Fore.GREEN + str(col.get("columnName", "")).strip() + Fore.RESET,
+                            Fore.GREEN + str(col.get("columnType", "")).strip() + Fore.RESET,
+                        ])
+                    verboseHandle.printConsoleInfo(f"Columns for {tbl_schema}.{orig_tbl_name}:")
+                    printTabular(None, col_headers, col_rows)
 
-                # Validate deletion
-                max_del_retries  = 5
-                pipeline_deleted = False
-                for attempt in range(1, max_del_retries + 1):
-                    verboseHandle.printConsoleInfo(f"Validating pipeline deletion for: {pipeline_name} (attempt {attempt}/{max_del_retries})")
-                    logger.info(f"Validating pipeline deletion: attempt {attempt}/{max_del_retries}")
-                    show_result = subprocess.run(
-                        [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
-                        stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
-                    )
-                    show_reader        = csv.DictReader(io.StringIO(show_result.stdout))
-                    remaining_pipelines = [row.get("name", "") for row in show_reader]
-                    if pipeline_name not in remaining_pipelines:
-                        pipeline_deleted = True
-                        verboseHandle.printConsoleInfo(f"Validation passed: pipeline '{pipeline_name}' confirmed deleted.")
-                        logger.info(f"Validation passed: pipeline '{pipeline_name}' not found in show pipelines output.")
-                        break
-                    verboseHandle.printConsoleError(f"Validation failed: pipeline '{pipeline_name}' still exists. (attempt {attempt}/{max_del_retries})")
-                    logger.error(f"Validation failed: pipeline still present. Attempt {attempt}/{max_del_retries}.")
-                    time.sleep(10)
-                if not pipeline_deleted:
-                    verboseHandle.printConsoleError(f"Pipeline '{pipeline_name}' still exists after {max_del_retries} attempts. Aborting.")
-                    return
+                    if col_rows:
+                        col_remove_input = userInputWrapper(
+                            Fore.YELLOW + f"Select column number(s) to remove from '{selected_pl_tbl_name}' (e.g. 1 or 1-3 or 1,4,5, or press Enter to skip): " + Fore.RESET
+                        ).strip()
+                        if col_remove_input:
+                            rm_indices = set()
+                            for part in col_remove_input.split(","):
+                                part = part.strip()
+                                if "-" in part:
+                                    s_v, e_v = part.split("-", 1)
+                                    rm_indices.update(range(int(s_v.strip()), int(e_v.strip()) + 1))
+                                elif part.isdigit():
+                                    rm_indices.add(int(part))
+                            rm_indices = sorted(i for i in rm_indices if 1 <= i <= len(cols_raw))
+                            if rm_indices:
+                                cols_to_remove = [cols_raw[i - 1].get("columnName", "") for i in rm_indices]
+                                verboseHandle.printConsoleInfo(f"Columns to remove from '{selected_pl_tbl_name}': {cols_to_remove}")
+                                logger.info(f"Columns to remove: {cols_to_remove}")
+                                confirm_remove = userInputWrapper(
+                                    Fore.YELLOW + f"Confirm removing {cols_to_remove} from '{selected_pl_tbl_name}'? (yes/no): " + Fore.RESET
+                                ).strip().lower()
+                                if confirm_remove in ("yes", "y"):
+                                    col_exclude_map[selected_pl_tbl_name] = cols_to_remove
+                                else:
+                                    verboseHandle.printConsoleWarning(f"Column removal cancelled.")
+                                    logger.info(f"User cancelled column removal.")
+                except Exception as col_ex:
+                    verboseHandle.printConsoleError(f"Failed to fetch columns: {col_ex}")
+                    logger.error(f"Columns fetch failed: {col_ex}")
+        else:
+            verboseHandle.printConsoleInfo("Skipping column removal.")
 
-                # # Unregister each modified space type
-                # objectMgmtHost = getPivotHost()
-                # for space_type_name in modified_space_types:
-                #     verboseHandle.printConsoleInfo(f"Unregistering space type: {space_type_name}")
-                #     logger.info(f"Unregistering space type: {space_type_name}")
-                #     try:
-                #         unreg_response = requests.post(
-                #             f"http://{objectMgmtHost}:7001/unregistertype",
-                #             data={"type": space_type_name},
-                #             headers={"Accept": "application/json"}
-                #         )
-                #         if unreg_response.text.strip() == "success":
-                #             verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' unregistered successfully.")
-                #             logger.info(f"Space type '{space_type_name}' unregistered successfully.")
-                #         else:
-                #             verboseHandle.printConsoleError(f"Failed to unregister space type '{space_type_name}': {unreg_response.text}")
-                #             return
-                #     except requests.exceptions.ConnectionError:
-                #         verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001 for unregister.")
-                #         return
+        # Apply column exclusions to YAML
+        for tp_idx, tp in enumerate(table_pipelines):
+            stn = str(tp.get("spaceTypeName", "")).strip()
+            matched_cols = (
+                col_exclude_map.get(stn) or
+                col_exclude_map.get(stn.upper()) or
+                col_exclude_map.get(stn.lower())
+            )
+            if matched_cols:
+                existing_exclude = tp.get("excludeFields") or []
+                updated_exclude  = existing_exclude + [col for col in matched_cols if col not in existing_exclude]
+                exported_yaml["pipelines"][0]["tablePipelines"][tp_idx]["excludeFields"] = updated_exclude
+                verboseHandle.printConsoleInfo(f"Updated excludeFields for '{stn}': {updated_exclude}")
+                logger.info(f"Updated excludeFields for '{stn}': {updated_exclude}")
 
-                # Import updated pipeline with excludeFields
-                import_cmd = f"{rootpath}dihctl -e dev apply -f {new_yaml_file}"
-                verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
-                logger.info(f"Running: {import_cmd}")
-                import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
-                if import_result.returncode != 0:
-                    verboseHandle.printConsoleError(f"Create pipeline failed: {import_result.stderr}")
-                    return
+        new_yaml_file = os.path.join(export_path, f"{pipeline_name}_updated.yaml")
+        with open(new_yaml_file, 'w') as f:
+            yaml.dump(exported_yaml, f, default_flow_style=False, allow_unicode=True)
+        verboseHandle.printConsoleInfo(f"Updated YAML saved to: {new_yaml_file}")
+        logger.info(f"Updated YAML: {new_yaml_file}")
+
+        # Delete pipeline
+        delete_cmd = f"{rootpath}dihctl -e dev delete pipelines {pipeline_name}"
+        verboseHandle.printConsoleInfo(f"Running: {delete_cmd}")
+        logger.info(f"Running: {delete_cmd}")
+        delete_result = subprocess.run(delete_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if delete_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Delete pipeline failed: {delete_result.stderr}")
+            return
+        verboseHandle.printConsoleInfo(f"Pipeline deleted: {pipeline_name}")
+        logger.info(f"Pipeline deleted: {delete_result.stdout}")
+
+        # Validate deletion
+        max_del_retries  = 5
+        pipeline_deleted = False
+        for attempt in range(1, max_del_retries + 1):
+            verboseHandle.printConsoleInfo(f"Validating deletion: {pipeline_name} (attempt {attempt}/{max_del_retries})")
+            logger.info(f"Validating deletion attempt {attempt}/{max_del_retries}")
+            show_result = subprocess.run(
+                [f'{rootpath}dihctl', '-e', 'dev', 'show', 'pipelines', '--format', 'csv'],
+                stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True
+            )
+            show_reader = csv.DictReader(io.StringIO(show_result.stdout))
+            remaining_pipelines = [row.get("name", "") for row in show_reader]
+            if pipeline_name not in remaining_pipelines:
+                pipeline_deleted = True
+                verboseHandle.printConsoleInfo(f"Pipeline '{pipeline_name}' confirmed deleted.")
+                logger.info(f"Validation passed: pipeline deleted.")
+                break
+            verboseHandle.printConsoleError(f"Pipeline still exists (attempt {attempt}/{max_del_retries})")
+            logger.error(f"Validation failed: pipeline still present, attempt {attempt}.")
+            time.sleep(10)
+        if not pipeline_deleted:
+            verboseHandle.printConsoleError(f"Pipeline '{pipeline_name}' still exists after {max_del_retries} attempts. Aborting.")
+            return
+
+        # # Unregister original space type names registered by add_tables API
+        # objectMgmtHost = getPivotHost()
+        # for space_type_name in types_to_unregister:
+        #     verboseHandle.printConsoleInfo(f"Unregistering space type: {space_type_name}")
+        #     logger.info(f"Unregistering space type: {space_type_name}")
+        #     try:
+        #         unreg_response = requests.post(
+        #             f"http://{objectMgmtHost}:7001/unregistertype",
+        #             data={"type": space_type_name},
+        #             headers={"Accept": "application/json"}
+        #         )
+        #         if unreg_response.text.strip() == "success":
+        #             verboseHandle.printConsoleInfo(f"Space type '{space_type_name}' unregistered.")
+        #             logger.info(f"Space type '{space_type_name}' unregistered.")
+        #         else:
+        #             verboseHandle.printConsoleError(f"Failed to unregister '{space_type_name}': {unreg_response.text}")
+        #             return
+        #     except requests.exceptions.ConnectionError:
+        #         verboseHandle.printConsoleError(f"Cannot connect to object management API at {objectMgmtHost}:7001.")
+        #         return
+
+        # Import updated pipeline
+        import_cmd = f"{rootpath}dihctl -e dev apply -f {new_yaml_file}"
+        verboseHandle.printConsoleInfo(f"Running: {import_cmd}")
+        logger.info(f"Running: {import_cmd}")
+        import_result = subprocess.run(import_cmd, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, universal_newlines=True)
+        if import_result.returncode != 0:
+            verboseHandle.printConsoleError(f"Import pipeline failed: {import_result.stderr}")
+            return
+        verboseHandle.printConsoleInfo(f"Pipeline imported successfully:\n{import_result.stdout}")
+        logger.info(f"Pipeline imported: {import_result.stdout}")
 
     except Exception as e:
         handleException(e)

@@ -1,0 +1,44 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+if {[llength $argv] != 1} {
+    puts "Usage:   ./auto_compare_pipeline <pipeline_name>"
+    exit 1
+}
+set pipeline_name [lindex $argv 0]
+set tmpfile "/tmp/auto_pipeline_[pid]"
+
+cd /dbagiga/gs-odsx
+log_file -noappend $tmpfile
+spawn ./odsx.py dataengine oracle-cdc pipeline pipeline-operations compare-record-count-pipeline
+
+expect "Select pipeline"
+log_file
+
+set fh [open $tmpfile r]
+set content [read $fh]
+close $fh
+file delete $tmpfile
+
+regsub -all {\x1b\[[0-9;]*m} $content "" clean
+set row_num ""
+foreach line [split $clean "\n"] {
+    if {[regexp "\\|\\s+(\\d+)\\s+\\|\\s*${pipeline_name}\\s*\\|" $line -> num]} {
+        set row_num $num
+        break
+    }
+}
+
+if {$row_num eq ""} {
+    puts "\nPipeline '$pipeline_name' not found."
+    exit 1
+}
+
+sleep 1
+send -- "$row_num"
+sleep 1
+send -- "\n"
+
+expect eof
