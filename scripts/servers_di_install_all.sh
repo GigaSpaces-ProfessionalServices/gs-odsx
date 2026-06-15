@@ -192,12 +192,26 @@ function installDIManager {
   echo "server.port=6080">>/dbagiga/di-manager.properties
   echo "mdm.client.timeouts.connection.ms=10000">>/dbagiga/di-manager.properties
   echo "mdm.client.timeouts.read.ms=60000">>/dbagiga/di-manager.properties
+  echo "xap.manager.url=http://${xapManagerHost}:8090">>$gigapath/di-manager.properties
 
   # Set final ownership to gsods
    chown -R gsods:gsods /dbagiga/di-manager/
    chown -R gsods:gsods /home/gsods/di-manager/
   # Use absolute path - cannot cd into /home/gsods/ (mode 700)
    sudo bash /dbagiga/di-manager/$extracted_folder_manager/utils/install_new_version.sh /dbagiga/di-manager.properties
+  # Copy upgrade jar if present: replace existing job-*.jar with same name
+   upgrade_jar=$(find $sourceInstallerDirectory/data-integration/di-manager/upgrade/ -name "*.jar" 2>/dev/null | head -1)
+   if [ -n "$upgrade_jar" ]; then
+     existing_jar=$(ls /home/gsods/di-processor/latest-di-manager/lib/job-*.jar 2>/dev/null | head -1)
+     if [ -n "$existing_jar" ]; then
+       existing_jar_name=$(basename "$existing_jar")
+       sudo cp "$upgrade_jar" /home/gsods/di-manager/latest-di-manager/lib/"$existing_jar_name"
+       sudo chown gsods:gsods /home/gsods/di-manager/latest-di-manager/lib/"$existing_jar_name"
+       info "Upgraded di-manager jar: $existing_jar_name\n"
+     else
+       info "No existing job-*.jar found; skipping upgrade jar copy\n"
+     fi
+   fi
   sudo chown -R gsods:gsods /dbagiga/di-manager/
   sudo chown -R gsods:gsods /home/gsods/di-manager/
   rm -f /dbagiga/di-manager/di-manager
@@ -231,6 +245,19 @@ function installDIProcessor {
      chown -R gsods:gsods /home/gsods/di-processor/
     # Use absolute path - cannot cd into /home/gsods/ (mode 700)
     sudo bash /dbagiga/di-processor/$extracted_folder_manager/utils/install_new_version.sh /dbagiga/di-processor.properties
+    # Copy upgrade jar if present: replace existing job-*.jar with same name
+    upgrade_jar=$(find $sourceInstallerDirectory/data-integration/di-processor/upgrade/ -name "*.jar" 2>/dev/null | head -1)
+    if [ -n "$upgrade_jar" ]; then
+      existing_jar=$(ls /home/gsods/di-processor/latest-di-processor/lib/job-*.jar 2>/dev/null | head -1)
+      if [ -n "$existing_jar" ]; then
+        existing_jar_name=$(basename "$existing_jar")
+        sudo cp "$upgrade_jar" /home/gsods/di-processor/latest-di-processor/lib/"$existing_jar_name"
+        sudo chown gsods:gsods /home/gsods/di-processor/latest-di-processor/lib/"$existing_jar_name"
+        info "Upgraded di-processor jar: $existing_jar_name\n"
+      else
+        info "No existing job-*.jar found; skipping upgrade jar copy\n"
+      fi
+    fi
     sudo chown -R gsods:gsods /dbagiga/di-processor/
     sudo chown -R gsods:gsods /home/gsods/di-processor/
     rm -f /dbagiga/di-processor/di-processor

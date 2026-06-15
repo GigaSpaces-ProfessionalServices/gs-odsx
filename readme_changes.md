@@ -570,3 +570,7 @@
 171. Added new properties for datasource credential config in app.config
      app.dataengine.dihctl.addpipeline.prefixname=STUD.
      app.cdc.datasource.oracle.username=gsods
+### TAU v5.6.16-tau-release tag
+172. Create upgrade folder :
+     mkdir /dbagigashare/current/data-integration/di-manager/upgrade/
+     mkdir /dbagigashare/current/data-integration/di-processor/upgrade/
