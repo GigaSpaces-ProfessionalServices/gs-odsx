@@ -574,3 +574,4 @@
 172. Create upgrade folder :
      mkdir /dbagigashare/current/data-integration/di-manager/upgrade/
      mkdir /dbagigashare/current/data-integration/di-processor/upgrade/
+173. Copy new jar files to this folders (part of s3/slack)
