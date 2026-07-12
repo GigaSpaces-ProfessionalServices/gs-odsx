@@ -1,7 +1,6 @@
 # to remove space
 import argparse
 import os
-import socket
 import sys
 
 import json
@@ -13,6 +12,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_list import addGscCountForContainer, getGscCountForHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
@@ -94,10 +94,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
             id=i["id"]
             id = str(id).replace('~'+str(i["pid"]), '')
             logger.info("id : "+str(id))
-            if(host_gsc_dict_obj.__contains__(id)):
-                host_gsc_dict_obj.add(id,host_gsc_dict_obj.get(id)+1)
-            else:
-                host_gsc_dict_obj.add(id,1)
+            addGscCountForContainer(host_gsc_dict_obj,id)
         logger.info("GSC obj: "+str(host_gsc_dict_obj))
     except Exception as e:
         logger.error("Error while retrieving from REST :"+str(e))
@@ -177,7 +174,9 @@ def listSpaceServer():
             status = getStatusOfSpaceHost(str(server.ip))
             logger.info("status : "+str(status))
             logger.info("Host:"+str(server.name))
-            gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(server.name).__getitem__(0)))
+            gsc = getGscCountForHost(host_gsc_dict_obj,server.ip)
+            if gsc is None:
+                gsc = getGscCountForHost(host_gsc_dict_obj,server.name)
             logger.info("GSC : "+str(gsc))
             version = getVersion(server.ip)
             if(status=="ON"):

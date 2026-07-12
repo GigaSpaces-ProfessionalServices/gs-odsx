@@ -1,7 +1,6 @@
 # to remove space
 import argparse
 import os
-import socket
 import sys
 from concurrent.futures import ThreadPoolExecutor
 
@@ -15,7 +14,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts
 from utils.ods_cluster_config import getManagerHostFromEnv
-from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
+from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana, addGscCountForContainer, getGscCountForHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import port_check_config
@@ -75,10 +74,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
             id=i["id"]
             id = str(id).replace('~'+str(i["pid"]), '')
             logger.info("id : "+str(id))
-            if(host_gsc_dict_obj.__contains__(id)):
-                host_gsc_dict_obj.add(id,host_gsc_dict_obj.get(id)+1)
-            else:
-                host_gsc_dict_obj.add(id,1)
+            addGscCountForContainer(host_gsc_dict_obj,id)
         logger.info("GSC obj: "+str(host_gsc_dict_obj))
     except Exception as e:
         logger.error("Error while retrieving from REST :"+str(e))
@@ -142,18 +138,11 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
             status = getStatusOfSpaceHost(str(host))
             logger.info("status : "+str(status))
             logger.info("Host:"+str(host))
-            #adding split to get just hostname and not fully qualified name
-            isAwsEnv = readValuefromAppConfig("app.isaws.env")
-            gsc=''
-            if isAwsEnv == 'True':
-                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
-            else:
-                gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
-            #gsc = host_gsc_dict_obj.get(str(host))
+            gsc = getGscCountForHost(host_gsc_dict_obj,host)
             logger.info("GSC : "+str(gsc))
         else:
             status="NOT REACHABLE"
-            gsc = host_gsc_dict_obj.get(str(host))
+            gsc = getGscCountForHost(host_gsc_dict_obj,host)
             logger.info(" Host :"+str(server.ip)+" is not reachable")
         #version = getVersion(server.ip)
         influx = validateMetricsXmlInflux(host)

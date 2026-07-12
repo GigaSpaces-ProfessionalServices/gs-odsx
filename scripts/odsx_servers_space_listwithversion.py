@@ -11,6 +11,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts
+from utils.ods_list import addGscCountForContainer, getGscCountForHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from utils.ods_ssh import get_ssh_user
 from utils.odsx_print_tabular_data import printTabular
@@ -69,10 +70,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
             id=i["id"]
             id = str(id).replace('~'+str(i["pid"]), '')
             logger.info("id : "+str(id))
-            if(host_gsc_dict_obj.__contains__(id)):
-                host_gsc_dict_obj.add(id,host_gsc_dict_obj.get(id)+1)
-            else:
-                host_gsc_dict_obj.add(id,1)
+            addGscCountForContainer(host_gsc_dict_obj,id)
         logger.info("GSC obj: "+str(host_gsc_dict_obj))
     except Exception as e:
         logger.error("Error while retrieving from REST :"+str(e))
@@ -148,7 +146,7 @@ def listSpaceServer():
             status = getStatusOfSpaceHost(str(host))
             logger.info("status : "+str(status))
             logger.info("Host:"+str(host))
-            gsc = host_gsc_dict_obj.get(str(host))
+            gsc = getGscCountForHost(host_gsc_dict_obj,host)
             logger.info("GSC : "+str(gsc))
             version = getVersion(host)
             dataArray=[Fore.GREEN+host+Fore.RESET,

@@ -14,6 +14,7 @@ from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from utils.ods_ssh import get_ssh_user
+from utils.ods_list import addGscCountForContainer, getGscCountForHost
 from utils.ods_validation import getSpaceServerStatus, port_check_config
 from utils.odsx_print_tabular_data import printTabular
 
@@ -93,10 +94,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
             id=i["id"]
             id = str(id).replace('~'+str(i["pid"]), '')
             logger.info("id : "+str(id))
-            if(host_gsc_dict_obj.__contains__(id)):
-                host_gsc_dict_obj.add(id,host_gsc_dict_obj.get(id)+1)
-            else:
-                host_gsc_dict_obj.add(id,1)
+            addGscCountForContainer(host_gsc_dict_obj,id)
         logger.info("GSC obj: "+str(host_gsc_dict_obj))
         #print(host_gsc_dict_obj)
     except Exception as e:
@@ -184,11 +182,15 @@ def listSpaceServer():
                 logger.info("status GSC : "+str(status))
                 logger.info("Host GSC :"+str(server.name))
                 #print(server.name)
-                gsc = host_gsc_dict_obj.get(str(server.name))
+                gsc = getGscCountForHost(host_gsc_dict_obj,server.ip)
+                if gsc is None:
+                    gsc = host_gsc_dict_obj.get(str(server.name))
                 logger.info("GSC : "+str(gsc))
             else:
                 status="NOT REACHABLE"
-                gsc = host_gsc_dict_obj.get(str(server.name))
+                gsc = getGscCountForHost(host_gsc_dict_obj,server.ip)
+                if gsc is None:
+                    gsc = host_gsc_dict_obj.get(str(server.name))
                 logger.info(" Host :"+str(server.ip)+" is not reachable")
             #version = getVersion(server.ip)
             if(status=="ON"):

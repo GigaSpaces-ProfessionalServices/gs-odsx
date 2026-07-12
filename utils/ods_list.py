@@ -2,6 +2,7 @@
 # !/usr/bin/python
 
 import os
+import socket
 from colorama import Fore
 
 from scripts.spinner import Spinner
@@ -241,3 +242,38 @@ def configureMetricsXML(host):
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
     except Exception as e:
         handleException(e)
+
+def addGscCountForContainer(host_gsc_dict_obj, containerHostname):
+    # The manager reports each container under its own machine's hostname
+    # (e.g. an EC2 internal FQDN), which may differ from the name this machine
+    # resolves for that host. Count it under every candidate key - full
+    # hostname, short hostname and forward-resolved IP - so a lookup by any
+    # of them succeeds.
+    logger.info("addGscCountForContainer() : containerHostname :"+str(containerHostname))
+    keys = {str(containerHostname), str(containerHostname).split('.')[0]}
+    try:
+        keys.add(socket.gethostbyname(str(containerHostname)))
+    except OSError as e:
+        logger.info("Could not resolve container hostname "+str(containerHostname)+" : "+str(e))
+    for key in keys:
+        if key in host_gsc_dict_obj:
+            host_gsc_dict_obj[key] = host_gsc_dict_obj[key]+1
+        else:
+            host_gsc_dict_obj[key] = 1
+    return host_gsc_dict_obj
+
+def getGscCountForHost(host_gsc_dict_obj, host):
+    logger.info("getGscCountForHost() : host :"+str(host))
+    gsc = host_gsc_dict_obj.get(str(host))
+    if gsc is None:
+        # Fall back to reverse DNS (full then short name) for setups where the
+        # container hostname could not be forward-resolved to this host's IP.
+        try:
+            reverseName = str(socket.gethostbyaddr(str(host)).__getitem__(0))
+            gsc = host_gsc_dict_obj.get(reverseName)
+            if gsc is None:
+                gsc = host_gsc_dict_obj.get(reverseName.split('.')[0])
+        except OSError as e:
+            logger.info("Could not reverse-resolve host "+str(host)+" : "+str(e))
+    logger.info("GSC count for host "+str(host)+" : "+str(gsc))
+    return gsc
