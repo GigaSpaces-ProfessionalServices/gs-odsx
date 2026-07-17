@@ -1,0 +1,4 @@
+#!/bin/bash
+
+cd /giga/gs-odsx
+./odsx.py servers service list

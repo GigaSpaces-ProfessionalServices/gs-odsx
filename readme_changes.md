@@ -575,3 +575,9 @@
      mkdir /dbagigashare/current/data-integration/di-manager/upgrade/
      mkdir /dbagigashare/current/data-integration/di-processor/upgrade/
 173. Copy new jar files to this folders (part of s3/slack)
+174. Updated in app.config
+     app.security.menu=manager,space,service,tieredstorage,feeder,mq,object,dataengine
+     app.isaws.env=true
+175. In host.yaml file add below after space section
+     service :
+       host1 : X.X.X.X

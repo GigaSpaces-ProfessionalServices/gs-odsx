@@ -1,0 +1,30 @@
+echo "Removing Server - Service"
+removeJava=$1
+removeUnzip=$2
+
+homeDir=$(pwd)
+source setenv.sh
+if [ "$removeJava" == "y" ]; then
+  echo "Removing Java"
+  yum -y remove java*
+  yum -y remove jdk*
+  echo "Java Remove -Done!"
+fi
+if [ "$removeUnzip" == "y" ]; then
+  echo "Removing Unzip"
+  yum -y remove unzip
+  echo "unzip Remove -Done!"
+fi
+source setenv.sh
+systemctl stop gsa.service
+sleep 5
+rm -rf $GS_HOME
+rm -rf setenv.sh gs install install.tar /dbagiga/giga* /dbagigadata/* /dbagigawork/* /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+find /dbagigalogs/ -mindepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -delete
+cd /dbagiga
+rm -f gigaspaces-smart-ods /dbagiga/gs_config/metrics.xml
+echo "Remove symlink done!"
+systemctl daemon-reload
+sed -i '/hard nofile/d' /etc/security/limits.conf
+sed -i '/soft nofile/d' /etc/security/limits.conf
+echo "GS Remove -Done!"

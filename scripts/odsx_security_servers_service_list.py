@@ -1,23 +1,24 @@
-# to remove space
+# to list service
 import argparse
 import os
-import socket
 import sys
 from concurrent.futures import ThreadPoolExecutor
-
+import socket
 import json
 import requests
 from colorama import Fore
+from requests.auth import HTTPBasicAuth
 
 from scripts.logManager import LogManager
 from scripts.odsx_servers_manager_list import isInstalledAndGetVersion
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_space_hosts
+from utils.ods_cluster_config import config_get_service_hosts, config_get_manager_node
 from utils.ods_cluster_config import getManagerHostFromEnv
 from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
-from utils.ods_validation import port_check_config
+from utils.ods_validation import getSpaceServerStatus, port_check_config
+from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -29,12 +30,32 @@ class bcolors:
     FAIL = '\033[91m'  # RED
     RESET = '\033[0m'  # RESET COLOR
 
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
 class host_nic_dictionary(dict):
-    # __init__ function
     def __init__(self):
         self = dict()
 
-    # Function to add key:value
     def add(self, key, value):
         self[key] = value
 
@@ -66,7 +87,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
     logger.info("getGSCByManagerServerConfig() : managerServerConfig :"+str(managerServerConfig)+" host_gsc_dict_obj :"+str(host_gsc_dict_obj))
     try:
         logger.info("Getting response for :"+str(managerServerConfig))
-        response = requests.get(('http://'+managerServerConfig+':8090/v2/containers'), headers={'Accept': 'application/json'})
+        response = requests.get(('http://'+managerServerConfig+':8090/v2/containers'), headers={'Accept': 'application/json'},auth = HTTPBasicAuth(username,password))
         output = response.content.decode("utf-8")
         logger.info("Json Response container:"+str(output))
         datas = json.loads(output)
@@ -98,9 +119,8 @@ def getStatusOfHost(host_nic_dict_obj,server):
     logger.info("Final Status :"+str(status))
     return status
 
-def getStatusOfSpaceHost(server):
+def getStatusOfServiceHost(server):
     commandToExecute = "ps -ef | grep GSA"
-    # with Spinner():
     output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
     if(str(output).__contains__('services=GSA')):
         logger.info("services=GSA")
@@ -111,7 +131,7 @@ def getStatusOfSpaceHost(server):
 
 def getVersion(ip):
     logger.info("getVersion() ip :"+str(ip))
-    cmdToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh version | grep -v JAVA_HOME"
+    cmdToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh --username="+username+" --password="+password+" version | grep -v JAVA_HOME"
     logger.info("cmdToExecute : "+str(cmdToExecute))
     output = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
     output=str(output).replace('\n','')
@@ -120,7 +140,7 @@ def getVersion(ip):
 
 def checkActiveStatus(server,host_nic_dict_obj,user):
     if (port_check_config(os.getenv(server.ip),22)):
-        cmd = 'systemctl is-active gs.service'
+        cmd = 'systemctl is-active gsa.service'
         logger.info("server.ip : "+str(os.getenv(server.ip))+" cmd :"+str(cmd))
         output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
         logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
@@ -128,7 +148,7 @@ def checkActiveStatus(server,host_nic_dict_obj,user):
     else:
         logger.info(" Host :"+str(os.getenv(server.ip))+" is not reachable")
 
-def printListOfSpace(server,data,host_gsc_dict_obj):
+def printListOfService(server,data,host_gsc_dict_obj):
     host = os.getenv(server.ip)
     logger.info("server.ip : "+str(server.ip))
     installStatus='No'
@@ -137,56 +157,44 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
     if(len(str(install))>8):
         installStatus='Yes'
     if (port_check_config(host,22)):
-        status = getStatusOfSpaceHost(str(host))
+        status = getStatusOfServiceHost(str(host))
         logger.info("status : "+str(status))
         logger.info("Host:"+str(host))
-        #adding split to get just hostname and not fully qualified name
         isAwsEnv = readValuefromAppConfig("app.isaws.env")
         gsc=''
-        if str(isAwsEnv).strip().lower() == 'true':
+        if isAwsEnv == 'true':
             gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
         else:
             gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
-        #gsc = host_gsc_dict_obj.get(str(host))
         logger.info("GSC : "+str(gsc))
     else:
         status="NOT REACHABLE"
         gsc = host_gsc_dict_obj.get(str(host))
         logger.info(" Host :"+str(server.ip)+" is not reachable")
-    #version = getVersion(server.ip)
-    influx = validateMetricsXmlInflux(host)
-    grafana = validateMetricsXmlGrafana(host)
     dataArray=[Fore.GREEN+host+Fore.RESET,
                Fore.GREEN+str(gsc)+Fore.RESET,
                Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
-               Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET]
-               # Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
-               # Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
+               Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET,
+               ]
     data.append(dataArray)
 
 
-def listSpaceServer():
+def listServiceServer():
     try:
-        logger.debug("listing space server")
-        logger.info("listSpaceServer()")
-        spaceServers = config_get_space_hosts()
-        verboseHandle.printConsoleWarning("Menu -> Servers -> Space -> List\n")
+        logger.debug("listing service server")
+        logger.info("listServiceServer()")
+        serviceServers = config_get_service_hosts()
+        verboseHandle.printConsoleWarning("Menu -> Servers -> Service -> List\n")
         headers = [Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
                    Fore.YELLOW+"Installed"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET,
-                   Fore.YELLOW+"Version"+Fore.RESET
-                   # Fore.YELLOW+"Influxdb"+Fore.RESET,
-                   # Fore.YELLOW+"Grafana"+Fore.RESET
+                   Fore.YELLOW+"Version"+Fore.RESET,
                    ]
         global data
         data=[]
         userConfig = readValuefromAppConfig("app.server.user")
-        # changed : 25-Aug hence systemctl always with root no need to ask
-        #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
-        #if(len(str(user))==0):
-        #    user=userConfig
         user='root'
         logger.info("app.server.user: "+str(user))
 
@@ -194,22 +202,54 @@ def listSpaceServer():
         global host_nic_dict_obj
         host_nic_dict_obj = host_nic_dictionary()
 
-        spaceHostsLength = len(spaceServers)+1
-        with ThreadPoolExecutor(spaceHostsLength) as executor:
-           for server in spaceServers:
-               executor.submit(checkActiveStatus,server,host_nic_dict_obj,user)
+        serviceHostsLength = len(serviceServers)+1
+        with ThreadPoolExecutor(serviceHostsLength) as executor:
+            for server in serviceServers:
+                executor.submit(checkActiveStatus,server,host_nic_dict_obj,user)
 
         logger.info("host_nic_dict_obj : "+str(host_nic_dict_obj))
-        with ThreadPoolExecutor(spaceHostsLength) as executor:
-            for server in spaceServers:
-                    executor.submit(printListOfSpace,server,data,host_gsc_dict_obj)
+        with ThreadPoolExecutor(serviceHostsLength) as executor:
+            for server in serviceServers:
+                executor.submit(printListOfService,server,data,host_gsc_dict_obj)
 
         printTabular(None,headers,data)
     except Exception as e:
-        logger.error("Error in odsx_servers_space_list "+str(e))
+        logger.error("Error in odsx_servers_service_list "+str(e))
+        handleException(e)
+
+def getManagerHost(managerNodes):
+    managerHost=""
+    try:
+        logger.info("getManagerHost() : managerNodes :"+str(managerNodes))
+        for node in managerNodes:
+            status = getSpaceServerStatus(os.getenv(node.ip))
+            if(status=="ON"):
+                managerHost = os.getenv(node.ip)
+        return managerHost
+    except Exception as e:
+        handleException(e)
+
+
 if __name__ == '__main__':
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
     myCheckArg()
-    listSpaceServer()
+    username = ""
+    password = ""
+    appId=""
+    safeId=""
+    objectId=""
+    try:
+        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
+        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
+        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+        logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
+        managerNodes = config_get_manager_node()
+        managerHost = getManagerHost(managerNodes)
+        logger.info("managerHost : main"+str(managerHost))
+        username = str(getUsernameByHost())
+        password = str(getPasswordByHost())
+        listServiceServer()
+    except Exception as e:
+        handleException(e)

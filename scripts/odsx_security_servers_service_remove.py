@@ -1,0 +1,198 @@
+#!/usr/bin/env python3
+import os, subprocess, sys, argparse, platform
+from concurrent.futures import ThreadPoolExecutor
+
+from scripts.logManager import LogManager
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput, connectExecuteSSH
+from utils.ods_cluster_config import config_get_service_list_with_status, config_get_service_hosts_list, config_remove_service_nodeByIP
+from colorama import Fore
+from utils.ods_app_config import readValuefromAppConfig
+from scripts.spinner import Spinner
+from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
+
+verboseHandle = LogManager(os.path.basename(__file__))
+logger = verboseHandle.logger
+
+class bcolors:
+    OK = '\033[92m'  # GREEN
+    WARNING = '\033[93m'  # YELLOW
+    FAIL = '\033[91m'  # RED
+    RESET = '\033[0m'  # RESET COLOR
+
+def handleException(e):
+    logger.info("handleException()")
+    trace = []
+    tb = e.__traceback__
+    while tb is not None:
+        trace.append({
+            "filename": tb.tb_frame.f_code.co_filename,
+            "name": tb.tb_frame.f_code.co_name,
+            "lineno": tb.tb_lineno
+        })
+        tb = tb.tb_next
+    logger.error(str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    }))
+    verboseHandle.printConsoleError((str({
+        'type': type(e).__name__,
+        'message': str(e),
+        'trace': trace
+    })))
+
+def myCheckArg(args=None):
+    parser = argparse.ArgumentParser(description='Script to learn basic argparse')
+    parser.add_argument('m', nargs='?')
+    parser.add_argument('-f', nargs='?')
+    parser.add_argument('--host',
+                        help='host ip',
+                        required='True',
+                        default='localhost')
+    parser.add_argument('-u', '--user',
+                        help='user name',
+                        default='root')
+    parser.add_argument('-dryrun', '--dryrun',
+                        help='Dry run flag',
+                        default='false', action='store_true')
+    return verboseHandle.checkAndEnableVerbose(parser, sys.argv[1:])
+
+def execute_scriptBuilder(host):
+    logger.info("execute_scriptBuilder(args)")
+    commandToExecute="scripts/security_service_remove.sh"
+    additionalParam = removeJava+' '+removeUnzip
+    logger.info("additionalParam : "+str(additionalParam))
+    outputShFile = connectExecuteSSH(host, user,commandToExecute,additionalParam)
+    print(outputShFile)
+    logger.info("Output : scripts/security_service_remove.sh :"+str(outputShFile))
+    logger.debug(str(host)+" has been removed.")
+    verboseHandle.printConsoleInfo(str(host)+" has been removed.")
+
+def exitAndDisplay(isMenuDriven):
+    logger.info("exitAndDisplay(isMenuDriven)")
+    if(isMenuDriven=='m'):
+        logger.info("exitAndDisplay(isMenuDriven) : MenuDriven")
+        os.system('python3 scripts/odsx_security_servers_service_remove.py'+' '+isMenuDriven)
+    else:
+        cliArgumentsStr=''
+        for arg in cliArguments:
+            cliArgumentsStr+=arg
+            cliArgumentsStr+=' '
+        os.system('python3 scripts/odsx_security_servers_service_remove.py'+' '+cliArgumentsStr)
+
+def removeSecureServiceServer(host,args,menuDrivenFlag,user):
+    logger.info("BEFORE")
+    logger.info("Removing host:"+str(host))
+    args.append(menuDrivenFlag)
+    args.append('--host')
+    args.append(os.getenv(host))
+    args.append('-u')
+    args.append(user)
+    args.append('--id')
+    args.append(host)
+    argsString = str(args)
+    logger.info(argsString)
+    logger.debug('Arguments :'+argsString)
+    argsString =argsString.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+    execute_scriptBuilder(os.getenv(host))
+    logger.info("AFTER")
+    args.remove(menuDrivenFlag)
+    args.remove("--host")
+    args.remove(os.getenv(host))
+    args.remove('-u')
+    args.remove(user)
+    args.remove('--id')
+    args.remove(host)
+    logger.info(args)
+
+if __name__ == '__main__':
+    logger.info("odsx_security_service_remove")
+    verboseHandle.printConsoleWarning('Menu -> Servers -> Service -> Remove')
+    args = []
+    menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
+    args.append(sys.argv[0])
+    try:
+        streamResumeStream=''
+        optionMainMenu=''
+        choice=''
+        cliArguments=''
+        isMenuDriven=''
+        user='root'
+        global removeJava
+        global removeUnzip
+        streamDict = config_get_service_list_with_status(user)
+        serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))
+        logger.info("serverStartType:"+str(serverStartType))
+        if(serverStartType=='1'):
+            optionMainMenu = int(userInputWithEscWrapper("Enter your host number to remove: "))
+            logger.info("optionMainMenu:"+str(optionMainMenu))
+            if(optionMainMenu != 99):
+                if len(streamDict) >= optionMainMenu:
+                    managerRemove = streamDict.get(optionMainMenu)
+                    removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+                    if(len(str(removeJava))==0):
+                        removeJava='n'
+                    removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+                    if(len(str(removeUnzip))==0):
+                        removeUnzip='n'
+                    choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    while(len(str(choice))==0):
+                        choice = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove server ? [yes (y)] / [no (n)] / [cancel (c)] :"+Fore.RESET))
+                    logger.info("choice remvoe server:"+str(choice))
+                    if(choice.casefold()=='no' or choice.casefold()=='n'):
+                        if(isMenuDriven=='m'):
+                            logger.info("isMenuDriven:")
+                            os.system('python3 scripts/odsx_security_servers_service_remove.py'+' '+isMenuDriven)
+                        else:
+                            logger.info("Not menudriven")
+                            exitAndDisplay(isMenuDriven)
+                    elif(choice.casefold()=='yes' or choice.casefold()=='y'):
+                        args.append(menuDrivenFlag)
+                        args.append('--host')
+                        args.append(os.getenv(managerRemove.ip))
+                        args.append('-u')
+                        args.append(user)
+                        args.append('--id')
+                        args.append(os.getenv(managerRemove.ip))
+                        args = str(args)
+                        logger.debug('Arguments :'+args)
+                        logger.info("Arguments"+str(args))
+                        args =args.replace('[','').replace("'","").replace("]",'').replace(',','').strip()
+                        execute_scriptBuilder(os.getenv(managerRemove.ip))
+                else:
+                    verboseHandle.printConsoleError("please select valid option")
+                    optionMainMenu=''
+                    choice=''
+                    exitAndDisplay(isMenuDriven)
+            else :
+                print("")
+        elif(serverStartType =='99'):
+            logger.info("99")
+        else:
+            removeJava = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Java ? (y/n) [n] :"))
+            if(len(str(removeJava))==0):
+                removeJava='n'
+            removeUnzip = str(userInputWrapper(Fore.YELLOW+"Do you want to remove Unzip ? (y/n) [n] :"))
+            if(len(str(removeUnzip))==0):
+                removeUnzip='n'
+            confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+            while(len(str(confirm))==0):
+                confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to remove all servers ? [yes (y)] / [no (n)]"+Fore.RESET))
+            logger.info("confirm :"+str(confirm))
+            if(confirm=='yes' or confirm=='y'):
+                serviceHosts = config_get_service_hosts_list()
+                serviceHostsLength = len(serviceHosts)+1
+                with Spinner():
+                    with ThreadPoolExecutor(serviceHostsLength) as executor:
+                        for host in serviceHosts:
+                            executor.submit(removeSecureServiceServer,host,args,menuDrivenFlag,user)
+
+            elif(confirm =='no' or confirm=='n'):
+                if(isMenuDriven=='m'):
+                    logger.info("menudriven")
+                    os.system('python3 scripts/odsx_security_servers_service_remove.py'+' '+isMenuDriven)
+
+    except Exception as e:
+        logger.error("Error while removing service host:"+str(e))
+        verboseHandle.printConsoleError("Invalid argument"+str(e))
+        handleException(e)

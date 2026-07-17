@@ -111,10 +111,11 @@ class Policyconfiguration:
 
 
 class AllServers:
-    def __init__(self, managers, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation,iidrdataIntegration, dataIntegrationSubscriptionManager, iidrAccessServer, iidrKafkaAgent, iidrOracleAgent):
+    def __init__(self, managers, nb, spaces, grafana, influxdb, dataIntegration, dataEngine, dataValidation,iidrdataIntegration, dataIntegrationSubscriptionManager, iidrAccessServer, iidrKafkaAgent, iidrOracleAgent, services=None):
         self.managers = managers
         self.nb = nb
         self.spaces = spaces
+        self.services = services
         self.grafana = grafana
         self.influxdb = influxdb
         self.dataIntegration = dataIntegration
@@ -196,6 +197,10 @@ class Node:
         self.role = role
 
 class Spaces:
+    def __init__(self,servers):
+        self.servers = servers
+
+class Services:
     def __init__(self,servers):
         self.servers = servers
 
@@ -365,7 +370,14 @@ def get_cluster_obj(filePath='config/cluster.config', verbose=False):
         hosts.append(Host(host.ip, host.name, host.gsc))
 
     spaces = Spaces(Servers(hosts))
-    allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation, iidrdataIntegration, dataIntegrationSubscriptionManager, iidrAccessServer, iidrKafkaAgent, iidrOracleAgent)
+
+    hosts = []
+    if hasattr(config_data.cluster.servers, 'services'):
+        for host in list(config_data.cluster.servers.services.servers.host):
+            hosts.append(Host(host.ip, host.name, host.gsc))
+    services = Services(Servers(hosts))
+
+    allservers = AllServers( managers, nb, spaces, grafana, influxdb, dataIntegration,dataEngine, dataValidation, iidrdataIntegration, dataIntegrationSubscriptionManager, iidrAccessServer, iidrKafkaAgent, iidrOracleAgent, services)
 
     # print(config_data.cluster.timestamp)
     cluster = Cluster(config_data.cluster.name, config_data.cluster.configVersion,
@@ -743,6 +755,169 @@ def config_update_space_gsc_byHost(host,gsc,filePath='config/cluster.config', ve
     config_data.cluster.servers.spaces.servers.host = spaceNodes
     with open(filePath, 'w') as outfile:
         json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+def config_get_service_node(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.services.servers.host
+
+def config_get_service_list(filePath='config/cluster.config'):
+    serviceNodes = config_get_service_node()
+    verboseHandle.printConsoleWarning("Please choose an option from below :")
+    serviceDict = {}
+    counter = 0
+    for serviceNode in serviceNodes:
+        counter = counter + 1
+        serviceDict.update({counter: serviceNode})
+        verboseHandle.printConsoleInfo(
+            str(counter) + ". "+serviceNode.name + " (" + serviceNode.ip + ")")
+    verboseHandle.printConsoleInfo(
+        str(99) + ". ESC" " (Escape from menu.)")
+    return  serviceDict
+
+def config_get_service_hosts_list(filePath='config/cluster.config'):
+    hosts=[]
+    serviceNodes = config_get_service_node()
+    serviceDict = {}
+    counter = 0
+    for serviceNode in serviceNodes:
+        counter = counter + 1
+        serviceDict.update({counter: serviceNode})
+        hosts.append(serviceNode.ip)
+    return  hosts
+
+def config_get_service_list_with_threading(server,host_nic_dict_obj):
+    serviceHost = str(os.getenv(server.ip))
+    cmd = 'ps -ef | grep GSA'
+    output = executeRemoteCommandAndGetOutput(serviceHost, 'root', cmd)
+    if(str(output).__contains__('services=GSA')):
+            logger.info("services=GSA")
+            host_nic_dict_obj.add(serviceHost,"ON")
+    else:
+            logger.info("services!=GSA")
+            host_nic_dict_obj.add(serviceHost,"OFF")
+    return host_nic_dict_obj
+
+def config_get_service_hosts(filePath='config/cluster.config'):
+    return get_cluster_obj(filePath).cluster.servers.services.servers.host
+
+def config_get_service_list_with_status(user,filePath='config/cluster.config'):
+    logger.info("config_get_service_list_with_status()")
+    global host_nic_dict_obj
+    host_nic_dict_obj = host_nic_dictionary()
+    serviceServers = config_get_service_hosts()
+    serviceHostsLength = len(serviceServers)+1
+    with ThreadPoolExecutor(serviceHostsLength) as executor:
+        for server in serviceServers:
+            executor.submit(config_get_service_list_with_threading,server,host_nic_dict_obj)
+
+    serviceNodes = config_get_service_node()
+    verboseHandle.printConsoleWarning("Please choose an option from below :")
+    serviceDict = {}
+    counter = 0
+    headers = [Fore.YELLOW+"SrNo."+Fore.RESET,
+               Fore.YELLOW+"IP"+Fore.RESET,
+               Fore.YELLOW+"Host"+Fore.RESET,
+               Fore.YELLOW+"GSC"+Fore.RESET,
+               Fore.YELLOW+"Install"+Fore.RESET,
+               Fore.YELLOW+"Status"+Fore.RESET
+               ]
+    data=[]
+    for server in serviceNodes:
+        serviceHost = str(os.getenv(server.ip))
+        counter = counter + 1
+        serviceDict.update({counter: server})
+        installStatus='No'
+        install = isInstalledAndGetVersion(serviceHost)
+        logger.info("install : "+str(install))
+        if(len(str(install))>8):
+            installStatus='Yes'
+        status = host_nic_dict_obj.get(serviceHost)
+        dataArray=[Fore.GREEN+str(counter)+Fore.RESET,
+                   Fore.GREEN+serviceHost+Fore.RESET,
+                   Fore.GREEN+serviceHost+Fore.RESET,
+                   Fore.GREEN+"None"+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,]
+        data.append(dataArray)
+    printTabular(None,headers,data)
+    verboseHandle.printConsoleInfo(
+        str(99) + ". ESC" " (Escape from menu.)")
+    return  serviceDict
+
+def config_get_service_listWithoutDisplay(filePath='config/cluster.config'):
+    serviceNodes = config_get_service_node()
+    serviceDict = {}
+    counter = 0
+    for serviceNode in serviceNodes:
+        counter = counter + 1
+        serviceDict.update({counter: serviceNode})
+    return  serviceDict
+
+def config_remove_service_nodeById(servicename,serviceip,filePath='config/cluster.config', verbose=False):
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    serviceNodes = config_get_service_node()
+    counter=0
+    for serviceNode in serviceNodes:
+        if(serviceNode.name==servicename and serviceNode.ip==serviceip):
+            serviceNodes.pop(counter)
+        counter=counter+1
+    config_data.cluster.servers.services.servers.host = serviceNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+def config_remove_service_nodeByIP(serviceIP,filePath='config/cluster.config',verbose=False):
+    logger.debug("Removing service node "+str(serviceIP)+".")
+    if verbose:
+        verboseHandle.setVerboseFlag()
+    config_data = get_cluster_obj(filePath)
+    serviceNodes = config_get_service_node()
+    counter=0
+    for serviceNode in serviceNodes:
+        if(serviceNode.ip==serviceIP):
+            serviceNodes.pop(counter)
+        counter=counter+1
+    config_data.cluster.servers.services.servers.host = serviceNodes
+    with open(filePath, 'w') as outfile:
+        json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+
+
+def config_add_service_node(hostIp, hostName, gsc,filePath='config/cluster.config'):
+    newHost = Host(hostIp, hostName, gsc)
+    filePath='config/cluster.config'
+    config_data = get_cluster_obj(filePath)
+    existingNodes = config_data.cluster.servers.services.servers.host
+    sizeOfNodes = len(existingNodes)
+    logger.info("Size of node"+str(sizeOfNodes)+" CURRENT NODE"+str(hostIp) )
+    logger.info("Size of existing nodes : "+str(sizeOfNodes))
+    if(sizeOfNodes>0) :
+        if(isMangerExist(existingNodes,hostIp)=='true'):
+            logger.info("Host is already exist."+str(hostIp))
+            confirmAnswer='y'
+            logger.info("Host is already exist."+str(confirmAnswer))
+            if(confirmAnswer=="y" or confirmAnswer=="yes"):
+                logger.info("Host is already exist. Node overrides"+str(confirmAnswer))
+                for manager in existingNodes:
+                    if(str(manager.ip)==str(hostIp)):
+                        logger.info("OVERRIDING IP : "+str(manager.ip))
+                        manager.ip=hostIp
+                        manager.name=hostName
+                logger.info("Host overriden "+str(hostIp)+" To "+str(hostName))
+                config_data.cluster.servers.services.servers.host = existingNodes
+                with open(filePath, 'w') as outfile:
+                    json.dump(config_data, outfile, indent=2, cls=ClusterEncoder)
+            elif(confirmAnswer=="n" or confirmAnswer=="no"):
+                logger.info("ADDING NEW NODE")
+                logger.info("Host is already exist. Node adding"+str(confirmAnswer))
+                return addToExistingNode(newHost,hostIp,hostName,filePath,config_data,existingNodes)
+        else:
+            logger.info("ADDING NODE.."+str(hostIp))
+            logger.info("Host not found. Node adding")
+            return addToExistingNode(newHost,hostIp,hostName,filePath,config_data,existingNodes)
+    else:
+        logger.info("ADDING NODE"+str(hostIp))
+        logger.info("Host not found.. Node adding")
+        return addToExistingNode(newHost,hostIp,hostName,filePath,config_data,existingNodes)
 
 def isNbNodeExist(existingNodes,hostIp):
     for manager in existingNodes:
@@ -1607,6 +1782,15 @@ def getSpaceHostFromEnv():
     hosts=hosts[:-1]
     return hosts
 
+def getServiceHostFromEnv():
+    logger.info("getServiceHostFromEnv()")
+    hosts = ''
+    serviceNodes = config_get_service_hosts()
+    for node in serviceNodes:
+        hosts+=str(os.getenv(str(node.ip)))+','
+    hosts=hosts[:-1]
+    return hosts
+
 def getManagerHostFromEnv():
     logger.info("getManagerHostFromEnv()")
     hosts = ''
@@ -1649,6 +1833,20 @@ def cleanSpaceHostFronConfig():
             config_remove_space_nodeById(host,host)
     logger.info("Clean space host completed.")
 
+def cleanServiceHostFronConfig():
+    logger.info("cleanServiceHost")
+    nodeList = config_get_service_hosts()
+    nodes = ""
+    for node in nodeList:
+        if (len(nodeList) == 1):
+            nodes = node.ip
+        else:
+            nodes = nodes + ',' + node.ip
+    logger.info("nodes :"+str(nodes))
+    for host in nodes.split(','):
+            config_remove_service_nodeById(host,host)
+    logger.info("Clean service host completed.")
+
 def cleanManagerHostFronConfig():
     logger.info("cleanManagerHostFronConfig")
     nodeList = config_get_manager_node()
@@ -1680,7 +1878,8 @@ def discoverHostConfig():
         logger.info("updateClusterConfigFileFlag1 : "+str(updateClusterConfigFileFlag))
         if not updateClusterConfigFileFlag:
             spaceNodes = config_get_space_hosts()
-            if len(spaceNodes)==0:
+            serviceNodes = config_get_service_hosts()
+            if len(spaceNodes)==0 or ('service' in content['servers'] and len(serviceNodes)==0):
                 updateClusterConfigFileFlag = True
                 logger.info("updateClusterConfigFileFlag2 : "+str(updateClusterConfigFileFlag))
 
@@ -1719,6 +1918,17 @@ def discoverHostConfig():
                 if updateClusterConfigFileFlag:
                     config_add_space_node(host, host, 'gsc', filePath='config/cluster.config')
                 spaceHostCount+=1
+
+        serviceHostCount=1
+        if 'service' in content['servers']:
+            if updateClusterConfigFileFlag:
+                cleanServiceHostFronConfig()
+            for k,v in content['servers']['service'].items():
+                host = 'service'+str(serviceHostCount)+""
+                os.environ[host] = str(v)
+                if updateClusterConfigFileFlag:
+                    config_add_service_node(host, host, 'na', filePath='config/cluster.config')
+                serviceHostCount+=1
 
         dataIntegrationHostCount=1
         if 'dataIntegration' in content['servers']:

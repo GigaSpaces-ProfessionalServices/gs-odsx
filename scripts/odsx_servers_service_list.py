@@ -1,4 +1,3 @@
-# to remove space
 import argparse
 import os
 import socket
@@ -11,11 +10,8 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.odsx_servers_manager_list import isInstalledAndGetVersion
-from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
-from utils.ods_cluster_config import config_get_space_hosts
-from utils.ods_cluster_config import getManagerHostFromEnv
-from utils.ods_list import validateMetricsXmlInflux, validateMetricsXmlGrafana
+from utils.ods_cluster_config import config_get_service_hosts, getManagerHostFromEnv
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
 from utils.ods_validation import port_check_config
 from utils.odsx_print_tabular_data import printTabular
@@ -30,11 +26,9 @@ class bcolors:
     RESET = '\033[0m'  # RESET COLOR
 
 class host_nic_dictionary(dict):
-    # __init__ function
     def __init__(self):
         self = dict()
 
-    # Function to add key:value
     def add(self, key, value):
         self[key] = value
 
@@ -49,17 +43,16 @@ def myCheckArg(args=None):
 def getGSCForHost():
     logger.info("getGSCForHost")
     managerServerConfig = getManagerHostFromEnv()
-    host_gsc_dict_obj =  host_nic_dictionary()
-    host_gsc_mul_host_dict_obj =  host_nic_dictionary()
+    host_gsc_dict_obj = host_nic_dictionary()
     managerServerConfigArr=[]
     if(str(managerServerConfig).__contains__(',')):  # if cluster manager configured
         managerServerConfig = str(managerServerConfig).replace('"','')
         managerServerConfigArr = managerServerConfig.split(',')
         logger.info("MangerServerConfigArray: "+str(managerServerConfigArr))
-        host_gsc_dict_obj =  getGSCByManagerServerConfig(managerServerConfigArr[0], host_gsc_dict_obj)
+        host_gsc_dict_obj = getGSCByManagerServerConfig(managerServerConfigArr[0], host_gsc_dict_obj)
     else:
         logger.info("managerServerConfig :"+str(managerServerConfig))
-        host_gsc_dict_obj =  getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj)
+        host_gsc_dict_obj = getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj)
     return host_gsc_dict_obj
 
 def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
@@ -84,23 +77,8 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
     logger.info("host_gsc_dict_obj : "+str(host_gsc_dict_obj))
     return host_gsc_dict_obj
 
-def getStatusOfHost(host_nic_dict_obj,server):
-    logger.info("getStatusOfHost(host_nic_dict_obj,server) :")
-    status = host_nic_dict_obj.get(server.ip)
-    logger.info("status of "+str(server)+" "+str(status))
-    if(status=="3"):
-        status="OFF"
-    elif(status=="0"):
-        status="ON"
-    else:
-        logger.info("Host Not reachable.. :"+str(server))
-        status="OFF"
-    logger.info("Final Status :"+str(status))
-    return status
-
-def getStatusOfSpaceHost(server):
+def getStatusOfServiceHost(server):
     commandToExecute = "ps -ef | grep GSA"
-    # with Spinner():
     output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
     if(str(output).__contains__('services=GSA')):
         logger.info("services=GSA")
@@ -109,18 +87,9 @@ def getStatusOfSpaceHost(server):
         logger.info("services!=GSA")
         return "OFF"
 
-def getVersion(ip):
-    logger.info("getVersion() ip :"+str(ip))
-    cmdToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh version | grep -v JAVA_HOME"
-    logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
-    output=str(output).replace('\n','')
-    logger.info("output : "+str(output))
-    return output
-
 def checkActiveStatus(server,host_nic_dict_obj,user):
     if (port_check_config(os.getenv(server.ip),22)):
-        cmd = 'systemctl is-active gs.service'
+        cmd = 'systemctl is-active gsa.service'
         logger.info("server.ip : "+str(os.getenv(server.ip))+" cmd :"+str(cmd))
         output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
         logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
@@ -128,7 +97,7 @@ def checkActiveStatus(server,host_nic_dict_obj,user):
     else:
         logger.info(" Host :"+str(os.getenv(server.ip))+" is not reachable")
 
-def printListOfSpace(server,data,host_gsc_dict_obj):
+def printListOfService(server,data,host_gsc_dict_obj):
     host = os.getenv(server.ip)
     logger.info("server.ip : "+str(server.ip))
     installStatus='No'
@@ -137,7 +106,7 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
     if(len(str(install))>8):
         installStatus='Yes'
     if (port_check_config(host,22)):
-        status = getStatusOfSpaceHost(str(host))
+        status = getStatusOfServiceHost(str(host))
         logger.info("status : "+str(status))
         logger.info("Host:"+str(host))
         #adding split to get just hostname and not fully qualified name
@@ -147,46 +116,33 @@ def printListOfSpace(server,data,host_gsc_dict_obj):
             gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)))
         else:
             gsc = host_gsc_dict_obj.get(str(socket.gethostbyaddr(host).__getitem__(0)).split('.')[0])
-        #gsc = host_gsc_dict_obj.get(str(host))
         logger.info("GSC : "+str(gsc))
     else:
         status="NOT REACHABLE"
         gsc = host_gsc_dict_obj.get(str(host))
         logger.info(" Host :"+str(server.ip)+" is not reachable")
-    #version = getVersion(server.ip)
-    influx = validateMetricsXmlInflux(host)
-    grafana = validateMetricsXmlGrafana(host)
     dataArray=[Fore.GREEN+host+Fore.RESET,
                Fore.GREEN+str(gsc)+Fore.RESET,
                Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET,
                Fore.GREEN+install+Fore.RESET if(installStatus=='Yes') else Fore.RED+'N/A'+Fore.RESET]
-               # Fore.GREEN+influx+Fore.RESET if(influx=='Yes') else Fore.RED+influx+Fore.RESET,
-               # Fore.GREEN+grafana+Fore.RESET if(grafana=='Yes') else Fore.RED+grafana+Fore.RESET]
     data.append(dataArray)
 
 
-def listSpaceServer():
+def listServiceServer():
     try:
-        logger.debug("listing space server")
-        logger.info("listSpaceServer()")
-        spaceServers = config_get_space_hosts()
-        verboseHandle.printConsoleWarning("Menu -> Servers -> Space -> List\n")
+        logger.debug("listing service server")
+        logger.info("listServiceServer()")
+        serviceServers = config_get_service_hosts()
+        verboseHandle.printConsoleWarning("Menu -> Servers -> Service -> List\n")
         headers = [Fore.YELLOW+"Host"+Fore.RESET,
                    Fore.YELLOW+"GSC"+Fore.RESET,
                    Fore.YELLOW+"Installed"+Fore.RESET,
                    Fore.YELLOW+"Status"+Fore.RESET,
                    Fore.YELLOW+"Version"+Fore.RESET
-                   # Fore.YELLOW+"Influxdb"+Fore.RESET,
-                   # Fore.YELLOW+"Grafana"+Fore.RESET
                    ]
         global data
         data=[]
-        userConfig = readValuefromAppConfig("app.server.user")
-        # changed : 25-Aug hence systemctl always with root no need to ask
-        #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
-        #if(len(str(user))==0):
-        #    user=userConfig
         user='root'
         logger.info("app.server.user: "+str(user))
 
@@ -194,22 +150,22 @@ def listSpaceServer():
         global host_nic_dict_obj
         host_nic_dict_obj = host_nic_dictionary()
 
-        spaceHostsLength = len(spaceServers)+1
-        with ThreadPoolExecutor(spaceHostsLength) as executor:
-           for server in spaceServers:
+        serviceHostsLength = len(serviceServers)+1
+        with ThreadPoolExecutor(serviceHostsLength) as executor:
+           for server in serviceServers:
                executor.submit(checkActiveStatus,server,host_nic_dict_obj,user)
 
         logger.info("host_nic_dict_obj : "+str(host_nic_dict_obj))
-        with ThreadPoolExecutor(spaceHostsLength) as executor:
-            for server in spaceServers:
-                    executor.submit(printListOfSpace,server,data,host_gsc_dict_obj)
+        with ThreadPoolExecutor(serviceHostsLength) as executor:
+            for server in serviceServers:
+                    executor.submit(printListOfService,server,data,host_gsc_dict_obj)
 
         printTabular(None,headers,data)
     except Exception as e:
-        logger.error("Error in odsx_servers_space_list "+str(e))
+        logger.error("Error in odsx_servers_service_list "+str(e))
 if __name__ == '__main__':
     args = []
     menuDrivenFlag = 'm'  # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
     myCheckArg()
-    listSpaceServer()
+    listServiceServer()

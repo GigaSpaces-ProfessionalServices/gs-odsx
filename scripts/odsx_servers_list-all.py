@@ -16,7 +16,8 @@ from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_manager_node, config_get_iidrAccessServer_node, \
     config_get_iidrKafkaAgent_node, config_get_iidrOracleAgent_node, config_get_dataIntegrationSubscriptionManager_node
 from utils.ods_cluster_config import config_get_space_hosts, config_get_nb_list, config_get_grafana_list, \
-    config_get_influxdb_node, config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes
+    config_get_influxdb_node, config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes, \
+    config_get_service_hosts
 from utils.ods_list import isInstalledAndGetVersionGrafana, isInstalledAndGetVersionInflux, isInstalledIIDRAccessServer, \
                             isInstalledIIDROracleAgent, isInstalledIIDRKafkaAgent, isInstalledIIDRSubscriptionManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput, \
@@ -197,6 +198,26 @@ def listAllServers():
             installStatus='Yes'
         dataArray=[Fore.GREEN+str(count)+Fore.RESET,
                    Fore.GREEN+"Space"+Fore.RESET,
+                   Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
+                   Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
+                   Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET
+                   ]
+        data.append(dataArray)
+
+    logger.info("Service server list.")
+    serviceServers = config_get_service_hosts()
+    for server in serviceServers:
+        count = count+1
+        logger.info(os.getenv(server.ip))
+        status = getStatusOfSpaceHost(os.getenv(server.ip))
+        logger.info("status"+str(status))
+        installStatus='No'
+        install = isInstalledAndGetVersionManagerSpace(os.getenv(str(server.ip)))
+        logger.info("install : "+str(install))
+        if(len(str(install))>8):
+            installStatus='Yes'
+        dataArray=[Fore.GREEN+str(count)+Fore.RESET,
+                   Fore.GREEN+"Service"+Fore.RESET,
                    Fore.GREEN+os.getenv(server.ip)+Fore.RESET,
                    Fore.GREEN+installStatus+Fore.RESET if(installStatus=='Yes') else Fore.RED+installStatus+Fore.RESET,
                    Fore.GREEN+status+Fore.RESET if(status=='ON') else Fore.RED+status+Fore.RESET

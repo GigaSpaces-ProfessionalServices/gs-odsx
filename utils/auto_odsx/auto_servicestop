@@ -1,0 +1,17 @@
+#!/usr/bin/expect -f
+set timeout -1
+set force_conservative 1
+cd /giga/gs-odsx
+spawn ./odsx.py servers service stop
+# Enter for all servers
+expect "for exit"
+sleep 0.2
+send -- "\n"
+# Verify
+expect "Are you sure want to stop all servers"
+sleep 0.2
+send -- "y"
+sleep 0.2
+send -- "\n"
+expect eof
+

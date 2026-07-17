@@ -1,0 +1,22 @@
+#!/usr/bin/expect -f
+
+set timeout -1
+set force_conservative 1
+
+cd /giga/gs-odsx
+spawn ./odsx.py servers service install
+expect -exact {Press [Enter] to install all.}
+sleep .2
+send -- "\n"
+expect -exact {Are you sure want to install all servers ? [yes (y)] / [no (n)] :}
+sleep .2
+send -- "y"
+sleep .2
+send -- "\n"
+expect -exact {Do you want to continue installation for above configuration ? [yes (y) / no (n)]:}
+sleep .2
+send -- "y"
+sleep .2
+send -- "\n"
+
+expect eof

@@ -6,6 +6,9 @@ servers :
   space :
     host1 : 10.0.0.247
     host2 : 10.0.0.4
+  service :
+    host1 : 10.0.0.247
+    host2 : 10.0.0.4
   dataIntegration :
     host1 : 10.0.0.1
     host2 : 10.0.0.2

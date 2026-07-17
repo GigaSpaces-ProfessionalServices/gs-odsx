@@ -1,0 +1,444 @@
+echo "Installation starting..."
+#source gs_installation.properties
+osDetected=$(cat /etc/os-release|grep "NAME=" | head -n 1 | cut -d "=" -f2 | sed -e 's/^"//' -e 's/"$//')
+echo "os: "$osDetected
+osType=$osDetected
+
+function installRemoteJava {
+  echo "os:"$osType
+  if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] ; then
+      if [ "$openJdkVersion" == "1.8" ] ||  [ "$openJdkVersion" == "8" ]; then
+          sudo yum -y install java-1.8.0-openjdk
+          sudo yum -y install java-1.8.0-openjdk-devel
+    elif [ "$openJdkVersion" == "11" ] ; then
+        sudo yum -y install java-11-openjdk
+        sudo yum -y install java-11-openjdk-devel
+        fi
+    elif [ "$osType" == "ubuntu" ]; then
+      if [ "$openJdkVersion" == "1.8" ]  ||  [ "$openJdkVersion" == "8" ]; then
+          sudo apt-get update
+          sudo apt -y install openjdk-8-jdk
+      elif [ "$openJdkVersion" == "11" ]; then
+          sudo apt-get update
+          sudo apt -y install openjdk-11-jdk
+      fi
+    elif [ "$osType" == "awsLinux2" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ]; then
+      if [ "$openJdkVersion" == "1.8" ] ||  [ "$openJdkVersion" == "8" ]; then
+          sudo amazon-linux-extras enable corretto8
+          yum clean metadata
+          sudo yum -y install java-1.8.0-amazon-corretto
+      elif [ "$openJdkVersion" == "11" ]; then
+          sudo amazon-linux-extras install -y java-openjdk11
+      fi
+    else
+      if [ "$openJdkVersion" == "1.8" ] ||  [ "$openJdkVersion" == "8" ]; then
+          sudo yum -y install java-1.8.0-openjdk
+          sudo yum -y install java-1.8.0-openjdk-devel
+    elif [ "$openJdkVersion" == "11" ]; then
+        sudo yum -y install java-11-openjdk
+        sudo yum -y install java-11-openjdk-devel
+        fi
+  fi
+    echo "Installation Remote JDK - Done!"
+}
+
+function installZip {
+    echo "os:"$osType
+    if [ "$osType" == "centos" ]; then
+	    sudo yum -y install unzip
+    elif [ "$osType" == "ubuntu" ]; then
+        sudo apt -y install unzip
+    elif [ "$osType" == "awsLinux2" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [ "$osType" == "Red Hat Enterprise Linux" ]  || [[ "$osType" ==  *"Linux"*  ]]; then
+        sudo yum -y install unzip
+	else
+	   sudo yum -y install unzip
+	fi
+	echo "install ZIP - Done!"
+}
+function installWget {
+  echo "os:"$osType
+    if [ "$osType" == "centos" ]; then
+	    sudo yum -y install wget
+    elif [ "$osType" == "ubuntu" ]; then
+        sudo apt -y install wget
+    elif [ "$osType" == "awsLinux2" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [ "$osType" == "Red Hat Enterprise Linux" ]  || [[ "$osType" ==  *"Linux"*  ]]; then
+        sudo yum -y install wget
+    else
+	    sudo yum -y install wget
+	fi
+	echo "install wget - Done!"
+}
+function downloadGS {
+  if [ ! -d "install" ]; then
+    mkdir "install"
+  fi
+	cd install
+	if [ -e  gigaspaces-${gsType}-enterprise-${gsVersion}.zip ]; then
+	  rm gigaspaces-${gsType}-enterprise-${gsVersion}.zip
+	  wget https://gigaspaces-releases-eu.s3.amazonaws.com/${gsType}/${gsVersion}/gigaspaces-${gsType}-enterprise-${gsVersion}.zip
+	else
+	  wget https://gigaspaces-releases-eu.s3.amazonaws.com/${gsType}/${gsVersion}/gigaspaces-${gsType}-enterprise-${gsVersion}.zip
+	fi
+	cd
+	echo "download GS - Done!"
+}
+function unzipGS {
+  targetDir=$1
+
+  if [ ! -d $targetDir ]; then
+    mkdir $targetDir
+  fi
+  echo $targetDir
+  unzip install/gigaspaces-${gsType}-enterprise-${gsVersion}.zip -d  $targetDir  #/home/ec2-user/install/
+  echo "unzipping GS - Done!"
+  }
+function activateGS {
+  targetDir=$1
+  license="export GS_LICENSE='Product=InsightEdge;Version=15.8;Type=ENTERPRISE;Customer=GigaSpaces_Technologies_-_Internal_rajiv_shah_DEV;Expiration=2021-Dec-31;Hash=gSZQ6OSP83VRn0PRQZNH'"
+  sed -i '/export GS_LICENSE/d' $targetDir/gigaspaces-${gsType}-enterprise-${gsVersion}/bin/setenv-overrides.sh
+  sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/gigaspaces-${gsType}-enterprise-${gsVersion}/bin/setenv-overrides.sh
+  echo "targetDir"$targetDir
+  echo  "">>$targetDir/gigaspaces-${gsType}-enterprise-${gsVersion}/bin/setenv-overrides.sh
+  echo  "$license">>$targetDir/gigaspaces-${gsType}-enterprise-${gsVersion}/bin/setenv-overrides.sh
+  hostCfg="export GS_MANAGER_SERVERS="$gs_clusterhosts
+  echo  "$hostCfg">>$targetDir/gigaspaces-${gsType}-enterprise-${gsVersion}/bin/setenv-overrides.sh
+	echo "activating GS - Done!"
+}
+function setGSHome {
+    targetDir=$1
+    path="export GS_HOME="$targetDir/gigaspaces-smart-ods
+    sed -i '/export GS_HOME/d' setenv.sh
+    echo "">>setenv.sh
+    echo "$path">>setenv.sh
+    source setenv.sh
+  echo "Set GS_HOME - Done!"
+}
+
+function installAirGapJava {
+    echo "Installation of AirGapJava"
+    home_dir=$(pwd)
+    installation_path=$sourceInstallerDirectory/jdk
+    installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
+    echo "Installation File :"$installation_file
+    if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ]  || [[ "$osType" ==  *"Linux"*  ]]; then
+      echo $installation_path"/"$installation_file
+	     rpm -ivh $installation_path"/"$installation_file
+	     java_home_path="export JAVA_HOME='$(readlink -f /usr/bin/javac | sed "s:/bin/javac::")'"
+	     echo "">>setenv.sh
+	     echo "$java_home_path">>setenv.sh
+	    echo "installAirGapJava -Done!"
+	  elif [ "$osType" == "ubuntu" ]; then
+       dpkg -i $installation_path"/"$installation_file
+      java_home_folder=$(ls /usr/lib/jvm/)
+      java_home=$java_home_folder
+      java_home_path="export JAVA_HOME=/usr/lib/jvm/$java_home"
+      java_path="export PATH="'$PATH'":"'${JAVA_HOME}'"/bin"
+      echo "Installation AirGapJava -Done!"
+      echo "">>setenv.sh
+      echo "$java_home_path">>setenv.sh
+      echo "$java_path">>setenv.sh
+      source setenv.sh
+      echo "Set JAVA_HOME -Done!"
+    fi
+
+}
+function installAirGapUnzip {
+   echo "Install AirGapUnzip"
+   home_dir=$(pwd)
+   installation_path=$sourceInstallerDirectory/unzip
+   installation_file=$(find $installation_path -name *.rpm -printf "%f\n")
+   if [ "$osType" == "centos" ] || [ "$osType" == "Red Hat Enterprise Linux" ] || [ "$osType" == "Amazon Linux" ] || [ "$osType" == "Amazon Linux2" ] || [[ "$osType" ==  *"Linux"*  ]]; then
+      rpm -ivh $installation_path"/"$installation_file
+   elif [ "$osType" == "ubuntu"  ]; then
+      dpkg -i $installation_path"/"$installation_file
+   fi
+   echo "Installation zip -Done!"
+}
+function installAirGapGS {
+   targetDir=$1
+   #Creating target Directory to install Gigaspaces
+   echo "TargetDir:"$targetDir
+   cd
+   cd /
+   dir=$targetDir
+   workDir="dbagigawork"
+   logDir="dbagigalogs"
+   dataDir="dbagigadata"
+   cd
+   targetConfigDir="$targetDir/gs_config/"
+   targetJarsDir="$targetDir/gs_jars"
+   if [ ! -d "$dir" ]; then
+     mkdir /$dir
+     chmod 777 /$dir
+     mkdir $targetConfigDir
+     chmod 777 $targetConfigDir
+   fi
+   if [ ! -d "$targetConfigDir" ]; then
+     chmod 777 /$dir
+     mkdir $targetConfigDir
+     echo "Not Exit created"
+     chmod 777 $targetConfigDir
+   fi
+   if [ ! -d "$targetJarsDir" ]; then
+     mkdir $targetJarsDir
+     echo "Not Exit created"
+     chmod 777 $targetJarsDir
+   fi
+   if [ ! -d "/$logDir" ]; then
+     mkdir /$logDir
+     chmod 777 /$logDir
+   fi
+   if [ ! -d "/$workDir" ]; then
+     mkdir /$workDir
+     chmod 777 /$workDir
+   fi
+   if [ ! -d "/$dataDir" ]; then
+     mkdir /$dataDir
+     chmod 777 /$dataDir
+   fi
+   pwd
+   cd
+   # Taking the installer name and extract to Target Directory
+   echo "Installing Gigaspace InsightEdge at "$targetDir
+   home_dir=$(pwd)
+   echo "homedir: "$home_dir
+   installation_path=$sourceInstallerDirectory/gs
+   installation_file=$(ls -1 $sourceInstallerDirectory/gs/*.zip)
+   installation_file=$(basename $installation_file)
+   echo $installation_path"/"$installation_file
+   pwd
+   unzip -qq $installation_path"/"$installation_file -d  $targetDir
+
+   # Configure license and additional params to setenv-override and set GS home
+    if [ "$gsNicAddress" == "x" ] ; then   # Replaced dummy param with blank and no required to append GS_NIC_ADDR to setenv.over..
+       gsNicAddress=${gsNicAddress//[x]/''}
+    fi
+   echo "gsNicAddress: "$gsNicAddress
+
+   var=$installation_file
+   replace=""
+   extracted_folder=${var//'.zip'/$replace}
+   echo "extracted_folder: "$extracted_folder
+
+   sed -i '/export GS_MANAGER_SERVERS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sed -i '/export GS_LOGS_CONFIG_FILE/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sed -i '/export GS_MANAGER_OPTIONS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   sed -i '/export GS_OPTIONS_EXT/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   if [  "$gsNicAddress" != "" ]; then
+      echo "PRESENT"
+      sed -i '/export GS_NIC_ADDRESS/d' $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   fi
+
+   echo  "">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   if [ "$useVault" != "false" ]; then
+      echo  "export VAULT_MANAGER_PASS=\$(java -Dapp.db.path=$vaultDbPath -jar $vaultJar --get $passPropertyName)">>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   else
+      echo  "export VAULT_MANAGER_PASS=$passPropertyName" >> $targetDir/$extracted_folder/bin/setenv-overrides.sh
+   fi
+
+   cp -f $gsLicenseConfig $targetDir/$extracted_folder/
+
+   hostCfg="export GS_MANAGER_SERVERS="$gs_clusterhosts
+   echo  $hostCfg>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+   gsLogsConfigFile="export GS_LOGS_CONFIG_FILE="$gsLogsConfigFile
+   echo $gsLogsConfigFile>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+   gsManagerOptions="export GS_MANAGER_OPTIONS="\"$gsManagerOptions\"
+   echo $gsManagerOptions>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+   gsOptionExt="export GS_OPTIONS_EXT="\"$gsOptionExt\"
+   echo $gsOptionExt>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+
+   if [ ! "$gsNicAddress" == "" ]; then
+     gsNicAddr="export GS_NIC_ADDRESS="$gsNicAddress
+     echo $gsNicAddr>>$targetDir/$extracted_folder/bin/setenv-overrides.sh
+   fi
+   #set GS_HOME to start stop remove Gigaspaces
+   cd
+   path="export GS_HOME="$targetDir/gigaspaces-smart-ods
+   echo "">>setenv.sh
+   echo "$path">>setenv.sh
+
+   echo "path: "$path
+   cd
+   # Moving the required files to other folder
+   if [ ! -f "$targetConfigDir/xap_logging.properties" ]; then                #Condition added on 02Feb22 if file exist dont override it
+     sed -i -e 's/NullBackupPolicy/DeleteBackupPolicy/g' $targetDir/$extracted_folder/config/log/xap_logging.properties
+     cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
+   fi
+   cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template /dbagiga/gs_config/metrics.xml
+
+
+   limitContent="$applicativeUser hard nofile "$nofileLimitFile
+   limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile
+
+   sed -i '/hard nofile/d' /etc/security/limits.conf
+   sed -i '/soft nofile/d' /etc/security/limits.conf
+
+   echo "LimitContent : "$limitContent
+   echo "">>/etc/security/limits.conf
+   echo $limitContent>>/etc/security/limits.conf
+   echo $limitContentSoft>>/etc/security/limits.conf
+   cd $targetDir
+   ln -s $extracted_folder gigaspaces-smart-ods
+   sed -i -e 's|../config/security/security-config.xml|//dbagiga/gs_config/ldap-security-config.xml|g' gigaspaces-smart-ods/config/security/security.properties
+   cp gigaspaces-smart-ods/config/security/security.properties /dbagiga/gs_config/
+   echo "Installation & configuration Gigaspace  -Done!"
+}
+function loadEnv {
+  cd
+  home_dir=$(pwd)
+  source $home_dir/setenv.sh
+}
+
+function gsCreateGSServeice {
+    echo "GS Creating services started. (service - GSA only, no GSC)"
+
+  chown -R $applicativeUser:$applicativeUser /dbagigawork/ /dbagiga/*
+  find /dbagigalogs -maxdepth 1 ! -regex '^/dbagigalogs/consul\(/.*\)?' -type d -exec chown $applicativeUser:$applicativeUser {} \;
+
+  start_gsa_file="start_gsa.sh"
+  stop_gsa_file="stop_gsa.sh"
+  gsa_service_file="gsa.service"
+
+  home_dir_sh=$(pwd)
+  echo "homedir: "$home_dir_sh
+  source $home_dir_sh/setenv.sh
+  echo "GS_HOME :"$GS_HOME
+
+  cmd="$GS_HOME/bin/gs.sh host run-agent --auto"
+  echo "$cmd">>$start_gsa_file
+
+  echo "#!/bin/bash">>$stop_gsa_file
+  echo "# Kill the old 16.4.1 WebUI process holding port 8099">>$stop_gsa_file
+  KilltheoldWebui="fuser -k 8099/tcp 2>/dev/null || true"
+  echo "$KilltheoldWebui">>$stop_gsa_file
+  echo "# Kill the GSA agents">>$stop_gsa_file
+  cmd="$GS_HOME/bin/gs.sh host kill-agent --all"
+  echo "$cmd">>$stop_gsa_file
+
+  echo "TIMEOUT=30">>$stop_gsa_file
+  echo "ELAPSED=0">>$stop_gsa_file
+  echo "while fuser 8099/tcp >/dev/null 2>&1 && [ $ELAPSED -lt $TIMEOUT ]; do">>$stop_gsa_file
+  echo "sleep 1">>$stop_gsa_file
+  echo "ELAPSED=$((ELAPSED + 1))">>$stop_gsa_file
+  echo "done">>$stop_gsa_file
+  echo "if fuser 8099/tcp >/dev/null 2>&1; then">>$stop_gsa_file
+  echo "# Force kill if still held">>$stop_gsa_file
+  echo "fuser -k -9 8099/tcp 2>/dev/null || true">>$stop_gsa_file
+  echo "fi">>$stop_gsa_file
+  gs_installation_path=$home_dir_sh/install/gs/
+  sed -i -e 's|Requires = gsc.service|#Requires=gsc.service|g' $gs_installation_path/$gsa_service_file
+  mv $home_dir_sh/st*_gs*.sh /tmp
+  mv $gs_installation_path/$gsa_service_file /tmp
+  mv /tmp/st*_gs*.sh /usr/local/bin/
+  chmod +x /usr/local/bin/st*_gs*.sh
+  mv /tmp/gs*.service /etc/systemd/system/
+  if [ "$selinux" == "true" ]; then
+    restorecon /etc/systemd/system/gs*.service
+  fi
+  rm -rf gs.service
+
+  chmod 777 -R $GS_HOME/logs/
+  chmod 777 -R $GS_HOME/deploy/
+  chmod 777 -R $GS_HOME/deploy/*
+  # Only chmod gs-webui if it exists (GS 16.x and earlier)
+  if [ -d "$GS_HOME/tools/gs-webui" ]; then
+      chmod 777 -R $GS_HOME/tools/gs-webui/*
+  fi
+  chmod -R +x /dbagiga
+
+  systemctl daemon-reload
+  systemctl enable $gsa_service_file
+  sed -i 's/sslQuorum=true/sslQuorum=false/' $targetDir/gigaspaces-smart-ods/config/zookeeper/zoo.cfg
+
+  echo "GS Creating services -Done!."
+}
+function copyLogFile {
+    echo "xap_logging file copied from source to target"
+    cd /dbagiga/gs_config/
+    sudo cp $logSourcePath $logTargetPath
+}
+#if the airGap true then it will install from user/install dir
+targetDir=$2
+gs_clusterhosts=$3
+gsOptionExt=$4
+gsManagerOptions=$5
+gsLogsConfigFile=$6
+gsLicenseConfig=$7
+applicativeUser=$8
+nofileLimitFile=$9
+wantInstallJava=${10}
+wantInstallUnzip=${11}
+gscCount=${12}
+memoryGSC=${13}
+zoneGSC=${14}
+sourceInstallerDirectory=${15}
+logTargetPath=${16}
+logSourcePath=${17}
+startSpaceGsc=${18}
+passPropertyName=${19}
+vaultJar=${20}
+vaultDbPath=${21}
+useVault=${22}
+selinux=${23}
+userNameParam=${24}
+passwordParam=${25}
+gsNicAddress=${26}
+
+echo "param1"$1
+echo "param2"$targetDir
+echo "param3"$gs_clusterhosts
+echo "param4"$gsOptionExt
+echo "param5"$gsManagerOptions
+echo "param6"$gsLogsConfigFile
+echo "param7"$gsLicenseConfig
+echo "param8"$applicativeUser
+echo "param9"$nofileLimitFile
+echo "param10"$wantInstallJava
+echo "param11"$wantInstallUnzip
+echo "param12"$gscCount
+echo "param13"$memoryGSC
+echo "param14"$zoneGSC
+echo "param15"$sourceInstallerDirectory
+echo "param16"$startSpaceGsc
+echo "param17"$gsNicAddress
+if [ -z "$targetDir" ]; then
+  targetDir=$(pwd)
+else
+  targetDir=$2
+fi
+echo "TargetDir:"$targetDir
+if [ $1 == 'true' ]; then
+  if [ "$wantInstallJava" == "y" ]; then
+    echo "Setup AirGapJava"
+    installAirGapJava
+  fi
+  if [ "$wantInstallUnzip" == "y" ]; then
+    echo "Setup AirGap unzip"
+    installAirGapUnzip
+  fi
+  echo "Setup AirGap GS InsightEdge "
+  installAirGapGS $targetDir
+  echo "Load env"
+  loadEnv
+  echo "Creating GS Services.."
+  gsCreateGSServeice
+else
+  echo "Setup java"
+  installRemoteJava
+  echo "setup zip"
+  installZip
+  echo "install wget"
+  installWget
+  echo "Download GS"
+  downloadGS
+  echo "unzipping GS"
+  unzipGS $targetDir
+  echo "activating GS"
+  activateGS $targetDir
+  echo "Set GS Home"
+  setGSHome $targetDir
+fi
+copyLogFile
