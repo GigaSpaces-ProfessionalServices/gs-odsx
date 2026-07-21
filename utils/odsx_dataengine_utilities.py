@@ -116,7 +116,22 @@ def getmysqlFeederList():
     os.chdir(sourceMYSQLFeederShFilePath)
     for file in glob.glob("load_*.sh"):
         puName = str(file).replace('load_','').replace('.sh','').casefold()
-        mysqlFeederList.append('mysqlfeeder_'+puName)        
+        mysqlFeederList.append('mysqlfeeder_'+puName)
+
+def getoracleerpFeederList():
+    global oracleerpFeederList
+    oracleerpFeederList=[]
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
+    os.getcwd()
+    sourceOracleErpFeederShFilePath = str(sourceInstallerDirectory + ".oracleerp.scripts.").replace('.', '/')
+    os.chdir(sourceOracleErpFeederShFilePath)
+    for file in glob.glob("load_*.sh"):
+        puName = str(file).replace('load_','').replace('.sh','').casefold()
+        oracleerpFeederList.append('oracleerpfeeder_'+puName)
+
+def getnotifierFeederList():
+    global notifierFeederList
+    notifierFeederList=['personal_message_notifier_service','group_message_notifier_service']
 
 def getAllFeeders():
     logger.info("getAllFeeders() : start")
@@ -153,6 +168,8 @@ def getAllFeeders():
         getgilboaFeederList()
         getoracleFeederList()
         getmysqlFeederList()
+        getoracleerpFeederList()
+        getnotifierFeederList()
         if (len(jsonArray) == 0):
             sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory+".oracle.scripts.").replace('.','/')
             os.chdir(sourceDB2FeederShFilePathConfig)
@@ -241,6 +258,8 @@ def getAllFeeders():
             if(str(data["name"]).__contains__('oracle')):
                 if(oracleFeederList.__contains__(str(data["name"]))):
                     oracleFeederList.remove(str(data["name"]))
+                if(oracleerpFeederList.__contains__(str(data["name"]))):
+                    oracleerpFeederList.remove(str(data["name"]))
                 dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
                              Fore.GREEN+data["name"]+Fore.RESET,
                              Fore.GREEN+str(hostId)+Fore.RESET,
@@ -294,7 +313,19 @@ def getAllFeeders():
                 gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
                 counter=counter+1
                 dataTable.append(dataArray)
-                
+
+            if(str(data["name"]).__contains__('notifier')):
+                if(notifierFeederList.__contains__(str(data["name"]))):
+                    notifierFeederList.remove(str(data["name"]))
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+data["name"]+Fore.RESET,
+                             Fore.GREEN+str(hostId)+Fore.RESET,
+                             Fore.GREEN+str(data["sla"]["zones"])+Fore.RESET,
+                             Fore.GREEN+data["status"]+Fore.RESET
+                             ]
+                gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
+                counter=counter+1
+                dataTable.append(dataArray)
 
         logger.info("getAllFeeders() : end")
         mssqlFlag = False
@@ -353,6 +384,29 @@ def getAllFeeders():
                                  ]
                     counter=counter+1
                     dataTable.append(dataArray)
+
+        if (len(oracleerpFeederList) != 0 and len(jsonArray) != 0):
+            for puName in oracleerpFeederList:
+                if(str(puName).__contains__('oracleerp')):
+                    dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                                 Fore.GREEN+str(puName)+Fore.RESET,
+                                 Fore.GREEN+str("-")+Fore.RESET,
+                                 Fore.GREEN+str("-")+Fore.RESET,
+                                 Fore.GREEN+str("Undeployed")+Fore.RESET,
+                                 ]
+                    counter=counter+1
+                    dataTable.append(dataArray)
+
+        if (len(notifierFeederList) != 0 and len(jsonArray) != 0):
+            for puName in notifierFeederList:
+                dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
+                             Fore.GREEN+str(puName)+Fore.RESET,
+                             Fore.GREEN+str("-")+Fore.RESET,
+                             Fore.GREEN+str("-")+Fore.RESET,
+                             Fore.GREEN+str("Undeployed")+Fore.RESET,
+                             ]
+                counter=counter+1
+                dataTable.append(dataArray)
         # for i in jsonArray:
         if not(str(jsonArray).__contains__("mssql")):
                 mssqlFlag = True
@@ -402,6 +456,8 @@ def getAllFeeders():
         mysqlFeederList.clear()
         gilboaFeederList.clear()
         oracleFeederList.clear()
+        oracleerpFeederList.clear()
+        notifierFeederList.clear()
         return dataTable
 
     except Exception as e:

@@ -16,7 +16,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFolder
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
-from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node, config_get_service_hosts
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus, port_check_config
 from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder, getPasswordByHost, getUsernameByHost
@@ -676,14 +676,23 @@ if __name__ == '__main__':
                 username = str(getUsernameByHost())
                 password = str(getPasswordByHost())
 
-                spaceNodes = config_get_space_hosts()
-                logger.info("spaceNodes: main"+str(spaceNodes))
                 managerHost = getManagerHost(managerNodes)
                 #updateAndCopyJarFileFromSourceToShFolder()
                 logger.info("managerHost : main"+str(managerHost))
                 if(len(str(managerHost))>0):
                     listSpacesOnServer(managerNodes)
                     listDeployed(managerHost)
+                    hostTypeHeaders = [Fore.YELLOW+"Sr No."+Fore.RESET,
+                                       Fore.YELLOW+"Host Type"+Fore.RESET]
+                    hostTypeTable = [[Fore.GREEN+"1"+Fore.RESET,Fore.GREEN+"Space host"+Fore.RESET],
+                                     [Fore.GREEN+"2"+Fore.RESET,Fore.GREEN+"Service host"+Fore.RESET]]
+                    printTabular(None,hostTypeHeaders,hostTypeTable)
+                    hostTypeChoice = str(userInputWrapper(Fore.YELLOW+"Select host type to deploy GSC [2] : "+Fore.RESET))
+                    if(hostTypeChoice=='1'):
+                        spaceNodes = config_get_space_hosts()
+                    else:
+                        spaceNodes = config_get_service_hosts()
+                    logger.info("spaceNodes: main"+str(spaceNodes))
                     space_dict_obj = displaySpaceHostWithNumber(managerNodes,spaceNodes)
                     if(len(space_dict_obj)>0):
                         confirmCreateGSC = str(readValuefromAppConfig("app.dataengine.mssql-feeder.gsc.create"))

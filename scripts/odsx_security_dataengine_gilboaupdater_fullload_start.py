@@ -272,6 +272,9 @@ def inputParam():
             inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start mssql-feeder : "+Fore.RESET))
         proceedToStartMSSQLFeeder(inputNumberToStart)
     if(len(str(inputChoice))==0):
+        confirmAll = str(userInputWrapper(Fore.YELLOW+"Do you want to start all gilboa-feeders y/N [N]: "+Fore.RESET))
+        if(confirmAll.casefold()!='y' and confirmAll.casefold()!='yes'):
+            return
         elements = len(fileNameDict)
         for i in range (1,elements+1):
             proceedToStartMSSQLFeeder(str(i))
