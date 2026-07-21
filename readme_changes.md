@@ -575,6 +575,7 @@
      mkdir /dbagigashare/current/data-integration/di-manager/upgrade/
      mkdir /dbagigashare/current/data-integration/di-processor/upgrade/
 173. Copy new jar files to this folders (part of s3/slack)
+### TAU v5.6.17-tau-release tag
 174. Updated in app.config
      app.security.menu=manager,space,service,tieredstorage,feeder,mq,object,dataengine
      app.isaws.env=true
