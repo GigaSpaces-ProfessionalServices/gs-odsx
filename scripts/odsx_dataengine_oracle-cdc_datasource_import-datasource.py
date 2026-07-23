@@ -97,7 +97,7 @@ def createDatasource():
             verboseHandle.printConsoleError(f"Path not found: {export_path}")
             return
 
-        files = [f for f in os.listdir(export_path) if os.path.isfile(os.path.join(export_path, f))]
+        files = [f for f in os.listdir(export_path) if os.path.isfile(os.path.join(export_path, f)) and f.lower().endswith(".json")]
         if not files:
             verboseHandle.printConsoleError(f"No files found in: {export_path}")
             return

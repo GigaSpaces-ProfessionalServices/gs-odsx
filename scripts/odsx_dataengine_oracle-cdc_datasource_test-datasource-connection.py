@@ -147,11 +147,11 @@ def testDatasourceConnections():
         files = sorted(
             f for f in os.listdir(datasource_path)
             if os.path.isfile(os.path.join(datasource_path, f))
-            and (f.endswith('.json') or f.endswith('.yaml') or f.endswith('.yml'))
+            and (f.endswith('.json'))
         )
 
         if not files:
-            verboseHandle.printConsoleWarning(f"No datasource files (JSON/YAML) found in: {datasource_path}")
+            verboseHandle.printConsoleWarning(f"No datasource JSON files found in: {datasource_path}")
             return
 
         entries = []  # list of (filename, datasource_dict)

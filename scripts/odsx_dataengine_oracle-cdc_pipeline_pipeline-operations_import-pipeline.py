@@ -68,7 +68,7 @@ def importPipeline(diManagerHost):
             verboseHandle.printConsoleError(f"Path not found: {import_path}")
             return
 
-        files = [f for f in os.listdir(import_path) if os.path.isfile(os.path.join(import_path, f))]
+        files = [f for f in os.listdir(import_path) if os.path.isfile(os.path.join(import_path, f)) and f.lower().endswith(".yaml")]
         if not files:
             verboseHandle.printConsoleError(f"No files found in: {import_path}")
             return
