@@ -93,6 +93,8 @@ function installFlink() {
   echo "state.savepoints.dir: file:///home/gsods/di-flink/latest-flink/data/savepoints">>$flink_conf_file
   echo "state.checkpoints.dir: file:///home/gsods/di-flink/latest-flink/data/checkpoints">>$flink_conf_file
   echo "env.java.opts: \"--add-opens java.base/java.util=ALL-UNNAMED --add-opens java.base/java.lang=ALL-UNNAMED\"">>$flink_conf_file
+  mkdir -p /giga/data/work/flink/
+  echo "io.tmp.dirs: /giga/data/work/flink/">>$flink_conf_file
 
   chmod +x /dbagiga/di-flink/$extracted_folder_flink/bin/*
    cp $installation_path_flink/di-flink-jobmanager.service /etc/systemd/system/
@@ -202,10 +204,11 @@ function installDIManager {
   # Copy upgrade jar if present: replace existing job-*.jar with same name
    upgrade_jar=$(find $sourceInstallerDirectory/data-integration/di-manager/upgrade/ -name "*.jar" 2>/dev/null | head -1)
    if [ -n "$upgrade_jar" ]; then
-     existing_jar=$(ls /home/gsods/di-processor/latest-di-manager/lib/job-*.jar 2>/dev/null | head -1)
+     existing_jar=$(ls /home/gsods/di-manager/latest-di-manager/lib/di-*.jar 2>/dev/null | head -1)
      if [ -n "$existing_jar" ]; then
        existing_jar_name=$(basename "$existing_jar")
        sudo cp "$upgrade_jar" /home/gsods/di-manager/latest-di-manager/lib/"$existing_jar_name"
+       sudo chmod +x /home/gsods/di-manager/latest-di-manager/lib/"$existing_jar_name"
        sudo chown gsods:gsods /home/gsods/di-manager/latest-di-manager/lib/"$existing_jar_name"
        info "Upgraded di-manager jar: $existing_jar_name\n"
      else
@@ -252,6 +255,7 @@ function installDIProcessor {
       if [ -n "$existing_jar" ]; then
         existing_jar_name=$(basename "$existing_jar")
         sudo cp "$upgrade_jar" /home/gsods/di-processor/latest-di-processor/lib/"$existing_jar_name"
+        sudo chmod +x /home/gsods/di-processor/latest-di-processor/lib/"$existing_jar_name"
         sudo chown gsods:gsods /home/gsods/di-processor/latest-di-processor/lib/"$existing_jar_name"
         info "Upgraded di-processor jar: $existing_jar_name\n"
       else

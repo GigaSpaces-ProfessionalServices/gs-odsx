@@ -9,7 +9,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.odsx_servers_di_install import getDIServerHostList
 from scripts.spinner import Spinner
-from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes
+from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes,config_get_iidrOracleAgent_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import isValidHost, port_check
 from utils.odsx_print_tabular_data import printTabularGrid
@@ -405,6 +405,10 @@ def listDIServers():
     # the specific node-type config functions (config_get_iidrAccessServer_node etc.) may return
     # empty lists if those entries aren't registered in cluster.config for this environment.
     iidrNodes = config_get_dataIntegrationiidr_nodes()
+    iidrOracleAgentNode = config_get_iidrOracleAgent_node()
+    for server in iidrOracleAgentNode:
+        iidrOracleAgentNode = os.getenv(server.ip)
+        break;
     for server in iidrNodes:
         iidrHost = os.getenv(server.ip)
 
@@ -433,9 +437,9 @@ def listDIServers():
             IIDRKafkaAgentInstallStatus = 'Yes'
 
         IIDROracleAgentPort = readValuefromAppConfig("app.iidr.Oracle.DB.Agent.Port")
-        IIDROracleDBAgentStatus = getTelnetStatus(iidrHost, IIDROracleAgentPort)
+        IIDROracleDBAgentStatus = getTelnetStatus(iidrOracleAgentNode, IIDROracleAgentPort)
         IIDROracleAgentInstallStatus = 'No'
-        IIDROracleAgentInstall = isInstalledIIDROracleAgent(str(iidrHost))
+        IIDROracleAgentInstall = isInstalledIIDROracleAgent(str(iidrOracleAgentNode))
         logger.info("IIDROracleAgentInstall : "+str(IIDROracleAgentInstall))
         if len(str(IIDROracleAgentInstall)) > 0:
             IIDROracleAgentInstallStatus = 'Yes'
