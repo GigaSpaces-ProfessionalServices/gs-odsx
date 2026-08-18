@@ -104,8 +104,8 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         hostManager=hostsConfig.replace('"','').split(",")
         logger.debug("optionID:"+str(hostsConfig))
         targetDirectory=''
-        gsOptionExtFromConfig = str(readValueByConfigObj("app.space.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
-        additionalParam = str(readValuefromAppConfig("app.space.targetDirectory"))
+        gsOptionExtFromConfig = str(readValueByConfigObj("app.service.gsOptionExt")).replace('[','').replace(']','').replace("'","").replace(', ',',')
+        additionalParam = str(readValuefromAppConfig("app.service.targetDirectory"))
         targetDirectory=str(additionalParam)
         targetDirectory=additionalParam
         logger.info("targetDirecory :"+str(targetDirectory))
@@ -134,29 +134,29 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         nofileLimitFile = nofileLimit
         nofileLimitFile = '"{}"'.format(nofileLimitFile)
 
-        wantToInstallJava = str(readValuefromAppConfig("app.space.wantInstallJava"))
+        wantToInstallJava = str(readValuefromAppConfig("app.service.wantInstallJava"))
 
-        wantToInstallUnzip = str(readValuefromAppConfig("app.space.wantInstallUnzip"))
+        wantToInstallUnzip = str(readValuefromAppConfig("app.service.wantInstallUnzip"))
         global gscCount
         global memoryGSC
         global zoneGSC
 
-        gscCountConfig = str(readValuefromAppConfig("app.space.gsc.count"))
+        gscCountConfig = str(readValuefromAppConfig("app.service.gsc.count"))
         gscCount = ""
         gscCount = gscCountConfig
 
-        memoryGSCConfig = str(readValuefromAppConfig("app.space.gsc.memory"))
+        memoryGSCConfig = str(readValuefromAppConfig("app.service.gsc.memory"))
         memoryGSC = ""
         memoryGSC = memoryGSCConfig
 
-        zoneGSC = str(readValuefromAppConfig("app.space.gsc.zone"))
+        zoneGSC = str(readValuefromAppConfig("app.service.gsc.zone"))
 
-        sourceDirectoryForJar = str(readValuefromAppConfig("app.space.jar.sourceFolder"))
+        sourceDirectoryForJar = str(readValuefromAppConfig("app.service.jar.sourceFolder"))
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
         logger.info("sourceInstallerDirectory :"+str(sourceInstallerDirectory))
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
-        startSpaceGsc=str(readValuefromAppConfig("app.space.start.gsc.path"))
+        startSpaceGsc=str(readValuefromAppConfig("app.service.start.gsc.path"))
         if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDirectory+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+gscCount+' '+memoryGSC+' '+zoneGSC+' '+sourceInstallerDirectory+' '+logSourcePath+' '+logTargetPath
         else:
@@ -169,7 +169,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         serviceHostConfig=getServiceHostFromEnv()
         for host in getServiceHostFromEnv().split(','):
             host_nic_dict_obj.add(host,'')
-        wantNicAddress = str(readValuefromAppConfig("app.space.gsNicAddress"))
+        wantNicAddress = str(readValuefromAppConfig("app.service.gsNicAddress"))
         if(len(str(wantNicAddress))==0):
             wantNicAddress='n'
         if(wantNicAddress=="yes" or wantNicAddress=="y"):
@@ -187,16 +187,16 @@ def execute_ssh_server_manager_install(hostsConfig,user):
         db2ccJarLicensePath=".db2.jars.db2ccLicense"
         db2jccJarLicenseInput = str(readValueFromYaml(db2ccJarLicensePath)).replace('[','').replace(']','')
         db2jccJarLicenseInput=getYamlJarFilePath(".db2.jars",db2jccJarLicenseInput)
-        db2FeederJarTargetInput = str(readValuefromAppConfig("app.space.db2feeder.jar.target")).replace('[','').replace(']','')
+        db2FeederJarTargetInput = str(readValuefromAppConfig("app.service.db2feeder.jar.target")).replace('[','').replace(']','')
         msSqlFeederFilePath="."
         msSqlFeederFileSource = str(os.getenv("ENV_CONFIG"))+str(msSqlFeederFilePath).replace('[','').replace(']','').replace('.','/')
-        msSqlFeederFileTarget = str(readValuefromAppConfig("app.space.mssqlfeeder.files.target")).replace('[','').replace(']','')
+        msSqlFeederFileTarget = str(readValuefromAppConfig("app.service.mssqlfeeder.files.target")).replace('[','').replace(']','')
         logTargetPath=str(readValuefromAppConfig("app.log.target.file"))
         logSourcePath=str(getYamlFilePathInsideFolder(".gs.config.log.xap_logging"))
         infraJarPath = ".gs.jars.infra.infrajar"
         infraJarInput = str(readValueFromYaml(infraJarPath)).replace('[','').replace(']','')
         infraJarInput = getYamlJarFilePath(".gs.jars.infra",infraJarInput)
-        infraJarTargetInput = str(readValuefromAppConfig("app.space.infra.jar.target")).replace('[','').replace(']','')
+        infraJarTargetInput = str(readValuefromAppConfig("app.service.infra.jar.target")).replace('[','').replace(']','')
         selinuxEnabled = str(readValuefromAppConfig("app.selinux.enabled"))
 
 

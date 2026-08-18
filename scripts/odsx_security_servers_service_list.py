@@ -241,9 +241,9 @@ if __name__ == '__main__':
     safeId=""
     objectId=""
     try:
-        appId = str(readValuefromAppConfig("app.space.security.appId")).replace('"','')
-        safeId = str(readValuefromAppConfig("app.space.security.safeId")).replace('"','')
-        objectId = str(readValuefromAppConfig("app.space.security.objectId")).replace('"','')
+        appId = str(readValuefromAppConfig("app.service.security.appId")).replace('"','')
+        safeId = str(readValuefromAppConfig("app.service.security.safeId")).replace('"','')
+        objectId = str(readValuefromAppConfig("app.service.security.objectId")).replace('"','')
         logger.info("appId : "+appId+" safeID : "+safeId+" objectID : "+objectId)
         managerNodes = config_get_manager_node()
         managerHost = getManagerHost(managerNodes)

@@ -2000,6 +2000,13 @@ def discoverHostConfig():
                 if updateClusterConfigFileFlag:
                     config_add_nb_node(host,host,'agent', "config/cluster.config")
                 nbHostCount+=1
+        if 'service' in content['servers']:
+            for host,v in content['servers']['service'].items():
+                host = 'nb_agent'+str(nbHostCount)
+                os.environ[host] = str(v)
+                if updateClusterConfigFileFlag:
+                    config_add_nb_node(host,host,'agent', "config/cluster.config")
+                nbHostCount+=1
         dvHostCount=1
         if 'data_validator_server' in content['servers']:
             for host,v in content['servers']['data_validator_server'].items():

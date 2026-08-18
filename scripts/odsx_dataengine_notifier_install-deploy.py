@@ -125,29 +125,41 @@ def getHighestAvailableMemoryManagerHost(spaceNodes,newGSCCount,feederType):
             jsonData = json.loads(response.text)
             GetFreeSpaceFromManager[spaceHost] = jsonData["actualFreePhysicalMemorySizeInBytes"]
 
+        rankedHosts = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)
+        if not rankedHosts:
+            logger.error("No active host found for the selected host type.")
+            verboseHandle.printConsoleError("No active host found for the selected host type. Check the host list and retry.")
+            exit(1)
+
+        def pickHostByRank(rankIndex):
+            # Clamp the rank to the number of hosts actually available. A category may hold
+            # fewer hosts than the rank being asked for (e.g. a single "service" host), which
+            # previously raised IndexError -> host None -> "Did not find host [None]".
+            return rankedHosts[min(rankIndex, len(rankedHosts) - 1)]
+
         if feederType == "Personal_Message_Notifier":
-            SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
+            SpaceHostHighestAvailableMemory = pickHostByRank(0)
         if feederType == "Group_Message_Notifier":
-            SpaceHostHighestAvailableMemory = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)[1]
+            SpaceHostHighestAvailableMemory = pickHostByRank(1)
 
         DataengineNotifierRequiredAvaiableMemoryLimit =  readValuefromAppConfig("app.dataengine.notifier.hard.limit")
         DataengineNotifierRequiredAvaiableMemoryLimitBytes = getHardLimitMemoryInBytes(DataengineNotifierRequiredAvaiableMemoryLimit)
 
         if feederType == "all":
             if newGSCCount == 0:
-                SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
+                SpaceHostHighestAvailableMemory = pickHostByRank(0)
             else:
-                SpaceHostHighestAvailableMemory = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)[1]
+                SpaceHostHighestAvailableMemory = pickHostByRank(1)
 
                 if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:
                     pass
                 else:
-                    SpaceHostHighestAvailableMemory = sorted(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get, reverse=True)[2]
+                    SpaceHostHighestAvailableMemory = pickHostByRank(2)
 
                 if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:
                     pass
                 else:
-                    SpaceHostHighestAvailableMemory = max(GetFreeSpaceFromManager, key=GetFreeSpaceFromManager.get)
+                    SpaceHostHighestAvailableMemory = pickHostByRank(0)
 
         if GetFreeSpaceFromManager[SpaceHostHighestAvailableMemory] >= DataengineNotifierRequiredAvaiableMemoryLimitBytes:  # Change '/' to another path if needed
             print(str(DataengineNotifierRequiredAvaiableMemoryLimit) + " Free disk Security space is available on "  + str(SpaceHostHighestAvailableMemory))

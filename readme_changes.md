@@ -582,3 +582,25 @@
 175. In host.yaml file add below after space section
      service :
        host1 : X.X.X.X
+### TAU v5.6.20-tau-release tag
+176. In app.config added properties similar to space server, update values as per env:
+     app.service.security.gsOptionExt="-Dcom.gs.transport_protocol.lrmi.bind-port=7000-7200 -Dcom.gs.work=/dbagigadata -Dcom.gigaspaces.system.registryRetries=50 -Dcom.gigaspaces.lib.opt.security=/dbagiga/gs_jars -Dcom.gs.security.properties-file=/dbagiga/gs_config/security.properties -Dcom.gigaspaces.metrics.config=/dbagiga/gs_config/metrics.xml -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=/dbagigalogs -Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 -Dcom.gs.manager.leader-election.zookeeper.connection-timeout=10000 -Dspace-config.leader-election.zookeeper.session-timeout=60000 -Dspace-config.leader-election.zookeeper.connection-timeout=10000 -Dcom.gs.transport_protocol.lrmi.max-threads=1024 -Dcom.gs.transport_protocol.lrmi.threshold-check-interval=500 -Dgs.gc.collectionTimeThresholdWarning=300 -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=50 -Xlog:gc*:file=/dbagigalogs/gc_%p.log:time,level -XX:+DisableExplicitGC -Dcom.gs.replication.replicaProgressTimeout=400000 -Dcom.gs.security.enabled=true -Djavax.net.ssl.trustStore=/giga/gs_config/ldap-client.jks -Djavax.net.ssl.trustStorePassword=$VAULT_MANAGER_PASS"
+     app.service.security.appId=appId
+     app.service.security.safeId=safeId
+     app.service.security.objectId=objectId
+     app.service.gsOptionExt="-Dcom.gs.transport_protocol.lrmi.bind-port=7000-7200 -Dcom.gs.work=/dbagigadata -Dcom.gigaspaces.system.registryRetries=50 -Dcom.gigaspaces.metrics.config=/dbagiga/gs_config/metrics.xml -Dcom.gigaspaces.logger.RollingFileHandler.filename-pattern.gs.logs=/dbagigalogs -Dcom.gs.manager.leader-election.zookeeper.session-timeout=60000 -Dcom.gs.manager.leader-election.zookeeper.connection-timeout=10000 -Dspace-config.leader-election.zookeeper.session-timeout=60000 -Dspace-config.leader-election.zookeeper.connection-timeout=10000 -Dcom.gs.transport_protocol.lrmi.max-threads=1024 -Dcom.gs.transport_protocol.lrmi.threshold-check-interval=500 -Dgs.gc.collectionTimeThresholdWarning=300 -XX:+UseParallelGC -XX:+HeapDumpOnOutOfMemoryError -XX:MaxGCPauseMillis=300 -XX:InitiatingHeapOccupancyPercent=50 -Xlog:gc*:file=/dbagigalogs/gc_%p.log:time,level -XX:+DisableExplicitGC -Dcom.gs.replication.replicaProgressTimeout=400000"
+     app.service.gsc.count=20
+     app.service.gsc.memory=8g
+     app.service.targetDirectory=/dbagiga
+     app.service.wantInstallJava=n
+     app.service.wantInstallUnzip=n
+     app.service.gsc.zone=bll
+     app.service.gsNicAddress=n
+     app.service.property.filePath.target=/dbagiga/gs_config/spaceproperty.properties
+     app.service.db2feeder.jar.target=/dbagiga/gigaspaces-smart-ods/lib/optional/pu-common
+     app.service.mssqlfeeder.files.target=/dbagiga/gs_config
+     app.service.security.spring.jar.target=/dbagiga/gs_jars/
+     app.service.infra.jar.target=/dbagiga/gigaspaces-smart-ods/lib/optional/pu-common
+
+177. updated in app.config:
+app.dataengine.oracle-feeder.rest.port=8000
