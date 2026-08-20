@@ -288,6 +288,13 @@ def configureMetricsProperties(host):
         grafanaHost = os.getenv("grafana1")
         if grafanaHost and grafanaHost != "None":
             replacements.append(("grafana1:3000", str(grafanaHost) + ":3000"))
+        gigaLogPath = readValuefromAppConfig("app.gigalog.path")
+        if gigaLogPath and gigaLogPath != "None":
+            replacements.append(("@GIGALOGPATH@", str(gigaLogPath)))
+        else:
+            verboseHandle.printConsoleWarning(
+                "app.gigalog.path is not set - leaving the file-tap placeholder "
+                "unresolved in " + target)
         if not replacements:
             return
         cmd = ';'.join('sed -i "s|' + old + '|' + new + '|g" ' + target

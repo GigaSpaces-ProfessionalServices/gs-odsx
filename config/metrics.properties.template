@@ -21,7 +21,7 @@
 # --- active registries ---------------------------------------------
 # Valid values: influxdb, otlp, file, logging, simple, none, disabled.
 # There is NO 'prometheus' registry - Prometheus is fed via OTLP push.
-metrics.registries=otlp
+metrics.registries=otlp,file
 
 # --- OTLP -> Prometheus native OTLP receiver ------------------------
 # Prometheus 3.x ingests OTLP at POST /api/v1/otlp/v1/metrics and must be
@@ -46,8 +46,13 @@ metrics.otlp.aggregationTemporality=cumulative
 #metrics.influxdb.password=
 
 # --- local file tap (debugging) -------------------------------------
-#metrics.file.path=/tmp/xap-metrics.log
-#metrics.file.step=30
+# Writes the same metrics to a local file. On first bring-up this separates
+# "the JVMs are producing metrics" from "the metrics reached Prometheus",
+# which is the quickest way to localise a failure. Drop 'file' from
+# metrics.registries above once the OTLP path is confirmed.
+# @GIGALOGPATH@ is substituted with app.gigalog.path by configureMetricsProperties.
+metrics.file.path=@GIGALOGPATH@/metrics.log
+metrics.file.step=30
 
 # --- Grafana integration for the Web Management Console -------------
 #grafana.url=http://grafana1:3000
