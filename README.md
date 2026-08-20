@@ -102,6 +102,9 @@
                                                  
     -/dbagigashare/current/gs/config/license/gs-license.txt write tryme or if you have valid license then put it.
     -Copy <odsx>/config/metrics.xml.template /dbagigashare/current/gs/config/metrics/
+    -Copy <odsx>/config/metrics.properties.template /dbagigashare/current/gs/config/metrics/
+     (required for GigaSpaces 17.3.0+, which ships no metrics.xml and reads
+      config/metrics/metrics.properties instead - see config/metrics.properties.template)
     
 ### <u>Usage</u>
 
