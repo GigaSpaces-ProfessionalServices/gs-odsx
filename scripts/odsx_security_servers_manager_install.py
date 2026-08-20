@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
 from scripts.odsx_security_servers_space_install import configureMetricsXML
+from utils.ods_list import configureMetricsProperties
 from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
@@ -566,6 +567,8 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"* "+ newZkJarTarget+"*")
         logger.info("chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"* "+ newZkJarTarget+"*")
         configureMetricsXML(host)
+        # 17.3.0+ reads config/metrics/metrics.properties, not gs_config/metrics.xml.
+        configureMetricsProperties(host)
     serverHost=''
     try:
         serverHost = socket.gethostbyaddr(host).__getitem__(0)

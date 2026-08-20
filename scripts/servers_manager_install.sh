@@ -365,6 +365,12 @@ function installAirGapGS {
    # cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
    #fi
    cp $sourceInstallerDirectory/gs/config/metrics/metrics.xml.template $gigapath"/gs_config/metrics.xml"
+   # GigaSpaces 17.3.0+ ships no metrics.xml and reads config/metrics/metrics.properties
+   # instead (path derived from -Dcom.gs.home), so the metrics.xml above is ignored on
+   # those versions. Guarded so older artifact trees without the template still work.
+   if [ -f "$sourceInstallerDirectory/gs/config/metrics/metrics.properties.template" ]; then
+     cp $sourceInstallerDirectory/gs/config/metrics/metrics.properties.template $targetDir/$extracted_folder/config/metrics/metrics.properties
+   fi
 
    limitContent="$applicativeUser hard nofile "$nofileLimitFile
    limitContentSoft="$applicativeUser soft nofile "$nofileLimitFile

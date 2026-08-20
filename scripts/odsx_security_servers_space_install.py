@@ -11,7 +11,7 @@ from utils.ods_app_config import render_install_templates, readValuefromAppConfi
     getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
 from colorama import Fore
 
-from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv
+from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv, configureMetricsProperties
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
     executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
@@ -604,6 +604,8 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+ dbaGigaPath +"/* ")
                 #logger.info(host, user,"chown "+applicativeUser+":"+applicativeUser+" /dbagiga/* ")
                 configureMetricsXML(host)
+                # 17.3.0+ reads config/metrics/metrics.properties, not gs_config/metrics.xml.
+                configureMetricsProperties(host)
             serverHost=''
             try:
                 serverHost = socket.gethostbyaddr(host).__getitem__(0)

@@ -1,0 +1,59 @@
+# ===================================================================
+# GigaSpaces metrics configuration - propagated by ODSX
+# ===================================================================
+# Target on each manager / space host:
+#   ${app.giga.path}/gigaspaces-smart-ods/config/metrics/metrics.properties
+#
+# This file REPLACES metrics.xml for GigaSpaces 17.3.0 and later. From 17.3.0
+# the distribution ships no metrics.xml at all and MetricsConfigLoader reads a
+# .properties file whose path it derives from -Dcom.gs.home as
+# "<com.gs.home>/config/metrics/metrics.properties". The legacy
+# -Dcom.gigaspaces.metrics.config system property is NOT consulted on those
+# versions, because the com.gs.home branch resolves first and returns.
+#
+# The endpoint host:port placeholders below are substituted per environment by ODSX
+# (configureMetricsProperties) from host.yaml - the 'prometheus', 'influxdb' and
+# 'grafana' categories. The prometheus host falls back to the pivot when host.yaml
+# has no 'prometheus' category. Placeholder tokens are deliberately not repeated in
+# these comments, so a rendered file has no stale-looking leftovers.
+# ===================================================================
+
+# --- active registries ---------------------------------------------
+# Valid values: influxdb, otlp, file, logging, simple, none, disabled.
+# There is NO 'prometheus' registry - Prometheus is fed via OTLP push.
+metrics.registries=otlp
+
+# --- OTLP -> Prometheus native OTLP receiver ------------------------
+# Prometheus 3.x ingests OTLP at POST /api/v1/otlp/v1/metrics and must be
+# started with --web.enable-otlp-receiver. The path is mandatory; a bare
+# host:port returns HTTP 404.
+metrics.otlp.url=http://prometheus1:9090/api/v1/otlp/v1/metrics
+# Export interval in seconds (platform default is 60).
+metrics.otlp.step=10
+# MUST be cumulative: Prometheus drops delta series unless it is started with
+# --enable-feature=otlp-deltatocumulative.
+metrics.otlp.aggregationTemporality=cumulative
+# Optional extra headers, "k=v,k2=v2".
+#metrics.otlp.headers=
+# NOTE: metrics.otlp.protocol is documented but NOT read by 17.3.0. The
+# registry is OTLP/HTTP protobuf by default. Deliberately omitted.
+
+# --- InfluxDB (legacy path - enable by adding 'influxdb' above) -----
+#metrics.influxdb.uri=http://influxdb1:8086
+#metrics.influxdb.db=mydb
+#metrics.influxdb.step=10
+#metrics.influxdb.username=
+#metrics.influxdb.password=
+
+# --- local file tap (debugging) -------------------------------------
+#metrics.file.path=/tmp/xap-metrics.log
+#metrics.file.step=30
+
+# --- Grafana integration for the Web Management Console -------------
+#grafana.url=http://grafana1:3000
+#grafana.user=admin
+#grafana.password=admin
+#grafana.datasource.name=xap
+#grafana.datasource.type=influxdb
+#grafana.datasource.isDefault=true
+#grafana.datasource.access=proxy

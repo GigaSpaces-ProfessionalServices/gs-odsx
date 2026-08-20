@@ -30,6 +30,7 @@ current:
         gslicense_16_4: gs-license_16_4.txt
       metrics:
         metricsxml: metrics.xml.template
+        metricsproperties: metrics.properties.template
       space:
         spacepropertyfile: space.properties
       imspace:

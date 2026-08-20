@@ -344,7 +344,10 @@ function installAirGapGS {
      cd /;  cp $targetDir/$extracted_folder/config/log/xap_logging.properties $targetConfigDir
    fi
    #cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir"
-   if [ ! -f "$targetConfigDir/metrics.xml" ]; then                #Condition added on 20Oct21 if file exist dont override it
+   # GigaSpaces 17.3.0+ ships no config/metrics/metrics.xml (it reads
+   # config/metrics/metrics.properties in place instead), so require the source
+   # to exist - otherwise this cp fails on every 17.3.0+ install.
+   if [ ! -f "$targetConfigDir/metrics.xml" ] && [ -f "$targetDir/$extracted_folder/config/metrics/metrics.xml" ]; then
     echo "File $targetConfigDir/metrics.xml not exist so copying"
     cd /;  cp $targetDir/$extracted_folder/config/metrics/metrics.xml $targetConfigDir
    fi

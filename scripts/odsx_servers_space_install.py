@@ -11,7 +11,7 @@ from utils.ods_app_config import render_install_templates, readValuefromAppConfi
     getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
 from colorama import Fore
 
-from utils.ods_list import getManagerHostFromEnv, configureMetricsXML
+from utils.ods_list import getManagerHostFromEnv, configureMetricsXML, configureMetricsProperties
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
     executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
@@ -535,6 +535,8 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
             #verboseHandle.printConsoleInfo(getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" ->"+msSqlFeederFileTarget)
             #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
             configureMetricsXML(host)
+            # 17.3.0+ reads config/metrics/metrics.properties, not gs_config/metrics.xml.
+            configureMetricsProperties(host)
         serverHost=''
         try:
             serverHost = socket.gethostbyaddr(host).__getitem__(0)

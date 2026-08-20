@@ -1821,6 +1821,16 @@ def discoverHostConfig():
                 host='pivot'+str(pivotHostCount)
                 os.environ[host]=str(v)
 
+        # Host running Prometheus / the OTLP receiver. Like 'pivot' this only needs
+        # to be an env var - there is no cluster.config node type for it. Consumers
+        # fall back to pivot1 when this category is absent from host.yaml.
+        if 'prometheus' in content['servers']:
+            prometheusHostCount=1
+            for host,v in content['servers']['prometheus'].items():
+                host='prometheus'+str(prometheusHostCount)
+                os.environ[host]=str(v)
+                prometheusHostCount+=1
+
         if 'dataIntegrationSubscriptionManager' in content['servers']:
             nbHostCount=1
             for host,v in content['servers']['dataIntegrationSubscriptionManager'].items():

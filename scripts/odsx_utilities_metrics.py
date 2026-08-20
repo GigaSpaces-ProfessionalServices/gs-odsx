@@ -26,6 +26,7 @@ from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
 from scripts.odsx_servers_influxdb_stop import getInfluxdbServerHostList
 from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
 from scripts.odsx_servers_space_install import getSpaceHostFromEnv
+from utils.ods_list import configureMetricsProperties, getGsMetricsPropertiesPath
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -90,11 +91,17 @@ def configureMetricsXML(host):
 def configureLicenseManagerAndSpace():
     managerHosts = getManagerHostFromEnv()
     spaceHosts = getSpaceHostFromEnv()
+    # Legacy XML - still read by pre-17.3 clusters via -Dcom.gigaspaces.metrics.config.
     sourceGSmetrics = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsxml"))
     targetGSmetrics = dbaGigaPath +"/gs_config/metrics.xml"
+    # 17.3.0+ reads ONLY this file, at a path derived from -Dcom.gs.home.
+    sourceGSmetricsProps = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsproperties"))
+    targetGSmetricsProps = getGsMetricsPropertiesPath()
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("metrics.xml.template source file :"+str(sourceGSmetrics))
-    verboseHandle.printConsoleInfo("metrics.xml target : "+str(targetGSmetrics))
+    verboseHandle.printConsoleInfo("metrics.xml target (pre-17.3) : "+str(targetGSmetrics))
+    verboseHandle.printConsoleInfo("metrics.properties.template source file :"+str(sourceGSmetricsProps))
+    verboseHandle.printConsoleInfo("metrics.properties target (17.3+) : "+str(targetGSmetricsProps))
     verboseHandle.printConsoleInfo("Manager hosts : "+managerHosts)
     verboseHandle.printConsoleInfo("Space hosts : "+spaceHosts)
     verboseHandle.printConsoleInfo("Influxdb hosts : "+getInfluxdbServerHostList())
@@ -106,17 +113,16 @@ def configureLicenseManagerAndSpace():
         #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  '+dbaGigaPath+'/gigaspaces-smart-ods/bin/setenv-overrides.sh"
 
         commandToExecute = "cp "+sourceGSmetrics+" "+targetGSmetrics
+        commandToExecuteProps = "cp "+sourceGSmetricsProps+" "+targetGSmetricsProps
         logger.info("commandToExecute:"+commandToExecute)
+        logger.info("commandToExecuteProps:"+commandToExecuteProps)
 
-        for host in managerHosts.split(','):
+        for host in managerHosts.split(',') + spaceHosts.split(','):
             executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecute)
             configureMetricsXML(host)
-            verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
-
-        for host in spaceHosts.split(','):
-            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecute)
-            configureMetricsXML(host)
-            verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
+            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecuteProps)
+            configureMetricsProperties(host)
+            verboseHandle.printConsoleInfo("metrics.xml + metrics.properties configured for host:"+host)
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Utilities -> Metrics")

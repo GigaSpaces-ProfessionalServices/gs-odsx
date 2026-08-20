@@ -13,7 +13,7 @@ from utils.ods_app_config import render_install_templates, readValuefromAppConfi
     getYamlFilePathInsideFolderList1
 from colorama import Fore
 
-from utils.ods_list import configureMetricsXML
+from utils.ods_list import configureMetricsXML, configureMetricsProperties
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
     executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
@@ -520,6 +520,8 @@ def installManagerServer(host,additionalParam,output,newZkJarTarget,selinuxEnabl
         #verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
         #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
         configureMetricsXML(host)
+        # 17.3.0+ reads config/metrics/metrics.properties, not gs_config/metrics.xml.
+        configureMetricsProperties(host)
     serverHost=''
     try:
         serverHost = socket.gethostbyaddr(host).__getitem__(0)

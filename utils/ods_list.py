@@ -243,6 +243,80 @@ def configureMetricsXML(host):
     except Exception as e:
         handleException(e)
 
+# --- GigaSpaces 17.3.0+ : metrics.properties replaces metrics.xml ------------
+# From 17.3.0 the distribution ships no metrics.xml at all, and
+# MetricsConfigLoader reads "<com.gs.home>/config/metrics/metrics.properties".
+# It resolves that path from -Dcom.gs.home and returns BEFORE looking at
+# -Dcom.gigaspaces.metrics.config, so the XML written by configureMetricsXML()
+# above is silently ignored on those versions. configureMetricsXML is kept for
+# pre-17.3 clusters, which still read it.
+
+METRICS_PROPERTIES_REL_PATH = "/gigaspaces-smart-ods/config/metrics/metrics.properties"
+
+def getGsMetricsPropertiesPath():
+    """Absolute path of the metrics.properties the platform actually reads."""
+    return dbaGigaPath + METRICS_PROPERTIES_REL_PATH
+
+def getPrometheusServers():
+    """Host running Prometheus / the OTLP receiver.
+
+    host.yaml has no dedicated 'prometheus' category on most environments, so
+    fall back to the pivot, which is where the receiver is normally run.
+    """
+    for key in ("prometheus1", "pivot1"):
+        value = os.getenv(key)
+        if value and value != "None":
+            return str(value)
+    return None
+
+def configureMetricsProperties(host):
+    """Substitute this environment's endpoints into metrics.properties on host."""
+    logger.info("configureMetricsProperties()")
+    try:
+        target = getGsMetricsPropertiesPath()
+        replacements = []
+        prometheusHost = getPrometheusServers()
+        if prometheusHost:
+            replacements.append(("prometheus1:9090", prometheusHost + ":9090"))
+        else:
+            verboseHandle.printConsoleWarning(
+                "No 'prometheus' or 'pivot' host in host.yaml - leaving the OTLP "
+                "placeholder unresolved in " + target)
+        influxdbHost = os.getenv("influxdb1")
+        if influxdbHost and influxdbHost != "None":
+            replacements.append(("influxdb1:8086", str(influxdbHost) + ":8086"))
+        grafanaHost = os.getenv("grafana1")
+        if grafanaHost and grafanaHost != "None":
+            replacements.append(("grafana1:3000", str(grafanaHost) + ":3000"))
+        if not replacements:
+            return
+        cmd = ';'.join('sed -i "s|' + old + '|' + new + '|g" ' + target
+                       for old, new in replacements)
+        logger.info(cmd)
+        with Spinner():
+            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), cmd)
+    except Exception as e:
+        handleException(e)
+
+def validateMetricsPropertiesOtlp(ip):
+    """Return "Yes" when metrics.properties on ip enables OTLP to our Prometheus."""
+    logger.info("validateMetricsPropertiesOtlp()")
+    try:
+        target = getGsMetricsPropertiesPath()
+        cmd = ("grep -E '^[[:space:]]*metrics\\.(registries|otlp\\.url)[[:space:]]*=' "
+               + target + " 2>/dev/null")
+        logger.info("cmdToExecute : " + str(cmd))
+        output = executeRemoteCommandAndGetOutputValuePython36(ip, get_ssh_user(), cmd)
+        output = getPlainOutput(output)
+        logger.info("output : " + str(output))
+        prometheusHost = getPrometheusServers()
+        if "otlp" in output and prometheusHost and prometheusHost in output:
+            return "Yes"
+        return "No"
+    except Exception as e:
+        handleException(e)
+        return "No"
+
 def addGscCountForContainer(host_gsc_dict_obj, containerHostname):
     # The manager reports each container under its own machine's hostname
     # (e.g. an EC2 internal FQDN), which may differ from the name this machine
