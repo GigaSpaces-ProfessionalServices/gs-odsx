@@ -324,9 +324,9 @@ def executeCommandForUnInstall():
                     # Export pipelines and datasources, then delete them before removing DI
                     # diHost, export paths already resolved above for the summary
                     if diHost:
-                        verboseHandle.printConsoleInfo("Exporting pipelines to: " + export_path_pipeline)
+                        #verboseHandle.printConsoleInfo("Exporting pipelines to: " + export_path_pipeline)
+                        #exportAllPipelinesBeforeRemove(diHost, export_path_pipeline)
                         verboseHandle.printConsoleInfo("Exporting datasource to: " + export_path_datasource)
-                        exportAllPipelinesBeforeRemove(diHost, export_path_pipeline)
                         exportDatasourcesBeforeRemove(diHost, export_path_datasource)
                         verboseHandle.printConsoleInfo("Deleting pipelines...")
                         deleteAllPipelines(diHost)

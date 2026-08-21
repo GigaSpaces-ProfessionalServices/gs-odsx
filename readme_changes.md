@@ -604,3 +604,8 @@
 
 177. updated in app.config:
 app.dataengine.oracle-feeder.rest.port=8000
+
+### TAU v5.6.21-tau-release tag
+178. updated in app.config:
+app.dataengine.dihctl.pipelinefolderpath=/dbagigashare/env_config/dihctl/pipelines/
+app.dataengine.dihctl.datasourcefolderpath=/dbagigashare/env_config/dihctl/datasource/
