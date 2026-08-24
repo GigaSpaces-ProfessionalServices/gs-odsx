@@ -346,6 +346,18 @@ export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 #### `User=` / `Group=` lines in user-level systemd service files
 User-level systemd services **must not** have `User=` or `Group=` directives. If present, the service fails with `status=216/GROUP`. These lines are only valid for system-level services in `/etc/systemd/system/`.
 
+#### ODSX logs to `${app.gigalog.path}/odsx.log`, not the repo's `logs/odsx.log`
+`config/logging.conf` points its only file handler at
+`("${app.gigalog.path}/odsx.log", "a", 1024*1024*5, 10)`, with the placeholder resolved at runtime by
+`_expand_logging_conf()` in `scripts/logManager.py`. Resolve the real path per environment with
+`grep ^app.gigalog.path $ENV_CONFIG/app.config` — on env4 it is
+`/v/campus/vi/cs/eqrisk/josroden/gigalogs/odsx.log`.
+
+The tracked `logs/odsx.log` inside the repo is a **0-byte placeholder that the current config never
+writes to**. Grepping it during a diagnosis returns zero matches, which is indistinguishable from
+"the code never ran" — a false negative that has already cost real time. Always resolve the handler's
+path before concluding anything from an empty log.
+
 #### `unzip` prompts consume the piped script — always pass `-o`
 Install scripts reach the remote host as `cat lib_app_config.sh script.sh | ssh ... bash -s`, so
 **stdin is the script body**. When `unzip` finds existing files it prompts on stdin, eats the rest of
