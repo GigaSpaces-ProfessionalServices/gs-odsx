@@ -346,6 +346,25 @@ export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 #### `User=` / `Group=` lines in user-level systemd service files
 User-level systemd services **must not** have `User=` or `Group=` directives. If present, the service fails with `status=216/GROUP`. These lines are only valid for system-level services in `/etc/systemd/system/`.
 
+#### `unzip` prompts consume the piped script — always pass `-o`
+Install scripts reach the remote host as `cat lib_app_config.sh script.sh | ssh ... bash -s`, so
+**stdin is the script body**. When `unzip` finds existing files it prompts on stdin, eats the rest of
+the script, and every function defined below that point silently never gets defined — a partial
+install that reports no error. `-qq` suppresses the file *listing*, **not** the prompts. Every
+`unzip` in an install script must pass `-o`.
+
+Fixed Aug 2026 across all 11 call sites: `installAirGapGS` in `servers_{manager,space}_install.sh`,
+`security_{manager,space}_install.sh` and `security_dev_{manager,space}_install.sh`; the legacy 16.4
+extraction in `security_manager_install.sh`; and the `unzipGS` equivalents in the four security
+installers. Before that only the two non-security `unzipGS` functions had `-o`.
+
+Why it stayed hidden: the **space** install is wrapped in `if installStatus == 'No'`
+(`isInstalledAndGetVersion()`), so it never re-extracts over an existing tree — the guard was
+accidentally masking the bug. The **manager** install has no such guard (detection exists only in
+`odsx_servers_manager_list.py`, for the `Installed` column) and re-runs unconditionally, so
+`auto_managerinstall` against an already-installed manager was the exposed path. Any
+remove-then-install sequence, such as `auto_spacereinstall`, never hit it.
+
 #### `readValuefromAppConfig()` truncates any value containing `=`
 `setConfigProperties()` builds its dict with `line.split("=")[0]` / `line.split("=")[1]`, so it keeps
 only the **first** `=`-delimited field of the value. Every `app.*.gsOptionExt` value therefore reads

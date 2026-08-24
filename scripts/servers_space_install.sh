@@ -274,7 +274,10 @@ function installAirGapGS {
    echo $installation_path"/"$installation_file
    pwd
    #unzip $installation_path"/"$installation_file -d  $targetDir"
-   unzip -qq $installation_path"/"$installation_file -d  $targetDir
+   # -o: overwrite without prompting. -qq hides the listing, NOT the prompts, and
+   # stdin here is the script body (ssh ... bash -s), so a prompt would consume
+   # the rest of it and later functions would never be defined.
+   unzip -qq -o $installation_path"/"$installation_file -d  $targetDir
 
    # Change ownership of extracted files to current user so we can modify them
    current_user=$(whoami)

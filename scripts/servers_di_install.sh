@@ -186,7 +186,7 @@ function installDIManager {
 }
 
 function installDIProcessor {
-
+  warning "\nDI install not implemented\n"
 }
 
 function installDISubscription {

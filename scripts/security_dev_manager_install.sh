@@ -118,7 +118,9 @@ function unzipGS {
     mkdir $targetDir
   fi
   echo $targetDir
-  unzip install/gigaspaces-${gsType}-enterprise-${gsVersion}.zip -d  $targetDir  #/home/ec2-user/install/
+  # -o: overwrite without prompting - stdin is the script body (ssh ... bash -s),
+  # so a prompt would consume the rest of it. Matches servers_*_install.sh.
+  unzip -o install/gigaspaces-${gsType}-enterprise-${gsVersion}.zip -d  $targetDir  #/home/ec2-user/install/
   echo "unzipping GS - Done!"
   }
 function activateGS {
@@ -250,7 +252,10 @@ function installAirGapGS {
    echo $installation_path"/"$installation_file
    pwd
    #unzip $installation_path"/"$installation_file -d  $targetDir"
-   unzip -qq $installation_path"/"$installation_file -d  $targetDir
+   # -o: overwrite without prompting. -qq hides the listing, NOT the prompts, and
+   # stdin here is the script body (ssh ... bash -s), so a prompt would consume
+   # the rest of it and later functions would never be defined.
+   unzip -qq -o $installation_path"/"$installation_file -d  $targetDir
 
    # Configure license and additional params to setenv-override and set GS home
     if [ "$gsNicAddress" == "x" ] ; then   # Replaced dummy param with blank and no required to append GS_NIC_ADDR to setenv.over..
