@@ -10,7 +10,7 @@ from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataIntegrationiidr_nodes
-from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutputValuePython36
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -89,18 +89,30 @@ def startZookeeperServiceByHost(host):
             verboseHandle.printConsoleError("Service zookeeper failed to start on "+str(host))
 
 
-def startKafkaServiceByHost(host):
+def getKafkaClusterId(host):
+    logger.info("getKafkaClusterId() from "+str(host))
+    kafka_data = str(readValuefromAppConfig("app.di.base.kafka.data")).rstrip('/')
+    get_id_cmd = "cat " + kafka_data + "/meta.properties 2>/dev/null | grep '^cluster.id=' | cut -d'=' -f2"
+    return executeRemoteCommandAndGetOutputValuePython36(host, 'root', get_id_cmd).strip()
+
+
+def startKafkaServiceByHost(host, cluster_id=None):
     logger.info("startKafkaServiceByHost()")
     user = 'root'
     # KRaft: format storage if not already done (meta.properties absent = not formatted)
     gigapath = "/dbagiga"
-    gigasharepath = "/dbagigashare"
     kafka_data = str(readValuefromAppConfig("app.di.base.kafka.data")).rstrip('/')
     kafka_bin = gigapath + "/kafka_latest/bin/kafka-storage.sh"
     kafka_cfg = gigapath + "/kafka_latest/config/server.properties"
-    cluster_id_file = gigasharepath + "/current/kafka-cluster-id"
-    format_cmd = ("[ -f " + kafka_data + "/meta.properties ] || " +
-                  kafka_bin + " format -t $(cat " + cluster_id_file + ") -c " + kafka_cfg)
+    print("kafka cluster_id: " + str(cluster_id) + ", host: "+str(host))
+    if cluster_id:
+        # Same cluster ID as the reference node (read once, reused) so this broker joins the same KRaft cluster.
+        format_cmd = ("[ -f " + kafka_data + "/meta.properties ] || " +
+                      kafka_bin + " format -t " + cluster_id + " -c " + kafka_cfg)
+    else:
+        # Reference node (or single-node): first one formatted, mints its own cluster ID.
+        format_cmd = ("[ -f " + kafka_data + "/meta.properties ] || " +
+                      kafka_bin + " format -t $(" + kafka_bin + " random-uuid) -c " + kafka_cfg)
     verboseHandle.printConsoleInfo("Format command: "+str(format_cmd))
     logger.info("Ensuring KRaft storage is formatted on "+str(host))
     with Spinner():
@@ -176,7 +188,8 @@ def startKafkaService(args):
                 elif nodeListSize<4:
                     startZookeeperServiceByHost(host)
                 if nodeType != "Zookeeper Witness":
-                    startKafkaServiceByHost(host)
+                    cluster_id = None if host == di_node1_host else getKafkaClusterId(di_node1_host)
+                    startKafkaServiceByHost(host, cluster_id)
                 #startTelegrafServiceByHost(host)
                 if nodeType == "kafka Broker 1a" or (nodeListSize < 4 and host == di_node1_host):
                     startDIMServices(host)
@@ -194,10 +207,18 @@ def startKafkaService(args):
                     startZookeeperServiceByHost(os.getenv(node.ip))
                 elif nodeListSize<4:
                     startZookeeperServiceByHost(os.getenv(node.ip))
-            # Then start Kafka on broker nodes
-            for node in config_get_dataIntegration_nodes():
+            # Then start Kafka on broker nodes (node1/reference formats first and mints the cluster
+            # ID; read it once and reuse for the rest so every broker joins the same KRaft cluster)
+            di_nodes = list(config_get_dataIntegration_nodes())
+            di_node1_host = os.getenv(di_nodes[0].ip) if di_nodes else None
+            cluster_id = None
+            for node in di_nodes:
                 if node.type != "Zookeeper Witness":
-                    startKafkaServiceByHost(os.getenv(node.ip))
+                    host = os.getenv(node.ip)
+                    startKafkaServiceByHost(host, cluster_id)
+                    if cluster_id is None and host == di_node1_host:
+                        cluster_id = getKafkaClusterId(di_node1_host)
+                        print("kafka cluster_id from reference node "+di_node1_host+": "+str(cluster_id))
             # Then start DIM services (only on node1 for 3-node, only on kafka Broker 1a for 4-node)
             counter = 0
             for node in config_get_dataIntegration_nodes():

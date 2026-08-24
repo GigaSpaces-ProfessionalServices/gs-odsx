@@ -335,6 +335,14 @@ def installCluster():
         verboseHandle.printConsoleInfo("Restarting di-subscription-manager-iidr on " + kafkaBrokerHost1)
         executeRemoteCommandAndGetOutput(kafkaBrokerHost1, user,
                                          "sudo systemctl restart di-subscription-manager-iidr.service")
+
+        # All brokers are KRaft-formatted and running (each has its own meta.properties);
+        # the shared cluster-id handoff file is no longer needed, so clean it up.
+        try:
+            os.remove(os.path.join(sourceInstallerDirectory, "kafka-cluster-id"))
+        except OSError:
+            pass
+
         verboseHandle.printConsoleInfo("Completed DI installation")
 
 def createDatasource():
