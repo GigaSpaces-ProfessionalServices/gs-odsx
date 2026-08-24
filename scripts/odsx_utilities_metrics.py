@@ -26,7 +26,8 @@ from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
 from scripts.odsx_servers_influxdb_stop import getInfluxdbServerHostList
 from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
 from scripts.odsx_servers_space_install import getSpaceHostFromEnv
-from utils.ods_list import configureMetricsProperties, getGsMetricsPropertiesPath
+from utils.ods_list import configureMetricsProperties, getGsMetricsPropertiesPath, configureOtelIdentity, \
+    getClusterLookupGroup, getSetenvOverridesPath, OTEL_DEFAULT_SERVICE_NAME
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -102,6 +103,15 @@ def configureLicenseManagerAndSpace():
     verboseHandle.printConsoleInfo("metrics.xml target (pre-17.3) : "+str(targetGSmetrics))
     verboseHandle.printConsoleInfo("metrics.properties.template source file :"+str(sourceGSmetricsProps))
     verboseHandle.printConsoleInfo("metrics.properties target (17.3+) : "+str(targetGSmetricsProps))
+    # The OTel identity decides the job label this cluster's series land under in
+    # Prometheus, so show it before asking to proceed.
+    lookupGroup = getClusterLookupGroup()
+    verboseHandle.printConsoleInfo("setenv-overrides.sh target : "+str(getSetenvOverridesPath()))
+    if lookupGroup:
+        verboseHandle.printConsoleInfo("Prometheus job label : "+lookupGroup+"/"+OTEL_DEFAULT_SERVICE_NAME)
+    else:
+        verboseHandle.printConsoleWarning("Prometheus job label : unknown_service - no single lookup group found, "
+                                          "so this cluster's metrics will not be distinguishable from another's.")
     verboseHandle.printConsoleInfo("Manager hosts : "+managerHosts)
     verboseHandle.printConsoleInfo("Space hosts : "+spaceHosts)
     verboseHandle.printConsoleInfo("Influxdb hosts : "+getInfluxdbServerHostList())
@@ -122,7 +132,9 @@ def configureLicenseManagerAndSpace():
             configureMetricsXML(host)
             executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecuteProps)
             configureMetricsProperties(host)
-            verboseHandle.printConsoleInfo("metrics.xml + metrics.properties configured for host:"+host)
+            # Distinct Prometheus job label per cluster (OTEL_* env vars).
+            configureOtelIdentity(host)
+            verboseHandle.printConsoleInfo("metrics + OTel identity configured for host:"+host)
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Utilities -> Metrics")

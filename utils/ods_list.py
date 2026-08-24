@@ -2,6 +2,7 @@
 # !/usr/bin/python
 
 import os
+import re
 import socket
 from colorama import Fore
 
@@ -10,7 +11,8 @@ from utils.ods_cluster_config import config_get_grafana_list, config_get_influxd
 from utils.ods_validation import getTelnetStatus
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, get_ssh_user
+    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, get_ssh_user, \
+    executeRemoteShCommandAndGetOutput
 from utils.ods_app_config import readValuefromAppConfig
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -323,6 +325,118 @@ def validateMetricsPropertiesOtlp(ip):
     except Exception as e:
         handleException(e)
         return "No"
+
+# --- OTel resource identity: one Prometheus job label per cluster -----------
+# The 17.3.0 OTLP registry takes its OTel *resource* attributes ONLY from the
+# standard OTEL_* environment variables - its OtlpConfig implementation returns
+# null for every key, so there is no metrics.otlp.* property for them and -D
+# flags are ignored. Prometheus' OTLP receiver then always derives
+# job="<service.namespace>/<service.name>" and instance="<service.instance.id>",
+# so exporting the two variables below is what keeps several clusters apart in
+# one Prometheus - with no configuration change on the Prometheus side.
+# GSCs inherit their environment from the GSA, so the exports belong in
+# setenv-overrides.sh, which the platform sources at startup.
+
+SETENV_OVERRIDES_REL_PATH = "/gigaspaces-smart-ods/bin/setenv-overrides.sh"
+OTEL_DEFAULT_SERVICE_NAME = "gigaspaces"
+
+# Resolved relative to this file so it works regardless of the caller's cwd.
+_OTEL_IDENTITY_SCRIPT = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "scripts",
+                 "configure_otel_identity.sh"))
+
+_LOOKUP_GROUP_RE = re.compile(r'com\.gs\.jini_lus\.groups=([^\s"]+)')
+
+
+def getSetenvOverridesPath():
+    """Absolute path of the setenv-overrides.sh the platform sources."""
+    return dbaGigaPath + SETENV_OVERRIDES_REL_PATH
+
+
+def getClusterLookupGroup():
+    """This cluster's GigaSpaces lookup group, or None if it is not unambiguous.
+
+    Used as OTel service.namespace because it already uniquely names the grid:
+    it defines cluster membership, so it cannot drift from the cluster it
+    labels, and it is not otherwise used as a metric label.
+
+    The group has no dedicated app.config key - it is embedded in the
+    app.{manager,space}[.security].gsOptionExt values as
+    -Dcom.gs.jini_lus.groups=<group>, so app.config is parsed as text here.
+    readValuefromAppConfig() is NOT usable for it: setConfigProperties() splits
+    each line on "=" and keeps field [1], which truncates any gsOptionExt value
+    to '"-Dcom.gs.work'.
+    """
+    logger.info("getClusterLookupGroup()")
+    try:
+        appConfig = os.path.join(str(os.getenv("ENV_CONFIG")), "app.config")
+        with open(appConfig) as f:
+            groups = sorted(set(_LOOKUP_GROUP_RE.findall(f.read())))
+        logger.info("lookup groups found : " + str(groups))
+        if len(groups) == 1:
+            return groups[0]
+        if not groups:
+            verboseHandle.printConsoleWarning(
+                "No -Dcom.gs.jini_lus.groups in " + appConfig + " - cannot label "
+                "this cluster's metrics, so they stay job=\"unknown_service\" in "
+                "Prometheus.")
+        else:
+            verboseHandle.printConsoleWarning(
+                "Conflicting lookup groups in " + appConfig + " : "
+                + ", ".join(groups) + " - refusing to guess which one names this "
+                "cluster. Align them, then re-run Utilities -> Metrics.")
+        return None
+    except Exception as e:
+        handleException(e)
+        return None
+
+
+def configureOtelIdentity(host, namespace=None, serviceName=OTEL_DEFAULT_SERVICE_NAME):
+    """Export this cluster's OTel identity in setenv-overrides.sh on host.
+
+    Called right after the metrics config during install - that is before the
+    manager and space servers are started, so the JVMs pick the variables up on
+    their first start and no extra restart is needed.
+
+    Goes through executeRemoteShCommandAndGetOutput (a script piped to remote
+    bash) rather than executeRemoteCommandAndGetOutput*Python36, because those
+    split the command on " " and so cannot carry an argument containing a space
+    - and every line written here does.
+    """
+    logger.info("configureOtelIdentity()")
+    try:
+        namespace = namespace or getClusterLookupGroup()
+        if not namespace:
+            return   # getClusterLookupGroup() has already said why
+        target = getSetenvOverridesPath()
+        params = target + " " + namespace + " " + serviceName
+        logger.info("configure_otel_identity.sh params : " + params)
+        with Spinner():
+            output = executeRemoteShCommandAndGetOutput(
+                host, get_ssh_user(), params, _OTEL_IDENTITY_SCRIPT)
+        logger.info("output : " + str(output))
+    except Exception as e:
+        handleException(e)
+
+
+def validateOtelIdentity(ip):
+    """Return the OTel service.namespace exported on ip, or "No"."""
+    logger.info("validateOtelIdentity()")
+    try:
+        cmd = ("grep -hE '^export[[:space:]]*OTEL_RESOURCE_ATTRIBUTES=' "
+               + getSetenvOverridesPath() + " 2>/dev/null")
+        logger.info("cmdToExecute : " + str(cmd))
+        output = getPlainOutput(executeRemoteCommandAndGetOutputValuePython36(
+            ip, get_ssh_user(), cmd))
+        logger.info("output : " + str(output))
+        # Exclude the quote too: getPlainOutput() strips quotes, but do not
+        # depend on that - the raw line is OTEL_RESOURCE_ATTRIBUTES="k=v".
+        match = re.search(r'service\.namespace=([^,\s"]+)', output)
+        return match.group(1) if match else "No"
+    except Exception as e:
+        handleException(e)
+        return "No"
+
 
 def addGscCountForContainer(host_gsc_dict_obj, containerHostname):
     # The manager reports each container under its own machine's hostname

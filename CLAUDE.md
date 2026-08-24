@@ -128,7 +128,7 @@ Defines the artifact-to-filepath mapping for the shared filesystem. Maps artifac
 | `ods_scp.py` | SCP file transfer to/from remote hosts |
 | `ods_validation.py` | Server status checks, port availability checks |
 | `ods_space.py` | Space-related utility functions |
-| `ods_list.py` | RPM validation, metrics XML validation |
+| `ods_list.py` | RPM validation, metrics XML/properties propagation, OTel cluster identity (`configureOtelIdentity()`, `getClusterLookupGroup()`) |
 | `odsx_keypress.py` | User input handling with ESC support for menu navigation |
 | `odsx_print_tabular_data.py` | Tabular output formatting (uses `tabulate`) |
 | `odsx_dataengine_utilities.py` | Data engine utility functions |
@@ -227,6 +227,38 @@ The DI list screen determines install status by checking for files on the remote
 - **InfluxDB**: Metrics storage - Time Series DB
 - **Kapacitor**: Alerting
 - **Grafana**: Dashboards - catalogue service, main dashboard, data freshness, datavalidator etc...
+- **Prometheus (17.3.0+)**: GigaSpaces pushes OTLP straight to Prometheus' native OTLP receiver
+  (`--web.enable-otlp-receiver`, `POST /api/v1/otlp/v1/metrics`) - no Telegraf hop. Configured by
+  `config/metrics/metrics.properties` (template: `config/metrics.properties.template`), propagated
+  per host by `configureMetricsProperties()`. There is no `prometheus` metrics registry; the registry
+  name is `otlp`.
+
+#### Per-cluster identity for a shared Prometheus (`configureOtelIdentity()`)
+Writes a managed block into `<giga>/gigaspaces-smart-ods/bin/setenv-overrides.sh` on every manager
+and space host, via `scripts/configure_otel_identity.sh`:
+
+```bash
+export OTEL_SERVICE_NAME=gigaspaces
+export OTEL_RESOURCE_ATTRIBUTES="service.namespace=<lookup group>"
+```
+
+- **Why environment variables and not a property**: the 17.3.0 OTLP registry's `OtlpConfig.get()`
+  returns `null` for every key, so OTel *resource* attributes can only arrive through the standard
+  `OTEL_*` variables. There is no `metrics.otlp.resourceAttributes`, and `-D` flags are ignored.
+  (`metrics.otlp.headers` *is* honoured - that is the hook for Mimir/Cortex `X-Scope-OrgID`.)
+- **Effect**: Prometheus' OTLP receiver always derives `job="<service.namespace>/<service.name>"`
+  and `instance="<service.instance.id>"`, regardless of `otlp.promote_resource_attributes`. So each
+  cluster's series become separable with **no configuration change on the receiving Prometheus**.
+  Without this, every cluster stores as `job="unknown_service"`.
+- **`service.namespace` is the cluster's lookup group** (`-Dcom.gs.jini_lus.groups`): it already
+  uniquely names the grid and defines membership, so it cannot drift from the cluster it labels.
+- Called immediately after `configureMetricsProperties()` in all four install flows, i.e. **before**
+  the servers are started, so the JVMs export it on their first start. GSCs inherit the GSA's
+  environment, so only the GSA needs it.
+- Idempotent - rewrites its own marked block rather than appending, so repeated installs cannot
+  stack up duplicate exports.
+- Goes through `executeRemoteShCommandAndGetOutput` (script piped to remote bash), **not**
+  `executeRemoteCommandAndGetOutput*Python36` - see the pitfall on space-splitting below.
 
 ### AirGap Support
 Two installation modes:
@@ -313,6 +345,20 @@ export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
 
 #### `User=` / `Group=` lines in user-level systemd service files
 User-level systemd services **must not** have `User=` or `Group=` directives. If present, the service fails with `status=216/GROUP`. These lines are only valid for system-level services in `/etc/systemd/system/`.
+
+#### `readValuefromAppConfig()` truncates any value containing `=`
+`setConfigProperties()` builds its dict with `line.split("=")[0]` / `line.split("=")[1]`, so it keeps
+only the **first** `=`-delimited field of the value. Every `app.*.gsOptionExt` value therefore reads
+back as just `"-Dcom.gs.work` - silently, with no error. Parse `app.config` as text for those (see
+`getClusterLookupGroup()` in `utils/ods_list.py`), and never use `readValuefromAppConfig()` on a key
+whose value can contain `=`.
+
+#### `executeRemoteCommandAndGetOutput*Python36()` cannot carry an argument containing a space
+They build one command string and then `cmd.split(" ")` it into an argv list, so any quoted argument
+with a space is torn apart (quotes are not stripped either - the remote shell consumes them). This is
+why every `sed` expression passed through them is deliberately space-free. For anything with spaces,
+pipe a script to remote bash instead: `executeRemoteShCommandAndGetOutput()` /
+`build_remote_bash_cmd()`, which also prepends `lib_app_config.sh` for `read_property()`.
 
 #### `install/install.tar` stale artifact
 Install scripts must delete `install/install.tar` before rebuilding (`os.remove('install/install.tar')`); a stale tar carries outdated service files to remote hosts. Don't reintroduce builds that skip the delete.
