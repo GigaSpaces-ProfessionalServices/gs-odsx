@@ -105,6 +105,25 @@
     -Copy <odsx>/config/metrics.properties.template /dbagigashare/current/gs/config/metrics/
      (required for GigaSpaces 17.3.0+, which ships no metrics.xml and reads
       config/metrics/metrics.properties instead - see config/metrics.properties.template)
+
+    -CEF audit logging: the handler class lives in
+      /dbagigashare/current/gs/jars/cef/CEFLogger-1.0-SNAPSHOT.jar (the path
+      app.yaml's .gs.jars.cef.cefjar maps to). It is required whenever the
+      xap_logging.properties staged at
+      /dbagigashare/current/gs/config/log/ names com.gs.CEFRollingFileHandler in
+      its handlers line - java.util.logging cannot load a handler that is not on
+      the JVM classpath, so without the jar every GigaSpaces process fails with
+      ClassNotFoundException: com.gs.CEFRollingFileHandler and writes no CEF at
+      all. configureCefLogging() deploys it to <giga>/gigaspaces-smart-ods/lib/
+      required/ during manager/space install and on Menu -> Logs -> Enable CEF.
+    -In that same xap_logging.properties, write the CEF handler's
+      filename-pattern with the @GIGALOGPATH@ placeholder, as
+      metrics.properties.template does:
+        com.gs.CEFRollingFileHandler.filename-pattern = @GIGALOGPATH@/CEF/{date,yyyy-MM-dd~HH.mm}-CEF-gigaspaces-{service}-{host}-{pid}.log
+      configureCefLogging() substitutes app.gigalog.path per host. A hardcoded
+      log root (the file used to ship /gigalogs) breaks every cluster whose
+      app.gigalog.path differs, with
+      "java.util.logging.ErrorManager: 4: Failed to create directories".
     
 ### <u>Usage</u>
 

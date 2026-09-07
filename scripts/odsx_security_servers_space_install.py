@@ -11,7 +11,7 @@ from utils.ods_app_config import render_install_templates, readValuefromAppConfi
     getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
 from colorama import Fore
 
-from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv, configureMetricsProperties, configureOtelIdentity
+from utils.ods_list import configureMetricsXML, getPlainOutput, validateRPMS, getManagerHostFromEnv, configureMetricsProperties, configureOtelIdentity, configureCefLogging
 from utils.ods_scp import scp_upload, scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
     executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
@@ -572,8 +572,10 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
 
                 #print(outputShFile)
-                #Upload CEF logging jar
-                executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+                # The CEF jar is deployed by configureCefLogging() below, which
+                # also resolves the handler's log path - a jar on its own still
+                # fails with "Failed to create directories: /gigalogs/CEF" off
+                # the default layout.
                 #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
 
                 executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+infraJarInput+" "+infraJarTargetInput)
@@ -608,6 +610,9 @@ def installSpaceServer(host,host_nic_dict_obj,additionalParam,cefLoggingJarInput
                 configureMetricsProperties(host)
                 # Distinct Prometheus job label per cluster (OTEL_* env vars).
                 configureOtelIdentity(host)
+                # CEF handler jar onto the boot classpath + its log path resolved; a no-op
+                # when the deployed xap_logging.properties does not enable CEF.
+                configureCefLogging(host)
             serverHost=''
             try:
                 serverHost = socket.gethostbyaddr(host).__getitem__(0)

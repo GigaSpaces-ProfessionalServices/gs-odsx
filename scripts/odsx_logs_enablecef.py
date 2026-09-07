@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
+from utils.ods_list import configureCefLogging
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, get_ssh_user
 from utils.odsx_keypress import userInputWrapper
@@ -63,7 +64,12 @@ def proceedForNodeConfiguration(flag,nodes,sourceFile,targetFile):
             #print(outputShFile)
             logger.info("outputShFile logs enable CEF : " + str(outputShFile))
             scp_upload(host,get_ssh_user(),sourceCefLogInput,targetCefLogInput)
-            #scp_upload(host,get_ssh_user(),cefLoggingJarInput,cefLoggingJarInputTarget)
+            # Must follow the upload above: configureCefLogging() keys off the
+            # handlers line in the *deployed* config, so it can only see that
+            # CEF is wanted once the CEF variant is in place. Deploys the
+            # handler jar and resolves its log path - without the jar the
+            # config alone only produces ClassNotFoundException.
+            configureCefLogging(host)
 
 def proceedForInputParam(configXapLogLocation):
     logger.info("proceedForInputParam() ")

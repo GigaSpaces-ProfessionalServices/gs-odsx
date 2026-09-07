@@ -412,6 +412,38 @@ The remote bash receives `lib_app_config.sh` content first (function defs only, 
 
 **Don't add side-effect code to lib_app_config.sh** — it must remain pure function definitions, since it runs unconditionally on every remote bash invocation.
 
+#### CEF logging needs its jar on the classpath, not just its config
+`xap_logging.properties` names `com.gs.CEFRollingFileHandler` in its `handlers=` line, but that
+class ships only in `$ODSXARTIFACTS/gs/jars/cef/CEFLogger-1.0-SNAPSHOT.jar`. `java.util.logging`
+resolves handler classes with the **application classloader** at `LogManager` init, so unless the jar
+is on the JVM's `-classpath` every GigaSpaces process on the host prints
+
+```
+Can't load log handler "com.gs.CEFRollingFileHandler"
+java.lang.ClassNotFoundException: com.gs.CEFRollingFileHandler
+```
+
+and writes no CEF at all. Nothing about v17 caused this: the 2022 JDK-8 jar loads fine on OpenJDK 17
+against GS 17.3.0, and both superclasses (`com.gigaspaces.logger.RollingFileHandler`,
+`GSSimpleFormatter`) are still in `lib/required/xap-common.jar`. The jar copy was simply live only in
+the two **security** install flows, so every non-security cluster shipped the CEF config without the
+handler.
+
+`configureCefLogging()` in `utils/ods_list.py` (via `scripts/configure_cef_logging.sh`) now provisions
+it in all four install flows and on Menu -> Logs -> Enable CEF. Two things to know about it:
+
+- **`lib/required/` is the right target** (`app.cefLogging.jar.target`). `GsPremiumCommandFactory`
+  appends any jar it does not recognise there to the boot classpath it emits, and the GSA, GSM, LUS
+  and every GSC share that classpath. **`GS_CLASSPATH_EXT` is not an alternative** — `setenv-overrides.sh`
+  advertises it as "extra classpath to append to the predefined classpath", but 17.3.0 emits a
+  byte-identical `service-grid` command with and without it.
+- **Don't add a `mkdir` for the CEF directory.** `RollingFileHandler.createParentDirectories()`
+  creates the leaf itself. The real failure is a *hardcoded* log root: the file used to ship
+  `/gigalogs/CEF`, which no app user can create on a cluster whose `app.gigalog.path` is elsewhere,
+  giving `java.util.logging.ErrorManager: 4: Failed to create directories: /gigalogs/CEF`. Write the
+  pattern in the artifacts tree with the `@GIGALOGPATH@` placeholder (same token as
+  `metrics.properties.template`); the helper substitutes it per host.
+
 #### App user must be able to traverse path-root parents on remote hosts
 `root-setup.sh` mkdirs and `chown -R`'s the **parent** of each of the 6 path roots on every remote (e.g. `/v/campus/vi/cs/eqrisk/josroden/`). The parent dirs ABOVE that (e.g. `/v/`, `/v/campus/`) are created by `mkdir -p` running as root and end up `root:root` mode 755. The app user only needs `+x` (traverse) on those — which mode 755 provides — to read/write under its owned leaf parent. If any pre-existing intermediate dir has restrictive perms (e.g. mode 700 owned by another user with no group/other `+x`), the app user can't traverse and `user-setup.sh`'s mkdir will fail with `Permission denied`.
 

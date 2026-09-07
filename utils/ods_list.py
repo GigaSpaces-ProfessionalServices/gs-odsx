@@ -13,7 +13,7 @@ from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutput, \
     executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, get_ssh_user, \
     executeRemoteShCommandAndGetOutput
-from utils.ods_app_config import readValuefromAppConfig
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -433,6 +433,105 @@ def validateOtelIdentity(ip):
         # depend on that - the raw line is OTEL_RESOURCE_ATTRIBUTES="k=v".
         match = re.search(r'service\.namespace=([^,\s"]+)', output)
         return match.group(1) if match else "No"
+    except Exception as e:
+        handleException(e)
+        return "No"
+
+
+# --- CEF audit logging ------------------------------------------------------
+# xap_logging.properties names com.gs.CEFRollingFileHandler in its handlers
+# line, but that class lives in CEFLogger-1.0-SNAPSHOT.jar on the shared
+# filesystem. java.util.logging loads handler classes with the application
+# classloader at LogManager init, so without the jar on the JVM's -classpath
+# every GigaSpaces process on the host fails with
+#   Can't load log handler "com.gs.CEFRollingFileHandler"
+#   java.lang.ClassNotFoundException: com.gs.CEFRollingFileHandler
+# and logs no CEF at all. Only the security install flows ever deployed the
+# jar, so every non-security cluster hit this. See scripts/configure_cef_logging.sh
+# for why lib/required/ is the target and why GS_CLASSPATH_EXT is not.
+
+CEF_JAR_YAML_PATH = ".gs.jars.cef.cefjar"
+
+# Resolved relative to this file so it works regardless of the caller's cwd.
+_CEF_LOGGING_SCRIPT = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "scripts",
+                 "configure_cef_logging.sh"))
+
+
+def getGsLogsConfigPath():
+    """Absolute path of the xap_logging.properties the platform reads.
+
+    app.manager.gsLogsConfigFile holds it for both managers and spaces - the
+    path is the same on every host. Derived from app.giga.path if that key is
+    blank, matching getSetenvOverridesPath() and getGsMetricsPropertiesPath().
+    """
+    configured = readValuefromAppConfig("app.manager.gsLogsConfigFile")
+    if configured and configured != "None":
+        return str(configured).replace('"', '')
+    return dbaGigaPath + "/gs_config/xap_logging.properties"
+
+
+def configureCefLogging(host):
+    """Deploy the CEF handler jar on host and point it at this log root.
+
+    Called right after configureOtelIdentity() during install - that is before
+    the servers are started, so the JVMs pick the handler up on their first
+    start and no extra restart is needed. A no-op on clusters whose deployed
+    xap_logging.properties does not enable the CEF handler, so it is safe to
+    call from every install flow unconditionally.
+
+    Goes through executeRemoteShCommandAndGetOutput (a script piped to remote
+    bash) rather than executeRemoteCommandAndGetOutput*Python36, because those
+    split the command on " " and so cannot carry the brace-and-comma
+    filename-pattern this writes.
+    """
+    logger.info("configureCefLogging()")
+    try:
+        jarSource = str(getYamlFilePathInsideFolder(CEF_JAR_YAML_PATH)) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        jarTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        logConfig = getGsLogsConfigPath()
+        gigaLogPath = readValuefromAppConfig("app.gigalog.path")
+        missing = [name for name, value in (
+            ("app.yaml " + CEF_JAR_YAML_PATH, jarSource),
+            ("app.cefLogging.jar.target", jarTarget),
+            ("app.manager.gsLogsConfigFile", logConfig),
+            ("app.gigalog.path", gigaLogPath)) if not value or value == "None"]
+        if missing:
+            verboseHandle.printConsoleWarning(
+                "Cannot configure CEF logging on " + str(host) + " - unset: "
+                + ", ".join(missing) + ". CEF stays broken with "
+                "ClassNotFoundException: com.gs.CEFRollingFileHandler.")
+            return
+        params = (logConfig + " " + jarSource + " " + jarTarget + " "
+                  + str(gigaLogPath))
+        logger.info("configure_cef_logging.sh params : " + params)
+        with Spinner():
+            output = executeRemoteShCommandAndGetOutput(
+                host, get_ssh_user(), params, _CEF_LOGGING_SCRIPT)
+        logger.info("output : " + str(output))
+    except Exception as e:
+        handleException(e)
+
+
+def validateCefLogging(ip):
+    """Return "Yes" when the CEF handler class is deployed on ip, else "No"."""
+    logger.info("validateCefLogging()")
+    try:
+        jarTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        jarSource = str(getYamlFilePathInsideFolder(CEF_JAR_YAML_PATH)) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        if not jarTarget or jarTarget == "None" or not jarSource or jarSource == "None":
+            return "No"
+        target = jarTarget.rstrip('/') + "/" + os.path.basename(jarSource)
+        cmd = "ls " + target
+        logger.info("cmdToExecute : " + str(cmd))
+        output = getPlainOutput(executeRemoteCommandAndGetOutputValuePython36(
+            ip, get_ssh_user(), cmd))
+        logger.info("output : " + str(output))
+        return "Yes" if target in output else "No"
     except Exception as e:
         handleException(e)
         return "No"

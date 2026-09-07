@@ -13,7 +13,7 @@ from utils.ods_app_config import render_install_templates, readValuefromAppConfi
     getYamlFilePathInsideFolderList1
 from colorama import Fore
 
-from utils.ods_list import configureMetricsXML, configureMetricsProperties, configureOtelIdentity
+from utils.ods_list import configureMetricsXML, configureMetricsProperties, configureOtelIdentity, configureCefLogging
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
     executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
@@ -524,6 +524,9 @@ def installManagerServer(host,additionalParam,output,newZkJarTarget,selinuxEnabl
         configureMetricsProperties(host)
         # Distinct Prometheus job label per cluster (OTEL_* env vars).
         configureOtelIdentity(host)
+        # CEF handler jar onto the boot classpath + its log path resolved; a no-op
+        # when the deployed xap_logging.properties does not enable CEF.
+        configureCefLogging(host)
     serverHost=''
     try:
         serverHost = socket.gethostbyaddr(host).__getitem__(0)
