@@ -22,26 +22,27 @@ Steps performed:
 1. **Gigashare extraction** (if `-tar` given): extracts tgz into `-d` dir — skips if dir is not empty (or re-extracts with `--overwrite`)
 2. **Giga directories**: Creates `$GIGA_PATH`, `$GIGA_SHARE`, `$GIGA_LOG`, `$GIGA_DATA`, `$GIGA_WORK`, `$GIGA_PATH/bin` — no chown needed (app user owns them by creation). `$GIGA_INFLUX` is not created — it belongs to the `influxdb` system user.
 3. **SQLite copy**: Copies `$GIGA_SHARE/current/sqlite/*` to `$GIGA_WORK/sqlite/` — skips if not empty (or overwrites with `--overwrite`)
-4. **SSH key generation**: Generates ed25519 key in `~/.ssh/` — skips if exists
-5. **SSH config**: Creates `~/.ssh/config` — skips if exists (or overwrites with `--overwrite`)
-6. **SSH key deployment**: Deploys pubkey to each remote host via SSH. If a host is unreachable (user not yet created by `root-setup.sh`), skips with a warning.
-7. **Local directories**: Creates `~/.config/systemd/user/`
-8. **nofile limits**: Sets `ulimit -Sn` in `~/.bashrc` and `DefaultLimitNOFILE` in `~/.config/systemd/user.conf` (RHEL 9 default hard limit of 524288 is sufficient — no `/etc/security/limits.conf` needed)
-9. **`.bashrc` environment** (each line guarded by `grep -q`):
+4. **Staged CEF logging config**: rewrites the `com.gs.CEFRollingFileHandler.filename-pattern` in `$GIGA_SHARE/current/gs/config/log/xap_logging.properties` and `.cef` to the `@GIGALOGPATH@` placeholder, by calling `configure_cef_logging.sh --pattern-only`. The shipped files hardcode `/gigalogs/CEF`, which no app user can create where `app.gigalog.path` differs. The placeholder — not this pivot's own log root — keeps `current/` valid for every cluster reading the same shared tree; `configureCefLogging()` resolves it per host at install. **Always runs** (idempotent and corrective, so not gated on `--overwrite`), and is placed before the steps that can `exit 1` on a missing prerequisite. No-ops on `.without-cef`, whose `handlers=` line does not enable CEF.
+5. **SSH key generation**: Generates ed25519 key in `~/.ssh/` — skips if exists
+6. **SSH config**: Creates `~/.ssh/config` — skips if exists (or overwrites with `--overwrite`)
+7. **SSH key deployment**: Deploys pubkey to each remote host via SSH. If a host is unreachable (user not yet created by `root-setup.sh`), skips with a warning.
+8. **Local directories**: Creates `~/.config/systemd/user/`
+9. **nofile limits**: Sets `ulimit -Sn` in `~/.bashrc` and `DefaultLimitNOFILE` in `~/.config/systemd/user.conf` (RHEL 9 default hard limit of 524288 is sufficient — no `/etc/security/limits.conf` needed)
+10. **`.bashrc` environment** (each line guarded by `grep -q`):
    - `ENV_CONFIG`, `PYTHONPATH`, `ODSXARTIFACTS`, `XDG_RUNTIME_DIR`, `DBUS_SESSION_BUS_ADDRESS`
    - Aliases (`odsx`), `GS_HOME`, `PATH` (with `auto_odsx`, `utils`), argcomplete
-10. **Remote hosts** (SSH as the app user — skipped if unreachable):
+11. **Remote hosts** (SSH as the app user — skipped if unreachable):
     - Creates giga directories (`$GIGA_PATH`, `$GIGA_LOG`, `$GIGA_DATA`, `$GIGA_WORK`, `$GIGA_PATH/bin`)
     - Creates `~/.config/systemd/user/`
     - Sets nofile limits (`.bashrc` + `systemd/user.conf`)
     - Sets `ENV_CONFIG`, `PYTHONPATH`, `XDG_RUNTIME_DIR`, `DBUS_SESSION_BUS_ADDRESS` in `~/.bashrc`
-11. **GigaSpaces install** (idempotent, requires `yq` and `unzip`):
+12. **GigaSpaces install** (idempotent, requires `yq` and `unzip`):
     - Finds latest `gigaspaces-smart*.zip` in `$GIGA_PATH` — exits with error if none found
     - Copies zip to `$GIGA_SHARE/current/gs/` — skips if already present
     - Unzips into `$GIGA_PATH` — skips if extracted dir exists
     - Creates symlink `gigaspaces-smart-ods -> <extracted dir>` via `ln -snf`
     - **Always** refreshes `GS_MANAGER_SERVERS` in `setenv-overrides.sh` from `host.yaml`
-12. **Python dependencies**: offline from `$GIGA_SHARE/current/python/` if present, otherwise from PyPI
+13. **Python dependencies**: offline from `$GIGA_SHARE/current/python/` if present, otherwise from PyPI
 
 ### `scripts/root-setup.sh` — run once as root on the pivot
 **Usage**: `root-setup.sh -d <gigashare dir>`

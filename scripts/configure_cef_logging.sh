@@ -34,7 +34,7 @@
 #
 # Invoked from utils/ods_list.py:configureCefLogging() via
 # build_remote_bash_cmd(), i.e. piped to `bash -s <cfg> <jar> <dir> <logroot>`
-# on the remote host with scripts/lib_app_config.sh prepended. Not run directly.
+# on the remote host with scripts/lib_app_config.sh prepended.
 #
 # Args:
 #   $1  absolute path of the deployed xap_logging.properties to edit
@@ -42,16 +42,38 @@
 #   $3  directory to deploy the jar into, i.e. <gs home>/lib/required/
 #   $4  this environment's log root, i.e. app.gigalog.path
 #
+# --pattern-only <cfg> <logroot>
+#   Skip the jar and only set the filename-pattern. This is how user-setup.sh
+#   normalises the xap_logging.properties *staged in the artifacts tree*, where
+#   there is no GigaSpaces install to deploy a jar into: it passes the literal
+#   @GIGALOGPATH@ as <logroot> so the staged copy stays environment-neutral and
+#   each host resolves it at install time. Run it as a local script for this -
+#   `bash -s --pattern-only ...` does not work, because bash parses a leading
+#   "--pattern-only" as its own option rather than a positional argument.
+#
 # Idempotent: a no-op once the jar matches and the pattern is already resolved,
 # so repeated installs cannot duplicate anything. Exits 0 doing nothing when the
-# deployed config does not enable CEF.
+# config does not enable CEF - which is what keeps the .without-cef variant from
+# having a CEF pattern added to it.
 
 set -u
 
+PATTERN_ONLY=false
+if [ "${1:-}" = "--pattern-only" ]; then
+    PATTERN_ONLY=true
+    shift
+fi
+
 CFG="${1:-}"
-JAR_SRC="${2:-}"
-JAR_DIR="${3:-}"
-LOG_ROOT="${4:-}"
+if $PATTERN_ONLY; then
+    LOG_ROOT="${2:-}"
+    JAR_SRC=""
+    JAR_DIR=""
+else
+    JAR_SRC="${2:-}"
+    JAR_DIR="${3:-}"
+    LOG_ROOT="${4:-}"
+fi
 
 PROP="com.gs.CEFRollingFileHandler.filename-pattern"
 CEF_BASENAME="{date,yyyy-MM-dd~HH.mm}-CEF-gigaspaces-{service}-{host}-{pid}.log"
@@ -81,10 +103,16 @@ active_prop_value() {
 # validate_nonempty_paths() comes from lib_app_config.sh, which
 # build_remote_bash_cmd prepends. Guards the writes below from running against
 # an empty path.
-if declare -F validate_nonempty_paths >/dev/null 2>&1; then
-    validate_nonempty_paths CFG JAR_SRC JAR_DIR LOG_ROOT
+if $PATTERN_ONLY; then
+    _required="CFG LOG_ROOT"
 else
-    for _v in CFG JAR_SRC JAR_DIR LOG_ROOT; do
+    _required="CFG JAR_SRC JAR_DIR LOG_ROOT"
+fi
+if declare -F validate_nonempty_paths >/dev/null 2>&1; then
+    # shellcheck disable=SC2086  # deliberate word splitting: a list of names
+    validate_nonempty_paths $_required
+else
+    for _v in $_required; do
         [ -n "${!_v}" ] || fail "no $_v given"
     done
 fi
@@ -102,31 +130,37 @@ esac
 # ---------------------------------------------------------------------------
 # 1. Put the handler class on the boot classpath.
 # ---------------------------------------------------------------------------
-[ -f "$JAR_SRC" ] || fail "CEF jar $JAR_SRC not found - stage it on the shared filesystem first"
-[ -d "$JAR_DIR" ] || fail "$JAR_DIR does not exist - is GigaSpaces installed on this host?"
-[ -w "$JAR_DIR" ] || fail "$JAR_DIR is not writable by $(id -un)"
+deploy_jar() {
+    [ -f "$JAR_SRC" ] || fail "CEF jar $JAR_SRC not found - stage it on the shared filesystem first"
+    [ -d "$JAR_DIR" ] || fail "$JAR_DIR does not exist - is GigaSpaces installed on this host?"
+    [ -w "$JAR_DIR" ] || fail "$JAR_DIR is not writable by $(id -un)"
 
-# app.cefLogging.jar.target conventionally ends in "/", so strip it rather than
-# emit lib/required//CEFLogger... in every log line.
-JAR_DIR="${JAR_DIR%/}"
-JAR_DST="$JAR_DIR/$(basename "$JAR_SRC")"
-if [ -f "$JAR_DST" ] && cmp -s "$JAR_SRC" "$JAR_DST"; then
-    echo "CEF jar already current at $JAR_DST"
-else
-    # Copy to a temp file in the SAME directory and rename, rather than writing
-    # over $JAR_DST in place: a running JVM holds the old jar open, and
-    # truncating it under a live process corrupts its view of the archive. The
-    # rename is atomic and gives the new file its own inode, so running JVMs
-    # keep the jar they started with until they restart.
-    TMP_JAR=$(mktemp "$JAR_DIR/.cef-jar.XXXXXX") || fail "cannot create a temp file in $JAR_DIR"
-    trap 'rm -f "$TMP_JAR"' EXIT
-    cat "$JAR_SRC" > "$TMP_JAR"    || fail "could not copy $JAR_SRC"
-    chmod 644 "$TMP_JAR"           || fail "could not chmod $TMP_JAR"
-    cmp -s "$JAR_SRC" "$TMP_JAR"   || fail "copy of $JAR_SRC is truncated - $JAR_DST left untouched"
-    mv -f "$TMP_JAR" "$JAR_DST"    || fail "could not install $JAR_DST"
-    trap - EXIT
-    echo "CEF jar deployed to $JAR_DST"
-fi
+    # app.cefLogging.jar.target conventionally ends in "/", so strip it rather than
+    # emit lib/required//CEFLogger... in every log line.
+    JAR_DIR="${JAR_DIR%/}"
+    JAR_DST="$JAR_DIR/$(basename "$JAR_SRC")"
+    if [ -f "$JAR_DST" ] && cmp -s "$JAR_SRC" "$JAR_DST"; then
+        echo "CEF jar already current at $JAR_DST"
+    else
+        # Copy to a temp file in the SAME directory and rename, rather than writing
+        # over $JAR_DST in place: a running JVM holds the old jar open, and
+        # truncating it under a live process corrupts its view of the archive. The
+        # rename is atomic and gives the new file its own inode, so running JVMs
+        # keep the jar they started with until they restart.
+        TMP_JAR=$(mktemp "$JAR_DIR/.cef-jar.XXXXXX") || fail "cannot create a temp file in $JAR_DIR"
+        trap 'rm -f "$TMP_JAR"' EXIT
+        cat "$JAR_SRC" > "$TMP_JAR"    || fail "could not copy $JAR_SRC"
+        chmod 644 "$TMP_JAR"           || fail "could not chmod $TMP_JAR"
+        cmp -s "$JAR_SRC" "$TMP_JAR"   || fail "copy of $JAR_SRC is truncated - $JAR_DST left untouched"
+        mv -f "$TMP_JAR" "$JAR_DST"    || fail "could not install $JAR_DST"
+        trap - EXIT
+        echo "CEF jar deployed to $JAR_DST"
+    fi
+}
+
+# The staged artifacts-tree copy has no GigaSpaces install of its own to deploy
+# into, so there the jar is left to the per-host install flows.
+$PATTERN_ONLY || deploy_jar
 
 # ---------------------------------------------------------------------------
 # 2. Point the handler at this environment's log root.
@@ -179,4 +213,4 @@ n=$(active_prop_value "$PROP" "$TMP" | wc -l)
 cat "$TMP" > "$CFG" || fail "could not write $CFG"
 
 echo "$PROP set to $WANT in $CFG"
-echo "note: the CEF directory is created by RollingFileHandler on first write"
+$PATTERN_ONLY || echo "note: the CEF directory is created by RollingFileHandler on first write"

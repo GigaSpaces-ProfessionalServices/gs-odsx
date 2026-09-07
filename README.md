@@ -116,14 +116,18 @@
       ClassNotFoundException: com.gs.CEFRollingFileHandler and writes no CEF at
       all. configureCefLogging() deploys it to <giga>/gigaspaces-smart-ods/lib/
       required/ during manager/space install and on Menu -> Logs -> Enable CEF.
-    -In that same xap_logging.properties, write the CEF handler's
-      filename-pattern with the @GIGALOGPATH@ placeholder, as
-      metrics.properties.template does:
+    -In that same xap_logging.properties, the CEF handler's filename-pattern
+      must use the @GIGALOGPATH@ placeholder, as metrics.properties.template
+      does:
         com.gs.CEFRollingFileHandler.filename-pattern = @GIGALOGPATH@/CEF/{date,yyyy-MM-dd~HH.mm}-CEF-gigaspaces-{service}-{host}-{pid}.log
-      configureCefLogging() substitutes app.gigalog.path per host. A hardcoded
+      user-setup.sh step 4 rewrites it for you on every run, so a tgz that
+      still ships a hardcoded root needs no manual edit; configureCefLogging()
+      then substitutes app.gigalog.path per host at install time. A hardcoded
       log root (the file used to ship /gigalogs) breaks every cluster whose
       app.gigalog.path differs, with
       "java.util.logging.ErrorManager: 4: Failed to create directories".
+      Keep the placeholder rather than one cluster's absolute path: current/ is
+      shared artifact storage that other clusters may read.
     
 ### <u>Usage</u>
 

@@ -218,8 +218,62 @@ else
     echo "    $GIGA_WORK/sqlite/ is not empty — skipping. Use --overwrite to force."
 fi
 
-# --- Step 4: SSH key generation ---
-echo ">>> Step 4: SSH key..."
+# --- Step 4: Normalise staged CEF logging config ---
+# The xap_logging.properties staged in the artifacts tree ships a hardcoded
+# /gigalogs/CEF filename-pattern for com.gs.CEFRollingFileHandler. On any
+# cluster whose app.gigalog.path is not /gigalogs, no app user can create that
+# directory, and every GigaSpaces JVM then reports
+#   java.util.logging.ErrorManager: 4: Failed to create directories: /gigalogs/CEF
+# Rewrite it to the @GIGALOGPATH@ placeholder instead of this pivot's own log
+# root: current/ is shared artifact storage, so baking one cluster's absolute
+# path into it would be wrong for any other cluster reading the same tree.
+# configureCefLogging() resolves the placeholder per host at install time.
+#
+# Always run - it is idempotent, and it is corrective, so it must not wait for
+# --overwrite. Deliberately placed before the steps that can exit non-zero on a
+# missing prerequisite (yq, unzip, a staged GS zip), so a pivot that trips one
+# of those still gets a usable staged config.
+echo ">>> Step 4: Staged CEF logging config..."
+cef_log_script="$(dirname "$0")/configure_cef_logging.sh"
+cef_log_dir="$GIGA_SHARE/current/gs/config/log"
+if [ ! -r "$cef_log_script" ]; then
+    echo "    Warning: $cef_log_script not found — skipping. CEF logging will use"
+    echo "             whatever log root the staged xap_logging.properties hardcodes."
+elif [ ! -d "$cef_log_dir" ]; then
+    echo "    $cef_log_dir does not exist — skipping (nothing staged)."
+else
+    # Existence tested per name rather than via nullglob: these are literal
+    # paths, not globs, so nullglob would not drop a variant that is not
+    # staged and the loop below would warn about a file nobody asked for.
+    # .without-cef is deliberately not listed - it enables no CEF handler.
+    cef_cfgs=()
+    for cef_name in xap_logging.properties xap_logging.properties.cef; do
+        if [ -f "$cef_log_dir/$cef_name" ]; then
+            cef_cfgs+=("$cef_log_dir/$cef_name")
+        fi
+    done
+    if [ ${#cef_cfgs[@]} -eq 0 ]; then
+        echo "    No xap_logging.properties staged in $cef_log_dir — skipping."
+    else
+        for cef_cfg in "${cef_cfgs[@]}"; do
+            # The script no-ops on a config whose handlers line does not enable
+            # the CEF handler, which is what leaves .without-cef alone.
+            # Status captured explicitly: a normalisation failure (say a
+            # read-only artifacts tree) is worth a warning but must not abort
+            # the rest of setup, and relying on set -e's command-substitution
+            # exemption to get that would be too subtle to trust.
+            if cef_out=$(bash "$cef_log_script" --pattern-only "$cef_cfg" '@GIGALOGPATH@' 2>&1); then
+                echo "    $(basename "$cef_cfg"): $(echo "$cef_out" | tail -1)"
+            else
+                echo "    Warning: could not normalise $(basename "$cef_cfg"):"
+                echo "$cef_out" | sed 's/^/             /'
+            fi
+        done
+    fi
+fi
+
+# --- Step 5: SSH key generation ---
+echo ">>> Step 5: SSH key..."
 mkdir -p ~/.ssh
 chmod 700 ~/.ssh
 
@@ -230,8 +284,8 @@ else
     echo "    Key already exists."
 fi
 
-# --- Step 5: SSH config ---
-echo ">>> Step 5: SSH config..."
+# --- Step 6: SSH config ---
+echo ">>> Step 6: SSH config..."
 if [ ! -f ~/.ssh/config ] || $OVERWRITE; then
     cat > ~/.ssh/config << 'SSHCONFIG'
 Host *
@@ -252,9 +306,9 @@ else
     echo "    SSH config exists — skipping. Use --overwrite to force."
 fi
 
-# --- Step 6: SSH key deployment to remote hosts ---
+# --- Step 7: SSH key deployment to remote hosts ---
 if [ -n "$REMOTE_HOSTS" ]; then
-    echo ">>> Step 6: SSH key deployment..."
+    echo ">>> Step 7: SSH key deployment..."
     PUBKEY=$(cat ~/.ssh/id_ed25519.pub)
     for HOST in $REMOTE_HOSTS; do
         # Test if we can already SSH to this host
@@ -271,16 +325,16 @@ if [ -n "$REMOTE_HOSTS" ]; then
         fi
     done
 else
-    echo ">>> Step 6: No remote hosts — skipping SSH key deployment."
+    echo ">>> Step 7: No remote hosts — skipping SSH key deployment."
 fi
 
-# --- Step 7: Local directories ---
-echo ">>> Step 7: Local directories..."
+# --- Step 8: Local directories ---
+echo ">>> Step 8: Local directories..."
 mkdir -p ~/.config/systemd/user/
 echo "    ~/.config/systemd/user/ ready."
 
-# --- Step 8: nofile limits ---
-echo ">>> Step 8: nofile limits..."
+# --- Step 9: nofile limits ---
+echo ">>> Step 9: nofile limits..."
 if ! grep -q "ulimit -Sn" ~/.bashrc 2>/dev/null; then
     echo "ulimit -Sn $NOFILE_LIMIT" >> ~/.bashrc
     echo "    ulimit -Sn $NOFILE_LIMIT added to .bashrc."
@@ -294,8 +348,8 @@ DefaultLimitNOFILE=$NOFILE_LIMIT
 EOF
 echo "    systemd user.conf set to $NOFILE_LIMIT."
 
-# --- Step 9: .bashrc environment ---
-echo ">>> Step 9: .bashrc environment..."
+# --- Step 10: .bashrc environment ---
+echo ">>> Step 10: .bashrc environment..."
 
 if ! grep -q "export ENV_CONFIG=" ~/.bashrc 2>/dev/null; then
     echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> ~/.bashrc
@@ -378,9 +432,9 @@ if $WRITE_KSHRC; then
     fi
 fi
 
-# --- Step 10: Configure remote hosts ---
+# --- Step 11: Configure remote hosts ---
 if [ -n "$REMOTE_HOSTS" ]; then
-    echo ">>> Step 10: Configuring remote hosts..."
+    echo ">>> Step 11: Configuring remote hosts..."
     REMOTE_FAILED=false
     for HOST in $REMOTE_HOSTS; do
         echo "  --- $HOST ---"
@@ -476,12 +530,12 @@ REMOTE
         echo "    ./$(basename "$0") -d $GIGASHARE_DIR -u $APP_USER"
     fi
 else
-    echo ">>> Step 10: No remote hosts — skipping."
+    echo ">>> Step 11: No remote hosts — skipping."
 fi
 echo ""
 
-# --- Step 11: GigaSpaces installation ---
-echo ">>> Step 11: GigaSpaces installation..."
+# --- Step 12: GigaSpaces installation ---
+echo ">>> Step 12: GigaSpaces installation..."
 
 # Check prerequisites
 if ! command -v yq &>/dev/null; then
@@ -562,8 +616,8 @@ else
     echo "    Warning: host.yaml or setenv-overrides.sh not found — skipping GS_MANAGER_SERVERS."
 fi
 
-# --- Step 12: Python dependencies ---
-echo ">>> Step 12: Python dependencies..."
+# --- Step 13: Python dependencies ---
+echo ">>> Step 13: Python dependencies..."
 if ls "$GIGA_SHARE/current/python/"* > /dev/null 2>&1; then
     echo "    Offline packages found — installing from $GIGA_SHARE/current/python"
     pip3 install --no-index --find-links="$GIGA_SHARE/current/python" -r "$GIGA_PATH/gs-odsx/scripts/requirements.txt"
