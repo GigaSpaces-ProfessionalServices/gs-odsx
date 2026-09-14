@@ -6,6 +6,7 @@ from concurrent.futures import ThreadPoolExecutor
 
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from colorama import Fore
@@ -87,7 +88,7 @@ if __name__ == '__main__':
     cliArguments=''
     isMenuDriven=''
     managerRemove=''
-    user='root'
+    user = get_ssh_user()
     menuDrivenFlag='m' # To differentiate between CLI and Menudriven Argument handling help section
     args.append(sys.argv[0])
 

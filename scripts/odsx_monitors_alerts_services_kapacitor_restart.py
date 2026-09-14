@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_kapacitor_list import getStatusOfKapacitor
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -43,9 +44,9 @@ def handleException(e):
 
 def reloadedKapacitorServiceByHost(host):
     logger.info("reloadedKapacitorServiceByHost()")
-    cmd = "systemctl stop kapacitor.service;sleep 5;systemctl start kapacitor.service;sleep 2;"
+    cmd = "sudo systemctl stop kapacitor.service;sleep 5;sudo systemctl start kapacitor.service;sleep 2;"
     logger.info("Getting status.. kapacitor :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):

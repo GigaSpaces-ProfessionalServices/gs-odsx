@@ -1,0 +1,13 @@
+{ "records": [ {
+
+    "source": "ODS-STG",
+    "node": "{{ index .Tags "host" }}",
+    "message_key": "nginx-load-raw_{{ index .Tags "host" }}",
+    "resource": "Throughput",
+    "metric_name": "App Load",
+    "type": "Infra",
+    "severity": "3",
+    "description": "Nginx accessed per minute",
+    "additional_info": "{'u_mc_object':'App Load','u_mc_object_class':'Infra','u_mc_parameter':'Throughput','u_mc_parameter_value':'{{ range .Values }}{{ index . "rate" }}{{ end }}'}"
+
+} ] }

@@ -13,12 +13,13 @@ from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_grafana_list, config_get_nb_list
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput, executeLocalCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "catalogue-service.service"
-user = "root"
+user = get_ssh_user()
 
 
 def getGrafanaServerHostList():
@@ -198,16 +199,16 @@ def uploadDashbordJsonFile(host):
             logger.info("hostip ::" + str(host) + " user :" + str(user))
 
             ### Setting up Service Catalogue dashboard
-            scp_upload(host, "root", 'systemServices/catalogue/grafana/service-catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
+            scp_upload(host, get_ssh_user(), 'systemServices/catalogue/grafana/service-catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
 
-            executeRemoteCommandAndGetOutput(host, "root","sudo sed -i 's,catalogue_service_url,'"+catalogue_service_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/service-catalogue.json")
-            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/service-catalogue.json")
+            executeRemoteCommandAndGetOutput(host, get_ssh_user(),"sudo sed -i 's,catalogue_service_url,'"+catalogue_service_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/service-catalogue.json")
+            executeRemoteCommandAndGetOutput(host, get_ssh_user(),"chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/service-catalogue.json")
     
             ### Setting up Table Catalogue dashboard
-            scp_upload(host, "root", 'systemServices/catalogue/grafana/table-catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
+            scp_upload(host, get_ssh_user(), 'systemServices/catalogue/grafana/table-catalogue.json', '/usr/share/grafana/conf/provisioning/dashboards/')
 
-            executeRemoteCommandAndGetOutput(host, "root","sudo sed -i 's,catalogue_table_url,'"+catalogue_table_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/table-catalogue.json")
-            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/table-catalogue.json")
+            executeRemoteCommandAndGetOutput(host, get_ssh_user(),"sudo sed -i 's,catalogue_table_url,'"+catalogue_table_url+"',g' /usr/share/grafana/conf/provisioning/dashboards/table-catalogue.json")
+            executeRemoteCommandAndGetOutput(host, get_ssh_user(),"chown grafana:grafana /usr/share/grafana/conf/provisioning/dashboards/table-catalogue.json")
     
     except Exception as e:
         handleException(e)
@@ -218,8 +219,8 @@ def uploadDashboadProvisionFile(host):
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))
-            scp_upload(host, "root", 'systemServices/catalogue/grafana/catalogue.yaml', '/etc/grafana/provisioning/dashboards/')
-            executeRemoteCommandAndGetOutput(host, "root","chown grafana:grafana /etc/grafana/provisioning/dashboards/catalogue.yaml")
+            scp_upload(host, get_ssh_user(), 'systemServices/catalogue/grafana/catalogue.yaml', '/etc/grafana/provisioning/dashboards/')
+            executeRemoteCommandAndGetOutput(host, get_ssh_user(),"chown grafana:grafana /etc/grafana/provisioning/dashboards/catalogue.yaml")
     except Exception as e:
         handleException(e)
     

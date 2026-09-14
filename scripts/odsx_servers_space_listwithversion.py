@@ -11,7 +11,9 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts
+from utils.ods_list import addGscCountForContainer, getGscCountForHost
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_print_tabular_data import printTabular
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -68,10 +70,7 @@ def getGSCByManagerServerConfig(managerServerConfig, host_gsc_dict_obj):
             id=i["id"]
             id = str(id).replace('~'+str(i["pid"]), '')
             logger.info("id : "+str(id))
-            if(host_gsc_dict_obj.__contains__(id)):
-                host_gsc_dict_obj.add(id,host_gsc_dict_obj.get(id)+1)
-            else:
-                host_gsc_dict_obj.add(id,1)
+            addGscCountForContainer(host_gsc_dict_obj,id)
         logger.info("GSC obj: "+str(host_gsc_dict_obj))
     except Exception as e:
         logger.error("Error while retrieving from REST :"+str(e))
@@ -95,7 +94,7 @@ def getStatusOfHost(host_nic_dict_obj,server):
 def getStatusOfSpaceHost(server):
     commandToExecute = "ps -ef | grep GSA"
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(server, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(server, get_ssh_user(), commandToExecute)
     if(str(output).__contains__('services=GSA')):
         logger.info("services=GSA")
         return "ON"
@@ -107,7 +106,7 @@ def getVersion(ip):
     logger.info("getVersion() ip :"+str(ip))
     cmdToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh version | grep -v JAVA_HOME"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
+    output = executeRemoteCommandAndGetOutput(ip,get_ssh_user(),cmdToExecute)
     output=str(output).replace('\n','')
     logger.info("output : "+str(output))
     return output
@@ -125,14 +124,14 @@ def listSpaceServer():
                    Fore.YELLOW+"Version"+Fore.RESET
                    ]
         data=[]
-        user='root'
+        user = get_ssh_user()
         logger.info("app.server.user: "+str(user))
 
         host_gsc_dict_obj = getGSCForHost()
         host_nic_dict_obj = host_nic_dictionary()
 
         for server in spaceServers:
-            cmd = 'systemctl is-active gs.service'
+            cmd = 'systemctl --user is-active gs.service'
             host = str(os.getenv(server.ip))
             logger.info("server.ip : "+host+" cmd :"+str(cmd))
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
@@ -147,7 +146,7 @@ def listSpaceServer():
             status = getStatusOfSpaceHost(str(host))
             logger.info("status : "+str(status))
             logger.info("Host:"+str(host))
-            gsc = host_gsc_dict_obj.get(str(host))
+            gsc = getGscCountForHost(host_gsc_dict_obj,host)
             logger.info("GSC : "+str(gsc))
             version = getVersion(host)
             dataArray=[Fore.GREEN+host+Fore.RESET,

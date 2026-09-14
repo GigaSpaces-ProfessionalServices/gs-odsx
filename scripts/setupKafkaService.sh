@@ -1,4 +1,13 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -24,9 +33,9 @@ echo $recoverLoggingConfigFile
 sed -i 's/gsods/'$applicativeUser'/g' /tmp/odsxkafka.service
 
 
-sudo mv -f /tmp/odsxkafka.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable odsxkafka.service
-sudo systemctl start odsxkafka.service
+mv -f /tmp/odsxkafka.service $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable odsxkafka.service
+systemctl --user start odsxkafka.service
 
 echo "DI Kafka service setup - Completed!."

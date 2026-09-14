@@ -14,7 +14,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFolder, getYamlFileNamesInsideFolderList
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus, port_check_config
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -284,7 +284,7 @@ def proceedToCreateGSC(zoneGSC,newGSCCount,feederType):
     verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(SpaceHighestAvailableHost))
     logger.info(commandToExecute)
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), commandToExecute)
         print(output)
         logger.info("Output:"+str(output))
 

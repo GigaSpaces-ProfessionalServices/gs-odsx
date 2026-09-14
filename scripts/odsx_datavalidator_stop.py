@@ -10,6 +10,7 @@ from scripts.odsx_datavalidator_list import listDVServers
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -68,9 +69,9 @@ def stopDataValidationService(args):
         if choice.casefold() == 'n':
             exit(0)
         for node in config_get_dataValidation_nodes():
-            cmd = "systemctl stop odsxdatavalidation.service"
+            cmd = "systemctl --user stop odsxdatavalidation.service"
             logger.info("Getting status.. odsxdatavalidation:"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
                 if (output == 0):

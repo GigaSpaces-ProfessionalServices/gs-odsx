@@ -1,3 +1,12 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 echo "Stopping InsightEdge"
 source setenv.sh
 #echo $JAVA_HOME
@@ -5,12 +14,12 @@ source setenv.sh
 cd $GS_HOME
 #sudo -s
 #./bin/gs.sh host kill-agent --all
-#systemctl daemon-reload
+#systemctl --user daemon-reload
 echo "Stopping gsa.service..."
-sudo systemctl stop gsa.service
+systemctl --user stop gsa.service
 
 echo "Waiting for service to stop..."
 sleep 5
 echo "Checking service status..."
-sudo systemctl status gsa.service --no-pager || true
+systemctl --user status gsa.service --no-pager || true
 echo "InsightEdge stopped."

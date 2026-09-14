@@ -19,7 +19,7 @@ def scp_download(host, user, sourceFileWithPath, destPath):
         if (isConnectUsingPem=='True'):
             ssh = ''.join(['scp', ' -i ', pemFileName, ' ', user, '@', host, ':'])
         else:
-            ssh = ''.join(['scp', host, ':'])
+            ssh = ''.join(['scp', ' ', user, '@', host, ':'])
         # scp -i ps-share.pem ubuntu@18.222.185.155:uninstall.sh /home/tapan/
         cmd = ssh + sourceFileWithPath + ' ' + destPath  # + type  ' < ' + cmd #+ '>> mylog.txt 2>&1'
         logger.debug("scp cmd : " + cmd)
@@ -74,7 +74,7 @@ def scp_upload_multiple(host, user, sourceFileWithPath, destPath):
     if (isConnectUsingPem=='True'):
         ssh = ''.join(['scp', ' -i ', pemFileName, ' -r ', sourceFileWithPath, ' ', user, '@', host, ':'])
     else:
-        ssh = ''.join(['scp',' -r ', sourceFileWithPath, ' ', host, ':'])
+        ssh = ''.join(['scp',' -r ', sourceFileWithPath, ' ', user, '@', host, ':'])
     # scp -i ps-share.pem /home/tapan/uninstall_1.sh ubuntu@18.222.185.155:
     cmd = ssh + destPath  # + type  ' < ' + cmd #+ '>> mylog.txt 2>&1'
     print(cmd)
@@ -96,7 +96,7 @@ def scp_upload_specific_extension(host, user, sourceFileWithPath, destPath,exten
         if (isConnectUsingPem=='True'):
             ssh = ''.join(['scp', ' -i ', pemFileName, ' -r ', sourceFileWithPath+'/*.'+extension, ' ', user, '@', host, ':'])
         else:
-            ssh = ''.join(['scp',' -r ', sourceFileWithPath+'/*.'+extension, ' ', host, ':'])
+            ssh = ''.join(['scp',' -r ', sourceFileWithPath+'/*.'+extension, ' ', user, '@', host, ':'])
         # scp -i ps-share.pem /home/tapan/uninstall_1.sh ubuntu@18.222.185.155:
         cmd = ssh + destPath  # + type  ' < ' + cmd #+ '>> mylog.txt 2>&1'
         print(cmd)

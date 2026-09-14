@@ -1,21 +1,23 @@
 #!/usr/bin/env python3
 # s6.py
 #!/usr/bin/python
+import glob
 import os, subprocess, sys, argparse, platform,socket
+from urllib.parse import urlparse
 from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideFolderList, getYamlFileNamesInsideFolderList, \
     getYamlFilePathInsideFolderList1
 from colorama import Fore
 
-from utils.ods_list import configureMetricsXML
+from utils.ods_list import configureMetricsXML, configureMetricsProperties, configureOtelIdentity, configureCefLogging
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
     executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
-    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
+    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
@@ -433,13 +435,18 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         if(summaryConfirm == 'y' or summaryConfirm =='yes'):
             sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-            verboseHandle.printConsoleInfo("Downloading XAP/DIH ...")
             gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
             if not xap_download_url:
                 raise RuntimeError("Artifact xap not found")
 
-            downloaded_path = download_artifact(xap_download_url, gs_dest_path)
-            print("Downloaded at path: "+downloaded_path)
+            existing_files = glob.glob(os.path.join(gs_dest_path, 'gigaspaces-smart-cache*.zip'))
+            if existing_files:
+                downloaded_path = existing_files[0]
+                verboseHandle.printConsoleInfo("XAP/DIH file already exists at " + downloaded_path + ", skipping download.")
+            else:
+                verboseHandle.printConsoleInfo("Downloading XAP/DIH ...")
+                downloaded_path = download_artifact(xap_download_url, gs_dest_path)
+                print("Downloaded at path: "+downloaded_path)
             #if(len(additionalParam)==0):
             additionalParam= 'true'+' '+targetDir+' '+hostsConfig+' '+gsOptionExt+' '+gsManagerOptions+' '+gsLogsConfigFile+' '+gsLicenseFile+' '+applicativeUser+' '+nofileLimitFile+' '+wantToInstallJava+' '+wantToInstallUnzip+' '+sourceInstallerDirectory
             #else:
@@ -448,7 +455,11 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             additionalParam=additionalParam+' '+logTargetPath+' '+logSourcePath
             logger.info('additional param :'+additionalParam)
             output=""
+            # Remove stale tar to ensure fresh build from current install/ contents
+            if os.path.exists('install/install.tar'):
+                os.remove('install/install.tar')
             logger.info("Building .tar file : tar -cvf install/install.tar install")
+            render_install_templates()
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
                 status = os.system(cmd)
@@ -509,6 +520,13 @@ def installManagerServer(host,additionalParam,output,newZkJarTarget,selinuxEnabl
         #verboseHandle.printConsoleInfo(cefLoggingJarInput+" -> "+cefLoggingJarInputTarget)
         #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
         configureMetricsXML(host)
+        # 17.3.0+ reads config/metrics/metrics.properties, not gs_config/metrics.xml.
+        configureMetricsProperties(host)
+        # Distinct Prometheus job label per cluster (OTEL_* env vars).
+        configureOtelIdentity(host)
+        # CEF handler jar onto the boot classpath + its log path resolved; a no-op
+        # when the deployed xap_logging.properties does not enable CEF.
+        configureCefLogging(host)
     serverHost=''
     try:
         serverHost = socket.gethostbyaddr(host).__getitem__(0)
@@ -525,44 +543,28 @@ def getPlainOutput(input):
 
 def validateRPMS():
     logger.info("validateRPM()")
-    installerArray = []
-    cmd = "pwd"
-    home = executeLocalCommandAndGetOutput(cmd)
-    home = getPlainOutput(home)
-    logger.info("home dir : " + str(home))
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))#str(readValuefromAppConfig("app.setup.sourceInstaller"))
-    cmd = 'find ' + str(sourceInstallerDirectory) + '/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-    javaRpm = executeLocalCommandAndGetOutput(cmd)
-    javaRpm = getPlainOutput(javaRpm)
-    logger.info("javaRpm found :" + str(javaRpm))
-
-    cmd = 'find ' + str(sourceInstallerDirectory)  + '/unzip/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-    unZip = executeLocalCommandAndGetOutput(cmd)
-    unZip = getPlainOutput(unZip)
-    logger.info("unZip found :" + str(unZip))
-
+    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     cmd = 'find ' + str(sourceInstallerDirectory) + '/gs/ -name *.zip -printf "%f\n"'  # Checking .zip file on Pivot machine
     gsZip = executeLocalCommandAndGetOutput(cmd)
     gsZip = getPlainOutput(gsZip)
     logger.info("Gigaspace Zip found :" + str(gsZip))
 
-    di_installer_dict = obj_type_dictionary()
-    di_installer_dict.add('Java', javaRpm)
-    di_installer_dict.add('unZip', unZip)
-    di_installer_dict.add('gsZip', gsZip)
-
-    for name, installer in di_installer_dict.items():
-        if (len(str(installer)) == 0):
-            verboseHandle.printConsoleInfo(
-                "Pre-requisite installer " + str(gsZip) + " not found")
-            return False
+    if len(str(gsZip)) == 0:
+        verboseHandle.printConsoleInfo(
+            "Pre-requisite installer " + str(sourceInstallerDirectory) + "/gs/*.zip not found")
+        return False
     return True
 
 def downloadDihGSPackage():
     sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
     gs_dest_path = str(sourceInstallerDirectory) + '/gs/'
     pkg = parse_package_file("config/dih-package.json")
-    downloaded_path = process_artifact_by_id(pkg, "xap", gs_dest_path)
+    existing_files = glob.glob(os.path.join(gs_dest_path, 'gigaspaces-smart-cache*.zip'))
+    if existing_files:
+        verboseHandle.printConsoleInfo("XAP/DIH file already exists at " + existing_files[0] + ", skipping download.")
+        downloaded_path = existing_files[0]
+    else:
+        downloaded_path = process_artifact_by_id(pkg, "xap", gs_dest_path)
     print("downloaded_path: " + downloaded_path)
 
 
@@ -584,9 +586,9 @@ if __name__ == '__main__':
             #args.append(host)
             #user = readValuefromAppConfig("app.server.user")
             #user = str(userInputWrapper("Enter your user [root]: "))
-            user='root'
+            user = get_ssh_user()
             if(len(str(user))==0):
-                user="root"
+                user = get_ssh_user()
             args.append('-u')
             args.append(user)
             hostsConfig = readValuefromAppConfig("app.manager.hosts")

@@ -246,7 +246,7 @@ def show_policy_info(args):
             logger.error("No manager found")
         if selectedValue.name != "simpleSpaceRecoveryPolicy":
             with Spinner():
-                executeLocalCommandAndGetOutput("sudo systemctl restart --quiet odsxrecovery.service")
+                executeLocalCommandAndGetOutput("systemctl --user restart --quiet odsxrecovery.service")
         verboseHandle.printConsoleInfo("Done")
 
 

@@ -2,6 +2,8 @@
 # !/usr/bin/python
 
 import os
+import re
+import socket
 from colorama import Fore
 
 from scripts.spinner import Spinner
@@ -9,8 +11,9 @@ from utils.ods_cluster_config import config_get_grafana_list, config_get_influxd
 from utils.ods_validation import getTelnetStatus
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, executeRemoteCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput
-from utils.ods_app_config import readValuefromAppConfig
+    executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, get_ssh_user, \
+    executeRemoteShCommandAndGetOutput
+from utils.ods_app_config import readValuefromAppConfig, getYamlFilePathInsideFolder
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -68,12 +71,12 @@ def isInstalledAndGetVersionGrafana(host):
     logger.info("isInstalledAndGetVersion")
     commandToExecute='ls /usr/lib/systemd/system/grafana*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     if len(str(outputShFile)) ==0:
-        commandToExecute='ls /etc/systemd/system/grafana*'
+        commandToExecute='ls ~/.config/systemd/user/grafana*'
         logger.info("commandToExecute :"+str(commandToExecute))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
         outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -98,9 +101,9 @@ def getGrafanaServerDetails(grafanaServers):
 
 def isInstalledAndGetVersionInflux(host):
     logger.info("isInstalledAndGetVersion")
-    commandToExecute='ls /etc/systemd/system/influx*'
+    commandToExecute='rpm -q influxdb && ls /usr/lib/systemd/system/influxdb.service'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -109,7 +112,7 @@ def isInstalledIIDRAccessServer(host):
     logger.info("isInstalledIIDRAccessServer")
     commandToExecute='ls /giga/iidr/as*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -118,7 +121,7 @@ def isInstalledIIDRKafkaAgent(host):
     logger.info("isInstalledIIDRKafkaAgent")
     commandToExecute='ls /giga/iidr/kafka*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -127,16 +130,16 @@ def isInstalledIIDROracleAgent(host):
     logger.info("isInstalledIIDROracleAgent")
     commandToExecute='ls /giga/iidr/oracle*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
 
 def isInstalledIIDRSubscriptionManager(host):
     logger.info("isInstalledIIDRSubscriptionManager")
-    commandToExecute='ls /home/gsods/di-subscription-manager/latest-di-subscription-manager*'
+    commandToExecute='ls $HOME/di-subscription-manager/latest-di-subscription-manager*'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -163,8 +166,8 @@ def validateMetricsXmlInfluxUrl(ip):
     logger.info("validateMetricsXmlInfluxUrl()")
     cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/datasources/datasource/property[@name=\"url\"]/@value)' "+dbaGigaPath+"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    #output3 = executeRemoteCommandAndGetOutput(ip,"root",cmdToExecute)
-    output3 = executeRemoteCommandAndGetOutputValuePython36(ip, 'root', cmdToExecute)
+    #output3 = executeRemoteCommandAndGetOutput(ip,get_ssh_user(),cmdToExecute)
+    output3 = executeRemoteCommandAndGetOutputValuePython36(ip, get_ssh_user(), cmdToExecute)
     output3=str(output3).replace('\n','')
     logger.info("output3"+str(output3))
     influxUrl="http://"+str(getInfluxdbServers())+":8086"
@@ -188,7 +191,7 @@ def validateMetricsXmlInflux(ip):
     logger.info("validateMetricsXml()")
     cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/reporters/reporter/property/@value)' "+ dbaGigaPath +"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output1 = executeRemoteCommandAndGetOutputValuePython36(ip,"root",cmdToExecute)
+    output1 = executeRemoteCommandAndGetOutputValuePython36(ip,get_ssh_user(),cmdToExecute)
     output1=str(output1).replace('\n','')
     logger.info("output1"+str(output1))
     if str(output1)==str(getInfluxdbServers()):
@@ -200,7 +203,7 @@ def validateMetricsXmlGrafana(ip):
     logger.info("validateMetricsXmlGrafana()")
     cmdToExecute = "xmllint --xpath 'string(/metrics-configuration/grafana/@url)' "+ dbaGigaPath +"/gs_config/metrics.xml"
     logger.info("cmdToExecute : "+str(cmdToExecute))
-    output2 = executeRemoteCommandAndGetOutputValuePython36(ip,"root",cmdToExecute)
+    output2 = executeRemoteCommandAndGetOutputValuePython36(ip,get_ssh_user(),cmdToExecute)
     output2=str(output2).replace('\n','')
     grafanaUrl = "http://"+str(getGrafanaServers())+":3000"
     logger.info("output2"+str(output2))
@@ -212,37 +215,16 @@ def validateMetricsXmlGrafana(ip):
 def validateRPMS():
     logger.info("validateRPM()")
     try:
-        installerArray = []
-        cmd = "pwd"
-        home = executeLocalCommandAndGetOutput(cmd)
-        home = getPlainOutput(home)
-        logger.info("home dir : " + str(home))
         sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-        cmd = 'find ' + str(sourceInstallerDirectory) + '/jdk/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-        javaRpm = executeLocalCommandAndGetOutput(cmd)
-        javaRpm = getPlainOutput(javaRpm)
-        logger.info("javaRpm found :" + str(javaRpm))
-
-        cmd = 'find ' + str(sourceInstallerDirectory)  + '/unzip/ -name *.rpm -printf "%f\n"'  # Checking .rpm file on Pivot machine
-        unZip = executeLocalCommandAndGetOutput(cmd)
-        unZip = getPlainOutput(unZip)
-        logger.info("unZip found :" + str(unZip))
-
         cmd = 'find ' + str(sourceInstallerDirectory) + '/gs/ -name *.zip -printf "%f\n"'  # Checking .zip file on Pivot machine
         gsZip = executeLocalCommandAndGetOutput(cmd)
         gsZip = getPlainOutput(gsZip)
         logger.info("Gigaspace Zip found :" + str(gsZip))
 
-        di_installer_dict = obj_type_dictionary()
-        di_installer_dict.add('Java', javaRpm)
-        di_installer_dict.add('unZip', unZip)
-        di_installer_dict.add('gsZip', gsZip)
-
-        for name, installer in di_installer_dict.items():
-            if (len(str(installer)) == 0):
-                verboseHandle.printConsoleInfo(
-                    "Pre-requisite installer " + str(home) + "/install/" + str(name) + " not found")
-                return False
+        if len(str(gsZip)) == 0:
+            verboseHandle.printConsoleInfo(
+                "Pre-requisite installer " + str(sourceInstallerDirectory) + "/gs/*.zip not found")
+            return False
         return True
     except Exception as e:
         handleException(e)
@@ -257,8 +239,335 @@ def configureMetricsXML(host):
     try:
         cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" '+ dbaGigaPath +'/gs_config/metrics.xml'
         logger.info(cmd)
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
     except Exception as e:
         handleException(e)
+
+# --- GigaSpaces 17.3.0+ : metrics.properties replaces metrics.xml ------------
+# From 17.3.0 the distribution ships no metrics.xml at all, and
+# MetricsConfigLoader reads "<com.gs.home>/config/metrics/metrics.properties".
+# It resolves that path from -Dcom.gs.home and returns BEFORE looking at
+# -Dcom.gigaspaces.metrics.config, so the XML written by configureMetricsXML()
+# above is silently ignored on those versions. configureMetricsXML is kept for
+# pre-17.3 clusters, which still read it.
+
+METRICS_PROPERTIES_REL_PATH = "/gigaspaces-smart-ods/config/metrics/metrics.properties"
+
+def getGsMetricsPropertiesPath():
+    """Absolute path of the metrics.properties the platform actually reads."""
+    return dbaGigaPath + METRICS_PROPERTIES_REL_PATH
+
+def getPrometheusServers():
+    """Host running Prometheus / the OTLP receiver.
+
+    host.yaml has no dedicated 'prometheus' category on most environments, so
+    fall back to the pivot, which is where the receiver is normally run.
+    """
+    for key in ("prometheus1", "pivot1"):
+        value = os.getenv(key)
+        if value and value != "None":
+            return str(value)
+    return None
+
+def configureMetricsProperties(host):
+    """Substitute this environment's endpoints into metrics.properties on host."""
+    logger.info("configureMetricsProperties()")
+    try:
+        target = getGsMetricsPropertiesPath()
+        replacements = []
+        prometheusHost = getPrometheusServers()
+        if prometheusHost:
+            replacements.append(("prometheus1:9090", prometheusHost + ":9090"))
+        else:
+            verboseHandle.printConsoleWarning(
+                "No 'prometheus' or 'pivot' host in host.yaml - leaving the OTLP "
+                "placeholder unresolved in " + target)
+        influxdbHost = os.getenv("influxdb1")
+        if influxdbHost and influxdbHost != "None":
+            replacements.append(("influxdb1:8086", str(influxdbHost) + ":8086"))
+        grafanaHost = os.getenv("grafana1")
+        if grafanaHost and grafanaHost != "None":
+            replacements.append(("grafana1:3000", str(grafanaHost) + ":3000"))
+        gigaLogPath = readValuefromAppConfig("app.gigalog.path")
+        if gigaLogPath and gigaLogPath != "None":
+            replacements.append(("@GIGALOGPATH@", str(gigaLogPath)))
+        else:
+            verboseHandle.printConsoleWarning(
+                "app.gigalog.path is not set - leaving the file-tap placeholder "
+                "unresolved in " + target)
+        if not replacements:
+            return
+        cmd = ';'.join('sed -i "s|' + old + '|' + new + '|g" ' + target
+                       for old, new in replacements)
+        logger.info(cmd)
+        with Spinner():
+            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), cmd)
+    except Exception as e:
+        handleException(e)
+
+def validateMetricsPropertiesOtlp(ip):
+    """Return "Yes" when metrics.properties on ip enables OTLP to our Prometheus."""
+    logger.info("validateMetricsPropertiesOtlp()")
+    try:
+        target = getGsMetricsPropertiesPath()
+        cmd = ("grep -E '^[[:space:]]*metrics\\.(registries|otlp\\.url)[[:space:]]*=' "
+               + target + " 2>/dev/null")
+        logger.info("cmdToExecute : " + str(cmd))
+        output = executeRemoteCommandAndGetOutputValuePython36(ip, get_ssh_user(), cmd)
+        output = getPlainOutput(output)
+        logger.info("output : " + str(output))
+        prometheusHost = getPrometheusServers()
+        if "otlp" in output and prometheusHost and prometheusHost in output:
+            return "Yes"
+        return "No"
+    except Exception as e:
+        handleException(e)
+        return "No"
+
+# --- OTel resource identity: one Prometheus job label per cluster -----------
+# The 17.3.0 OTLP registry takes its OTel *resource* attributes ONLY from the
+# standard OTEL_* environment variables - its OtlpConfig implementation returns
+# null for every key, so there is no metrics.otlp.* property for them and -D
+# flags are ignored. Prometheus' OTLP receiver then always derives
+# job="<service.namespace>/<service.name>" and instance="<service.instance.id>",
+# so exporting the two variables below is what keeps several clusters apart in
+# one Prometheus - with no configuration change on the Prometheus side.
+# GSCs inherit their environment from the GSA, so the exports belong in
+# setenv-overrides.sh, which the platform sources at startup.
+
+SETENV_OVERRIDES_REL_PATH = "/gigaspaces-smart-ods/bin/setenv-overrides.sh"
+OTEL_DEFAULT_SERVICE_NAME = "gigaspaces"
+
+# Resolved relative to this file so it works regardless of the caller's cwd.
+_OTEL_IDENTITY_SCRIPT = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "scripts",
+                 "configure_otel_identity.sh"))
+
+_LOOKUP_GROUP_RE = re.compile(r'com\.gs\.jini_lus\.groups=([^\s"]+)')
+
+
+def getSetenvOverridesPath():
+    """Absolute path of the setenv-overrides.sh the platform sources."""
+    return dbaGigaPath + SETENV_OVERRIDES_REL_PATH
+
+
+def getClusterLookupGroup():
+    """This cluster's GigaSpaces lookup group, or None if it is not unambiguous.
+
+    Used as OTel service.namespace because it already uniquely names the grid:
+    it defines cluster membership, so it cannot drift from the cluster it
+    labels, and it is not otherwise used as a metric label.
+
+    The group has no dedicated app.config key - it is embedded in the
+    app.{manager,space}[.security].gsOptionExt values as
+    -Dcom.gs.jini_lus.groups=<group>, so app.config is parsed as text here.
+    readValuefromAppConfig() is NOT usable for it: setConfigProperties() splits
+    each line on "=" and keeps field [1], which truncates any gsOptionExt value
+    to '"-Dcom.gs.work'.
+    """
+    logger.info("getClusterLookupGroup()")
+    try:
+        appConfig = os.path.join(str(os.getenv("ENV_CONFIG")), "app.config")
+        with open(appConfig) as f:
+            groups = sorted(set(_LOOKUP_GROUP_RE.findall(f.read())))
+        logger.info("lookup groups found : " + str(groups))
+        if len(groups) == 1:
+            return groups[0]
+        if not groups:
+            verboseHandle.printConsoleWarning(
+                "No -Dcom.gs.jini_lus.groups in " + appConfig + " - cannot label "
+                "this cluster's metrics, so they stay job=\"unknown_service\" in "
+                "Prometheus.")
+        else:
+            verboseHandle.printConsoleWarning(
+                "Conflicting lookup groups in " + appConfig + " : "
+                + ", ".join(groups) + " - refusing to guess which one names this "
+                "cluster. Align them, then re-run Utilities -> Metrics.")
+        return None
+    except Exception as e:
+        handleException(e)
+        return None
+
+
+def configureOtelIdentity(host, namespace=None, serviceName=OTEL_DEFAULT_SERVICE_NAME):
+    """Export this cluster's OTel identity in setenv-overrides.sh on host.
+
+    Called right after the metrics config during install - that is before the
+    manager and space servers are started, so the JVMs pick the variables up on
+    their first start and no extra restart is needed.
+
+    Goes through executeRemoteShCommandAndGetOutput (a script piped to remote
+    bash) rather than executeRemoteCommandAndGetOutput*Python36, because those
+    split the command on " " and so cannot carry an argument containing a space
+    - and every line written here does.
+    """
+    logger.info("configureOtelIdentity()")
+    try:
+        namespace = namespace or getClusterLookupGroup()
+        if not namespace:
+            return   # getClusterLookupGroup() has already said why
+        target = getSetenvOverridesPath()
+        params = target + " " + namespace + " " + serviceName
+        logger.info("configure_otel_identity.sh params : " + params)
+        with Spinner():
+            output = executeRemoteShCommandAndGetOutput(
+                host, get_ssh_user(), params, _OTEL_IDENTITY_SCRIPT)
+        logger.info("output : " + str(output))
+    except Exception as e:
+        handleException(e)
+
+
+def validateOtelIdentity(ip):
+    """Return the OTel service.namespace exported on ip, or "No"."""
+    logger.info("validateOtelIdentity()")
+    try:
+        cmd = ("grep -hE '^export[[:space:]]*OTEL_RESOURCE_ATTRIBUTES=' "
+               + getSetenvOverridesPath() + " 2>/dev/null")
+        logger.info("cmdToExecute : " + str(cmd))
+        output = getPlainOutput(executeRemoteCommandAndGetOutputValuePython36(
+            ip, get_ssh_user(), cmd))
+        logger.info("output : " + str(output))
+        # Exclude the quote too: getPlainOutput() strips quotes, but do not
+        # depend on that - the raw line is OTEL_RESOURCE_ATTRIBUTES="k=v".
+        match = re.search(r'service\.namespace=([^,\s"]+)', output)
+        return match.group(1) if match else "No"
+    except Exception as e:
+        handleException(e)
+        return "No"
+
+
+# --- CEF audit logging ------------------------------------------------------
+# xap_logging.properties names com.gs.CEFRollingFileHandler in its handlers
+# line, but that class lives in CEFLogger-1.0-SNAPSHOT.jar on the shared
+# filesystem. java.util.logging loads handler classes with the application
+# classloader at LogManager init, so without the jar on the JVM's -classpath
+# every GigaSpaces process on the host fails with
+#   Can't load log handler "com.gs.CEFRollingFileHandler"
+#   java.lang.ClassNotFoundException: com.gs.CEFRollingFileHandler
+# and logs no CEF at all. Only the security install flows ever deployed the
+# jar, so every non-security cluster hit this. See scripts/configure_cef_logging.sh
+# for why lib/required/ is the target and why GS_CLASSPATH_EXT is not.
+
+CEF_JAR_YAML_PATH = ".gs.jars.cef.cefjar"
+
+# Resolved relative to this file so it works regardless of the caller's cwd.
+_CEF_LOGGING_SCRIPT = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "scripts",
+                 "configure_cef_logging.sh"))
+
+
+def getGsLogsConfigPath():
+    """Absolute path of the xap_logging.properties the platform reads.
+
+    app.manager.gsLogsConfigFile holds it for both managers and spaces - the
+    path is the same on every host. Derived from app.giga.path if that key is
+    blank, matching getSetenvOverridesPath() and getGsMetricsPropertiesPath().
+    """
+    configured = readValuefromAppConfig("app.manager.gsLogsConfigFile")
+    if configured and configured != "None":
+        return str(configured).replace('"', '')
+    return dbaGigaPath + "/gs_config/xap_logging.properties"
+
+
+def configureCefLogging(host):
+    """Deploy the CEF handler jar on host and point it at this log root.
+
+    Called right after configureOtelIdentity() during install - that is before
+    the servers are started, so the JVMs pick the handler up on their first
+    start and no extra restart is needed. A no-op on clusters whose deployed
+    xap_logging.properties does not enable the CEF handler, so it is safe to
+    call from every install flow unconditionally.
+
+    Goes through executeRemoteShCommandAndGetOutput (a script piped to remote
+    bash) rather than executeRemoteCommandAndGetOutput*Python36, because those
+    split the command on " " and so cannot carry the brace-and-comma
+    filename-pattern this writes.
+    """
+    logger.info("configureCefLogging()")
+    try:
+        jarSource = str(getYamlFilePathInsideFolder(CEF_JAR_YAML_PATH)) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        jarTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        logConfig = getGsLogsConfigPath()
+        gigaLogPath = readValuefromAppConfig("app.gigalog.path")
+        missing = [name for name, value in (
+            ("app.yaml " + CEF_JAR_YAML_PATH, jarSource),
+            ("app.cefLogging.jar.target", jarTarget),
+            ("app.manager.gsLogsConfigFile", logConfig),
+            ("app.gigalog.path", gigaLogPath)) if not value or value == "None"]
+        if missing:
+            verboseHandle.printConsoleWarning(
+                "Cannot configure CEF logging on " + str(host) + " - unset: "
+                + ", ".join(missing) + ". CEF stays broken with "
+                "ClassNotFoundException: com.gs.CEFRollingFileHandler.")
+            return
+        params = (logConfig + " " + jarSource + " " + jarTarget + " "
+                  + str(gigaLogPath))
+        logger.info("configure_cef_logging.sh params : " + params)
+        with Spinner():
+            output = executeRemoteShCommandAndGetOutput(
+                host, get_ssh_user(), params, _CEF_LOGGING_SCRIPT)
+        logger.info("output : " + str(output))
+    except Exception as e:
+        handleException(e)
+
+
+def validateCefLogging(ip):
+    """Return "Yes" when the CEF handler class is deployed on ip, else "No"."""
+    logger.info("validateCefLogging()")
+    try:
+        jarTarget = str(readValuefromAppConfig("app.cefLogging.jar.target")) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        jarSource = str(getYamlFilePathInsideFolder(CEF_JAR_YAML_PATH)) \
+            .replace('[', '').replace(']', '').replace('"', '')
+        if not jarTarget or jarTarget == "None" or not jarSource or jarSource == "None":
+            return "No"
+        target = jarTarget.rstrip('/') + "/" + os.path.basename(jarSource)
+        cmd = "ls " + target
+        logger.info("cmdToExecute : " + str(cmd))
+        output = getPlainOutput(executeRemoteCommandAndGetOutputValuePython36(
+            ip, get_ssh_user(), cmd))
+        logger.info("output : " + str(output))
+        return "Yes" if target in output else "No"
+    except Exception as e:
+        handleException(e)
+        return "No"
+
+
+def addGscCountForContainer(host_gsc_dict_obj, containerHostname):
+    # The manager reports each container under its own machine's hostname
+    # (e.g. an EC2 internal FQDN), which may differ from the name this machine
+    # resolves for that host. Count it under every candidate key - full
+    # hostname, short hostname and forward-resolved IP - so a lookup by any
+    # of them succeeds.
+    logger.info("addGscCountForContainer() : containerHostname :"+str(containerHostname))
+    keys = {str(containerHostname), str(containerHostname).split('.')[0]}
+    try:
+        keys.add(socket.gethostbyname(str(containerHostname)))
+    except OSError as e:
+        logger.info("Could not resolve container hostname "+str(containerHostname)+" : "+str(e))
+    for key in keys:
+        if key in host_gsc_dict_obj:
+            host_gsc_dict_obj[key] = host_gsc_dict_obj[key]+1
+        else:
+            host_gsc_dict_obj[key] = 1
+    return host_gsc_dict_obj
+
+def getGscCountForHost(host_gsc_dict_obj, host):
+    logger.info("getGscCountForHost() : host :"+str(host))
+    gsc = host_gsc_dict_obj.get(str(host))
+    if gsc is None:
+        # Fall back to reverse DNS (full then short name) for setups where the
+        # container hostname could not be forward-resolved to this host's IP.
+        try:
+            reverseName = str(socket.gethostbyaddr(str(host)).__getitem__(0))
+            gsc = host_gsc_dict_obj.get(reverseName)
+            if gsc is None:
+                gsc = host_gsc_dict_obj.get(reverseName.split('.')[0])
+        except OSError as e:
+            logger.info("Could not reverse-resolve host "+str(host)+" : "+str(e))
+    logger.info("GSC count for host "+str(host)+" : "+str(gsc))
+    return gsc

@@ -121,7 +121,7 @@ def setupOrReloadService(spaceName,schedulerInterval,managerServer,dbLocation,re
         with Spinner():
             os.system(commandToExecute)
         
-            os.system('sudo systemctl daemon-reload')
+            os.system('systemctl --user daemon-reload')
         
             logger.info("setupOrReloadService() completed")
 

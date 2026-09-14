@@ -1,6 +1,15 @@
 #!/bin/bash
 #set -x
 # prints colored text
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 print_style () {
     if [ "$2" == "debug" ] ; then
         COLOR="96m";
@@ -115,7 +124,7 @@ sed -i '/export KAPACITOR_URL/d' ~/.bash_profile
 echo "kapacitor_url:"$kapacitor_url
 echo "$kapacitor_url" >> ~/.bash_profile
 source ~/.bash_profile
-systemctl daemon-reload
+systemctl --user daemon-reload
 sleep 2
 #For debug
 #sed -i -e 's|#   endpoint = "example"|  endpoint = "debug"|g' /etc/kapacitor/kapacitor.conf

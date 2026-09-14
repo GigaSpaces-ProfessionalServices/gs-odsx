@@ -10,7 +10,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -183,7 +183,7 @@ def proceedToKillResource(spaceNodes):
     print(commandToExecute)
     logger.info(commandToExecute)
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), commandToExecute)
         print(output)
         logger.info("Output:" + str(output))
 

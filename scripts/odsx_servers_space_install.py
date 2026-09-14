@@ -5,16 +5,16 @@ import os, subprocess, sys, argparse, platform,socket
 from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
     getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
 from colorama import Fore
 
-from utils.ods_list import getManagerHostFromEnv, configureMetricsXML
+from utils.ods_list import getManagerHostFromEnv, configureMetricsXML, configureMetricsProperties, configureOtelIdentity, configureCefLogging
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, connectExecuteSSH, \
-    executeRemoteCommandAndGetOutputValuePython36
+    executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_cluster_config import config_add_space_node, config_get_cluster_airgap, config_get_space_hosts,isInstalledAndGetVersion, \
     config_get_space_list_with_status
 
@@ -299,7 +299,7 @@ def execute_ssh_server_manager_install(hostsConfig,user):
 
         spaceHostConfig = []
         spaceStart = ''
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = config_get_space_list_with_status(user)
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to install individual server. \nPress [Enter] to install all. \nPress [99] for exit.: "+Fore.RESET))
@@ -478,6 +478,10 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
         with Spinner():
             status = os.system(cmd)
         '''
+        # Remove stale tar to ensure fresh build from current install/ contents
+        if os.path.exists('install/install.tar'):
+            os.remove('install/install.tar')
+        render_install_templates()
         cmd = 'tar -cvf install/install.tar install'
         with Spinner():
             status = os.system(cmd)
@@ -531,6 +535,13 @@ def installSpaceServer(host,additionalParam,host_nic_dict_obj,cefLoggingJarInput
             #verboseHandle.printConsoleInfo(getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" ->"+msSqlFeederFileTarget)
             #executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+getYamlFilePathInsideConfigFolder("..security.sqljdbc")+" "+msSqlFeederFileTarget)
             configureMetricsXML(host)
+            # 17.3.0+ reads config/metrics/metrics.properties, not gs_config/metrics.xml.
+            configureMetricsProperties(host)
+            # Distinct Prometheus job label per cluster (OTEL_* env vars).
+            configureOtelIdentity(host)
+            # CEF handler jar onto the boot classpath + its log path resolved; a no-op
+            # when the deployed xap_logging.properties does not enable CEF.
+            configureCefLogging(host)
         serverHost=''
         try:
             serverHost = socket.gethostbyaddr(host).__getitem__(0)
@@ -561,7 +572,7 @@ if __name__ == '__main__':
             #user = readValuefromAppConfig("app.server.user")
             #user = str(userInputWrapper("Enter your user [root]: "))
             #if(len(str(user))==0):
-            user="root"
+            user = get_ssh_user()
             args.append('-u')
             args.append(user)
             hostsConfig = readValuefromAppConfig("app.manager.hosts")

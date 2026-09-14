@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+import getpass
 import os
 import subprocess
 from subprocess import Popen, PIPE
@@ -9,37 +10,68 @@ from scripts.logManager import LogManager
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 
+def get_ssh_user():
+    user = readValuefromAppConfig("app.server.user")
+    return user if user else getpass.getuser()
+
+# Absolute path to the bash helper that defines read_property() (and
+# validate_nonempty_paths). Resolved relative to this file so it works no
+# matter what the caller's cwd is.
+_LIB_APP_CONFIG = os.path.normpath(
+    os.path.join(os.path.dirname(__file__), "..", "scripts", "lib_app_config.sh")
+)
+
+def build_remote_bash_cmd(host, user, shellScript, bash_args=""):
+    """
+    Build a `cat lib_app_config.sh script.sh | ssh user@host bash <bash_args>` command.
+
+    Prepending lib_app_config.sh defines read_property() (and validate_nonempty_paths)
+    on the remote — REQUIRED for any remote shell script that reads paths from
+    app.config. Loud failure if the helper file is missing locally, since silent
+    degradation here previously caused a `rm -rf /*` event in production.
+
+    bash_args examples:
+      ""             -> remote runs `bash` (script body via stdin, no positional args)
+      "-s foo bar"   -> remote runs `bash -s foo bar` (positional args $1=foo $2=bar)
+      "-l"           -> remote runs `bash -l` as a login shell
+      "-l -s baz"    -> login shell with positional args
+    """
+    if not os.path.isfile(_LIB_APP_CONFIG):
+        raise FileNotFoundError(
+            "Required helper missing: {}. Cannot build remote SSH command "
+            "without read_property() definition.".format(_LIB_APP_CONFIG)
+        )
+    isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
+    pemFileName = readValuefromAppConfig("cluster.pemFile")
+    pem = " -i " + pemFileName if isConnectUsingPem == "True" else ""
+    bash_args = bash_args.strip()
+    bash_part = ("bash " + bash_args) if bash_args else "bash"
+    return "cat {helper} {script} | ssh{pem} {user}@{host} {bash_part}".format(
+        helper=_LIB_APP_CONFIG,
+        script=shellScript,
+        pem=pem,
+        user=user,
+        host=host,
+        bash_part=bash_part,
+    )
+
 def connectExecuteSSH(host, user, shellScript, params):
-    if (isValidHost(host)):
-        isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
-        pemFileName = readValuefromAppConfig("cluster.pemFile")
-        if (isConnectUsingPem=='True'):
-            ssh = ''.join(['ssh', ' -i ', pemFileName, ' ', user, '@', host, ' '])
-        else:
-            ssh = ''.join(['ssh', ' ', host, ' '])
-        if (len(params) > 0):
-            cmd = ssh + 'bash' + ' -s ' + params + ' < ' + shellScript  # + '>> myl
-        else:
-            cmd = ssh + 'bash' + ' < ' + shellScript  # + '>> myl
-        status = os.system(cmd)
-    else:
-        print("Invalid Host / IP."+str(host))
+    if not isValidHost(host):
+        print("Invalid Host / IP." + str(host))
+        return
+    bash_args = ("-s " + params) if (params and len(params) > 0) else ""
+    cmd = build_remote_bash_cmd(host, user, shellScript, bash_args)
+    logger.info("cmd:" + str(cmd))
+    os.system(cmd)
 
 def connectExecuteSSHWithLoginProxy(host, user, shellScript, params):
-    if (isValidHost(host)):
-        isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
-        pemFileName = readValuefromAppConfig("cluster.pemFile")
-        if (isConnectUsingPem=='True'):
-            ssh = ''.join(['ssh', ' -i ', pemFileName, ' ', user, '@', host, ' '])
-        else:
-            ssh = ''.join(['ssh', ' ', host, ' '])
-        if (len(params) > 0):
-            cmd = ssh + 'bash' + ' -l -s ' + params + ' < ' + shellScript  # + '>> myl
-        else:
-            cmd = ssh + 'bash' + ' -l < ' + shellScript  # + '>> myl
-        status = os.system(cmd)
-    else:
-        print("Invalid Host / IP."+str(host))
+    if not isValidHost(host):
+        print("Invalid Host / IP." + str(host))
+        return
+    bash_args = ("-l -s " + params) if (params and len(params) > 0) else "-l"
+    cmd = build_remote_bash_cmd(host, user, shellScript, bash_args)
+    logger.info("cmd:" + str(cmd))
+    os.system(cmd)
 
 def executeRemoteCommandAndGetOutput(host, user, commandToExecute):
     logger.info("executeRemoteCommandAndGetOutput host:"+str(host)+" user:"+str(user)+" commmandToExecute:"+str(commandToExecute))
@@ -50,7 +82,7 @@ def executeRemoteCommandAndGetOutput(host, user, commandToExecute):
     if(isConnectUsingPem=='True'):
         cmd = "ssh -i " + pemFileName + " " + user + "@" + host + " " + commandToExecute
     else:
-        cmd = "ssh" +" " + host + " " + commandToExecute
+        cmd = "ssh" +" " + user + "@" + host + " " + commandToExecute
     logger.info("cmd :"+str(cmd))
     cmdArray = cmd.split(" ")
     logger.info("cmdArray:"+str(cmdArray))
@@ -67,7 +99,7 @@ def executeRemoteCommandAndGetOutputPython36(host, user, commandToExecute):
     if(isConnectUsingPem=='True'):
         cmd = "ssh -i " + pemFileName + " " + user + "@" + host + " " + commandToExecute
     else:
-        cmd = "ssh" +" " + host + " " + commandToExecute
+        cmd = "ssh" +" " + user + "@" + host + " " + commandToExecute
     logger.info("cmd :"+str(cmd))
     cmdArray = cmd.split(" ")
     logger.info("cmdArray:"+str(cmdArray))
@@ -87,7 +119,7 @@ def executeRemoteCommandAndGetOutputValuePython36(host, user, commandToExecute):
     if(isConnectUsingPem=='True'):
         cmd = "ssh -i " + pemFileName + " " + user + "@" + host + " " + commandToExecute
     else:
-        cmd = "ssh" +" " + host + " " + commandToExecute
+        cmd = "ssh" +" " + user + "@" + host + " " + commandToExecute
     logger.info("cmd :"+str(cmd))
     cmdArray = cmd.split(" ")
     logger.info("cmdArray:"+str(cmdArray))
@@ -103,18 +135,11 @@ def executeRemoteCommandAndGetOutputValuePython36(host, user, commandToExecute):
 
 def executeRemoteShCommandAndGetOutput(host, user, additionalparam, commandToExecute):
     logger.info("executeRemoteShCommandAndGetOutput host:"+str(host)+" user:"+str(user)+" additinalparam:"+str(additionalparam)+" cmdtoexec:"+str(commandToExecute))
-    pemFileName = readValuefromAppConfig("cluster.pemFile")
-    logger.info("pemFileName : "+str(pemFileName))
-    # ssh -i aharon_ami.pem ec2-user@34.245.126.19 < scripts/streams_status.sh
-    isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
-    logger.info("isConnectUsingPem :"+str(isConnectUsingPem))
-    if(isConnectUsingPem=='True'):
-        cmd = "ssh -i " + pemFileName + ' ' + user + "@" + host + ' ' + 'bash' + ' -s ' + additionalparam + " < " + commandToExecute
-    else:
-        cmd = "ssh " + host + ' ' + 'bash' + ' -s ' + additionalparam + " < " + commandToExecute
-    logger.info("cmd:"+str(cmd))
+    bash_args = "-s " + additionalparam if additionalparam else "-s"
+    cmd = build_remote_bash_cmd(host, user, commandToExecute, bash_args)
+    logger.info("cmd:" + str(cmd))
     output = subprocess.check_output(cmd, shell=True)
-    logger.info("output:"+str(output))
+    logger.info("output:" + str(output))
     return output
 
 

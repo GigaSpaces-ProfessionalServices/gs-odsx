@@ -16,6 +16,8 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_remove_dataIntegration_byNameIP, \
     config_get_dataIntegrationiidr_nodes
+from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
 from utils.odsx_keypress import userInputWrapper
 
@@ -266,7 +268,7 @@ def removeInputUserAndHost():
         global host
         #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
         #if(len(str(user))==0):
-        user="root"
+        user = get_ssh_user()
         logger.info(" user: "+str(user))
 
     except Exception as e:
@@ -307,7 +309,7 @@ def executeCommandForUnInstall():
         if(len(nodes)>0):
             removeType=''
             #if(len(nodesCount)>1):
-            #removeType = str(userInputWrapper(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
+                #removeType = str(userInputWrapper(Fore.YELLOW+"[1] Individual remove \n[Enter] To remove all \n[99] ESC : "))
             if(len(str(removeType))==0):
                 verboseHandle.printConsoleInfo("Want to remove kafka : "+str(wantToRemoveKafka))
                 verboseHandle.printConsoleInfo("Want to remove zookeeper : "+str(wantToRemoveZk))

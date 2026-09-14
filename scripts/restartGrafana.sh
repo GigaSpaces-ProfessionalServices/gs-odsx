@@ -1,6 +1,15 @@
-systemctl stop grafana-server.service
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
+systemctl --user stop grafana-server.service
 sleep 2
 
-systemctl enable grafana-server.service
+systemctl --user enable grafana-server.service
 sleep 5
-systemctl start grafana-server.service
+systemctl --user start grafana-server.service

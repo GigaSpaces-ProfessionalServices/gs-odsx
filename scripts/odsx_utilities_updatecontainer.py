@@ -8,6 +8,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file
 from utils.ods_cluster_config import config_get_space_hosts
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -88,9 +89,10 @@ def updateSpaceServersGSC():
             from utils.odsx_keypress import userInputWrapper
             confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to update container count="+str(gscToBeUpdated)+" and memory="+str(sizeToBeupdated)+" on [ "+str(spaceHosts)+" ] ? (y/n) [y]: "+Fore.RESET))
             if(confirm=='y' or len(confirm)==0):
-                cmd = 'sed -i -e \'s|--count='+str(gscFromConfig)+'|--count='+str(gscToBeUpdated)+'|g\' /usr/local/bin/start_gsc.sh'
-                cmd2= 'sed -i -e \'s|--memory='+str(sizeFromConfig)+'|--memory='+str(sizeToBeupdated)+'|g\' /usr/local/bin/start_gsc.sh'
-                user= 'root'
+                start_gsc = readValuefromAppConfig("app.giga.path") + "/bin/start_gsc.sh"
+                cmd = 'sed -i -e \'s|--count='+str(gscFromConfig)+'|--count='+str(gscToBeUpdated)+'|g\' '+start_gsc
+                cmd2= 'sed -i -e \'s|--memory='+str(sizeFromConfig)+'|--memory='+str(sizeToBeupdated)+'|g\' '+start_gsc
+                user = get_ssh_user()
                 for node in spaceNodes:
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(node.ip,user,cmd)

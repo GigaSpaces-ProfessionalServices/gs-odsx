@@ -9,6 +9,7 @@ from scripts.odsx_monitors_alerts_catalogue_list import listCatalogue
 from scripts.odsx_monitors_alerts_services_kapacitor_list import getStatusOfKapacitor
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -56,7 +57,7 @@ def enableKapacitorServiceByHost(alertName):
     verboseHandle.printConsoleInfo("Enabling alert :"+alertName)
     cmd = "kapacitor enable "+str(alertName)
     logger.info("Getting status.. kapacitor :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
         if (output == 0):

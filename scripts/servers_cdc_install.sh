@@ -100,12 +100,12 @@ if [[ "$SCRIPT_RUN" == "dry" ]]; then
     exit;
 fi
 
-sudo yum update -y
-sudo yum install wget -y
-sudo yum install unzip -y
+yum update -y
+yum install wget -y
+yum install unzip -y
 sudo useradd dbsh
 
-sudo mkdir /root/misc
+mkdir /root/misc
 cd /
 
 info "Total RAM: $totalRAM\n";
@@ -113,26 +113,26 @@ info "Total Swap: $totalSwap\n";
 info "Required Swap: $requiredSwap\n";
 
 #For Removing Swap
-#sudo swapoff -v /swapfile
-#sudo sed '/^\/swapfile/d' < /etc/fstab > /tmp/fstab
+#swapoff -v /swapfile
+#sed '/^\/swapfile/d' < /etc/fstab > /tmp/fstab
 #sudo mc /tmp/fstab /etc/fstab
-#sudo rm -f /swapfile
+#rm -f /swapfile
 
 if [ $totalSwap -eq 0 ]; then
-        sudo dd if=/dev/zero of=/swapfile bs=1024k count=$requiredSwap
-        sudo chmod 600 /swapfile
-        sudo mkswap /swapfile
-        sudo swapon /swapfile
-        sudo bash -c "echo "/swapfile swap    swap    defaults        0 0" >> /etc/fstab"
+        dd if=/dev/zero of=/swapfile bs=1024k count=$requiredSwap
+        chmod 600 /swapfile
+        mkswap /swapfile
+        swapon /swapfile
+        bash -c "echo "/swapfile swap    swap    defaults        0 0" >> /etc/fstab"
 fi
 
 sudo cd /root/misc
 sudo wget https://download-area-us-east.s3.amazonaws.com/dbshLocalInstall/dbshLocalSetup-rehl7.2-14032021.tar.gz
-sudo tar xvfz dbshLocalSetup-rehl7.2-14032021.tar.gz
+tar xvfz dbshLocalSetup-rehl7.2-14032021.tar.gz
 
 sudo cd /etc/yum.repos.d
-sudo mkdir yum.repos.backup
-sudo cp *repo yum.repos.backup/
+mkdir yum.repos.backup
+cp *repo yum.repos.backup/
 
 sudo cd /root/misc/dbshLocalSetup/utils
 sudo ./build_local_cr8.sh
@@ -142,6 +142,6 @@ cd /tmp
 wget https://jay-dalal.s3.us-west-2.amazonaws.com/leumi-odsx/cr8/2.0.9-245/cr8-2.0.9-245.x86_64.rpm
 
 #For uninstallation
-#sudo yum remove cr8-2.0.9-245.x86_64 -y
-sudo rpm -Uvh cr8-2.0.9-245.x86_64.rpm
+#yum remove cr8-2.0.9-245.x86_64 -y
+rpm -Uvh cr8-2.0.9-245.x86_64.rpm
 

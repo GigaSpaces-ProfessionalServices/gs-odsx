@@ -9,6 +9,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import port_check_config
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.ods_app_config import readValuefromAppConfig
@@ -105,7 +106,7 @@ def cleanUpManagerServers():
         if(confirm=='y' or len(confirm)==0):
             cmdregex = '^'+dbaGigaLogPath+'/consul\(/.*\)?'
             cmd = "rm -rf "+ dbaGigaWorkPath +"/*;find " + dbaGigaLogPath+"/ -mindepth 1 ! -regex "+ cmdregex +" -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
-            user = 'root'
+            user = get_ssh_user()
             for node in managerNodes:
                 with Spinner():
                     if (port_check_config(os.getenv(node.ip),22)):
@@ -133,7 +134,7 @@ def cleanUpSpaceServers():
         if(confirm=='y' or len(confirm)==0):
             cmdregex = '^'+dbaGigaLogPath+'/consul\(/.*\)?'
             cmd = "rm -rf "+ dbaGigaDataPath +"/*;find "+ dbaGigaLogPath +"/ -mindepth 1 ! -regex "+ cmdregex +" -delete;source setenv.sh;cd $GS_HOME/deploy;find $GS_HOME/deploy/ -mindepth 1 -name templates -prune -o -exec rm -rf {} \;"
-            user = 'root'
+            user = get_ssh_user()
             for node in spaceNodes:
                 with Spinner():
                     if (port_check_config(os.getenv(node.ip),22)):

@@ -14,6 +14,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_manager_node, config_get_manager_listWithStatus
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
@@ -101,8 +102,8 @@ def proceedForRollingRestart(host):
     rolingRestartStopTime = str(readValuefromAppConfig("app.manager.rollingrestart.stop.sleep.time"))
     rollingRestartStartTime = str(readValuefromAppConfig("app.manager.rollingrestart.start.sleep.time"))
 
-    cmdList = ["systemctl stop gsa.service;sleep "+str(rolingRestartStopTime),"systemctl start gsa.service;sleep "+str(rollingRestartStartTime)]
-    user='root'
+    cmdList = ["systemctl --user stop gsa.service;sleep "+str(rolingRestartStopTime),"systemctl --user start gsa.service;sleep "+str(rollingRestartStartTime)]
+    user = get_ssh_user()
     infoDict = {}
     infoDict.update({1:"Stopping service..."})
     #infoDict.update({2:"Reloading service..."})

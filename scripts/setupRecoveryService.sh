@@ -1,4 +1,13 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 
 function getAppPropertyValue() {
     ENV=${1:-dev}
@@ -37,9 +46,9 @@ sed -i 's,$recoverLoggingConfigFile,'$recoverLoggingConfigFile',g' /tmp/odsxreco
 sed -i 's,$nodeRebalancerJar,'$nodeRebalancerJar',g' /tmp/odsxrecovery.service
 sed -i 's,$clusterConfigFile,'$clusterConfigFile',g' /tmp/odsxrecovery.service
 
-sudo mv -f /tmp/odsxrecovery.service /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable odsxrecovery.service
-sudo systemctl start odsxrecovery.service
+mv -f /tmp/odsxrecovery.service $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable odsxrecovery.service
+systemctl --user start odsxrecovery.service
 
 echo "Recovery service setup - Completed!."

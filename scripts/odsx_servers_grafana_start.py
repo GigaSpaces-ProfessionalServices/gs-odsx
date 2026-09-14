@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_grafana_list
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -60,7 +61,7 @@ def startInputUserAndHost():
         global host
         #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to Grafana [root]:"+Fore.RESET))
         #if(len(str(user))==0):
-        user="root"
+        user = get_ssh_user()
         logger.info(" user: "+str(user))
 
     except Exception as e:

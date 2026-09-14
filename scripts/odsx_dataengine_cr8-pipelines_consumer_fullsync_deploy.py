@@ -10,7 +10,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
@@ -222,10 +222,10 @@ def displaySpaceHostWithNumber(managerNodes, spaceNodes):
 def proceedToCreateGSC():
     logger.info("proceedToCreateGSC()")
     # for host in managerNodes:
-    #    scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
+    #    scp_upload(str(host.ip),get_ssh_user(),dPipelineLocationSource,dPipelineLocationTarget)
     spaceNodes = config_get_space_hosts()
     for host in spaceNodes:
-        # scp_upload(str(host.ip),'root',dPipelineLocationSource,dPipelineLocationTarget)
+        # scp_upload(str(host.ip),get_ssh_user(),dPipelineLocationSource,dPipelineLocationTarget)
         # commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count="+str(numberOfGSC)+" --zone="+str(zoneGSC)+" --memory="+str(memoryGSC)+" --vm-option -Dspring.profiles.active=connector --vm-option -Dpipeline.config.location="+str(dPipelineLocationTarget)+" "+str(host.ip)
         commandToExecute = "cd; home_dir=$(pwd); source $home_dir/setenv.sh;$GS_HOME/bin/gs.sh container create --count=" + str(
             numberOfGSC) + " --zone=" + str(zoneGSC) + " --memory=" + str(
@@ -233,7 +233,7 @@ def proceedToCreateGSC():
         print(commandToExecute)
         logger.info(commandToExecute)
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+            output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), commandToExecute)
             print(output)
             logger.info("Output:" + str(output))
 

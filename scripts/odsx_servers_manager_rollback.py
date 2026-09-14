@@ -16,6 +16,8 @@ from utils.ods_cluster_config import config_get_manager_node, isInstalledAndGetV
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
+from utils.ods_ssh import get_ssh_user
+from utils.ods_ssh import build_remote_bash_cmd
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -152,7 +154,7 @@ def getGSVersion(host):
 def proceedForRollback(host):
     logger.info("proceedForRollback")
     upgradedManagerDict.update({host:"N/A"})
-    user = 'root'
+    user = get_ssh_user()
     isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
     pemFileName = readValuefromAppConfig("cluster.pemFile")
     ssh = ""
@@ -168,12 +170,7 @@ def proceedForRollback(host):
 
     additionalParam=cefLoggingJarInput+" "+cefLoggingJarInputTarget+" "+springLdapCoreJarInput+" "+springLdapJarInput+" "+vaultSupportJarInput+" "+javaPasswordJarInput+" "+springTargetJarInput
 
-    if isConnectUsingPem == 'True':
-        ssh = ''.join(
-            ['ssh', ' -i ', pemFileName, ' ', user, '@', str(host), ' '])
-    else:
-        ssh = ''.join(['ssh', ' ', str(host), ' '])
-    cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/servers_manager_upgrade_rollback.sh'
+    cmd = build_remote_bash_cmd(str(host), user, 'scripts/servers_manager_upgrade_rollback.sh', '-s ' + additionalParam)
     with Spinner():
         os.system(cmd)
         pass

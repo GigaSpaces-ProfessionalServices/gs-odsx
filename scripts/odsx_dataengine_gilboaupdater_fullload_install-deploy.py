@@ -16,7 +16,7 @@ from utils.ods_app_config import readValueByConfigObj, getYamlFilePathInsideFold
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataIntegration_nodes
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus, port_check_config
 from utils.odsx_db2feeder_utilities import getPortNotExistInMSSQLFeeder
 from utils.odsx_keypress import userInputWrapper,userInputWithEscWrapper
@@ -282,7 +282,7 @@ def proceedToCreateGSC(zoneGSC,newGSCCount):
     verboseHandle.printConsoleInfo("Creating container count : "+str(numberOfGSC)+" zone="+str(zoneGSC)+" memory="+str(memoryGSC)+" host="+str(SpaceHighestAvailableHost))
     logger.info(commandToExecute)
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(managerHost, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), commandToExecute)
         print(output)
         logger.info("Output:"+str(output))
 
@@ -313,7 +313,7 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     targetJarFile=sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
     userCMD = os.getlogin()
     if userCMD == 'ec2-user':
-        cmd = "sudo cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
+        cmd = "cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
         #print(cmd)
     else:
         cmd = "cp "+sourceMSSQLJarFilePath+' '+sourceMSSQLFeederShFilePath+fileName+puName+'.jar'
@@ -505,7 +505,7 @@ def proceedToDeployPU(feederName):
                                 verboseHandle.printConsoleInfo("Entry : "+str(file)+" puName :"+str(puName))
                                 userCMD = os.getlogin()
                                 if userCMD == 'ec2-user':
-                                    cmd = "sudo rm -f "+sourceMSSQLFeederShFilePath+resource
+                                    cmd = "rm -f "+sourceMSSQLFeederShFilePath+resource
                                 else:
                                     cmd = "rm -f "+sourceMSSQLFeederShFilePath+resource
                                 logger.info("cmd : "+str(cmd))

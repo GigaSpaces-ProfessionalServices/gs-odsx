@@ -3,6 +3,7 @@
 import argparse
 import logging
 import logging.config
+import os, re, tempfile
 ###########################################################################
 # put below code in ~/.bashrc file to redirect all stderr to this function.
 # From any script or program, when there is any print to stderr, it will
@@ -23,8 +24,28 @@ import os.path
 
 from colorama import init, Fore
 
+def _expand_logging_conf(src_path):
+    # Resolve ${app.*.path} placeholders in logging.conf using a tiny inline
+    # parser (importing utils.ods_app_config here would create a cycle).
+    cfg_path = os.environ.get('ENV_CONFIG', '') + '/app.config'
+    props = {}
+    if os.path.exists(cfg_path):
+        for line in open(cfg_path):
+            if line.startswith('#') or '=' not in line:
+                continue
+            k, _, v = line.rstrip('\n').partition('=')
+            props[k] = v
+    text = open(src_path).read()
+    text = re.sub(r'\$\{(app\.[a-z]+\.path)\}',
+                  lambda m: props.get(m.group(1), m.group(0)),
+                  text)
+    tmp = tempfile.NamedTemporaryFile('w', suffix='.conf', delete=False)
+    tmp.write(text)
+    tmp.close()
+    return tmp.name
+
 LOGGING_CONFIG = 'config/logging.conf'
-logging.config.fileConfig(LOGGING_CONFIG)
+logging.config.fileConfig(_expand_logging_conf(LOGGING_CONFIG))
 
 class LogManager():  # Custom completer
     verboseFlag = False

@@ -1,3 +1,19 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
+ENV_CONFIG_PATH="${ENV_CONFIG}/app.config"
+if [ -z "$ENV_CONFIG" ] || [ ! -f "$ENV_CONFIG_PATH" ]; then
+    echo "Error: ENV_CONFIG not set or $ENV_CONFIG_PATH missing." >&2
+    exit 1
+fi
+gigapath=$(read_property "app.giga.path")
+
 echo "Starting Data Validation Server Installation."
 #echo "Extracting install.tar to "$targetDir
 sourceInstallerDirectory=$1
@@ -50,16 +66,16 @@ mv $home_dir_sh/st*_data_validation_server.sh /tmp
 
 mv $home_dir_sh/install/$data_validation_service_file /tmp
 
-mv /tmp/st*_data_validation_server.sh /usr/local/bin/
+mv /tmp/st*_data_validation_server.sh $gigapath/bin/
 
-chmod +x /usr/local/bin/st*_data_validation_server.sh
+chmod +x $gigapath/bin/st*_data_validation_server.sh
 
-mv /tmp/$data_validation_service_file /etc/systemd/system/
+mv /tmp/$data_validation_service_file $HOME/.config/systemd/user/
 
-restorecon /etc/systemd/system/$data_validation_service_file
+restorecon $HOME/.config/systemd/user/$data_validation_service_file
 
-sudo systemctl daemon-reload
-sudo systemctl enable $data_validation_service_file
+systemctl --user daemon-reload
+systemctl --user enable $data_validation_service_file
 
 
 

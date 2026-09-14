@@ -10,6 +10,7 @@ from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafS
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_space_node
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -56,7 +57,7 @@ def removeInputUserAndHost():
         global host
         user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to Telegraf [root]:"+Fore.RESET))
         if(len(str(user))==0):
-            user="root"
+            user = get_ssh_user()
         logger.info(" user: "+str(user))
 
     except Exception as e:
@@ -66,9 +67,9 @@ def removeInputUserAndHost():
 def executeCommandForUnInstall(host):
     logger.info("executeCommandForUnInstall(): remove")
     try:
-        cmd = "systemctl stop telegraf;sleep 5;yum -y remove telegraf;systemctl daemon-reload;"
+        cmd = "sudo systemctl stop telegraf;sleep 5;yum -y remove telegraf;sudo systemctl daemon-reload;"
         logger.info("Getting status.. telegraf :"+str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
             if (output == 0):
@@ -142,7 +143,7 @@ if __name__ == '__main__':
         cliArguments=''
         isMenuDriven=''
         managerRemove=''
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
         serverRemoveType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to remove individual server. \nPress [Enter] to remove all. \nPress [99] for exit.: "+Fore.RESET))

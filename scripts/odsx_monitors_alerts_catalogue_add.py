@@ -9,6 +9,8 @@ from scripts.odsx_monitors_alerts_services_kapacitor_list import getStatusOfKapa
 from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.odsx_keypress import userInputWrapper
+from utils.ods_ssh import get_ssh_user
+from utils.ods_ssh import build_remote_bash_cmd
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -57,18 +59,13 @@ def addTick():
             filePath=str(sourceTickFilePath+file)
             cmd = '"kapacitor define '+aliasName+' -tick '+filePath
             logger.info("Getting tick path.. kapacitor :"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 isConnectUsingPem = readValuefromAppConfig("cluster.usingPemFile")
                 pemFileName = readValuefromAppConfig("cluster.pemFile")
                 ssh = ""
                 additionalParam= aliasName+' '+filePath
-                if isConnectUsingPem == 'True':
-                    ssh = ''.join(
-                        ['ssh', ' -i ', pemFileName, ' ', user, '@', str(host), ' '])
-                else:
-                    ssh = ''.join(['ssh', ' ', str(host), ' '])
-                cmd = ssh + 'bash' + ' -s ' + additionalParam + ' < scripts/monitors_alerts_catalogue_add.sh'
+                cmd = build_remote_bash_cmd(str(host), user, 'scripts/monitors_alerts_catalogue_add.sh', '-s ' + additionalParam)
                 with Spinner():
                     os.system(cmd)
                     pass

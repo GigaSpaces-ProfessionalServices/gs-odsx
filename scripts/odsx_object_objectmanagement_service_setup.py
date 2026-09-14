@@ -7,17 +7,18 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import set_value_in_property_file, readValuefromAppConfig, getYamlFilePathInsideFolder, \
-    readValueFromYaml
+    readValueFromYaml, render_install_templates
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_manager_node
 from utils.ods_manager import getManagerInfo
 from utils.odsx_keypress import userInputWrapper
 from utils.odsx_objectmanagement_utilities import getManagerHost
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
 serviceName = "object-management.service"
-user = "root"
+user = get_ssh_user()
 app_config_space_key = 'app.tieredstorage.pu.spacename'
 
 
@@ -87,10 +88,15 @@ def setupService():
     logger.info("Command "+commandToExecute)
     try:
         with Spinner():
-            os.system("cp utils/odsx_vault_cred_details.sh /usr/local/bin/")
+            giga_bin = readValuefromAppConfig("app.giga.path") + "/bin"
+            os.makedirs(giga_bin, exist_ok=True)
+            os.system("cp utils/odsx_vault_cred_details.sh " + giga_bin + "/")
+            # Resolve ${app.*.path} placeholders in install/*.service before
+            # the .sh copies the template to ~/.config/systemd/user/.
+            render_install_templates()
             os.system(commandToExecute)
 
-            os.system('sudo systemctl daemon-reload')
+            os.system('systemctl --user daemon-reload')
 
 
 

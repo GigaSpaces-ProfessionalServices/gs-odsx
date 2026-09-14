@@ -17,7 +17,7 @@ from utils.ods_cluster_config import config_get_cluster_airgap, config_add_manag
     config_remove_space_nodeByIP, \
     getStreamIdByStreamCreationDateTime, config_update_stream_statusById, config_remove_manager_nodeByIP, \
     config_add_cdc_node, config_get_streamName_statusById
-from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import executeRemoteShCommandAndGetOutput, build_remote_bash_cmd
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -172,13 +172,17 @@ def remote_run(arguments,cmdFile):
                     print("StreamName:",streamName)
                     additionalParam=osuser+' '+password+' '+streamName
             if(config_get_cluster_airgap()):
-                #print(ssh + type +' -s '+config_get_cluster_airgap()+' < ' + cmd)
-                cmd = ssh + type +' -s '+config_get_cluster_airgap()+' '+ additionalParam+' '+' < ' + cmd #+ '>> mylog.txt 2>&1'
+                if type == 'bash':
+                    cmd = build_remote_bash_cmd(host, user, cmd, '-s ' + config_get_cluster_airgap() + ' ' + additionalParam)
+                else:
+                    cmd = ssh + type +' -s '+config_get_cluster_airgap()+' '+ additionalParam+' '+' < ' + cmd
                 print(cmd)
                 logger.info("cmd-AirGap-True :"+str(cmd))
             else:
-                #print(ssh + type + ' < ' + cmd)
-                cmd = ssh + type + ' < ' + cmd #+ '>> mylog.txt 2>&1'
+                if type == 'bash':
+                    cmd = build_remote_bash_cmd(host, user, cmd, '')
+                else:
+                    cmd = ssh + type + ' < ' + cmd
                 print(cmd)
                 logger.info("cmd :"+str(cmd))
             outputMainScript=''
@@ -188,7 +192,10 @@ def remote_run(arguments,cmdFile):
 
             # with Spinner():
             if(cmdFile.__contains__('streams_startonline')):
-                    cmd = ssh + type + ' -s '+additionalParam+' < scripts/streams_validator.sh'
+                    if type == 'bash':
+                        cmd = build_remote_bash_cmd(host, user, 'scripts/streams_validator.sh', '-s ' + additionalParam)
+                    else:
+                        cmd = ssh + type + ' -s '+additionalParam+' < scripts/streams_validator.sh'
                     print(cmd)
                     logger.info("cmd to validate stream:"+cmd)
                     os.system(cmd)

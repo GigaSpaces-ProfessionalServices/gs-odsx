@@ -11,11 +11,12 @@ from scripts.logManager import LogManager
 from scripts.odsx_datavalidator_install_installserver import getDataValidationAgentHostFromEnv
 from scripts.odsx_datavalidator_install_list import getDataValidationHost
 from scripts.spinner import Spinner
-from utils.ods_app_config import getYamlFilePathInsideFolder
+from utils.ods_app_config import render_install_templates, getYamlFilePathInsideFolder
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_dataValidation_nodes
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
 
@@ -83,7 +84,7 @@ def installSingle():
 
         #user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect Data Validation Agent servers [root]:"+Fore.RESET))
         #if(len(str(user))==0):
-        user="root"
+        user = get_ssh_user()
         logger.info(" user: "+str(user))
 
         dbPath= str(readValuefromAppConfig("app.dv.server.db")) #userInputWrapper(Fore.YELLOW+"Enter db path[/home/gsods/datavalidator.db]: "+Fore.RESET))
@@ -132,7 +133,7 @@ def installSingle():
                 verboseHandle.printConsoleWarning('');
                 data = {
                     "agentHostIp": agentHost,
-                    "agentUser": 'gsods',
+                    "agentUser": get_ssh_user(),
                 }
                 headers = {'Content-type': 'application/json', 'Accept': 'application/json'}
                 response = requests.post("http://" + dataValidationHost + ":"+str(readValuefromAppConfig("app.dv.server.port"))+"/agent/register"
@@ -153,6 +154,10 @@ def installSingle():
 
 def buildTarFileToLocalMachine(host):
     logger.info("buildTarFileToLocalMachine :"+str(host))
+    # Remove stale tar to ensure fresh build from current install/ contents
+    if os.path.exists('install/install.tar'):
+        os.remove('install/install.tar')
+    render_install_templates()
     cmd = 'tar -cvf install/install.tar install' # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
@@ -204,38 +209,6 @@ def executeLocalCommandAndGetOutput(commandToExecute):
     return str(out).replace('\n','')
 
 def validateRPM():
-    logger.info("validateRPM()")
-    installerArray = []
-    cmd = "pwd"
-    home = executeLocalCommandAndGetOutput(cmd)
-    logger.info("home dir : "+str(home))
-    cmd = 'find '+str(sourceInstallerDirectory)+'/jdk/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
-    javaRpm = executeLocalCommandAndGetOutput(cmd)
-    logger.info("javaRpm found :"+str(javaRpm))
-    cmd = 'find '+str(home)+'/install/kafka/ -name *.tgz -printf "%f\n"' # Creating .tar file on Pivot machine
-    #kafkaZip = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("kafkaZip found :"+str(kafkaZip))
-    #cmd = 'find '+str(home)+'/install/cr8/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
-    #cr8Rpm = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("cr8Rpm found :"+str(cr8Rpm))
-    #cmd = 'find '+str(home)+'/install/cr8/ -name *.gz -printf "%f\n"' # Creating .tar file on Pivot machine
-    #localSetupZip = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("localSetupZip found :"+str(localSetupZip))
-    #cmd = 'find '+str(home)+'/install/telegraf/ -name *.rpm -printf "%f\n"' # Creating .tar file on Pivot machine
-    #telegrafRpm = executeLocalCommandAndGetOutput(cmd)
-    #logger.info("telegrafRpm found :"+str(telegrafRpm))
-
-    di_installer_dict = obj_type_dictionary()
-    di_installer_dict.add('Java',javaRpm)
-    #di_installer_dict.add('KafkaZip',kafkaZip)
-    #di_installer_dict.add('CR8Rpm',cr8Rpm)
-    #di_installer_dict.add('CR8-LocalSetupZip',localSetupZip)
-    #di_installer_dict.add('Telegraf',telegrafRpm)
-
-    for name,installer in di_installer_dict.items():
-        if(len(str(installer))==0):
-            verboseHandle.printConsoleInfo("Pre-requisite installer "+str(home)+"/install  "+str(name)+" not found")
-            return False
     return True
 
 

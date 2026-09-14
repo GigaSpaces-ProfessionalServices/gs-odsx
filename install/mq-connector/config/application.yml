@@ -49,6 +49,6 @@ logging:
     console: "%d{HH:mm:ss} [%t] %-5level %logger{36} - %msg%n"
     file: "%d %p %c{1.} [%t] %m%n"
   file:
-    name: /dbagigalogs/Adabas/adabasPublisher.log
+    name: ${app.gigalog.path}/Adabas/adabasPublisher.log
   
 

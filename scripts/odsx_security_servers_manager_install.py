@@ -6,7 +6,8 @@ from concurrent.futures import ThreadPoolExecutor
 
 from scripts.logManager import LogManager
 from scripts.odsx_security_servers_space_install import configureMetricsXML
-from utils.ods_app_config import readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
+from utils.ods_list import configureMetricsProperties, configureOtelIdentity, configureCefLogging
+from utils.ods_app_config import render_install_templates, readValuefromAppConfig, set_value_in_property_file, readValueByConfigObj, \
     set_value_in_property_file_generic, read_value_in_property_file_generic_section, readValueFromYaml, \
     getYamlJarFilePath, getYamlFilePathInsideFolder, getYamlFilePathInsideConfigFolder, getYamlFilePathInsideFolderList, \
     getYamlFileNamesInsideFolderList, getYamlFilePathInsideFolderList1
@@ -17,7 +18,7 @@ from utils.ods_list import validateRPMS
 from utils.ods_scp import scp_upload,scp_upload_multiple
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteShCommandAndGetOutput, \
     executeShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36, executeLocalCommandAndGetOutput, \
-    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36
+    connectExecuteSSH, executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_cluster_config import config_add_manager_node, config_get_cluster_airgap,config_get_dataIntegration_nodes
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_manager_node
@@ -478,6 +479,10 @@ def execute_ssh_server_manager_install(hostsConfig,user):
             logger.info('additional param :'+additionalParam)
             output=""
             logger.info("Building .tar file : tar -cvf install/install.tar install")
+            # Remove stale tar to ensure fresh build from current install/ contents
+            if os.path.exists('install/install.tar'):
+                os.remove('install/install.tar')
+            render_install_templates()
             cmd = 'tar -cvf install/install.tar install'
             with Spinner():
                 status = os.system(cmd)
@@ -539,7 +544,9 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         #newZkJars = getYamlFilePathInsideFolderList(".gs.jars.zookeeper.zkjars")
         #for newZkJar in newZkJars:
         #    executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+newZkJar+" "+newZkJarTarget)
-        executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+cefLoggingJarInputTarget)
+        # The CEF jar is deployed by configureCefLogging() below, which also
+        # resolves the handler's log path - a jar on its own still fails with
+        # "Failed to create directories: /gigalogs/CEF" off the default layout.
         # executeRemoteCommandAndGetOutputValuePython36(host, user,"cp "+cefLoggingJarInput+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         #print("cp "+sourceJar+" "+readValuefromAppConfig("app.manager.security.spring.jar.target"))
         executeRemoteCommandAndGetOutputValuePython36(host, user,"cp -r "+sourceJar+" "+springTargetJarInput)
@@ -548,7 +555,7 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         managerWorkSrc = managerWorkSrc + "/vault.db"
         executeRemoteCommandAndGetOutputValuePython36(host, user,"mkdir -p " + managerWorkTarget)
         managerWorkTarget = managerWorkTarget + "vault.db"
-        scp_upload(host, "root", managerWorkSrc, managerWorkTarget)
+        scp_upload(host, get_ssh_user(), managerWorkSrc, managerWorkTarget)
         securityFiles = getYamlFilePathInsideFolderList1("..security.conf")
         for securityFile in securityFiles:
             securityFile = str(securityFile).replace('"',"")
@@ -562,6 +569,13 @@ def installSecureManagerServer(host,additionalParam,output,cefLoggingJarInput,ce
         executeRemoteCommandAndGetOutputValuePython36(host, user,"chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"* "+ newZkJarTarget+"*")
         logger.info("chown "+applicativeUser+":"+applicativeUser+" "+readValuefromAppConfig("app.manager.security.spring.jar.target")+"* "+readValuefromAppConfig("app.manager.security.config.target")+"* "+ newZkJarTarget+"*")
         configureMetricsXML(host)
+        # 17.3.0+ reads config/metrics/metrics.properties, not gs_config/metrics.xml.
+        configureMetricsProperties(host)
+        # Distinct Prometheus job label per cluster (OTEL_* env vars).
+        configureOtelIdentity(host)
+        # CEF handler jar onto the boot classpath + its log path resolved; a no-op
+        # when the deployed xap_logging.properties does not enable CEF.
+        configureCefLogging(host)
     serverHost=''
     try:
         serverHost = socket.gethostbyaddr(host).__getitem__(0)
@@ -591,9 +605,9 @@ if __name__ == '__main__':
             #args.append(host)
             #user = readValuefromAppConfig("app.server.user")
             #user = str(userInputWrapper("Enter your user [root]: "))
-            user='root'
+            user = get_ssh_user()
             if(len(str(user))==0):
-                user="root"
+                user = get_ssh_user()
             args.append('-u')
             args.append(user)
             hostsConfig = getManagerHostFromEnv()

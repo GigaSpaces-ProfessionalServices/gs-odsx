@@ -9,11 +9,11 @@ from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_space_shutdown_reload_utilities import checkSpacePrimaryStatus, deployFeeders, deployTierSpace, \
-    getManagerHost, startSpaceServers
+    getManagerHost, startSpaceServers, get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
-user='root'
+user = get_ssh_user()
 class bcolors:
     OK = '\033[92m'  # GREEN
     WARNING = '\033[93m'  # YELLOW

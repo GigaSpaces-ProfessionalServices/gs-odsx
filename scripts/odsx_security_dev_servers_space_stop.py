@@ -11,6 +11,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_space_list_with_status, config_get_space_hosts_list
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -60,13 +61,13 @@ if __name__ == '__main__':
         cliArguments=''
         isMenuDriven=''
         managerRemove=''
-        # changed : 25-Aug hence systemctl always with root no need to ask
+        # changed : 25-Aug hence systemctl --user always with root no need to ask
         #userConfig = readValuefromAppConfig("app.server.user")
         #logger.info("userConfig :"+str(userConfig))
         #user = str(userInputWrapper("Enter your user ["+userConfig+"]: "))
         #if(len(str(user))==0):
         #    user=userConfig
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = config_get_space_list_with_status(user)
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to stop individual server. \nPress [Enter] to stop all. \nPress [99] for exit.: "+Fore.RESET))

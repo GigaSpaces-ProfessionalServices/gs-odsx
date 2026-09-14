@@ -1,4 +1,13 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -9,13 +18,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -23,6 +25,8 @@ gigasharepath=$(read_property "app.gigashare.path")
 gigadatapath=$(read_property "app.gigadata.path")
 gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
+APP_USER=$(read_property "app.server.user")
+APP_USER=${APP_USER:-$(whoami)}
 
 print_style () {
     if [ "$2" == "debug" ] ; then
@@ -86,7 +90,7 @@ function installFlink() {
   extracted_folder_flink=$(ls -I "*.tgz" $gigapath/di-flink/)
   cd $gigapath/di-flink/
   ln -s $extracted_folder_flink latest-flink
-  ln -s $extracted_folder_manager /home/gsods/di-flink/
+  ln -s $extracted_folder_manager $HOME/di-flink/
   cd
   sed -i -e 's|rest.address: localhost|#rest.address: localhost|g' $gigapath/di-flink/latest-flink/conf/flink-conf.yaml
   sed -i -e 's|rest.bind-address: localhost|rest.bind-address: '$currentHost'|g' $gigapath/di-flink/latest-flink/conf/flink-conf.yaml
@@ -107,8 +111,8 @@ function installFlink() {
 #  sed -i -e 's|FLINK_HOME=/home/gsods/di-flink/latest-flink|FLINK_HOME=$flinkHome|g' $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service
 #  sed -i -e 's|FLINK_LOG_DIR=/home/gsods/di-flink/latest-flink/log|FLINK_LOG_DIR=$flinkLogDir|g' $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service
 
-  cp $gigapath/di-flink/latest-flink/conf/di-flink-jobmanager.service /etc/systemd/system/
-  cp $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service /etc/systemd/system/
+  cp $gigapath/di-flink/latest-flink/conf/di-flink-jobmanager.service $HOME/.config/systemd/user/
+  cp $gigapath/di-flink/latest-flink/conf/di-flink-taskmanager.service $HOME/.config/systemd/user/
 
   info "\n Installation Flink completed."
 }
@@ -120,7 +124,7 @@ function installDIMatadata {
   info "InstallationFile:"$installation_file_mdm"\n"
   mkdir -p $gigapath/di-mdm
   mkdir -p $gigalogpath/di-mdm
-  chown gsods:gsods $gigalogpath/di-mdm
+  chown $APP_USER:$APP_USER $gigalogpath/di-mdm
   info "Copying file from "$installation_path_mdm/$installation_file_mdm +" to "$gigapath"/di-mdm \n"
   cp $installation_path_mdm/$installation_file_mdm $gigapath/di-mdm
   info "\nExtracting zip file...\n"
@@ -129,7 +133,7 @@ function installDIMatadata {
   cd $gigapath/di-mdm/
   info "Creating symlink for :"$extracted_folder_mdm
   ln -s $extracted_folder_mdm latest-di-mdm
-  ln -s $extracted_folder_manager /home/gsods/di-mdm/
+  ln -s $extracted_folder_manager $HOME/di-mdm/
   cd latest-di-mdm
   sed -i -e 's|/home/gsods/di-mdm/latest-di-mdm/logs|'$gigalogpath'/di-mdm|g' config/di-mdm.service
   sed -i -e 's|/home/gsods|'$gigapath'|g' config/di-mdm.service
@@ -140,10 +144,10 @@ function installDIMatadata {
 
   cd
   info "\nCopying service file\n"
-  cp $gigapath/di-mdm/latest-di-mdm/config/di-mdm.service /etc/systemd/system/
-  systemctl daemon-reload
-  systemctl enable di-mdm
-  #systemctl start di-mdm
+  cp $gigapath/di-mdm/latest-di-mdm/config/di-mdm.service $HOME/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable di-mdm
+  #systemctl --user start di-mdm
   info "\n Installation DI-MDM completed."
 }
 
@@ -154,7 +158,7 @@ function installDIManager {
   info "InstallationFile:"$installation_file_manager"\n"
   mkdir -p $gigapath/di-manager
   mkdir -p $gigalogpath/di-manager
-  chown gsods:gsods $gigalogpath/di-manager
+  chown $APP_USER:$APP_USER $gigalogpath/di-manager
   info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-manager \n"
   cp $installation_path_manager/$installation_file_manager $gigapath/di-manager
   info "\nExtracting zip file...\n"
@@ -163,7 +167,7 @@ function installDIManager {
   cd $gigapath/di-manager/
   info "Creating symlink for :"$extracted_folder_manager
   ln -s $extracted_folder_manager latest-di-manager
-  ln -s $extracted_folder_manager /home/gsods/di-manager/
+  ln -s $extracted_folder_manager $HOME/di-manager/
   cd latest-di-manager
   sed -i -e 's|/home/gsods/di-manager/latest-di-manager/logs|'$gigalogpath'/di-manager|g' config/di-manager.service
   sed -i -e 's|/home/gsods|'$gigapath'|g' config/di-manager.service
@@ -174,15 +178,15 @@ function installDIManager {
   echo "mdm.server.fallback-url=http://$kafkaBrokerHost2:6081">>$gigapath/di-manager/latest-di-manager/config/di-manager-application.properties
   cd
   info "\nCopying service file\n"
-  cp $gigapath/di-manager/latest-di-manager/config/di-manager.service /etc/systemd/system/
-  systemctl daemon-reload
-  systemctl enable di-manager
-  #systemctl start di-manager
+  cp $gigapath/di-manager/latest-di-manager/config/di-manager.service $HOME/.config/systemd/user/
+  systemctl --user daemon-reload
+  systemctl --user enable di-manager
+  #systemctl --user start di-manager
   info "\n Installation DI-Manager completed.\n"
 }
 
 function installDIProcessor {
-
+  warning "\nDI install not implemented\n"
 }
 
 function installDISubscription {
@@ -192,7 +196,7 @@ function installDISubscription {
     info "InstallationFile:"$installation_file_manager"\n"
     mkdir -p $gigapath/di-subscription-manager
     mkdir -p $gigalogpath/di-subscription-manager
-    chown gsods:gsods $gigalogpath/di-subscription-manager
+    chown $APP_USER:$APP_USER $gigalogpath/di-subscription-manager
     info "Copying file from "$installation_path_manager/$installation_file_manager +" to "$gigapath"/di-subscription-manager \n"
     cp $installation_path_manager/$installation_file_manager $gigapath/di-subscription-manager
     info "\nExtracting zip file...\n"
@@ -201,7 +205,7 @@ function installDISubscription {
     cd $gigapath/di-subscription-manager/
     info "Creating symlink for :"$extracted_folder_manager
     ln -s $extracted_folder_manager latest-di-subscription-manager
-    ln -s $extracted_folder_manager /home/gsods/di-subscription-manager/
+    ln -s $extracted_folder_manager $HOME/di-subscription-manager/
     #cd latest-di-subscription-manager
 
     echo "##iidr.as##" > $gigapath/di-subscription-manager.properties
@@ -227,8 +231,8 @@ function installDISubscription {
     echo "iidr-kafka.properties.manager.client.timeouts.read.ms=60000" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.properties.manager.server.url=http://$iidrHost:6085" >> $gigapath/di-subscription-manager.properties
     echo "iidr-kafka.user-exit.properties.file.use-api=false" >> $gigapath/di-subscription-manager.properties
-    echo "iidr-kafka.user-exit.properties.file.read-path=/giga/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
-    echo "iidr-kafka.user-exit.properties.file.write-path=/giga/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.read-path=$gigapath/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
+    echo "iidr-kafka.user-exit.properties.file.write-path=$gigapath/iidr/kafka/instance/KAFKA/conf" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "##mdm##" >> $gigapath/di-subscription-manager.properties
     echo "mdm.client.timeouts.connection.ms=10000" >> $gigapath/di-subscription-manager.properties
@@ -250,13 +254,13 @@ function installDISubscription {
     echo "springdoc.swagger-ui.request-timeout=10000 # Timeout value in milliseconds" >> $gigapath/di-subscription-manager.properties
     echo "" >> $gigapath/di-subscription-manager.properties
     echo "logging.level.org.springframework.web.filter.CommonsRequestLoggingFilter=DEBUG" >> $gigapath/di-subscription-manager.properties
-    sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' /etc/systemd/system/di-subscription-manager-iidr.service
-    cd /home/gsods/di-subscription-manager/latest-di-subscription-manager/utils
+    sed -i -e 's|logs/di-subscription-manager.log|'$gigalogpath'/di-iidr/di-subscription-manager.log|g' $HOME/.config/systemd/user/di-subscription-manager-iidr.service
+    cd $HOME/di-subscription-manager/latest-di-subscription-manager/utils
     sudo ./install_new_version.sh $gigapath/di-subscription-manager.properties
-    systemctl daemon-reload
-    systemctl enable di-subscription-manager
-    systemctl restart di-subscription-manager
-    #systemctl start di-manager
+    systemctl --user daemon-reload
+    systemctl --user enable di-subscription-manager
+    systemctl --user restart di-subscription-manager
+    #systemctl --user start di-manager
     info "\n Installation DI-Manager completed.\n"
 }
 
@@ -467,9 +471,9 @@ if [[ $id != 2 ]]; then
 
   mv $home_dir_sh/st*_zookeeper.sh /tmp
   mv $home_dir_sh/install/zookeeper/$zookeeper_service_file /tmp
-  mv /tmp/st*_zookeeper.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_zookeeper.sh
-  mv /tmp/$zookeeper_service_file /etc/systemd/system/
+  mv /tmp/st*_zookeeper.sh $gigapath/bin/
+  chmod +x $gigapath/bin/st*_zookeeper.sh
+  mv /tmp/$zookeeper_service_file $HOME/.config/systemd/user/
 fi
 
 if [[ $id != 4 ]]; then
@@ -490,9 +494,9 @@ if [[ $id != 4 ]]; then
   fi
   mv $home_dir_sh/st*_kafka.sh /tmp
   mv $home_dir_sh/install/kafka/$kafka_service_file /tmp
-  mv /tmp/st*_kafka.sh /usr/local/bin/
-  chmod +x /usr/local/bin/st*_kafka.sh
-  mv /tmp/$kafka_service_file /etc/systemd/system/
+  mv /tmp/st*_kafka.sh $gigapath/bin/
+  chmod +x $gigapath/bin/st*_kafka.sh
+  mv /tmp/$kafka_service_file $HOME/.config/systemd/user/
 fi
 
 if [[ $installtelegrafFlag == "y" ]]; then
@@ -510,20 +514,20 @@ if [[ $installtelegrafFlag == "y" ]]; then
 
 fi
 
-chown gsods:gsods -R $baseFolderLocation*
-chown gsods:gsods -R $logsFolderKafka
-chown gsods:gsods -R $dataFolderKafka
-chown gsods:gsods -R $dataFolderZK
+chown $APP_USER:$APP_USER -R $baseFolderLocation*
+chown $APP_USER:$APP_USER -R $logsFolderKafka
+chown $APP_USER:$APP_USER -R $dataFolderKafka
+chown $APP_USER:$APP_USER -R $dataFolderZK
 
-chmod 777 -R $baseFolderLocation
-chmod 777 -R $logsFolderKafka
-chmod 777 -R $dataFolderKafka
-chmod 777 -R $dataFolderZK
+chmod 755 -R $baseFolderLocation
+chmod 755 -R $logsFolderKafka
+chmod 755 -R $dataFolderKafka
+chmod 755 -R $dataFolderZK
 
 #sudo service mongod stop
-#sudo yum erase $(rpm -qa | grep mongodb-enterprise)
-#sudo rm -r /var/log/mongodb
-#sudo rm -r /var/lib/mongo
+#yum erase $(rpm -qa | grep mongodb-enterprise)
+#rm -r /var/log/mongodb
+#rm -r /var/lib/mongo
 
-systemctl daemon-reload
+systemctl --user daemon-reload
 

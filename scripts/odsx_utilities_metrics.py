@@ -3,6 +3,7 @@ import os
 
 from scripts.logManager import LogManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 from utils.ods_app_config import readValuefromAppConfig
 
@@ -25,6 +26,8 @@ from scripts.odsx_servers_grafana_stop import getGrafanaServerHostList
 from scripts.odsx_servers_influxdb_stop import getInfluxdbServerHostList
 from utils.ods_cluster_config import getManagerHostFromEnv, config_get_space_hosts, config_get_manager_node
 from scripts.odsx_servers_space_install import getSpaceHostFromEnv
+from utils.ods_list import configureMetricsProperties, getGsMetricsPropertiesPath, configureOtelIdentity, \
+    getClusterLookupGroup, getSetenvOverridesPath, OTEL_DEFAULT_SERVICE_NAME
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -80,7 +83,7 @@ def configureMetricsXML(host):
     try:
         cmd = 'sed -i "s|grafana1:3000|'+os.getenv("grafana1")+':3000|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|influxdb1:8086|'+os.getenv("influxdb1")+':8086|g" '+ dbaGigaPath +'/gs_config/metrics.xml;sed -i "s|value=\\"influxdb1\\"|value=\\"'+os.getenv("influxdb1")+'\\"|g" '+ dbaGigaPath +'/gs_config/metrics.xml'
         logger.info(cmd)
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)
     except Exception as e:
@@ -89,11 +92,26 @@ def configureMetricsXML(host):
 def configureLicenseManagerAndSpace():
     managerHosts = getManagerHostFromEnv()
     spaceHosts = getSpaceHostFromEnv()
+    # Legacy XML - still read by pre-17.3 clusters via -Dcom.gigaspaces.metrics.config.
     sourceGSmetrics = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsxml"))
     targetGSmetrics = dbaGigaPath +"/gs_config/metrics.xml"
+    # 17.3.0+ reads ONLY this file, at a path derived from -Dcom.gs.home.
+    sourceGSmetricsProps = str(getYamlFilePathInsideFolder(".gs.config.metrics.metricsproperties"))
+    targetGSmetricsProps = getGsMetricsPropertiesPath()
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("metrics.xml.template source file :"+str(sourceGSmetrics))
-    verboseHandle.printConsoleInfo("metrics.xml target : "+str(targetGSmetrics))
+    verboseHandle.printConsoleInfo("metrics.xml target (pre-17.3) : "+str(targetGSmetrics))
+    verboseHandle.printConsoleInfo("metrics.properties.template source file :"+str(sourceGSmetricsProps))
+    verboseHandle.printConsoleInfo("metrics.properties target (17.3+) : "+str(targetGSmetricsProps))
+    # The OTel identity decides the job label this cluster's series land under in
+    # Prometheus, so show it before asking to proceed.
+    lookupGroup = getClusterLookupGroup()
+    verboseHandle.printConsoleInfo("setenv-overrides.sh target : "+str(getSetenvOverridesPath()))
+    if lookupGroup:
+        verboseHandle.printConsoleInfo("Prometheus job label : "+lookupGroup+"/"+OTEL_DEFAULT_SERVICE_NAME)
+    else:
+        verboseHandle.printConsoleWarning("Prometheus job label : unknown_service - no single lookup group found, "
+                                          "so this cluster's metrics will not be distinguishable from another's.")
     verboseHandle.printConsoleInfo("Manager hosts : "+managerHosts)
     verboseHandle.printConsoleInfo("Space hosts : "+spaceHosts)
     verboseHandle.printConsoleInfo("Influxdb hosts : "+getInfluxdbServerHostList())
@@ -105,17 +123,18 @@ def configureLicenseManagerAndSpace():
         #commandToExecute = "sed -i '/export GS_LICENSE*/c\export GS_LICENSE=\""+licenseConfig+"\"'  '+dbaGigaPath+'/gigaspaces-smart-ods/bin/setenv-overrides.sh"
 
         commandToExecute = "cp "+sourceGSmetrics+" "+targetGSmetrics
+        commandToExecuteProps = "cp "+sourceGSmetricsProps+" "+targetGSmetricsProps
         logger.info("commandToExecute:"+commandToExecute)
+        logger.info("commandToExecuteProps:"+commandToExecuteProps)
 
-        for host in managerHosts.split(','):
-            executeRemoteCommandAndGetOutputPython36(host, 'root', commandToExecute)
+        for host in managerHosts.split(',') + spaceHosts.split(','):
+            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecute)
             configureMetricsXML(host)
-            verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
-
-        for host in spaceHosts.split(','):
-            executeRemoteCommandAndGetOutputPython36(host, 'root', commandToExecute)
-            configureMetricsXML(host)
-            verboseHandle.printConsoleInfo("metrics.xml configured for host:"+host)
+            executeRemoteCommandAndGetOutputPython36(host, get_ssh_user(), commandToExecuteProps)
+            configureMetricsProperties(host)
+            # Distinct Prometheus job label per cluster (OTEL_* env vars).
+            configureOtelIdentity(host)
+            verboseHandle.printConsoleInfo("metrics + OTel identity configured for host:"+host)
 
 if __name__ == '__main__':
     verboseHandle.printConsoleWarning("Menu -> Utilities -> Metrics")

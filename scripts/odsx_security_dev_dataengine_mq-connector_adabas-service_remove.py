@@ -9,6 +9,7 @@ from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataEngine_nodes, config_remove_dataEngine_byNameIP
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -62,7 +63,7 @@ def removeInputUserAndHost():
         global host
         user = str(userInputWrapper(Fore.YELLOW+"Enter user to connect to DI server [root]:"+Fore.RESET))
         if(len(str(user))==0):
-            user="root"
+            user = get_ssh_user()
         logger.info(" user: "+str(user))
 
     except Exception as e:
@@ -99,11 +100,11 @@ class obj_type_dictionary(dict):
 
 def getAdabusServiceStatus(node):
     logger.info("getConsolidatedStatus() : " + str(node.ip))
-    cmdList = ["systemctl status odsxadabas"]
+    cmdList = ["systemctl --user status odsxadabas"]
     for cmd in cmdList:
         logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
         logger.info("Getting status.. :" + str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
             logger.info("output1 : " + str(output))

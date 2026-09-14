@@ -64,8 +64,8 @@ def show_policy_info(args):
     verboseHandle.printConsoleWarning("Wait Interval for Deletion after Demote : " + Fore.CYAN + str(
         selectedValue.parameters.waitIntervalForDeletionAfterDemote))
 
-    #status = executeLocalCommandAndGetOutput("sudo systemctl is-active --quiet odsxrecovery.service")
-    status = os.system('systemctl is-active --quiet odsxrecovery.service')
+    #status = executeLocalCommandAndGetOutput("systemctl --user is-active --quiet odsxrecovery.service")
+    status = os.system('systemctl --user is-active --quiet odsxrecovery.service')
     if (status == 0):
         verboseHandle.printConsoleWarning("Status : " + Fore.GREEN + 'Active')
     else:

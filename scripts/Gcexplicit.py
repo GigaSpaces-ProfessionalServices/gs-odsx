@@ -11,6 +11,7 @@ from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 from utils.ods_cluster_config import config_get_manager_node, config_get_space_hosts
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import host_dictionary_obj, getUsernameByHost, getPasswordByHost
@@ -215,7 +216,7 @@ if __name__ == '__main__':
         cliArguments = ''
         isMenuDriven = ''
         managerRemove = ''
-        user = 'root'
+        user = get_ssh_user()
         logger.info("user :" + str(user))
 
         managerNodes = config_get_manager_node()

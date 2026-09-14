@@ -5,6 +5,7 @@ from scripts.spinner import Spinner
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -55,7 +56,7 @@ if __name__ == '__main__':
     logger.info("Menu -> Utilities -> Check Manager Sync")
     verboseHandle.printConsoleWarning('Menu -> Utilities -> Check Manager Sync')
     try:
-        user = 'root'
+        user = get_ssh_user()
         logger.info("user :" + str(user))
         executeCommandForInstall(user)
     except Exception as e:

@@ -14,7 +14,7 @@ from scripts.spinner import Spinner
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cleanup import signal_handler
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPasswordByHost, getUsernameByHost
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
@@ -354,7 +354,7 @@ def removeGSC(managerHost):
         logger.info("security undeploy cmd : "+str(cmd))
         #print(str(cmd))
         with Spinner():
-            output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
+            output = executeRemoteCommandAndGetOutput(managerHost, get_ssh_user(), cmd)
             print(output)
 
     '''

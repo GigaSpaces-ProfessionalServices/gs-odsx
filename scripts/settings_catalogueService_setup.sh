@@ -1,4 +1,13 @@
 #!/bin/bash
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -9,13 +18,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -43,9 +45,9 @@ echo sed -i 's,$serviceJar,'$gigapath/$base_name',g' /tmp/$service_name
 sed -i 's,$consul_host,'$consul_host',g' /tmp/$service_name
 sed -i 's,$log_location,'$log_location',g' /tmp/$service_name
 
-sudo mv -f /tmp/$service_name /etc/systemd/system/
-sudo systemctl daemon-reload
-sudo systemctl enable $service_name
-sudo systemctl start $service_name
+mv -f /tmp/$service_name $HOME/.config/systemd/user/
+systemctl --user daemon-reload
+systemctl --user enable $service_name
+systemctl --user start $service_name
 
 echo "Catalogue service setup - Completed!."

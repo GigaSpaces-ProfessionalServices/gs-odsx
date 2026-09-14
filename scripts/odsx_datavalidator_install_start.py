@@ -7,6 +7,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataValidation_nodes
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput, executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from scripts.spinner import Spinner
 from scripts.odsx_datavalidator_install_list import listDVAgents, listDVServers, getConsolidatedStatus, \
     isServiceInstalled
@@ -76,9 +77,9 @@ def startDataValidationService(args):
                 hostToStart = hostToStart[0]
                 # start individual
                 if len(str(isServiceInstalled(hostToStart,hostType)))>0:
-                    cmd = "systemctl start odsxdatavalidation"+hostType+".service"
+                    cmd = "systemctl --user start odsxdatavalidation"+hostType+".service"
                     logger.info("Getting status.. odsxdatavalidation"+hostType+":"+str(cmd))
-                    user = 'root'
+                    user = get_ssh_user()
                     with Spinner():
                         output = executeRemoteCommandAndGetOutputPython36(hostToStart, user, cmd)
                         if (output == 0):
@@ -101,9 +102,9 @@ def startDataValidationService(args):
                     if (output == 0):
                         continue
                     if len(str(isServiceInstalled(os.getenv(node.ip), str(node.type))))>0:
-                        cmd = "systemctl start odsxdatavalidation"+str(node.type)+".service"
+                        cmd = "systemctl --user start odsxdatavalidation"+str(node.type)+".service"
                         logger.info("Getting status.. odsxdatavalidation"+str(node.type)+":"+str(cmd))
-                        user = 'root'
+                        user = get_ssh_user()
                         with Spinner():
                             output = executeRemoteCommandAndGetOutputPython36(os.getenv(node.ip), user, cmd)
                             if (output == 0):

@@ -20,7 +20,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_nb_list,
 from utils.ods_list import isInstalledAndGetVersionGrafana, isInstalledAndGetVersionInflux, isInstalledIIDRAccessServer, \
                             isInstalledIIDROracleAgent, isInstalledIIDRKafkaAgent, isInstalledIIDRSubscriptionManager
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36, executeRemoteCommandAndGetOutput, \
-    executeRemoteCommandAndGetOutputValuePython36
+    executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.ods_validation import getSpaceServerStatus
 from utils.ods_validation import getTelnetStatus
 from utils.odsx_print_tabular_data import printTabular
@@ -87,7 +87,7 @@ def getStatusOfHost(host_nic_dict_obj,server):
 def getStatusOfSpaceHost(serverHost):
     commandToExecute = "ps -ef | grep GSA"
     with Spinner():
-        output = executeRemoteCommandAndGetOutput(serverHost, 'root', commandToExecute)
+        output = executeRemoteCommandAndGetOutput(serverHost, get_ssh_user(), commandToExecute)
     if(str(output).__contains__('services=GSA')):
         return "ON"
     else:
@@ -96,13 +96,13 @@ def getStatusOfSpaceHost(serverHost):
 def getStatusOfNBHost(server):
     cmd=''
     if(str(server.role).__contains__('agent')):
-        cmd = "systemctl status consul.service"
+        cmd = "systemctl --user status consul.service"
     if(str(server.role).__contains__('applicative')):
-        cmd = 'systemctl status northbound.target'
+        cmd = 'systemctl --user status northbound.target'
     if(str(server.role).__contains__('management')):
-        cmd = 'systemctl status northbound.target'
+        cmd = 'systemctl --user status northbound.target'
     logger.info("Getting status.. :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
     logger.info(cmd+" :"+str(output))
@@ -113,12 +113,12 @@ def getStatusOfNBHost(server):
 
 def getConsolidatedStatus(node,role):
     output=''
-    user='root'
+    user = get_ssh_user()
     cmdList=[]
     logger.info("getConsolidatedStatus() : "+str(os.getenv(node.ip)))
-    cmdKafka1b = [ "systemctl status odsxkafka", "systemctl status telegraf"]
-    cmdZookeeperWitness2 = [  "systemctl status odsxzookeeper", "systemctl status telegraf"]
-    cmdList3 = [ "systemctl status odsxkafka" , "systemctl status odsxzookeeper", "systemctl status telegraf"]
+    cmdKafka1b = [ "sudo systemctl status odsxkafka", "sudo systemctl status telegraf"]
+    cmdZookeeperWitness2 = [  "sudo systemctl status odsxzookeeper", "sudo systemctl status telegraf"]
+    cmdList3 = [ "sudo systemctl status odsxkafka" , "sudo systemctl status odsxzookeeper", "sudo systemctl status telegraf"]
     if role.__contains__("kafka Broker 1b"):
         cmdList = cmdKafka1b
     elif role.__contains__("Zookeeper Witness"):
@@ -144,7 +144,7 @@ def isInstalledAndGetVersionManagerSpace(host):
     #commandToExecute="ls -la "+ dbaGigaPath +" | grep \"\->\" | awk \'{print $11}\'"
     commandToExecute='cd '+dbaGigaPath+';cd -P gigaspaces-smart-ods;echo ""$(basename $(pwd))'
     logger.info("commandToExecute :"+str(commandToExecute))
-    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+    outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
     outputShFile=str(outputShFile).replace('\n','').replace(dbaGigaPath+ '/','')
     logger.info("outputShFile :"+str(outputShFile))
     return str(outputShFile)
@@ -177,8 +177,8 @@ def listAllServers():
     spaceServers = config_get_space_hosts()
     host_dict_obj = host_dictionary()
     for server in spaceServers:
-        cmd = 'systemctl is-active gs.service'
-        user='root'
+        cmd = 'systemctl --user is-active gs.service'
+        user = get_ssh_user()
         output = executeRemoteCommandAndGetOutputPython36(os.getenv(server.ip), user, cmd)
         logger.info("executeRemoteCommandAndGetOutputPython36 : output:"+str(output))
         host_dict_obj.add(os.getenv(server.ip),str(output))

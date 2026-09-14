@@ -5,7 +5,7 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_kapacitor_list import getStatusOfKapacitor
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 
 verboseHandle = LogManager(os.path.basename(__file__))
 logger = verboseHandle.logger
@@ -44,7 +44,7 @@ def listCatalogue():
     if status=="ON":
         commandToExecute='kapacitor list tasks'
         logger.info("commandToExecute :"+str(commandToExecute))
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(host, get_ssh_user(), commandToExecute)
         print(Fore.GREEN+str(outputShFile)+Fore.RESET)
         logger.info("outputShFile :"+str(outputShFile))
     else:

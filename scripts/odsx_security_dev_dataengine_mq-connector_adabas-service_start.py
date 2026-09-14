@@ -10,6 +10,7 @@ from scripts.odsx_servers_di_list import listDIServers
 from scripts.spinner import Spinner
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_get_dataEngine_nodes
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 from utils.odsx_print_tabular_data import printTabular
 
@@ -68,11 +69,11 @@ def getDEServerHostList():
 
 def getAdabusServiceStatus(node):
     logger.info("getConsolidatedStatus() : " + str(node.ip))
-    cmdList = ["systemctl status odsxadabas"]
+    cmdList = ["systemctl --user status odsxadabas"]
     for cmd in cmdList:
         logger.info("cmd :" + str(cmd) + " host :" + str(node.ip))
         logger.info("Getting status.. :" + str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(node.ip, user, cmd)
             logger.info("output1 : " + str(output))
@@ -126,8 +127,8 @@ def listDIServers():
 
 
 def executeService(host):
-    user='root'
-    cmd = "systemctl start odsxadabas.service"
+    user = get_ssh_user()
+    cmd = "systemctl --user start odsxadabas.service"
     logger.info("Getting status.. odsxadabas:" + str(cmd))
     with Spinner():
         output = executeRemoteCommandAndGetOutputPython36(host, user, cmd)

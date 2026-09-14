@@ -6,7 +6,7 @@ from colorama import Fore
 from scripts.logManager import LogManager
 from utils.ods_app_config import readValuefromAppConfig
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36
+from utils.ods_ssh import executeRemoteCommandAndGetOutputValuePython36, get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -63,7 +63,7 @@ def configureLicenseManagerAndSpace():
     watchdogHost = str(readValuefromAppConfig("app.iidr.watchdog.host"))
     sourcePath= sourceInstallerDirectory+"/iidr/watchdog/"
     targetPathService=str(readValuefromAppConfig("app.iidr.watchdog.service.target"))
-    targetPathScripts=str(readValuefromAppConfig("app.iidr.watchdog.script.target"))
+    targetPathScripts=os.path.expanduser(str(readValuefromAppConfig("app.iidr.watchdog.script.target")))
     verboseHandle.printConsoleWarning("-------------------Summary-----------------")
     verboseHandle.printConsoleInfo("1. Source files : "+sourcePath)
     verboseHandle.printConsoleInfo("2. *.service target files : "+targetPathService)
@@ -74,24 +74,25 @@ def configureLicenseManagerAndSpace():
     confirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] : "+Fore.RESET))
     dbaGigaLogPath=readValuefromAppConfig("app.gigalog.path")
     if confirm=='y' or confirm=='':
-        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p " + dbaGigaLogPath + "/iidr;chown -R gsods.gsods " + dbaGigaLogPath + "/iidr;cp "+sourcePath+"*.service "+targetPathService
+        sshUser = get_ssh_user()
+        commandToExecute = "mkdir -p "+str(targetPathScripts)+";mkdir -p " + dbaGigaLogPath + "/iidr;chown -R "+sshUser+"."+sshUser+" " + dbaGigaLogPath + "/iidr;cp "+sourcePath+"*.service "+targetPathService
         logger.info("commandToExecute:"+commandToExecute)
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, get_ssh_user(), commandToExecute)
         verboseHandle.printConsoleInfo("Files *.service copied for for host:"+watchdogHost)
 
         commandToExecute = "cp "+sourcePath+"*.timer "+targetPathService
         logger.info("commandToExecute:"+commandToExecute)
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, get_ssh_user(), commandToExecute)
         verboseHandle.printConsoleInfo("Files *.timer copied for for host:"+watchdogHost)
 
         commandToExecute = "cp "+sourcePath+"*.sh "+targetPathScripts
         logger.info("commandToExecute:"+commandToExecute)
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, get_ssh_user(), commandToExecute)
         verboseHandle.printConsoleInfo("Files *.sh copied for for host:"+watchdogHost)
 
         commandToExecute = "cp "+sourcePath+"*.chcclp "+targetPathScripts
         logger.info("commandToExecute:"+commandToExecute)
-        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, 'root', commandToExecute)
+        outputShFile = executeRemoteCommandAndGetOutputValuePython36(watchdogHost, get_ssh_user(), commandToExecute)
         verboseHandle.printConsoleInfo("Files *.chcclp copied for for host:"+watchdogHost)
 
 

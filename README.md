@@ -102,6 +102,32 @@
                                                  
     -/dbagigashare/current/gs/config/license/gs-license.txt write tryme or if you have valid license then put it.
     -Copy <odsx>/config/metrics.xml.template /dbagigashare/current/gs/config/metrics/
+    -Copy <odsx>/config/metrics.properties.template /dbagigashare/current/gs/config/metrics/
+     (required for GigaSpaces 17.3.0+, which ships no metrics.xml and reads
+      config/metrics/metrics.properties instead - see config/metrics.properties.template)
+
+    -CEF audit logging: the handler class lives in
+      /dbagigashare/current/gs/jars/cef/CEFLogger-1.0-SNAPSHOT.jar (the path
+      app.yaml's .gs.jars.cef.cefjar maps to). It is required whenever the
+      xap_logging.properties staged at
+      /dbagigashare/current/gs/config/log/ names com.gs.CEFRollingFileHandler in
+      its handlers line - java.util.logging cannot load a handler that is not on
+      the JVM classpath, so without the jar every GigaSpaces process fails with
+      ClassNotFoundException: com.gs.CEFRollingFileHandler and writes no CEF at
+      all. configureCefLogging() deploys it to <giga>/gigaspaces-smart-ods/lib/
+      required/ during manager/space install and on Menu -> Logs -> Enable CEF.
+    -In that same xap_logging.properties, the CEF handler's filename-pattern
+      must use the @GIGALOGPATH@ placeholder, as metrics.properties.template
+      does:
+        com.gs.CEFRollingFileHandler.filename-pattern = @GIGALOGPATH@/CEF/{date,yyyy-MM-dd~HH.mm}-CEF-gigaspaces-{service}-{host}-{pid}.log
+      user-setup.sh step 4 rewrites it for you on every run, so a tgz that
+      still ships a hardcoded root needs no manual edit; configureCefLogging()
+      then substitutes app.gigalog.path per host at install time. A hardcoded
+      log root (the file used to ship /gigalogs) breaks every cluster whose
+      app.gigalog.path differs, with
+      "java.util.logging.ErrorManager: 4: Failed to create directories".
+      Keep the placeholder rather than one cluster's absolute path: current/ is
+      shared artifact storage that other clusters may read.
     
 ### <u>Usage</u>
 

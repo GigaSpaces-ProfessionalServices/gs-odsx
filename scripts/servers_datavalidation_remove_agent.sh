@@ -1,3 +1,12 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 source setenv.sh
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -9,13 +18,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -25,10 +27,10 @@ gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
 
 
-systemctl stop odsxdatavalidationagent.service
+systemctl --user stop odsxdatavalidationagent.service
 sleep 2
 
 #yum -y remove java*
 #yum -y remove jdk*
 
-rm -rf $gigapath/datavalidator/agent /usr/local/bin/st*_data_validation_agent.sh /etc/systemd/system/odsxdatavalidationagent.service
+rm -rf $gigapath/datavalidator/agent $gigapath/bin/st*_data_validation_agent.sh $HOME/.config/systemd/user/odsxdatavalidationagent.service

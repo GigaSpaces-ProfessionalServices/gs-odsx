@@ -1,3 +1,6 @@
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
 if [ -z "$ENV_CONFIG_PATH" ]; then
@@ -6,15 +9,8 @@ if [ -z "$ENV_CONFIG_PATH" ]; then
 else
   echo "$ENV_CONFIG_PATH is set to: $ENV_CONFIG_PATH"
 fi
-ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
+ENV_CONFIG_APP="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -24,13 +20,6 @@ gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
 
 sed -i '/export PYTHONPATH=$(dirname $(pwd))/d' ~/.bash_profile
-sed -i -e 's|/dbagigalogs/|'$gigalogpath'/|g' $gigapath/gs-odsx/config/logging.conf
-sed -i -e 's|/dbagigalogs/|'$gigalogpath'/|g' $gigasharepath/current/gs/config/scripts/start_gsc.sh
-sed -i -e 's|/dbagigalogs/|'$gigalogpath'/|g' $gigasharepath/current/gs/config/log/xap_logging.properties
-sed -i -e 's|/dbagigalogs/|'$gigalogpath'/|g' $gigasharepath/current/telegraf/scripts/space/telegraf_wal-size.sh
-sed -i -e 's|/dbagigalogs/|'$gigalogpath'/|g' $gigasharepath/current/mq-connector/adabas/config/application.yml
-sed -i -e 's|/dbagigalogs/|'$gigalogpath'/|g' $gigasharepath/current/mq-connector/config/application.yml
-sed -i -e 's|/dbagigainflaxdata/|'$gigainfluxpath'/|g' $gigasharepath/current/influx/config/influxdb.conf.template
 
 #echo 'export PYTHONPATH=$(dirname $(pwd))' >> ~/.bashrc
 project_home_dir=$(dirname $(pwd))
@@ -39,4 +28,8 @@ echo "$python_path" >> ~/.bash_profile
 odsx_path="export ODSXARTIFACTS="$gigasharepath"/current/"
 echo "$odsx_path" >> ~/.bash_profile
 echo 'eval "$(register-python-argcomplete odsx.py)"' >> ~/.bash_profile
+
+sed -i '/eval "$(register-python-argcomplete odsx.py)"/d' ~/.bash_profile
+echo 'eval "$(register-python-argcomplete odsx.py)"' >> ~/.bash_profile
 .  ~/.bash_profile
+pip3 install -r requirements.txt

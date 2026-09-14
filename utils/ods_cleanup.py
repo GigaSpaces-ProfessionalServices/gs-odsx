@@ -5,7 +5,7 @@ from utils.ods_app_config import set_value_in_property_file
 from scripts.logManager import LogManager
 from json import JSONEncoder
 import json
-from utils.ods_ssh import executeRemoteCommandAndGetOutput
+from utils.ods_ssh import executeRemoteCommandAndGetOutput, get_ssh_user
 from scripts.spinner import Spinner
 from colorama import Fore
 from utils.ods_app_config import readValuefromAppConfig
@@ -108,14 +108,14 @@ def cleanUp():
     logger.info("Selected answer manager:"+str(answer))
     if(answer.lower() == "y"):
         clenupManagerNode()
-        answerServer = input("Do you want to clean Manager Server folders? \n "+ dbaGigaPath +" \n " + dbaGigaLogPath + "/ \n "+ dbaGigaWorkPath +"/ \nsetenv.sh \n install \n install.tar \n /usr/local/bin/start_gs.sh \n /usr/local/bin/stop_gs.sh \n /etc/systemd/system/gs.service \n(yes(y)/no(n)/cancel(c): ")
+        answerServer = input("Do you want to clean Manager Server folders? \n "+ dbaGigaPath +" \n " + dbaGigaLogPath + "/ \n "+ dbaGigaWorkPath +"/ \nsetenv.sh \n install \n install.tar \n /giga/bin/start_gs.sh \n /giga/bin/stop_gs.sh \n ~/.config/systemd/user/gs.service \n(yes(y)/no(n)/cancel(c): ")
         if(answerServer.lower() == "y"):
-            cmd = 'rm -rf setenv.sh gs install install.tar  '+ dbaGigaPath +'/*  '+ dbaGigaLogPath +'/*  '+ dbaGigaWorkPath +'/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service'
+            cmd = 'rm -rf setenv.sh gs install install.tar  '+ dbaGigaPath +'/*  '+ dbaGigaLogPath +'/*  '+ dbaGigaWorkPath +'/* /giga/bin/start_gs.sh /giga/bin/stop_gs.sh ~/.config/systemd/user/gs.service'
             verboseHandle.printConsoleInfo("Removing..")
             verboseHandle.printConsoleWarning("Removing with user [root]")
             host = input("Please enter host:")
             with Spinner():
-                output = executeRemoteCommandAndGetOutput(host, "root", cmd)
+                output = executeRemoteCommandAndGetOutput(host, get_ssh_user(), cmd)
             logger.info("Servers-Manager files and folders removed. :"+str(output))
             verboseHandle.printConsoleInfo("Servers-Manager files and folders removed.")
             verboseHandle.printConsoleInfo(output)
@@ -140,14 +140,14 @@ def cleanUp():
     logger.info("Selected answer space:"+str(answer))
     if(answer.lower() == "y"):
         cleanupSpacesServerHosts()
-        answerServer = input("Do you want to clean Space Server folders? \n "+ dbaGigaPath +" \n " + dbaGigaLogPath + "/ \n "+ dbaGigaWorkPath +"/ \nsetenv.sh \n install \n install.tar \n /usr/local/bin/start_gs.sh \n /usr/local/bin/stop_gs.sh \n /etc/systemd/system/gs.service \n(yes(y)/no(n)/cancel(c): ")
+        answerServer = input("Do you want to clean Space Server folders? \n "+ dbaGigaPath +" \n " + dbaGigaLogPath + "/ \n "+ dbaGigaWorkPath +"/ \nsetenv.sh \n install \n install.tar \n /giga/bin/start_gs.sh \n /giga/bin/stop_gs.sh \n ~/.config/systemd/user/gs.service \n(yes(y)/no(n)/cancel(c): ")
         if(answerServer.lower() == "y"):
-            cmd = 'rm -rf setenv.sh gs install install.tar  '+ dbaGigaPath +'/*  '+ dbaGigaLogPath +'/*  '+ dbaGigaWorkPath +'/* /usr/local/bin/start_gs.sh /usr/local/bin/stop_gs.sh /etc/systemd/system/gs.service'
+            cmd = 'rm -rf setenv.sh gs install install.tar  '+ dbaGigaPath +'/*  '+ dbaGigaLogPath +'/*  '+ dbaGigaWorkPath +'/* /giga/bin/start_gs.sh /giga/bin/stop_gs.sh ~/.config/systemd/user/gs.service'
             verboseHandle.printConsoleInfo("Removing..")
             verboseHandle.printConsoleWarning("Removing with user [root]")
             host = input("Please enter host:")
             with Spinner():
-                output = executeRemoteCommandAndGetOutput(host, "root", cmd)
+                output = executeRemoteCommandAndGetOutput(host, get_ssh_user(), cmd)
             logger.info("Servers-spaec files and folders removed. :"+str(output))
             verboseHandle.printConsoleInfo("Servers-space files and folders removed.")
             verboseHandle.printConsoleInfo(output)

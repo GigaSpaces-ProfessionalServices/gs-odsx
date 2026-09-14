@@ -6,10 +6,11 @@ from colorama import Fore
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from utils.ods_app_config import set_value_in_property_file, readValueByConfigObj
+from utils.ods_app_config import render_install_templates, set_value_in_property_file, readValueByConfigObj
 from utils.ods_cluster_config import config_get_dataIntegration_nodes, config_add_dataEngine_node
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -155,6 +156,10 @@ def getInputParam(kafkaHosts):
 
 def buildTarFileToLocalMachine():
     logger.info("buildTarFileToLocalMachine :")
+    # Remove stale tar to ensure fresh build from current install/ contents
+    if os.path.exists('install/install.tar'):
+        os.remove('install/install.tar')
+    render_install_templates()
     cmd = 'tar -cvf install/install.tar install'  # Creating .tar file on Pivot machine
     with Spinner():
         status = os.system(cmd)
@@ -162,7 +167,7 @@ def buildTarFileToLocalMachine():
 
 def buildUploadInstallTarToServer(host):
     logger.info("buildUploadInstallTarToServer(): start host :" + str(host))
-    user='root'
+    user = get_ssh_user()
     try:
         with Spinner():
             logger.info("hostip ::" + str(host) + " user :" + str(user))
@@ -200,7 +205,7 @@ def proceedForInstallation(hostConfig):
         additionalParam = additionalParam+' '+mqHostname+' '+mqChannel+' '+mqManager+' '+queueName+' '+sslChipherSuite+' '+mqPort
         print(additionalParam)
         logger.info("additionalParam : "+str(additionalParam))
-        user='root'
+        user = get_ssh_user()
         for host in hostList:
             logger.info("Proceeding for host :"+str(host))
             buildUploadInstallTarToServer(host)

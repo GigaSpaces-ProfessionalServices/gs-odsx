@@ -19,8 +19,8 @@ def myCheckArg(args=None):
 
 def statusOfHealthmonitorService(args):
     with Spinner():
-        executeLocalCommandAndGetOutput("sudo systemctl is-active --quiet odsxhealthcheck.service")
-    status = os.system('systemctl is-active --quiet odsxhealthcheck.service')
+        executeLocalCommandAndGetOutput("systemctl --user is-active --quiet odsxhealthcheck.service")
+    status = os.system('systemctl --user is-active --quiet odsxhealthcheck.service')
     if (status == 0):
         verboseHandle.printConsoleInfo("active")
     else:

@@ -10,6 +10,7 @@ from scripts.logManager import LogManager
 from utils.ods_cluster_config import config_add_nb_node, config_get_nb_list, config_remove_nb_streamByNameIP
 from utils.ods_scp import scp_upload
 from utils.ods_ssh import connectExecuteSSH, executeRemoteCommandAndGetOutput,executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_read_properties_file import createPropertiesMapFromFile
 from utils.ods_ssh import executeRemoteShCommandAndGetOutput
 from scripts.odsx_servers_northbound_install import install_packages_to_nb_servers
@@ -114,7 +115,7 @@ def test_case_2(ip,nb_user,remotePath,nb_server,nb_agent,nb_management,nb_ops,co
     if(confirmServerInstall=='y'):
         cmd = 'systemctl status northbound.target'
         logger.info("Getting status.. :"+str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(managerHostip, user, cmd)
         logger.info(cmd+" :"+str(output))
@@ -143,7 +144,7 @@ def test_case_3(ip,nb_user,remotePath,nb_server,nb_agent,nb_management,nb_ops,co
     if(confirmAgentInstall=='y'):
         cmd = 'systemctl status consul.service'
         logger.info("Getting status.. :"+str(cmd))
-        user = 'root'
+        user = get_ssh_user()
         with Spinner():
             output = executeRemoteCommandAndGetOutputPython36(agentHostip, user, cmd)
         logger.info(cmd+" :"+str(output))
@@ -164,7 +165,7 @@ def test_case_4(ip,user,remotePath,nb_server,nb_agent,nb_management,nb_ops,confi
         for hostip in nb_server:
             cmd = 'systemctl start northbound.target'
             logger.info("Getting status.. :"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(hostip, user, cmd)
                 if(output!=0):
@@ -186,7 +187,7 @@ def test_case_5(ip,user,remotePath,nb_server,nb_agent,nb_management,nb_ops,confi
         for hostip in nb_agent:
             cmd = 'systemctl start consul.service'
             logger.info("Getting status.. :"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(hostip, user, cmd)
                 if(output!=0):
@@ -208,7 +209,7 @@ def test_case_6(ip,user,remotePath,nb_server,nb_agent,nb_management,nb_ops,confi
         for hostip in nb_agent:
             cmd = 'systemctl start consul.service'
             logger.info("Getting status.. :"+str(cmd))
-            user = 'root'
+            user = get_ssh_user()
             with Spinner():
                 output = executeRemoteCommandAndGetOutputPython36(hostip, user, cmd)
                 if(output!=0):
@@ -242,7 +243,7 @@ def test_case_7(ip,user,remotePath,nb_server,nb_agent,nb_management,nb_ops,confi
 
 if __name__ == '__main__':
     ip = "54.155.204.21"
-    user="root"
+    user = get_ssh_user()
     nb_server = "10.0.0.110"
     consul_replica_number = '3'
     remotePath = dbaGigaPath

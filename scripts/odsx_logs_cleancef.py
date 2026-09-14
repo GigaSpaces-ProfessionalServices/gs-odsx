@@ -8,7 +8,7 @@ from scripts.logManager import LogManager
 from scripts.spinner import Spinner
 from utils.ods_app_config import getYamlFilePathInsideFolder
 from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_node
-from utils.ods_ssh import connectExecuteSSH
+from utils.ods_ssh import connectExecuteSSH, get_ssh_user
 from utils.odsx_keypress import userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -58,7 +58,7 @@ def proceedForNodeConfiguration(flag,nodes,targetDir):
 
         logger.info("Additinal Param:" + additionalParam + " cmdToExec:" + commandToExecute + " Host:" + str(host) )
         with Spinner():
-            outputShFile = connectExecuteSSH(host, 'root', commandToExecute, additionalParam)
+            outputShFile = connectExecuteSSH(host, get_ssh_user(), commandToExecute, additionalParam)
             print(outputShFile)
             logger.info("outputShFile kafka : " + str(outputShFile))
 

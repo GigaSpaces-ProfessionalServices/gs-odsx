@@ -1,3 +1,12 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 echo "Installation begin for mq-connector!!!"
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -9,13 +18,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -23,6 +25,8 @@ gigasharepath=$(read_property "app.gigashare.path")
 gigadatapath=$(read_property "app.gigadata.path")
 gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
+APP_USER=$(read_property "app.server.user")
+APP_USER=${APP_USER:-$(whoami)}
 
 tar -xvf install.tar
 targetDir=$1
@@ -37,8 +41,8 @@ queueName=$9
 sslChipherSuite=${10}
 mqPort=${11}
 
-rootDir='/dbagigasoft'
-#targetDir='/dbagigasoft/Adabas'
+rootDir=$(dirname "$targetDir")
+#targetDir was passed as $1
 echo "targetDir:"$targetDir
 logDir=$gigalogpath'/Adabas'
 start_publisher_file='run-publisher.sh'
@@ -57,13 +61,13 @@ fi
 if [ ! -d "$logDir" ]; then
      mkdir -p $logDir
 fi
-chmod 777 $rootDir
-chmod 777 $targetDir
-chmod 777 $logDir
+chmod 755 $rootDir
+chmod 755 $targetDir
+chmod 755 $logDir
 echo "Dir created.."
-cmd="/dbagigasoft/Adabas/run-publisher.sh -name adabasPublisher"
+cmd="$targetDir/run-publisher.sh -name adabasPublisher"
 echo "$cmd">>$start_adabas_feeder_file
-cmd="/dbagigasoft/Adabas/stop-publisher.sh"
+cmd="$targetDir/stop-publisher.sh"
 echo "$cmd">>$stop_adabas_feeder_file
 
 echo "File written!!"
@@ -75,10 +79,10 @@ mv $home_dir_sh/install/mq-connector/config/*.yml $targetDir/config
 mv $home_dir_sh/$sourceAdabasJarFile $targetDir
 mv $home_dir_sh/$keystoreFile $targetDir/$keystoreFile
 
-chown gsods:gsods $targetDir/*.sh
-chown gsods:gsods $targetDir/config/*.*
+chown $APP_USER:$APP_USER $targetDir/*.sh
+chown $APP_USER:$APP_USER $targetDir/config/*.*
 chmod +x $targetDir/*.sh
-chmod 777 $targetDir/config/*.*
+chmod 755 $targetDir/config/*.*
 
 mqHostname=$6
 mqChannel=$7
@@ -106,19 +110,20 @@ sed -i -e 's|  port: 1414|  port: '$mqPort'|g' $applicationYml
 mv $home_dir_sh/$start_adabas_feeder_file /tmp
 mv $home_dir_sh/$stop_adabas_feeder_file /tmp
 mv $home_dir_sh/install/$service_file /tmp
+sed -i "s|WorkingDirectory=/dbagigasoft/Adabas|WorkingDirectory=$targetDir|g" /tmp/$service_file
 #echo "Files moved to /tmp"
 
-mv /tmp/st*_adabasFeeder.sh /usr/local/bin/
+mv /tmp/st*_adabasFeeder.sh $gigapath/bin/
 
-chmod +x /usr/local/bin/st*_adabasFeeder.sh
+chmod +x $gigapath/bin/st*_adabasFeeder.sh
 
-mv /tmp/$service_file /etc/systemd/system/
-systemctl daemon-reload
+mv /tmp/$service_file $HOME/.config/systemd/user/
+systemctl --user daemon-reload
 
-chown gsods:gsods $rootDir
-chown gsods:gsods $targetDir
-chown gsods:gsods $targetDir/*
-chown gsods:gsods $logDir
+chown $APP_USER:$APP_USER $rootDir
+chown $APP_USER:$APP_USER $targetDir
+chown $APP_USER:$APP_USER $targetDir/*
+chown $APP_USER:$APP_USER $logDir
 
 
-#rm -rf /dbagigasoft/Adabas/ /usr/local/bin/*_adabasFeeder.sh /etc/systemd/system/odsxadabas.service install install.tar /dbagigasoft setenv.sh
+#rm -rf /dbagigasoft/Adabas/ $gigapath/bin/*_adabasFeeder.sh $HOME/.config/systemd/user/odsxadabas.service install install.tar /dbagigasoft setenv.sh

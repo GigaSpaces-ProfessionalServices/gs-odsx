@@ -1,0 +1,639 @@
+#!/bin/bash
+# user-setup.sh — Run as the app user on the pivot machine.
+# Handles gigashare extraction, giga directory creation, SSH key
+# generation + deployment, user environment setup (pivot + remote),
+# GigaSpaces installation, and Python dependencies.
+#
+# Designed to be idempotent — safe to re-run. On the first run (before
+# root-setup.sh), remote host steps will be skipped with a warning.
+# After root-setup.sh creates remote users and NFS, re-run this script
+# to complete remote host configuration and SSH key deployment.
+#
+# Prerequisites:
+#   - App user exists on pivot (root-setup.sh or admin)
+#   - Gigashare dir exists and is writable by app user
+#
+# Typical workflow:
+#   1. user-setup.sh -d /gigashare -tar /path/gigashare.tgz
+#   2. root-setup.sh -d /gigashare       (as root)
+#   3. user-setup.sh -d /gigashare       (re-run for remote hosts)
+
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+function usage () {
+  cat << EOF
+
+  NAME
+
+    $(basename $0) – App user ODSX setup
+
+  USAGE
+
+    $(basename $0) -d <gigashare dir> [-u <username>] [-tar <gigashare.tgz>] [--overwrite] [--ksh]
+
+  OPTIONS
+
+    -d <dir>      Gigashare directory (e.g. /gigashare)
+    -u <user>     App username (default: current user)
+    -tar <tgz>    Gigashare tarball to extract into -d (optional; skipped
+                  if -d is already populated, unless --overwrite)
+    --overwrite   Re-extract tgz, overwrite sqlite files, overwrite SSH config,
+                  overwrite .kshrc (when --ksh is also given)
+    --ksh         Also create ~/.kshrc derived from ~/.bashrc (drops bash-only
+                  argcomplete eval; rewrites \`source X\` to POSIX \`. X\`).
+                  Created on the pivot and on every remote host.
+
+  EXAMPLES
+
+    # First run — extract tgz and set up pivot:
+    ./$(basename $0) -d /gigashare -tar /giga/gigashare.tgz
+
+    # After root-setup.sh — complete remote host config:
+    ./$(basename $0) -d /gigashare
+
+EOF
+exit
+}
+
+set -e
+
+# --- Parse arguments ---
+GIGASHARE_DIR=""
+APP_USER=""
+TGZ_FILE=""
+OVERWRITE=false
+WRITE_KSHRC=false
+
+# Extract multi-char flags (--overwrite, -tar) before getopts.
+# getopts only handles single-letter options, so anything longer
+# must be consumed here.
+_ARGS=()
+_consume_tar=false
+for _arg in "$@"; do
+    if $_consume_tar; then
+        TGZ_FILE=$_arg
+        _consume_tar=false
+        continue
+    fi
+    case "$_arg" in
+        --overwrite) OVERWRITE=true ;;
+        --ksh)       WRITE_KSHRC=true ;;
+        -tar)        _consume_tar=true ;;
+        *)           _ARGS+=("$_arg") ;;
+    esac
+done
+$_consume_tar && { echo "Error: -tar requires a path argument." >&2; usage; }
+set -- "${_ARGS[@]+"${_ARGS[@]}"}"
+unset _ARGS _arg _consume_tar
+
+while getopts ":d:u:h" opt; do
+    case $opt in
+        d) GIGASHARE_DIR=$OPTARG ;;
+        u) APP_USER=$OPTARG ;;
+        h) usage ;;
+        \?) echo "Unknown option: -$OPTARG" >&2; usage ;;
+        :)  echo "Option -$OPTARG requires an argument" >&2; usage ;;
+    esac
+done
+
+[[ -z "$GIGASHARE_DIR" ]] && { echo "Error: -d <gigashare dir> is required."; usage; }
+[[ -z "$APP_USER" ]] && APP_USER=$(id -un)
+[[ ! -d "$GIGASHARE_DIR" ]] && { echo "Error: $GIGASHARE_DIR does not exist."; exit 1; }
+
+# Validate running as the specified user
+if [[ "$(id -un)" != "$APP_USER" ]]; then
+    echo "Error: This script must be run as user $APP_USER (currently $(id -un))."
+    exit 1
+fi
+
+# --- Step 1: Gigashare extraction ---
+if [ -n "$TGZ_FILE" ]; then
+    echo ">>> Step 1: Gigashare extraction..."
+    if [ ! -s "$TGZ_FILE" ]; then
+        echo "Error: $TGZ_FILE is empty or does not exist."
+        exit 1
+    fi
+    if [ -z "$(ls -A "$GIGASHARE_DIR" 2>/dev/null)" ]; then
+        echo "    Extracting $TGZ_FILE into $GIGASHARE_DIR ..."
+        tar xzf "$TGZ_FILE" -C "$GIGASHARE_DIR"
+        echo "    Done."
+    elif $OVERWRITE; then
+        echo "    Overwrite mode: clearing $GIGASHARE_DIR and re-extracting..."
+        rm -rf "$GIGASHARE_DIR"/*
+        tar xzf "$TGZ_FILE" -C "$GIGASHARE_DIR"
+        echo "    Done."
+    else
+        echo "    $GIGASHARE_DIR is not empty — skipping extraction. Use --overwrite to force."
+    fi
+else
+    if [ -z "$(ls -A "$GIGASHARE_DIR" 2>/dev/null)" ]; then
+        echo ">>> Step 1: No -tar given and $GIGASHARE_DIR is empty — skipping gigashare extraction."
+    else
+        echo ">>> Step 1: Skipping gigashare extraction."
+    fi
+fi
+
+# --- Config paths ---
+ENV_CONFIG_PATH="$GIGASHARE_DIR/env_config"
+if [[ ! -d "$ENV_CONFIG_PATH" ]]; then
+    if [ -z "$(ls -A "$GIGASHARE_DIR" 2>/dev/null)" ]; then
+        echo "Error: $ENV_CONFIG_PATH does not exist. Extract gigashare first (-tar)."
+    else
+        echo "Error: $ENV_CONFIG_PATH does not exist."
+    fi
+    exit 1
+fi
+
+APP_CONFIG="$ENV_CONFIG_PATH/app.config"
+HOST_YAML="$ENV_CONFIG_PATH/host.yaml"
+[[ ! -f "$APP_CONFIG" ]] && { echo "Error: $APP_CONFIG not found."; exit 1; }
+[[ ! -f "$HOST_YAML" ]] && { echo "Error: $HOST_YAML not found."; exit 1; }
+
+
+GIGA_PATH=$(read_property "app.giga.path")
+GIGA_SHARE=$(read_property "app.gigashare.path")
+GIGA_LOG=$(read_property "app.gigalog.path")
+GIGA_DATA=$(read_property "app.gigadata.path")
+GIGA_WORK=$(read_property "app.gigawork.path")
+GIGA_INFLUX=$(read_property "app.gigainfluxdata.path")
+
+# Validate required path keys
+missing_paths=0
+for key_var in "app.giga.path:$GIGA_PATH" "app.gigashare.path:$GIGA_SHARE" "app.gigalog.path:$GIGA_LOG" "app.gigadata.path:$GIGA_DATA" "app.gigawork.path:$GIGA_WORK" "app.gigainfluxdata.path:$GIGA_INFLUX"; do
+    key="${key_var%%:*}"
+    val="${key_var#*:}"
+    if [ -z "$val" ]; then
+        echo "Error: '$key' is not set in $APP_CONFIG."
+        missing_paths=1
+    fi
+done
+[[ "$missing_paths" -eq 1 ]] && exit 1
+
+NOFILE_LIMIT=$(read_property "app.user.nofile.limit")
+NOFILE_LIMIT=${NOFILE_LIMIT:-50000}
+
+# --- Determine hosts ---
+ALL_HOSTS=$(grep -E '^\s+host[0-9]+\s*:' "$HOST_YAML" | awk -F':' '{gsub(/^[[:space:]]+|[[:space:]]+$/,"",$2); if($2!="") print $2}' | sort -u)
+PIVOT_IP=$(hostname -I | awk '{print $1}')
+
+REMOTE_HOSTS=""
+for _h in $ALL_HOSTS; do
+    [ "$_h" != "$PIVOT_IP" ] && REMOTE_HOSTS="$REMOTE_HOSTS $_h"
+done
+REMOTE_HOSTS="${REMOTE_HOSTS# }"
+
+echo ""
+echo "============================================"
+echo "  ODSX User Setup ($APP_USER)"
+echo "============================================"
+echo "Pivot IP:     $PIVOT_IP"
+echo "Giga path:    $GIGA_PATH"
+echo "Gigashare:    $GIGA_SHARE"
+echo "nofile limit: $NOFILE_LIMIT"
+echo "Remote hosts: ${REMOTE_HOSTS:-none}"
+echo ""
+
+# --- Step 2: Create giga directories ---
+echo ">>> Step 2: Creating giga directories..."
+mkdir -p $GIGA_PATH $GIGA_SHARE $GIGA_LOG $GIGA_DATA $GIGA_WORK
+mkdir -p $GIGA_PATH/bin
+touch $GIGA_LOG/odsx.log
+echo "    Directories created."
+
+# --- Step 3: SQLite copy ---
+echo ">>> Step 3: SQLite files..."
+mkdir -p $GIGA_WORK/sqlite
+if [ -z "$(ls -A "$GIGA_WORK/sqlite" 2>/dev/null)" ]; then
+    if ls $GIGA_SHARE/current/sqlite/* > /dev/null 2>&1; then
+        cp $GIGA_SHARE/current/sqlite/* $GIGA_WORK/sqlite/
+        echo "    SQLite files copied."
+    else
+        echo "    No sqlite source files found in $GIGA_SHARE/current/sqlite/ — skipping."
+    fi
+elif $OVERWRITE; then
+    cp $GIGA_SHARE/current/sqlite/* $GIGA_WORK/sqlite/
+    echo "    SQLite files overwritten (--overwrite)."
+else
+    echo "    $GIGA_WORK/sqlite/ is not empty — skipping. Use --overwrite to force."
+fi
+
+# --- Step 4: Normalise staged CEF logging config ---
+# The xap_logging.properties staged in the artifacts tree ships a hardcoded
+# /gigalogs/CEF filename-pattern for com.gs.CEFRollingFileHandler. On any
+# cluster whose app.gigalog.path is not /gigalogs, no app user can create that
+# directory, and every GigaSpaces JVM then reports
+#   java.util.logging.ErrorManager: 4: Failed to create directories: /gigalogs/CEF
+# Rewrite it to the @GIGALOGPATH@ placeholder instead of this pivot's own log
+# root: current/ is shared artifact storage, so baking one cluster's absolute
+# path into it would be wrong for any other cluster reading the same tree.
+# configureCefLogging() resolves the placeholder per host at install time.
+#
+# Always run - it is idempotent, and it is corrective, so it must not wait for
+# --overwrite. Deliberately placed before the steps that can exit non-zero on a
+# missing prerequisite (yq, unzip, a staged GS zip), so a pivot that trips one
+# of those still gets a usable staged config.
+echo ">>> Step 4: Staged CEF logging config..."
+cef_log_script="$(dirname "$0")/configure_cef_logging.sh"
+cef_log_dir="$GIGA_SHARE/current/gs/config/log"
+if [ ! -r "$cef_log_script" ]; then
+    echo "    Warning: $cef_log_script not found — skipping. CEF logging will use"
+    echo "             whatever log root the staged xap_logging.properties hardcodes."
+elif [ ! -d "$cef_log_dir" ]; then
+    echo "    $cef_log_dir does not exist — skipping (nothing staged)."
+else
+    # Existence tested per name rather than via nullglob: these are literal
+    # paths, not globs, so nullglob would not drop a variant that is not
+    # staged and the loop below would warn about a file nobody asked for.
+    # .without-cef is deliberately not listed - it enables no CEF handler.
+    cef_cfgs=()
+    for cef_name in xap_logging.properties xap_logging.properties.cef; do
+        if [ -f "$cef_log_dir/$cef_name" ]; then
+            cef_cfgs+=("$cef_log_dir/$cef_name")
+        fi
+    done
+    if [ ${#cef_cfgs[@]} -eq 0 ]; then
+        echo "    No xap_logging.properties staged in $cef_log_dir — skipping."
+    else
+        for cef_cfg in "${cef_cfgs[@]}"; do
+            # The script no-ops on a config whose handlers line does not enable
+            # the CEF handler, which is what leaves .without-cef alone.
+            # Status captured explicitly: a normalisation failure (say a
+            # read-only artifacts tree) is worth a warning but must not abort
+            # the rest of setup, and relying on set -e's command-substitution
+            # exemption to get that would be too subtle to trust.
+            if cef_out=$(bash "$cef_log_script" --pattern-only "$cef_cfg" '@GIGALOGPATH@' 2>&1); then
+                echo "    $(basename "$cef_cfg"): $(echo "$cef_out" | tail -1)"
+            else
+                echo "    Warning: could not normalise $(basename "$cef_cfg"):"
+                echo "$cef_out" | sed 's/^/             /'
+            fi
+        done
+    fi
+fi
+
+# --- Step 5: SSH key generation ---
+echo ">>> Step 5: SSH key..."
+mkdir -p ~/.ssh
+chmod 700 ~/.ssh
+
+if [ ! -f ~/.ssh/id_ed25519 ]; then
+    ssh-keygen -t ed25519 -N "" -f ~/.ssh/id_ed25519
+    echo "    Key generated."
+else
+    echo "    Key already exists."
+fi
+
+# --- Step 6: SSH config ---
+echo ">>> Step 6: SSH config..."
+if [ ! -f ~/.ssh/config ] || $OVERWRITE; then
+    cat > ~/.ssh/config << 'SSHCONFIG'
+Host *
+    StrictHostKeyChecking no
+    UserKnownHostsFile /dev/null
+    ServerAliveInterval 30
+    ServerAliveCountMax 3
+    ConnectTimeout 10
+    LogLevel ERROR
+SSHCONFIG
+    chmod 600 ~/.ssh/config
+    if $OVERWRITE; then
+        echo "    SSH config overwritten (--overwrite)."
+    else
+        echo "    SSH config created."
+    fi
+else
+    echo "    SSH config exists — skipping. Use --overwrite to force."
+fi
+
+# --- Step 7: SSH key deployment to remote hosts ---
+if [ -n "$REMOTE_HOSTS" ]; then
+    echo ">>> Step 7: SSH key deployment..."
+    PUBKEY=$(cat ~/.ssh/id_ed25519.pub)
+    for HOST in $REMOTE_HOSTS; do
+        # Test if we can already SSH to this host
+        if ssh -o ConnectTimeout=5 -o BatchMode=yes "$HOST" true 2>/dev/null; then
+            # Check if key is already deployed
+            if ssh -o ConnectTimeout=5 "$HOST" "grep -qF '$PUBKEY' ~/.ssh/authorized_keys 2>/dev/null"; then
+                echo "  $HOST — key already deployed."
+            else
+                ssh -o ConnectTimeout=5 "$HOST" "mkdir -p ~/.ssh && chmod 700 ~/.ssh && echo '$PUBKEY' >> ~/.ssh/authorized_keys && chmod 600 ~/.ssh/authorized_keys"
+                echo "  $HOST — key deployed."
+            fi
+        else
+            echo "  $HOST — cannot connect (user may not exist yet). Run root-setup.sh first, then re-run this script."
+        fi
+    done
+else
+    echo ">>> Step 7: No remote hosts — skipping SSH key deployment."
+fi
+
+# --- Step 8: Local directories ---
+echo ">>> Step 8: Local directories..."
+mkdir -p ~/.config/systemd/user/
+echo "    ~/.config/systemd/user/ ready."
+
+# --- Step 9: nofile limits ---
+echo ">>> Step 9: nofile limits..."
+if ! grep -q "ulimit -Sn" ~/.bashrc 2>/dev/null; then
+    echo "ulimit -Sn $NOFILE_LIMIT" >> ~/.bashrc
+    echo "    ulimit -Sn $NOFILE_LIMIT added to .bashrc."
+else
+    echo "    ulimit already in .bashrc."
+fi
+mkdir -p ~/.config/systemd
+cat > ~/.config/systemd/user.conf << EOF
+[Manager]
+DefaultLimitNOFILE=$NOFILE_LIMIT
+EOF
+echo "    systemd user.conf set to $NOFILE_LIMIT."
+
+# --- Step 10: .bashrc environment ---
+echo ">>> Step 10: .bashrc environment..."
+
+if ! grep -q "export ENV_CONFIG=" ~/.bashrc 2>/dev/null; then
+    echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> ~/.bashrc
+    echo "    ENV_CONFIG added."
+fi
+if ! grep -q "export GIGA_PATH=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_PATH=$GIGA_PATH" >> ~/.bashrc
+    echo "    GIGA_PATH added."
+fi
+if ! grep -q "export GIGA_SHARE=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_SHARE=$GIGA_SHARE" >> ~/.bashrc
+    echo "    GIGA_SHARE added."
+fi
+if ! grep -q "export GIGA_LOG=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_LOG=$GIGA_LOG" >> ~/.bashrc
+    echo "    GIGA_LOG added."
+fi
+if ! grep -q "export GIGA_DATA=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_DATA=$GIGA_DATA" >> ~/.bashrc
+    echo "    GIGA_DATA added."
+fi
+if ! grep -q "export GIGA_WORK=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_WORK=$GIGA_WORK" >> ~/.bashrc
+    echo "    GIGA_WORK added."
+fi
+if ! grep -q "export GIGA_INFLUX=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_INFLUX=$GIGA_INFLUX" >> ~/.bashrc
+    echo "    GIGA_INFLUX added."
+fi
+if ! grep -q "export PYTHONPATH=" ~/.bashrc 2>/dev/null; then
+    echo "export PYTHONPATH=$GIGA_PATH/gs-odsx" >> ~/.bashrc
+    echo "    PYTHONPATH added."
+fi
+if ! grep -q "export ODSXARTIFACTS=" ~/.bashrc 2>/dev/null; then
+    echo "export ODSXARTIFACTS=$GIGA_SHARE/current/" >> ~/.bashrc
+    echo "    ODSXARTIFACTS added."
+fi
+
+MY_UID=$(id -u)
+if ! grep -q "XDG_RUNTIME_DIR" ~/.bashrc 2>/dev/null; then
+    echo "export XDG_RUNTIME_DIR=/run/user/$MY_UID" >> ~/.bashrc
+    echo "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$MY_UID/bus" >> ~/.bashrc
+    echo "    XDG_RUNTIME_DIR and DBUS_SESSION_BUS_ADDRESS added."
+fi
+
+# Aliases and PATH (pivot only)
+if ! grep -q "source ~/.aliases" ~/.bashrc 2>/dev/null; then
+    echo '[ -f ~/.aliases ] && source ~/.aliases' >> ~/.bashrc
+fi
+if ! grep -q "alias odsx=" ~/.bashrc 2>/dev/null; then
+    echo "alias odsx='cd $GIGA_PATH/gs-odsx ; ./odsx.py'" >> ~/.bashrc
+fi
+if ! grep -q "export GS_HOME=" ~/.bashrc 2>/dev/null; then
+    echo "export GS_HOME=$GIGA_PATH/gigaspaces-smart-ods" >> ~/.bashrc
+fi
+if ! grep -q "$GIGA_PATH/utils/auto_odsx" ~/.bashrc 2>/dev/null; then
+    echo "export PATH=\$PATH:\$HOME/bin:$GIGA_PATH/utils/auto_odsx:$GIGA_PATH/utils:/opt/maven/bin" >> ~/.bashrc
+fi
+
+# Bash tab-completion for odsx.py
+if ! grep -q "register-python-argcomplete" ~/.bashrc 2>/dev/null; then
+    echo 'eval "$(register-python-argcomplete odsx.py)"' >> ~/.bashrc
+fi
+
+echo "    .bashrc configured."
+
+# Optional: derive ~/.kshrc from ~/.bashrc (--ksh flag).
+# Drops the bash-only argcomplete eval and rewrites `source X` to POSIX `. X`
+# so ksh handles them. All `export` lines and aliases work unchanged in ksh.
+if $WRITE_KSHRC; then
+    if [ ! -f ~/.kshrc ] || $OVERWRITE; then
+        grep -v "register-python-argcomplete" ~/.bashrc | sed 's/source /. /g' > ~/.kshrc
+        if $OVERWRITE; then
+            echo "    .kshrc overwritten from .bashrc (--overwrite)."
+        else
+            echo "    .kshrc created from .bashrc."
+        fi
+    else
+        echo "    .kshrc exists — skipping. Use --overwrite to force."
+    fi
+fi
+
+# --- Step 11: Configure remote hosts ---
+if [ -n "$REMOTE_HOSTS" ]; then
+    echo ">>> Step 11: Configuring remote hosts..."
+    REMOTE_FAILED=false
+    for HOST in $REMOTE_HOSTS; do
+        echo "  --- $HOST ---"
+        if ! ssh -o ConnectTimeout=5 -o BatchMode=yes "$HOST" true 2>/dev/null; then
+            echo "    Cannot connect — skipping. Run root-setup.sh first, then re-run this script."
+            REMOTE_FAILED=true
+            continue
+        fi
+        ssh -o ConnectTimeout=10 "$HOST" bash -s \
+            "$NOFILE_LIMIT" "$ENV_CONFIG_PATH" "$GIGA_PATH" "$GIGA_LOG" "$GIGA_DATA" "$GIGA_WORK" "$GIGA_SHARE" "$GIGA_INFLUX" "$WRITE_KSHRC" "$OVERWRITE" << 'REMOTE'
+set -e
+NOFILE_LIMIT=$1
+ENV_CONFIG_PATH=$2
+GIGA_PATH=$3
+GIGA_LOG=$4
+GIGA_DATA=$5
+GIGA_WORK=$6
+GIGA_SHARE=$7
+GIGA_INFLUX=$8
+WRITE_KSHRC=$9
+OVERWRITE=${10}
+
+# Giga directories
+mkdir -p "$GIGA_PATH" "$GIGA_LOG" "$GIGA_DATA" "$GIGA_WORK"
+mkdir -p "$GIGA_PATH/bin"
+
+# Systemd user dirs
+mkdir -p ~/.config/systemd/user/
+
+# nofile limits
+if ! grep -q "ulimit -Sn" ~/.bashrc 2>/dev/null; then
+    echo "ulimit -Sn $NOFILE_LIMIT" >> ~/.bashrc
+fi
+mkdir -p ~/.config/systemd
+cat > ~/.config/systemd/user.conf << USERCONF
+[Manager]
+DefaultLimitNOFILE=$NOFILE_LIMIT
+USERCONF
+
+# Env vars
+if ! grep -q "export ENV_CONFIG=" ~/.bashrc 2>/dev/null; then
+    echo "export ENV_CONFIG=$ENV_CONFIG_PATH" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_PATH=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_PATH=$GIGA_PATH" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_SHARE=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_SHARE=$GIGA_SHARE" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_LOG=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_LOG=$GIGA_LOG" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_DATA=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_DATA=$GIGA_DATA" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_WORK=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_WORK=$GIGA_WORK" >> ~/.bashrc
+fi
+if ! grep -q "export GIGA_INFLUX=" ~/.bashrc 2>/dev/null; then
+    echo "export GIGA_INFLUX=$GIGA_INFLUX" >> ~/.bashrc
+fi
+if ! grep -q "export PYTHONPATH=" ~/.bashrc 2>/dev/null; then
+    echo "export PYTHONPATH=$GIGA_PATH/gs-odsx" >> ~/.bashrc
+fi
+
+MY_UID=$(id -u)
+if ! grep -q "XDG_RUNTIME_DIR" ~/.bashrc 2>/dev/null; then
+    echo "export XDG_RUNTIME_DIR=/run/user/$MY_UID" >> ~/.bashrc
+    echo "export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$MY_UID/bus" >> ~/.bashrc
+fi
+
+# Optional: derive ~/.kshrc from ~/.bashrc (--ksh flag).
+# Drops bash-only argcomplete eval; rewrites `source X` to POSIX `. X`.
+if [ "$WRITE_KSHRC" = "true" ]; then
+    if [ ! -f ~/.kshrc ] || [ "$OVERWRITE" = "true" ]; then
+        grep -v "register-python-argcomplete" ~/.bashrc | sed 's/source /. /g' > ~/.kshrc
+        if [ "$OVERWRITE" = "true" ]; then
+            echo "    .kshrc overwritten from .bashrc (--overwrite)."
+        else
+            echo "    .kshrc created from .bashrc."
+        fi
+    else
+        echo "    .kshrc exists — skipping. Use --overwrite to force."
+    fi
+fi
+
+echo "    Done."
+REMOTE
+    done
+    if $REMOTE_FAILED; then
+        echo ""
+        echo "    Some remote hosts were unreachable. After root-setup.sh, re-run:"
+        echo "    ./$(basename "$0") -d $GIGASHARE_DIR -u $APP_USER"
+    fi
+else
+    echo ">>> Step 11: No remote hosts — skipping."
+fi
+echo ""
+
+# --- Step 12: GigaSpaces installation ---
+echo ">>> Step 12: GigaSpaces installation..."
+
+# Check prerequisites
+if ! command -v yq &>/dev/null; then
+    echo "Error: 'yq' is not installed. Please install yq before running this script."
+    exit 1
+fi
+if ! command -v unzip &>/dev/null; then
+    echo "Error: 'unzip' is not installed. Please install unzip before running this script."
+    exit 1
+fi
+
+# Find latest GigaSpaces zip
+shopt -s nullglob
+gs_zips=("$GIGA_PATH"/gigaspaces-smart*.zip)
+shopt -u nullglob
+if [ ${#gs_zips[@]} -eq 0 ]; then
+    echo "Error: No gigaspaces-smart*.zip found in $GIGA_PATH. Please stage the GigaSpaces zip before running this script."
+    exit 1
+fi
+latest_zip=$(ls -1t "${gs_zips[@]}" | head -n 1)
+zip_basename=$(basename "$latest_zip")
+echo "    GigaSpaces zip: $latest_zip"
+
+# Refresh GigaSpaces zip in gigashare when needed.
+gs_share_dir="$GIGA_SHARE/current/gs"
+shopt -s nullglob
+gs_share_zips=("$gs_share_dir"/gigaspaces-smart*.zip)
+shopt -u nullglob
+
+if $OVERWRITE || [ ${#gs_share_zips[@]} -gt 1 ]; then
+    rm -f "$gs_share_dir"/gigaspaces-smart*.zip
+    echo "    Removed existing gigaspaces-smart*.zip files from $gs_share_dir/."
+    cp "$latest_zip" "$gs_share_dir/$zip_basename"
+    echo "    Copied to $gs_share_dir/."
+elif [ ${#gs_share_zips[@]} -eq 1 ]; then
+    if [ "${gs_share_zips[0]}" = "$gs_share_dir/$zip_basename" ]; then
+        echo "    $zip_basename is already the only GigaSpaces zip in $gs_share_dir/."
+    else
+        rm -f "${gs_share_zips[0]}"
+        cp "$latest_zip" "$gs_share_dir/$zip_basename"
+        echo "    Replaced existing GigaSpaces zip in $gs_share_dir/."
+    fi
+else
+    cp "$latest_zip" "$gs_share_dir/$zip_basename"
+    echo "    Copied to $gs_share_dir/."
+fi
+
+# Unzip (idempotent)
+extracted_dir_name="${zip_basename%.zip}"
+if [ ! -d "$GIGA_PATH/$extracted_dir_name" ]; then
+    (cd "$GIGA_PATH" && unzip -q "$latest_zip")
+    echo "    Unzipped to $GIGA_PATH/$extracted_dir_name."
+else
+    echo "    $GIGA_PATH/$extracted_dir_name already exists."
+fi
+
+# Symlink (idempotent)
+symlink="$GIGA_PATH/gigaspaces-smart-ods"
+if [ "$(readlink "$symlink" 2>/dev/null)" != "$GIGA_PATH/$extracted_dir_name" ]; then
+    ln -snf "$GIGA_PATH/$extracted_dir_name" "$symlink"
+    echo "    Symlink: $symlink -> $GIGA_PATH/$extracted_dir_name"
+else
+    echo "    Symlink already correct."
+fi
+
+# GS_MANAGER_SERVERS in setenv-overrides.sh (always refresh)
+setenv_overrides="$symlink/bin/setenv-overrides.sh"
+if [ -f "$HOST_YAML" ] && [ -f "$setenv_overrides" ]; then
+    manager_ips=$(yq -r '.servers.manager[]' "$HOST_YAML" 2>/dev/null | paste -sd',' -)
+    if [ -n "$manager_ips" ]; then
+        sed -i '/^export GS_MANAGER_SERVERS=/d' "$setenv_overrides"
+        echo "export GS_MANAGER_SERVERS=$manager_ips" >> "$setenv_overrides"
+        echo "    GS_MANAGER_SERVERS=$manager_ips"
+    else
+        echo "    Warning: No manager IPs in $HOST_YAML — skipping GS_MANAGER_SERVERS."
+    fi
+else
+    echo "    Warning: host.yaml or setenv-overrides.sh not found — skipping GS_MANAGER_SERVERS."
+fi
+
+# --- Step 13: Python dependencies ---
+echo ">>> Step 13: Python dependencies..."
+if ls "$GIGA_SHARE/current/python/"* > /dev/null 2>&1; then
+    echo "    Offline packages found — installing from $GIGA_SHARE/current/python"
+    pip3 install --no-index --find-links="$GIGA_SHARE/current/python" -r "$GIGA_PATH/gs-odsx/scripts/requirements.txt"
+else
+    echo "    No offline packages — installing from PyPI"
+    pip3 install -r "$GIGA_PATH/gs-odsx/scripts/requirements.txt"
+fi
+
+echo ""
+echo "============================================"
+echo "  User setup complete ($APP_USER)."
+echo ""
+echo "  Source your updated profile:"
+echo "    source ~/.bashrc"
+echo ""
+echo "  Run ODSX:"
+echo "    cd $GIGA_PATH/gs-odsx"
+echo "    ./odsx.py"
+echo "============================================"

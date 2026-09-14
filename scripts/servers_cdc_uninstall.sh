@@ -44,22 +44,22 @@ printNoColor() {
 }
 
 info "Removing cr8 package"
-sudo yum remove cr8-2.0.9-245.x86_64 -y
-sudo rm -f /tmp/cr8-2.0.9-245.x86_64.rpm
+yum remove cr8-2.0.9-245.x86_64 -y
+rm -f /tmp/cr8-2.0.9-245.x86_64.rpm
 
 info "Removing misc directory"
-sudo rm -rf /root/misc
+rm -rf /root/misc
 
 info "Removing Swap"
 
 #For Removing Swap
-sudo swapoff -v /swapfile
-sudo sed '/^\/swapfile/d' < /etc/fstab > /tmp/fstab
-sudo mv /tmp/fstab /etc/fstab
-sudo rm -f /swapfile
+swapoff -v /swapfile
+sed '/^\/swapfile/d' < /etc/fstab > /tmp/fstab
+mv /tmp/fstab /etc/fstab
+rm -f /swapfile
 
 info "Removing user 'dbsh'"
 sudo userdel --remove dbsh
 
 info "Removing package 'wget'"
-sudo yum remove wget -y
+yum remove wget -y

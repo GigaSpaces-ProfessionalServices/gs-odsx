@@ -1,3 +1,12 @@
+# Set XDG_RUNTIME_DIR for systemctl --user over SSH
+# Load shared read_property helper (no-op when piped over SSH; see lib_app_config.sh).
+[ -r "$(dirname "$0")/lib_app_config.sh" ] && source "$(dirname "$0")/lib_app_config.sh"
+
+export XDG_RUNTIME_DIR=/run/user/$(id -u)
+export DBUS_SESSION_BUS_ADDRESS=unix:path=/run/user/$(id -u)/bus
+# Wait for user systemd bus before any systemctl --user calls (linger race).
+wait_for_user_bus
+
 echo "Removing Server - Manager"
 ENV_CONFIG_PATH=$ENV_CONFIG
 # Check if the environment variable is set
@@ -9,13 +18,6 @@ else
 fi
 ENV_CONFIG_PATH="$ENV_CONFIG_PATH/app.config"
 
-read_property() {
-  local prop_name="$1"
-  local prop_value
-
-  prop_value=$(grep "^$prop_name=" "$ENV_CONFIG_PATH" | awk -F'=' '{print $2}')
-  echo "$prop_value"
-}
 
 gigapath=$(read_property "app.giga.path")
 gigainfluxpath=$(read_property "app.gigainfluxdata.path")
@@ -23,6 +25,8 @@ gigasharepath=$(read_property "app.gigashare.path")
 gigadatapath=$(read_property "app.gigadata.path")
 gigalogpath=$(read_property "app.gigalog.path")
 gigaworkPath=$(read_property "app.gigawork.path")
+
+validate_nonempty_paths gigapath gigaworkPath gigalogpath
 
 removeJava=$1
 #echo "removeJava :"$removeJava
@@ -48,17 +52,17 @@ fi
 #rm -r install/*.zip
 #Removing symlink
 source setenv.sh
-systemctl stop gsa.service
+systemctl --user stop gsa.service
 sleep 5
 rm -rf $GS_HOME
-rm -rf setenv.sh gs install install.tar $gigapath"/giga*" $gigaworkPath"/*" /usr/local/bin/start_gs*.sh /usr/local/bin/stop_gs*.sh /etc/systemd/system/gs*.service
+rm -rf setenv.sh gs install install.tar $gigapath"/giga*" $gigaworkPath"/*" $gigapath/bin/start_gs*.sh $gigapath/bin/stop_gs*.sh $HOME/.config/systemd/user/gs*.service
 find $gigalogpath/ -mindepth 1 ! -regex '^'$gigalogpath'/consul\|'$gigalogpath'/nginx\(/.*\)?' -delete
 cd $gigapath
 rm -f gigaspaces-smart-ods
 echo "Remove symlink done!"
-systemctl daemon-reload
-sed -i '/hard nofile/d' /etc/security/limits.conf
-sed -i '/soft nofile/d' /etc/security/limits.conf
+systemctl --user daemon-reload
+# sed -i '/hard nofile/d' /etc/security/limits.conf
+# sed -i '/soft nofile/d' /etc/security/limits.conf
 
 echo "GS Remove -Done!"
 

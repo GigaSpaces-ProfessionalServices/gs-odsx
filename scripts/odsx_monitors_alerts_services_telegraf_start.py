@@ -8,6 +8,7 @@ from scripts.logManager import LogManager
 from scripts.odsx_monitors_alerts_services_telegraf_list import listAllTelegrafServers, getStatusOfTelegraf
 from scripts.spinner import Spinner
 from utils.ods_ssh import executeRemoteCommandAndGetOutputPython36
+from utils.ods_ssh import get_ssh_user
 from utils.odsx_keypress import userInputWithEscWrapper, userInputWrapper
 
 verboseHandle = LogManager(os.path.basename(__file__))
@@ -45,9 +46,9 @@ def handleException(e):
 
 def startInputUserAndHost(host):
     logger.info("startTelegrafServiceByHost()")
-    cmd = "systemctl start telegraf;sleep 3;"
+    cmd = "sudo systemctl start telegraf;sleep 3;"
     logger.info("Getting status.. telegraf :"+str(cmd))
-    user = 'root'
+    user = get_ssh_user()
     try:
         with Spinner():
             if(getStatusOfTelegraf(host) != 0):
@@ -85,7 +86,7 @@ if __name__ == '__main__':
         cliArguments=''
         isMenuDriven=''
         managerRemove=''
-        user='root'
+        user = get_ssh_user()
         logger.info("user :"+str(user))
         streamDict = listAllTelegrafServers()
         serverStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to start individual server. \nPress [Enter] to start all. \nPress [99] for exit.: "+Fore.RESET))
