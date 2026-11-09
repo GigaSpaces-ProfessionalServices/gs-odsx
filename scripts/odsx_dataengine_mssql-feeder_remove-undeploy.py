@@ -70,28 +70,20 @@ def getManagerHost(managerNodes):
         handleException(e)
 
 
-def listUndeployedPUsOnServer(managerHost):
-    logger.info("listUndeployedPUsOnServer()")
+def listUndeployedPUsOnServer(managerHost, puName):
+    logger.info("listUndeployedPUsOnServer() puName : "+str(puName))
     global gs_pu_dictionary_obj
     try:
         logger.info("managerHost :"+str(managerHost))
-        response = requests.get("http://"+str(managerHost)+":8090/v2/pus/undeployed")
-        logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
-        jsonArray = json.loads(response.text)
         verboseHandle.printConsoleWarning("Persist resources on cluster:")
         headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
                    Fore.YELLOW+"Name"+Fore.RESET
                    ]
         gs_pu_dictionary_obj = host_dictionary_obj()
+        gs_pu_dictionary_obj.add("1",str(puName))
         logger.info("gs_pu_dictionary_obj : "+str(gs_pu_dictionary_obj))
-        counter=0
-        dataTable=[]
-        for data in jsonArray:
-            dataArray = [Fore.GREEN+str(counter+1)+Fore.RESET,
-                         Fore.GREEN+data["name"]+Fore.RESET]
-            gs_pu_dictionary_obj.add(str(counter+1),str(data["name"]))
-            counter=counter+1
-            dataTable.append(dataArray)
+        dataTable=[[Fore.GREEN+"1"+Fore.RESET,
+                    Fore.GREEN+str(puName)+Fore.RESET]]
         printTabular(None,headers,dataTable)
         return gs_pu_dictionary_obj
     except Exception as e:
@@ -144,17 +136,15 @@ def proceedForAllUndeployed(managerHost):
 def getUserInput(managerHost):
     logger.info("getUserInput()")
     try:
-        typeOfRemove = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual undeployed PU\n[Enter] For all above undeployed PUs \n[99] For exist. :"+Fore.RESET))
-        #print(typeOfRemove)
+        typeOfRemove = str(userInputWithEscWrapper(Fore.YELLOW+"[1] For individual undeployed PU\n[all] For all above undeployed PUs \n[Enter] / [99] For exit. :"+Fore.RESET)).strip()
         logger.info("typeOfRemove : "+str(typeOfRemove))
         if(typeOfRemove=='1'):
             proceedForIndividualUndeployed(managerHost)
-        elif(str(typeOfRemove)=='99'):
-            print("99")
-            logger.info("99")
-            return
-        elif(len(str(typeOfRemove))==0):
+        elif(typeOfRemove.lower()=='all'):
             proceedForAllUndeployed(managerHost)
+        else:
+            logger.info("Exit without removing persisted PUs. input : "+str(typeOfRemove))
+            verboseHandle.printConsoleInfo("No persisted PU removed.")
     except Exception as e:
         handleException(e)
 
@@ -283,7 +273,7 @@ def proceedToUndeployPU(managerHost):
                             verboseHandle.printConsoleInfo("Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
                     deleteMSSqlEntryFromSqlLite(spaceTobeUndeploy)
                     verboseHandle.printConsoleInfo(" Undeploy  : "+str(spaceTobeUndeploy)+"   Status : "+str(status))
-                    proceedForPersistUndeploy()
+                    proceedForPersistUndeploy(spaceTobeUndeploy)
 
             gscRemove = str(userInputWrapper(Fore.YELLOW+"Do you want to remove gsc? (y/n) [y]:"+Fore.RESET))
             if(len(str(gscRemove))==0):
@@ -353,8 +343,8 @@ def removeGSC(managerHost,spaceNumberTobeRemove,flag):
             output = executeRemoteCommandAndGetOutput(managerHost, 'root', cmd)
             print(output)
 
-def proceedForPersistUndeploy():
-    gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost)
+def proceedForPersistUndeploy(puName):
+    gs_pu_dictionary_obj = listUndeployedPUsOnServer(managerHost, puName)
     if(len(gs_pu_dictionary_obj)>0):
         getUserInput(managerHost)
     else:
