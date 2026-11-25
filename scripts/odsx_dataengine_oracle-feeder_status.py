@@ -201,6 +201,7 @@ def listDeployed(managerHost):
                 if (str(data["name"]).__contains__("oraclefeeder")):
                     os.getcwd()
                     os.chdir(sourceOracleFeederShFilePath)
+                    dataArray = None
                     for file in glob.glob("load_*.sh"):
                         puName = str(str(data["name"])).replace('oraclefeeder_', 'load_').casefold()
                         puName = puName + ".sh"
@@ -226,8 +227,16 @@ def listDeployed(managerHost):
                                                  Fore.GREEN + data["name"] + Fore.RESET,
                                                  Fore.GREEN + str(queryStatus) + Fore.RESET
                                                  ]
-                    logger.info("UPDATE oracle_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                    mycursor = cnx.execute("UPDATE oracle_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    if dataArray is None:
+                        # no matching load_*.sh (or no curl line in it): still show the feeder,
+                        # so every Sr No. on screen matches gs_space_dictionary_obj
+                        logger.info("No load script found for "+str(data["name"]))
+                        dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
+                                     Fore.GREEN + data["name"] + Fore.RESET,
+                                     Fore.GREEN + str(queryStatus) + Fore.RESET
+                                     ]
+                    logger.info("UPDATE oracle_host_port SET host = ? WHERE feeder_name = ? | params: host="+str(hostId)+", feeder_name="+str(data["name"]))
+                    mycursor = cnx.execute("UPDATE oracle_host_port SET host = ? WHERE feeder_name = ?", (str(hostId), str(data["name"])))
                     logger.info("query result:"+str(mycursor.rowcount))
 
                     gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -266,8 +275,8 @@ def sqlLiteGetHostAndPortByFileName(puName):
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL: SELECT host,port FROM oracle_host_port where feeder_name like '%"+str(puName)+"%' ")
-        mycursor = cnx.execute("SELECT host,port FROM oracle_host_port where feeder_name like '%"+str(puName)+"%' ")
+        logger.info("SQL: SELECT host,port FROM oracle_host_port WHERE feeder_name = ? | params: feeder_name="+str(puName))
+        mycursor = cnx.execute("SELECT host,port FROM oracle_host_port WHERE feeder_name = ?", (str(puName),))
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:
@@ -292,8 +301,8 @@ def getOracleQueryStatusFromSqlLite(feederName):
         logger.info("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.execute("CREATE TABLE IF NOT EXISTS oracle_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.commit()
-        logger.info("SQL : SELECT host,port FROM oracle_host_port where feeder_name like '%"+str(feederName)+"%' ")
-        mycursor = cnx.execute("SELECT host,port FROM oracle_host_port where feeder_name like '%"+str(feederName)+"%' ")
+        logger.info("SQL : SELECT host,port FROM oracle_host_port WHERE feeder_name = ? | params: feeder_name="+str(feederName))
+        mycursor = cnx.execute("SELECT host,port FROM oracle_host_port WHERE feeder_name = ?", (str(feederName),))
         myresult = mycursor.fetchall()
         cnx.close()
         host = ''

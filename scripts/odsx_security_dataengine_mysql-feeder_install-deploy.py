@@ -149,7 +149,7 @@ def listDeployed(managerHost):
         sourceMysqlFeederShFilePath = str(sourceInstallerDirectory + ".mysql.scripts.").replace('.', '/')
         directory = os.getcwd()
         os.chdir(sourceMysqlFeederShFilePath)
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
             puName = str(file).replace('load_', '').replace('.sh', '').casefold()
             puName = 'mysqlfeeder_'+puName
@@ -315,7 +315,7 @@ def uploadFileRest(managerHostConfig,feederName):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         directory = os.getcwd()
         os.chdir(sourceMysqlFeederShFilePath)
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
             exitsFeeder = str(file).replace('load','mysqlfeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
@@ -439,7 +439,7 @@ def newInstallMysqlFeeder():
     newInstall=[]
     directory = os.getcwd()
     os.chdir(sourceMysqlFeederShFilePath)
-    for file in glob.glob("load_*.sh"):
+    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
         os.chdir(directory)
         exitsFeeder = str(file).replace('load','mysqlfeeder').replace('.sh','').casefold()
         if exitsFeeder not in activefeeder:
@@ -515,7 +515,7 @@ def proceedToDeployPU(feederName):
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
             exitsFeeder = str(file).replace('load','mysqlfeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
@@ -708,8 +708,11 @@ def displayAvailableFeederList():
     directory = os.getcwd()
     os.chdir(sourceMysqlFeederShFilePath)
 
-    for file in glob.glob("load_*.sh"):
+    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
         os.chdir(directory)
+        exitsFeeder = str(file).replace('load','mysqlfeeder').replace('.sh','').casefold()
+        if exitsFeeder in activefeeder:
+            continue                    # already deployed, don't offer it
         puName = str(file).replace('load_', '').replace('.sh', '').casefold()
         dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
                      Fore.GREEN + 'mysqlfeeder_'+ puName + Fore.RESET

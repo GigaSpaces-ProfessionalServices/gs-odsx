@@ -58,8 +58,8 @@ def getGilboaQueryStatusFromSqlLite(feederName):
         logger.info("CREATE TABLE IF NOT EXISTS gilboa_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.execute("CREATE TABLE IF NOT EXISTS gilboa_host_port (file VARCHAR(50), feeder_name VARCHAR(50), host VARCHAR(50), port varchar(10))")
         cnx.commit()
-        logger.info("SQL : SELECT host,port FROM gilboa_host_port where feeder_name like '%"+str(feederName)+"%' ")
-        mycursor = cnx.execute("SELECT host,port FROM gilboa_host_port where feeder_name like '%"+str(feederName)+"%' ")
+        logger.info("SQL : SELECT host,port FROM gilboa_host_port WHERE feeder_name = ? | params: feeder_name="+str(feederName))
+        mycursor = cnx.execute("SELECT host,port FROM gilboa_host_port WHERE feeder_name = ?", (str(feederName),))
         myresult = mycursor.fetchall()
         cnx.close()
         host = ''
@@ -87,8 +87,8 @@ def sqlLiteGetHostAndPortByFileName():
         db_file = str(readValueByConfigObj("app.dataengine.gilboa-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL : SELECT host,port,file FROM gilboa_host_port where feeder_name like '%"+str(puName)+"%' ")
-        mycursor = cnx.execute("SELECT host,port,file FROM gilboa_host_port where feeder_name like '%"+str(puName)+"%' ")
+        logger.info("SQL : SELECT host,port,file FROM gilboa_host_port WHERE feeder_name = ? | params: feeder_name="+str(puName))
+        mycursor = cnx.execute("SELECT host,port,file FROM gilboa_host_port WHERE feeder_name = ?", (str(puName),))
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:

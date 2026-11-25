@@ -32,13 +32,8 @@ def userInputWithEscWrapper(inputStr,isSingleInputEnabled=False):
     if(isEsc == 'True'):
         try:
             print(Fore.YELLOW + inputStr)
-            keyPressed = userInputWithEsc(isSingleInputEnabled)
-            os.system('stty sane')
-            os.system("stty erase ^H")
-            return keyPressed
+            return userInputWithEsc(isSingleInputEnabled)
         except (KeyboardInterrupt, SystemExit):
-            os.system('stty sane')
-            os.system("stty erase ^H")
             return "99"
     else:
         userInput = input(inputStr)
@@ -46,44 +41,60 @@ def userInputWithEscWrapper(inputStr,isSingleInputEnabled=False):
 
 
 def userInputWithEsc(isSingleInputEnabled=False):
-    import sys, tty, os, termios
-    old_settings = termios.tcgetattr(sys.stdin)
-    tty.setcbreak(sys.stdin.fileno())
-    # verboseHandle = LogManager(os.path.basename(__file__))
+    import tty, termios, select, codecs
+    fd = sys.stdin.fileno()
+    if not os.isatty(fd):
+        # piped / scripted input: no terminal to put in cbreak mode
+        return input()
 
     key_mapping = {
         10: 'return',
+        13: 'return',
         27: 'esc',
-        127: 'backspace'
+        127: 'backspace',
+        8: 'backspace'
     }
-    # if str is not None:
-    # verboseHandle.printConsoleWarning(str)
-    # print(str)
+    decoder = codecs.getincrementaldecoder('utf-8')(errors='ignore')
+    old_settings = termios.tcgetattr(fd)
     user_input = []
-    while True:
-        b = os.read(sys.stdin.fileno(), 3).decode()
-        if len(b) == 3:
-            k = ord(b[2])
-        else:
-            k = ord(b)
-        this_key = key_mapping.get(k, chr(k))
-        if this_key == 'return':
-            sys.stdout.write("\n")
-            break
-        if this_key == 'esc':
-            user_input.clear()
-            #            user_input.append('esc')
-            user_input.append('99')
-            break
-        if this_key == 'backspace':
-            sys.stdout.write("\033[K")
-            if len(user_input) > 0:
-                user_input.pop()
-        else:
-            user_input.append(this_key)
-        print(''.join(user_input), end="\r")
-        if isSingleInputEnabled:
-            break;
-    termios.tcsetattr(sys.stdin, termios.TCSADRAIN, old_settings)
-    # print(''.join(user_input))
+    try:
+        # TCSANOW: switch immediately and keep keys already typed ahead
+        tty.setcbreak(fd, termios.TCSANOW)
+        while True:
+            b = os.read(fd, 1)
+            if not b:                      # EOF
+                break
+            if b == b'\x1b':
+                # escape sequence (arrow keys etc.) arrives as one burst;
+                # a lone ESC has nothing following it
+                if select.select([fd], [], [], 0.05)[0]:
+                    seq = os.read(fd, 1)
+                    if seq in (b'[', b'O'):
+                        # consume up to the final byte of the sequence
+                        while select.select([fd], [], [], 0.05)[0]:
+                            c = os.read(fd, 1)
+                            if c and (c.isalpha() or c == b'~'):
+                                break
+                    continue               # ignore the sequence
+                user_input.clear()
+                user_input.append('99')
+                break
+            ch = decoder.decode(b)
+            if not ch:                     # incomplete multi-byte character
+                continue
+            this_key = key_mapping.get(ord(ch), ch)
+            if this_key == 'return':
+                sys.stdout.write("\n")
+                break
+            if this_key == 'backspace':
+                sys.stdout.write("\033[K")
+                if len(user_input) > 0:
+                    user_input.pop()
+            else:
+                user_input.append(this_key)
+            print(''.join(user_input), end="\r")
+            if isSingleInputEnabled:
+                break
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
     return ''.join(user_input)

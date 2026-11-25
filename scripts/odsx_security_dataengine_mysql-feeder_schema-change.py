@@ -106,8 +106,8 @@ def deleteMysqlEntryFromSqlLite(puName):
         db_file = str(readValueByConfigObj("app.dataengine.mysql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
-        logger.info("SQL : DELETE FROM mysql_host_port where feeder_name like '%"+str(puName)+"%'")
-        cnx.execute("DELETE FROM mysql_host_port where feeder_name like '%"+str(puName)+"%'")
+        logger.info("SQL : DELETE FROM mysql_host_port WHERE feeder_name = ? | params: feeder_name="+str(puName))
+        cnx.execute("DELETE FROM mysql_host_port WHERE feeder_name = ?", (str(puName),))
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -392,8 +392,8 @@ def sqlLiteGetHostAndPortByFileName(puName):
         db_file = str(readValueByConfigObj("app.dataengine.mysql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL : SELECT host,port,file FROM mysql_host_port where feeder_name = '"+str(puName)+"' ")
-        mycursor = cnx.execute("SELECT host,port,file FROM mysql_host_port where feeder_name = '"+str(puName)+"' ")
+        logger.info("SQL : SELECT host,port,file FROM mysql_host_port WHERE feeder_name = ? | params: feeder_name="+str(puName))
+        mycursor = cnx.execute("SELECT host,port,file FROM mysql_host_port WHERE feeder_name = ?", (str(puName),))
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:

@@ -159,6 +159,7 @@ def listDeployed(managerHost):
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
+        if isinstance(jsonArray, list): jsonArray = sorted(jsonArray, key=lambda pu: str(pu.get('name', '')).casefold())
         verboseHandle.printConsoleWarning("Resources on cluster:")
         headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
                    Fore.YELLOW+"Name"+Fore.RESET,

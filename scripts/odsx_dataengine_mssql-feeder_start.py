@@ -101,7 +101,7 @@ def displayMSSQLFeederShFiles():
                Fore.YELLOW+"Name of mssql-feeder file"+Fore.RESET
                ]
     dataTable=[]
-    for file in glob.glob("load_*.sh"):
+    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
         os.chdir(directory)
         dataArray = [Fore.GREEN+str(counter)+Fore.RESET,
                      Fore.GREEN+str(file)+Fore.RESET]
@@ -144,6 +144,7 @@ def listDeployed(managerHost):
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
+        if isinstance(jsonArray, list): jsonArray = sorted(jsonArray, key=lambda pu: str(pu.get('name', '')).casefold())
         verboseHandle.printConsoleWarning("Resources on cluster:")
         headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
                    Fore.YELLOW+"Name"+Fore.RESET,
@@ -169,7 +170,7 @@ def listDeployed(managerHost):
 
             os.chdir(sourceMSSQLFeederShFilePath)
 
-            for file in glob.glob("load_*.sh"):
+            for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
                 os.chdir(sourceMSSQLFeederShFilePath)
                 puName = str(file).replace('load_', '').replace('.sh', '').casefold()
                 file = open(file, "r")
@@ -215,7 +216,7 @@ def listDeployed(managerHost):
                 if (str(data["name"]).__contains__('mssql')):
                     os.getcwd()
                     os.chdir(sourceMSSQLFeederShFilePath)
-                    for file in glob.glob("load_*.sh"):
+                    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
                         puName = str(str(data["name"])).replace('mssqlfeeder_', 'load_').casefold()
                         puName = puName + ".sh"
                         if (file.casefold() == puName):
@@ -243,8 +244,8 @@ def listDeployed(managerHost):
                                                  Fore.GREEN + data["status"] + Fore.RESET,
                                                  Fore.GREEN + str(conditionDate) + Fore.RESET
                                                  ]
-                    logger.info("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                    mycursor = cnx.execute("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    logger.info("UPDATE mssql_host_port SET host = ? WHERE feeder_name = ? | params: host="+str(hostId)+", feeder_name="+str(data["name"]))
+                    mycursor = cnx.execute("UPDATE mssql_host_port SET host = ? WHERE feeder_name = ?", (str(hostId), str(data["name"])))
                     logger.info("query result:"+str(mycursor.rowcount))
 
                     gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -269,6 +270,14 @@ def inputParam():
         inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start mssql-feeder : "+Fore.RESET))
         if(len(str(inputNumberToStart))==0):
             inputNumberToStart = str(userInputWrapper(Fore.YELLOW+"Enter serial number to start mssql-feeder : "+Fore.RESET))
+        puName = gs_space_dictionary_obj.get(str(inputNumberToStart))
+        if(puName is None):
+            verboseHandle.printConsoleError("Invalid serial number : "+str(inputNumberToStart))
+            return
+        confirmStart = str(userInputWrapper(Fore.YELLOW+"Do you want to start "+str(puName)+" y/N [N]: "+Fore.RESET))
+        if(confirmStart.casefold()!='y' and confirmStart.casefold()!='yes'):
+            verboseHandle.printConsoleInfo("Skipped starting "+str(puName))
+            return
         proceedToStartMSSQLFeeder(inputNumberToStart)
     if(len(str(inputChoice))==0):
         confirmAll = str(userInputWrapper(Fore.YELLOW+"Do you want to start all mssql-feeders y/N [N]: "+Fore.RESET))
@@ -284,8 +293,8 @@ def sqlLiteGetHostAndPortByFileName(puName):
         db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL : SELECT host,port,file FROM mssql_host_port where feeder_name like '%"+str(puName)+"%' ")
-        mycursor = cnx.execute("SELECT host,port,file FROM mssql_host_port where feeder_name like '%"+str(puName)+"%' ")
+        logger.info("SQL : SELECT host,port,file FROM mssql_host_port WHERE feeder_name = ? | params: feeder_name="+str(puName))
+        mycursor = cnx.execute("SELECT host,port,file FROM mssql_host_port WHERE feeder_name = ?", (str(puName),))
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:

@@ -277,7 +277,7 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         directory = os.getcwd()
         os.chdir(sourceDB2FeederShFilePath)
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
 
             exitsFeeder = str(file).replace('load','db2feeder').replace('.sh','').casefold()
@@ -381,7 +381,7 @@ def proceedToDeployPU():
         restPort = restPort+1
 
         logger.info("Resport : "+str(restPort))
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
 
             exitsFeeder = str(file).replace('load','db2feeder').replace('.sh','').casefold()
@@ -470,7 +470,7 @@ def newInstallDB2Feeder():
     newInstall=[]
     directory = os.getcwd()
     os.chdir(sourceDB2FeederShFilePath)
-    for file in glob.glob("load_*.sh"):
+    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
         os.chdir(directory)
         exitsFeeder = str(file).replace('load','db2feeder').replace('.sh','').casefold()
         if exitsFeeder not in activefeeder:

@@ -171,6 +171,17 @@ def displayMainMenu(menu,currentMenu):
             #print('scriptMenuuu',scriptMenu)
             logger.error("Invalid Option or file does not exist. : "+scriptsFolder+'/'+scriptMenu+'.py')
             displayMainMenu('','menu')
+#Run a script and return its exit code (os.system returns a wait status)
+def runScript(command):
+    status = os.system(command)
+    if status & 0xff:          # killed by a signal
+        exitCode = 128 + (status & 0x7f)
+    else:
+        exitCode = status >> 8
+    if exitCode != 0:
+        logger.error("Command failed with exit code "+str(exitCode)+" : "+command)
+    return exitCode
+
 #To find command in file
 def findArgumentInFile(currentArg,initialFileName):
     #logger.info("findArgumentInFile-currentArg : "+currentArg+ " initialFileName :"+initialFileName)
@@ -276,22 +287,26 @@ def main(**args):
                     if not(initialFileName.__contains__('retentionmanager')) and initialFileName.__contains__(menu):
                         initialFileName = initialFileName.replace('odsx','odsx_security')
           #  print('python3 '+scriptsFolder+'/'+initialFileName+' '+args+ " 264")
+            exitCode = 0
             try:
                 if(path.exists(scriptsFolder+'/'+initialFileName)):
                     #print('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
                     #print(scriptsFolder+'/'+scriptMenu+'.py')
-                    os.system('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
+                    exitCode = runScript('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
                 else:
                     logger.info("== "+initialFileName)
                     initialFileName = initialFileName.replace('odsx_security','odsx')
                     logger.info("++ "+initialFileName)
                     if(path.exists(scriptsFolder+'/'+initialFileName)):
-                        os.system('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
+                        exitCode = runScript('python3 '+scriptsFolder+'/'+initialFileName+' '+args)
                     else:
                         verboseHandle.printConsoleInfo("===================TBD==================")
                         logger.error('File not exist. : '+scriptsFolder+'/'+initialFileName)
+                        exitCode = 2
             except Exception as e:
                 print(e)
+                exitCode = 1
+            sys.exit(exitCode)
     else:
         displayMainMenu('menu','')
 

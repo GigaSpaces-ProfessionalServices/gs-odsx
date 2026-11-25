@@ -279,7 +279,7 @@ def uploadFileRest(managerHostConfig):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         directory = os.getcwd()
         os.chdir(sourceMSSQLFeederShFilePath)
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
 
             exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
@@ -381,7 +381,7 @@ def newInstallMssqlFeeder():
     newInstall=[]
     directory = os.getcwd()
     os.chdir(sourceMSSQLFeederShFilePath)
-    for file in glob.glob("load_*.sh"):
+    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
         os.chdir(directory)
         exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
         if exitsFeeder not in activefeeder:
@@ -402,7 +402,7 @@ def proceedToDeployPU():
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
             exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:

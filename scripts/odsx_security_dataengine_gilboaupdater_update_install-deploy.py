@@ -20,7 +20,7 @@ from utils.ods_cluster_config import config_get_space_hosts, config_get_manager_
 from utils.ods_ssh import executeRemoteCommandAndGetOutput, executeRemoteCommandAndGetOutputValuePython36
 from utils.ods_validation import getSpaceServerStatus
 from utils.odsx_db2feeder_utilities import getPortNotExistInGilboaFeeder, getPasswordByHost, getUsernameByHost
-from utils.odsx_keypress import userInputWrapper
+from utils.odsx_keypress import userInputWrapper,userInputWithEscWrapper
 from utils.odsx_print_tabular_data import printTabular
 from scripts.odsx_security_servers_space_list import getStatusOfSpaceHost
 
@@ -324,17 +324,19 @@ def updateAndCopyJarFileFromSourceToShFolder(puName):
     logger.info("home: "+str(home))
     return targetJarFile
 
-def uploadFileRest(managerHostConfig):
+def uploadFileRest(managerHostConfig,feederName):
     try:
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         directory = os.getcwd()
         os.chdir(sourceMSSQLFeederShFilePath)
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
 
             exitsFeeder = str(file).replace('load','gilboafeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load','').replace('.sh','').casefold()
+                if feederName != "" and "_"+feederName != puName:
+                    continue
                 pathOfSourcePU = updateAndCopyJarFileFromSourceToShFolder(puName)
                 #print("pathOfSourcePU : "+str(pathOfSourcePU))
                 #print("jarName :"+jarName)
@@ -431,13 +433,13 @@ def newInstallMssqlFeeder():
     newInstall=[]
     directory = os.getcwd()
     os.chdir(sourceMSSQLFeederShFilePath)
-    for file in glob.glob("load_*.sh"):
+    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
         os.chdir(directory)
         exitsFeeder = str(file).replace('load','gilboafeeder').replace('.sh','').casefold()
         if exitsFeeder not in activefeeder:
             newInstall.append(exitsFeeder)
 
-def proceedToDeployPU():
+def proceedToDeployPU(feederName):
     global restPort
     try:
         logger.info("proceedToDeployPU()")
@@ -451,11 +453,13 @@ def proceedToDeployPU():
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
             exitsFeeder = str(file).replace('load','gilboafeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
                 puName = str(file).replace('load_','').replace('.sh','').casefold()
+                if feederName != "" and feederName != puName:
+                    continue
                 zoneGSC = 'gilboa_'+puName
                 logger.info("filePrefix : "+filePrefix)
                 resource = filePrefix+'_'+puName+'.jar'
@@ -512,6 +516,29 @@ def proceedToDeployPU():
     except Exception as e :
         handleException(e)
 
+
+def displayAvailableFeederList():
+    # number only the load_*.sh feeders that are not deployed yet (same filter as proceedToDeployPU)
+    feederDict = host_dictionary_obj()
+    verboseHandle.printConsoleWarning("Available Feeders:")
+    headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
+               Fore.YELLOW + "Name" + Fore.RESET
+               ]
+    dataTable = []
+    counter = 0
+    for file in sorted(glob.glob(os.path.join(sourceMSSQLFeederShFilePath, "load_*.sh"))):
+        file = os.path.basename(file)
+        exitsFeeder = str(file).replace('load','gilboafeeder').replace('.sh','').casefold()
+        if exitsFeeder in activefeeder:
+            continue
+        puName = str(file).replace('load_', '').replace('.sh', '').casefold()
+        counter = counter + 1
+        feederDict.add(str(counter), str(puName))
+        dataTable.append([Fore.GREEN + str(counter) + Fore.RESET,
+                          Fore.GREEN + puName + Fore.RESET
+                          ])
+    printTabular(None, headers, dataTable)
+    return feederDict
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
@@ -590,15 +617,38 @@ def proceedToDeployPUInputParam(managerHost):
         feederSleepAfterWrite='500'
 
     displaySummaryOfInputParam()
-    finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed ? (y/n) [y] :"+Fore.RESET))
-    if(len(str(finalConfirm))==0):
-        finalConfirm='y'
-    if(finalConfirm=='y'):
-        logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
-        uploadFileRest(managerHost)
-        proceedToDeployPU()
-    else:
+    feeder_dict_obj = displayAvailableFeederList()
+    if(len(feeder_dict_obj)==0):
+        verboseHandle.printConsoleInfo("No new feeders to deploy.")
         return
+
+    feederStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to deploy individual feeder. \nPress [Enter] to deploy all feeder. \nPress [99] for exit.: "+Fore.RESET))
+    if(feederStartType=='99'):
+        logger.info("99 - Exit deploy")
+        return
+    if(feederStartType=='1'):
+        srNo = str(userInputWrapper(Fore.YELLOW+"Enter Feeder Sr Number to Deploy: "+Fore.RESET)).strip()
+        feederToDeploy = feeder_dict_obj.get(srNo)
+        if(feederToDeploy is None):
+            verboseHandle.printConsoleError("Invalid serial number : "+srNo)
+            return
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with '"+feederToDeploy+"' feeder ? (y/n) [y] :"+Fore.RESET))
+        if(len(str(finalConfirm))==0):
+            finalConfirm='y'
+        if(finalConfirm=='y'):
+            logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+            uploadFileRest(managerHost,feederToDeploy)
+            proceedToDeployPU(feederToDeploy)
+    elif(len(feederStartType)==0):
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with all feeders ? (y/n) [y] :"+Fore.RESET))
+        if(len(str(finalConfirm))==0):
+            finalConfirm='y'
+        if(finalConfirm=='y'):
+            logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+            uploadFileRest(managerHost,"")
+            proceedToDeployPU("")
+    else:
+        verboseHandle.printConsoleError("Invalid option : "+feederStartType)
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_mssql-feeder_install")

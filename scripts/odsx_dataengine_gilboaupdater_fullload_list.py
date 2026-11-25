@@ -96,6 +96,7 @@ def listDeployed(managerHost):
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus")
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
+        if isinstance(jsonArray, list): jsonArray = sorted(jsonArray, key=lambda pu: str(pu.get('name', '')).casefold())
         verboseHandle.printConsoleWarning("Resources on cluster:")
         headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
                    Fore.YELLOW + "Name" + Fore.RESET,
@@ -122,7 +123,7 @@ def listDeployed(managerHost):
             sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory + ".mssql.scripts.").replace('.', '/')
             os.chdir(sourceMSSQLFeederShFilePath)
 
-            for file in glob.glob("load_*.sh"):
+            for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
                 os.chdir(sourceMSSQLFeederShFilePath)
                 puName = str(file).replace('load_', '').replace('.sh', '').casefold()
                 file = open(file, "r")
@@ -166,7 +167,7 @@ def listDeployed(managerHost):
                 if (str(data["name"]).__contains__('mssql')):
                     os.getcwd()
                     os.chdir(sourceMSSQLFeederShFilePath)
-                    for file in glob.glob("load_*.sh"):
+                    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
                         puName = str(str(data["name"])).replace('mssqlfeeder_', 'load_').casefold()
                         puName = puName + ".sh"
                         if (file.casefold() == puName):
@@ -191,11 +192,9 @@ def listDeployed(managerHost):
                                                  Fore.GREEN + data["status"] + Fore.RESET,
                                                  Fore.GREEN + str(conditionDate) + Fore.RESET
                                                  ]
-                            logger.info("UPDATE mssql_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
-                                data["name"]) + "%' ")
+                            logger.info("UPDATE mssql_host_port SET host = ? WHERE feeder_name = ? | params: host="+str(hostId)+", feeder_name="+str(data["name"]))
                             mycursor = cnx.execute(
-                                "UPDATE mssql_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
-                                    data["name"]) + "%' ")
+                                "UPDATE mssql_host_port SET host = ? WHERE feeder_name = ?", (str(hostId), str(data["name"])))
                             logger.info("query result:" + str(mycursor.rowcount))
 
                             gs_space_dictionary_obj.add(str(counter + 1), str(data["name"]))

@@ -105,6 +105,7 @@ def listDeployed(managerHost):
         logger.info("response status of host :" + str(managerHost) + " status :" + str(
             response.status_code) + " Content: " + str(response.content))
         jsonArray = json.loads(response.text)
+        if isinstance(jsonArray, list): jsonArray = sorted(jsonArray, key=lambda pu: str(pu.get('name', '')).casefold())
         # print(jsonArray)
         verboseHandle.printConsoleWarning("Resources on cluster:")
         headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
@@ -131,7 +132,7 @@ def listDeployed(managerHost):
             sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory + ".db2.scripts.").replace('.', '/')
             os.chdir(sourceDB2FeederShFilePathConfig)
 
-            for file in glob.glob("load_*.sh"):
+            for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
                 os.chdir(directory)
                 puName = str(file).replace('load_', '').replace('.sh', '').casefold()
                 puName = 'db2feeder_' + puName
@@ -182,7 +183,7 @@ def listDeployed(managerHost):
                     os.getcwd()
                     sourceDB2FeederShFilePathConfig = str(sourceInstallerDirectory + ".db2.scripts.").replace('.', '/')
                     os.chdir(sourceDB2FeederShFilePathConfig)
-                    for file in glob.glob("load_*.sh"):
+                    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
                         puName = str(str(data["name"])).replace('db2feeder_', 'load_').casefold()
                         puName = puName + ".sh"
                         if (file.casefold() == puName):
@@ -210,11 +211,9 @@ def listDeployed(managerHost):
                                                  Fore.GREEN + data["status"] + Fore.RESET,
                                                  Fore.GREEN + str(conditionDate) + Fore.RESET
                                                  ]
-                    logger.info("UPDATE db2_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
-                        data["name"]) + "%' ")
+                    logger.info("UPDATE db2_host_port SET host = ? WHERE feeder_name = ? | params: host="+str(hostId)+", feeder_name="+str(data["name"]))
                     mycursor = cnx.execute(
-                        "UPDATE db2_host_port SET host='" + str(hostId) + "' where feeder_name like '%" + str(
-                            data["name"]) + "%' ")
+                        "UPDATE db2_host_port SET host = ? WHERE feeder_name = ?", (str(hostId), str(data["name"])))
                     logger.info("query result:" + str(mycursor.rowcount))
 
                     gs_space_dictionary_obj.add(str(counter + 1), str(data["name"]))

@@ -229,8 +229,8 @@ def listDeployed(managerHost):
                                                  Fore.GREEN + data["name"] + Fore.RESET,
                                                  Fore.GREEN + str(queryStatus) + Fore.RESET
                                                  ]
-                    logger.info("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
-                    mycursor = cnx.execute("UPDATE mssql_host_port SET host='"+str(hostId)+"' where feeder_name like '%"+str(data["name"])+"%' ")
+                    logger.info("UPDATE mssql_host_port SET host = ? WHERE feeder_name = ? | params: host="+str(hostId)+", feeder_name="+str(data["name"]))
+                    mycursor = cnx.execute("UPDATE mssql_host_port SET host = ? WHERE feeder_name = ?", (str(hostId), str(data["name"])))
                     logger.info("query result:"+str(mycursor.rowcount))
 
                     gs_space_dictionary_obj.add(str(counter+1),str(data["name"]))
@@ -269,8 +269,8 @@ def sqlLiteGetHostAndPortByFileName(puName):
         db_file = str(readValueByConfigObj("app.dataengine.mssql-feeder.sqlite.dbfile")).replace('"','').replace(' ','')
         cnx = sqlite3.connect(db_file)
         logger.info("Db connection obtained."+str(cnx))
-        logger.info("SQL: SELECT host,port FROM mssql_host_port where feeder_name like '%"+str(puName)+"%' ")
-        mycursor = cnx.execute("SELECT host,port FROM mssql_host_port where feeder_name like '%"+str(puName)+"%' ")
+        logger.info("SQL: SELECT host,port FROM mssql_host_port WHERE feeder_name = ? | params: feeder_name="+str(puName))
+        mycursor = cnx.execute("SELECT host,port FROM mssql_host_port WHERE feeder_name = ?", (str(puName),))
         myresult = mycursor.fetchall()
         cnx.close()
         for row in myresult:

@@ -327,7 +327,7 @@ def uploadFileRest(managerHostConfig,feederName):
         logger.info("uploadFileRest : managerHostConfig : "+str(managerHostConfig))
         directory = os.getcwd()
         os.chdir(sourceMSSQLFeederShFilePath)
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
 
             exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
@@ -436,7 +436,7 @@ def newInstallMssqlFeeder():
     newInstall=[]
     directory = os.getcwd()
     os.chdir(sourceMSSQLFeederShFilePath)
-    for file in glob.glob("load_*.sh"):
+    for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
         os.chdir(directory)
         exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
         if exitsFeeder not in activefeeder:
@@ -456,7 +456,7 @@ def proceedToDeployPU(feederName):
 
         newGSCCount=0
         logger.info("Resport : "+str(restPort))
-        for file in glob.glob("load_*.sh"):
+        for file in sorted(glob.glob("load_*.sh"), key=str.casefold):
             os.chdir(directory)
             exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
             if exitsFeeder not in activefeeder:
@@ -520,35 +520,27 @@ def proceedToDeployPU(feederName):
         handleException(e)
 
 def displayAvailableFeederList():
-    global gs_avail_feeder_dictionary_obj
-    gs_avail_feeder_dictionary_obj = host_dictionary_obj()
+    # number only the load_*.sh feeders that are not deployed yet (same filter as proceedToDeployPU)
+    feederDict = host_dictionary_obj()
     verboseHandle.printConsoleWarning("Available Feeders:")
     headers = [Fore.YELLOW + "Sr No." + Fore.RESET,
                Fore.YELLOW + "Name" + Fore.RESET
                ]
-
-    counter = 0
     dataTable = []
-    dataArray=[]
-    sourceInstallerDirectory = str(os.getenv("ODSXARTIFACTS"))
-    logger.info("sourceInstallerDirectory:" + sourceInstallerDirectory)
-    sourceMSSQLFeederShFilePath = str(sourceInstallerDirectory + ".mssql.scripts.").replace('.', '/')
-    directory = os.getcwd()
-    os.chdir(sourceMSSQLFeederShFilePath)
-
-    for file in glob.glob("load_*.sh"):
-        os.chdir(directory)
-        #os.chdir(sourceMSSQLFeederShFilePath)
+    counter = 0
+    for file in sorted(glob.glob(os.path.join(sourceMSSQLFeederShFilePath, "load_*.sh"))):
+        file = os.path.basename(file)
+        exitsFeeder = str(file).replace('load','mssqlfeeder').replace('.sh','').casefold()
+        if exitsFeeder in activefeeder:
+            continue
         puName = str(file).replace('load_', '').replace('.sh', '').casefold()
-        dataArray = [Fore.GREEN + str(counter + 1) + Fore.RESET,
-                     Fore.GREEN + puName + Fore.RESET
-                     ]
-        gs_space_dictionary_obj.add(str(counter + 1), str(puName))
         counter = counter + 1
-        dataTable.append(dataArray)
-
+        feederDict.add(str(counter), str(puName))
+        dataTable.append([Fore.GREEN + str(counter) + Fore.RESET,
+                          Fore.GREEN + puName + Fore.RESET
+                          ])
     printTabular(None, headers, dataTable)
-    return gs_space_dictionary_obj
+    return feederDict
 
 def displaySummaryOfInputParam():
     logger.info("displaySummaryOfInputParam()")
@@ -632,23 +624,28 @@ def proceedToDeployPUInputParam(managerHost):
 
     displaySummaryOfInputParam()
     feeder_dict_obj = displayAvailableFeederList()
+    if(len(feeder_dict_obj)==0):
+        verboseHandle.printConsoleInfo("No new feeders to deploy.")
+        return
 
     feederStartType = str(userInputWithEscWrapper(Fore.YELLOW+"press [1] if you want to deploy individual feeder. \nPress [Enter] to deploy all feeder. \nPress [99] for exit.: "+Fore.RESET))
+    if(feederStartType=='99'):
+        logger.info("99 - Exit deploy")
+        return
     if(feederStartType=='1'):
-        optionMainMenu = int(userInputWrapper("Enter Feeder Sr Number to Deploy: "))
-        if len(feeder_dict_obj) >= optionMainMenu:
-            feederToDeploy = feeder_dict_obj.get(str(optionMainMenu))
-            # start individual
-            finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with '"+feederToDeploy+"' feeder ? (y/n) [y] :"+Fore.RESET))
-            if(len(str(finalConfirm))==0):
-                finalConfirm='y'
-            if(finalConfirm=='y'):
-                logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
-                uploadFileRest(managerHost,feederToDeploy)
-                proceedToDeployPU(feederToDeploy)
-    elif(feederStartType =='99'):
-        logger.info("99 - Exist start")
-    else:
+        srNo = str(userInputWrapper(Fore.YELLOW+"Enter Feeder Sr Number to Deploy: "+Fore.RESET)).strip()
+        feederToDeploy = feeder_dict_obj.get(srNo)
+        if(feederToDeploy is None):
+            verboseHandle.printConsoleError("Invalid serial number : "+srNo)
+            return
+        finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with '"+feederToDeploy+"' feeder ? (y/n) [y] :"+Fore.RESET))
+        if(len(str(finalConfirm))==0):
+            finalConfirm='y'
+        if(finalConfirm=='y'):
+            logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
+            uploadFileRest(managerHost,feederToDeploy)
+            proceedToDeployPU(feederToDeploy)
+    elif(len(feederStartType)==0):
         finalConfirm = str(userInputWrapper(Fore.YELLOW+"Are you sure want to proceed with all feeders ? (y/n) [y] :"+Fore.RESET))
         if(len(str(finalConfirm))==0):
             finalConfirm='y'
@@ -656,8 +653,8 @@ def proceedToDeployPUInputParam(managerHost):
             logger.info("mq connector kafka consumer confirmCreateGSC "+confirmCreateGSC)
             uploadFileRest(managerHost,"")
             proceedToDeployPU("")
-        else:
-            return
+    else:
+        verboseHandle.printConsoleError("Invalid option : "+feederStartType)
 
 if __name__ == '__main__':
     logger.info("odsx_dataengine_mssql-feeder_install")

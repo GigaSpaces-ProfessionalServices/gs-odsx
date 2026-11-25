@@ -142,8 +142,8 @@ def deleteOracleEntryFromSqlLite(puName):
         db_file = str(readValueByConfigObj("app.dataengine.oracle-feeder-erp.sqlite.dbfile")).replace('"','').replace(' ','')
         logger.info("db_file :"+str(db_file))
         cnx = sqlite3.connect(db_file)
-        logger.info("SQL : DELETE FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%'")
-        cnx.execute("DELETE FROM oracleerp_host_port where feeder_name like '%"+str(puName)+"%'")
+        logger.info("SQL : DELETE FROM oracleerp_host_port WHERE feeder_name = ? | params: feeder_name="+str(puName))
+        cnx.execute("DELETE FROM oracleerp_host_port WHERE feeder_name = ?", (str(puName),))
         cnx.commit()
         cnx.close()
     except Exception as e:
@@ -173,6 +173,7 @@ def listDeployed(managerHost):
         response = requests.get("http://"+str(managerHost)+":8090/v2/pus",auth = HTTPBasicAuth(username, password))
         logger.info("response status of host :"+str(managerHost)+" status :"+str(response.status_code)+" Content: "+str(response.content))
         jsonArray = json.loads(response.text)
+        if isinstance(jsonArray, list): jsonArray = sorted(jsonArray, key=lambda pu: str(pu.get('name', '')).casefold())
         verboseHandle.printConsoleWarning("Resources on cluster:")
         headers = [Fore.YELLOW+"Sr No."+Fore.RESET,
                    Fore.YELLOW+"Name"+Fore.RESET,

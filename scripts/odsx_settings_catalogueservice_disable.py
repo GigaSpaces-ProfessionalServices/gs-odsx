@@ -6,7 +6,8 @@ import sys
 
 from scripts.logManager import LogManager
 from scripts.spinner import Spinner
-from scripts.test import signal_handler
+# from scripts.test import signal_handler
+from utils.ods_cleanup import signal_handler
 from utils.ods_ssh import executeLocalCommandAndGetOutput
 from colorama import Fore
 
